@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* פונט עברי נקי לכל המערכת */
+:root {
+  font-family: system-ui, "Segoe UI", Arial, "Noto Sans Hebrew", sans-serif;
+}
