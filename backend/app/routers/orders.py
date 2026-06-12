@@ -4,11 +4,12 @@
 """
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from app.dependencies import get_access_token, get_current_user
 from app.schemas.auth import UserOut
 from app.schemas.orders import OrderCreate, OrderItemOut, OrderOut
+from app.services import notification_service
 from app.services.orders_service import OrderValidationError, build_order_payload
 from app.services.supabase_client import get_service_client, get_user_client
 
@@ -63,12 +64,14 @@ def _order_out(order: dict, items: list[dict], product_names: dict[str, str]) ->
 @router.post("", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
 def create_order(
     body: OrderCreate,
+    background_tasks: BackgroundTasks,
     user: UserOut = Depends(get_current_user),
     token: str = Depends(get_access_token),
 ) -> OrderOut:
     """
     יצירת הזמנה (O1): המחירים נלקחים מה-DB ברגע זה (snapshot, O8).
     הכתיבה בזהות המשתמש — ה-RLS מוודא שההזמנה על שם הלקוח שלו בלבד.
+    אחרי השמירה: התראה לאבא ברקע (Email + Telegram) — הלקוח לא מחכה לה.
     """
     client = get_user_client(token)
     customer_id = _resolve_customer_id(client, user)
@@ -102,6 +105,18 @@ def create_order(
         except Exception:
             logger.exception("גם ניקוי ההזמנה היתומה נכשל (order_id=%s)", order["id"])
         raise HTTPException(status_code=500, detail="יצירת ההזמנה נכשלה — נסה שוב") from exc
+
+    # התראה לאבא (N1) — ברקע, אחרי שהתשובה כבר נשלחה ללקוח
+    customer_row = client.table("customers").select("name") \
+        .eq("id", customer_id).limit(1).execute()
+    customer_name = customer_row.data[0]["name"] if customer_row.data else "לקוח"
+    background_tasks.add_task(
+        notification_service.notify_new_order,
+        customer_name=customer_name,
+        order_number=order["order_number"],
+        total_estimate=float(order.get("total_estimate") or 0),
+        items_count=len(items),
+    )
 
     names = {p["id"]: p["name"] for p in products_by_id.values()}
     return _order_out(order, items, names)

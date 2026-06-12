@@ -26,6 +26,8 @@ class Settings(BaseSettings):
 
     # התראות — יתמלא ב-Phase 5
     resend_api_key: str = ""
+    email_from: str = "Kerem Orders <onboarding@resend.dev>"
+    admin_notification_email: str = ""
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
 
