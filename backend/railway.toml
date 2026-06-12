@@ -1,4 +1,5 @@
-# הגדרות Railway לבקנד (Root Directory בהגדרות השירות: backend/)
+# חלופה בלבד: קובץ זה נקרא רק אם מגדירים Root Directory = backend בשירות.
+# מסלול ברירת המחדל הוא railway.json בשורש הריפו → backend/Dockerfile.
 [build]
 builder = "NIXPACKS"
 
