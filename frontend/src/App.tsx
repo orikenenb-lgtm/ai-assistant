@@ -5,6 +5,10 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './lib/auth'
 import { CartProvider } from './lib/cart'
 import { AdminSyncPage } from './pages/AdminSyncPage'
+import { AdminCustomersPage } from './pages/admin/AdminCustomersPage'
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
+import { AdminOrderDetailPage } from './pages/admin/AdminOrderDetailPage'
+import { AdminOrdersPage } from './pages/admin/AdminOrdersPage'
 import { CatalogPage } from './pages/CatalogPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
@@ -26,6 +30,10 @@ function App() {
             <Route path="/catalog" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><MyOrdersPage /></ProtectedRoute>} />
             <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+            <Route path="/admin/orders" element={<AdminRoute><AdminOrdersPage /></AdminRoute>} />
+            <Route path="/admin/orders/:orderId" element={<AdminRoute><AdminOrderDetailPage /></AdminRoute>} />
+            <Route path="/admin/customers" element={<AdminRoute><AdminCustomersPage /></AdminRoute>} />
             <Route path="/admin/sync" element={<AdminRoute><AdminSyncPage /></AdminRoute>} />
           </Routes>
         </CartProvider>

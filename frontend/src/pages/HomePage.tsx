@@ -37,13 +37,20 @@ export function HomePage() {
         )}
 
         <div className="mt-8 grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-          <BigLink to="/catalog" icon="🛒" label="הזמנה חדשה"
-            sub="עיון בקטלוג ובחירת מוצרים" />
-          <BigLink to="/orders" icon="📦" label="ההזמנות שלי"
-            sub="מעקב אחרי סטטוס הזמנות" />
-          {user?.role === 'admin' && (
-            <BigLink to="/admin/sync" icon="🔄" label="סנכרון Rivhit"
-              sub="משיכת מוצרים ולקוחות" />
+          {user?.role === 'admin' ? (
+            <>
+              <BigLink to="/admin" icon="📊" label="דשבורד ניהול"
+                sub="הזמנות ממתינות, לקוחות, סנכרון" />
+              <BigLink to="/admin/orders" icon="📋" label="כל ההזמנות"
+                sub="סקירה, עדכון סטטוס, הערות" />
+            </>
+          ) : (
+            <>
+              <BigLink to="/catalog" icon="🛒" label="הזמנה חדשה"
+                sub="עיון בקטלוג ובחירת מוצרים" />
+              <BigLink to="/orders" icon="📦" label="ההזמנות שלי"
+                sub="מעקב אחרי סטטוס הזמנות" />
+            </>
           )}
         </div>
       </main>

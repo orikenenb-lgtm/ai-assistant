@@ -14,10 +14,18 @@ export function AppHeader({ title }: { title?: string }) {
           {title && <span className="text-gray-500 hidden md:inline">· {title}</span>}
         </Link>
         <nav className="flex items-center gap-3 text-sm">
-          <Link to="/catalog" className="text-blue-600 hover:underline">קטלוג</Link>
-          <Link to="/orders" className="text-blue-600 hover:underline">ההזמנות שלי</Link>
-          {user?.role === 'admin' && (
-            <Link to="/admin/sync" className="text-blue-600 hover:underline">סנכרון</Link>
+          {user?.role === 'admin' ? (
+            <>
+              <Link to="/admin" className="text-blue-600 hover:underline">דשבורד</Link>
+              <Link to="/admin/orders" className="text-blue-600 hover:underline">הזמנות</Link>
+              <Link to="/admin/customers" className="text-blue-600 hover:underline">לקוחות</Link>
+              <Link to="/admin/sync" className="text-blue-600 hover:underline">סנכרון</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/catalog" className="text-blue-600 hover:underline">קטלוג</Link>
+              <Link to="/orders" className="text-blue-600 hover:underline">ההזמנות שלי</Link>
+            </>
           )}
           <button onClick={logout} className="text-red-600 hover:underline">התנתק</button>
         </nav>
