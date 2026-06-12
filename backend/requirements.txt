@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+supabase
+requests
+pytest
+httpx
+httpx2
