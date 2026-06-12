@@ -45,6 +45,13 @@ def test_n3_message_contains_all_details():
     assert "7" in telegram_text
 
 
+def test_n3_customer_name_html_escaped():
+    """שם לקוח עם תגיות HTML מעוקר באימייל (מניעת הזרקה)."""
+    _, html, _ = build_new_order_message('חנות <script>alert(1)</script>', 9, 10.0, 1)
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+
+
 # ---------- N1: שני הערוצים נשלחים ----------
 
 def test_n1_both_channels_sent(monkeypatch):

@@ -147,6 +147,22 @@ def test_s4_rivhit_error_logged_db_untouched():
     assert repo.tables["products"][1]["is_active"] is True  # שום דבר לא הושבת
 
 
+def test_s4_db_read_failure_logged():
+    """S4 הרחבה: גם כשל DB בקריאת המצב הקיים נרשם כריצה כושלת."""
+
+    class FailingRepo(InMemoryRepo):
+        def list_rivhit_ids(self, table: str) -> set[int]:
+            raise RuntimeError("Supabase לא זמין")
+
+    repo = FailingRepo()
+    result = SyncService(FakeRivhit(products=[make_product(1)]), repo) \
+        .sync_products(dry_run=False)
+
+    assert result.status == "error"
+    assert "DB" in result.error_message
+    assert len(repo.sync_logs) == 1 and repo.sync_logs[0].status == "error"
+
+
 # ---------- S7: כל ריצה אמיתית נרשמת בלוג ----------
 
 def test_s7_every_real_run_logged():

@@ -60,8 +60,12 @@ def confirmation_token(order_id: str, quote_items: list[dict]) -> str:
     טביעת אצבע של ההצעה: נגזרת מההזמנה ושורותיה.
     ה-confirm חייב להציג אותה — מבטיח שמה שאושר הוא בדיוק מה שיישלח (Q3).
     """
+    # מיון דטרמיניסטי: סדר השורות מה-DB לא מובטח, ואסור שיפסול אישור תקין
+    canonical_items = sorted(
+        quote_items,
+        key=lambda item: (item["item_id"], item["quantity"], item["price_nis"]))
     canonical = json.dumps(
-        {"order_id": order_id, "items": quote_items},
+        {"order_id": order_id, "items": canonical_items},
         sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
 

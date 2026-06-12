@@ -15,10 +15,11 @@ interface AdminOrder extends Order {
 }
 
 // המעברים החוקיים — תואם ל-admin_service.py בבקנד
+// (מ-quoted אין חזרה אחורה: מסמך כבר קיים ב-Rivhit)
 const NEXT_STATUSES: Record<OrderStatus, OrderStatus[]> = {
   pending: ['reviewed', 'quoted', 'cancelled'],
   reviewed: ['quoted', 'cancelled', 'pending'],
-  quoted: ['confirmed', 'cancelled', 'reviewed'],
+  quoted: ['confirmed', 'cancelled'],
   confirmed: ['shipped', 'cancelled'],
   shipped: ['closed'],
   closed: [],

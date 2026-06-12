@@ -26,6 +26,11 @@ async def _run_sync_once() -> None:
 async def sync_loop() -> None:
     """לולאת הסנכרון: רצה לנצח, מתעדת שגיאות וממשיכה (לא מפילה את השרת)."""
     settings = get_settings()
+    if settings.sync_interval_hours <= 0:
+        # ערך שגוי היה הופך את הלולאה להפגזה רצופה על Rivhit — עוצרים מיד
+        logger.error("SYNC_INTERVAL_HOURS לא תקין (%s) — המתזמן לא יופעל",
+                     settings.sync_interval_hours)
+        return
     interval_seconds = settings.sync_interval_hours * 3600
     logger.info("מתזמן סנכרון פעיל — כל %d שעות", settings.sync_interval_hours)
     while True:

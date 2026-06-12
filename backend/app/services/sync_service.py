@@ -86,7 +86,20 @@ class SyncService:
             rows = list(unique.values())
             logger.warning("סנכרון %s: זוהו כפילויות בתשובת Rivhit — אוחדו", sync_type)
 
-        existing_ids = self._repo.list_rivhit_ids(sync_type)
+        try:
+            existing_ids = self._repo.list_rivhit_ids(sync_type)
+        except Exception as exc:
+            # גם כשל בקריאת המצב הקיים מה-DB חייב להירשם כריצה כושלת (S7)
+            result.status = "error"
+            result.error_message = f"שגיאת DB בקריאת מצב קיים: {exc}"
+            if not dry_run:
+                try:
+                    self._repo.insert_sync_log(result)
+                except Exception:
+                    logger.exception("גם רישום ה-sync_log נכשל")
+            logger.error("סנכרון %s נכשל בקריאת DB: %s", sync_type, exc)
+            return result
+
         result.records_synced = len(rows)
         result.records_created = len(incoming_ids - existing_ids)
         result.records_updated = len(incoming_ids & existing_ids)

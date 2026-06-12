@@ -8,6 +8,7 @@
 """
 import logging
 from dataclasses import dataclass
+from html import escape
 
 import requests
 
@@ -80,10 +81,12 @@ def build_new_order_message(customer_name: str, order_number: int,
     """בונה את תוכן ההתראה (N3): נושא, HTML לאימייל, וטקסט לטלגרם."""
     subject = f"🧸 הזמנה חדשה #{order_number} מ{customer_name}"
     total_text = f"{total_estimate:,.2f} ₪"
+    # שם הלקוח מגיע מנתונים חיצוניים — חובה לעקר אותו לפני שיבוץ ב-HTML
+    safe_customer_name = escape(customer_name)
     html = f"""
     <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px;">
       <h2>🧸 הזמנה חדשה ב-Kerem Orders</h2>
-      <p><b>לקוח:</b> {customer_name}</p>
+      <p><b>לקוח:</b> {safe_customer_name}</p>
       <p><b>מספר הזמנה:</b> #{order_number}</p>
       <p><b>פריטים:</b> {items_count}</p>
       <p><b>סכום משוער:</b> {total_text}</p>

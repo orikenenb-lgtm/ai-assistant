@@ -16,9 +16,14 @@ export function saveTokens(accessToken: string, refreshToken: string) {
   localStorage.setItem(REFRESH_KEY, refreshToken)
 }
 
+// אירוע גלובלי: שכבת ה-auth מאזינה לו ומנקה את מצב המשתמש ב-React
+export const AUTH_INVALIDATED_EVENT = 'kerem:auth-invalidated'
+
 export function clearTokens() {
   localStorage.removeItem(ACCESS_KEY)
   localStorage.removeItem(REFRESH_KEY)
+  // בלי זה האפליקציה נשארת "מחוברת" ויזואלית עד רענון קשיח
+  window.dispatchEvent(new Event(AUTH_INVALIDATED_EVENT))
 }
 
 export function getAccessToken(): string | null {

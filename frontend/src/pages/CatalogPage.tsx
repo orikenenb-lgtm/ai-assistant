@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { AppHeader } from '../components/AppHeader'
 import { api, extractErrorMessage } from '../lib/api'
+import { useAuth } from '../lib/auth-context'
 import { useCart } from '../lib/cart-context'
 import { formatPrice } from '../lib/types'
 import type { Product } from '../lib/types'
@@ -17,7 +18,7 @@ function QuantityStepper({ product }: { product: Product }) {
       <button
         onClick={() => setQuantity(product, Math.max(0, qty - 1))}
         className="w-9 h-9 rounded-lg border border-gray-300 text-lg font-bold hover:bg-gray-50"
-        aria-label="הפחת כמות"
+        aria-label={`הפחת כמות עבור ${product.name}`}
       >
         −
       </button>
@@ -26,6 +27,7 @@ function QuantityStepper({ product }: { product: Product }) {
         min={0}
         value={qty === 0 ? '' : qty}
         placeholder="0"
+        aria-label={`כמות עבור ${product.name}`}
         onChange={(e) => {
           const parsed = parseInt(e.target.value, 10)
           setQuantity(product, Number.isNaN(parsed) ? 0 : Math.max(0, parsed))
@@ -35,7 +37,7 @@ function QuantityStepper({ product }: { product: Product }) {
       <button
         onClick={() => setQuantity(product, qty + 1)}
         className="w-9 h-9 rounded-lg border border-gray-300 text-lg font-bold hover:bg-gray-50"
-        aria-label="הוסף כמות"
+        aria-label={`הוסף כמות עבור ${product.name}`}
       >
         +
       </button>
@@ -69,9 +71,12 @@ function ProductCard({ product }: { product: Product }) {
 
 function CartBar() {
   const { totalItems, totalEstimate, lines, clear } = useCart()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [notes, setNotes] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
+  // חשבון שלא קושר ללקוח Rivhit לא יכול להזמין — חוסמים כבר כאן, לא בכשל מהשרת
+  const isLinked = user?.role === 'admin' || Boolean(user?.rivhit_customer_id)
 
   const submitMutation = useMutation({
     mutationFn: async () => {
@@ -121,14 +126,20 @@ function CartBar() {
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <span className="font-bold text-gray-900">{totalItems} פריטים</span>
               <span className="text-gray-500 text-sm"> · סה"כ משוער: {formatPrice(totalEstimate)}</span>
+              {!isLinked && (
+                <span className="block text-sm text-amber-700 mt-1">
+                  שליחת הזמנה תתאפשר אחרי שמנהל המערכת יקשר את החשבון שלך ללקוח.
+                </span>
+              )}
             </div>
             <button
               onClick={() => setShowConfirm(true)}
-              className="rounded-lg bg-blue-600 text-white px-6 py-2.5 font-medium hover:bg-blue-700"
+              disabled={!isLinked}
+              className="rounded-lg bg-blue-600 text-white px-6 py-2.5 font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               שלח הזמנה
             </button>

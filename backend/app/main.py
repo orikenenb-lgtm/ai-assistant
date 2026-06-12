@@ -3,7 +3,7 @@ Kerem Orders — שרת ה-API הראשי.
 מערכת ניהול הזמנות לסיטונאות צעצועים, מחוברת ל-Rivhit Online.
 """
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,6 +27,9 @@ async def lifespan(app: FastAPI):
     yield
     if task:
         task.cancel()
+        # ממתינים לסיום הביטול — כיבוי נקי בלי משימות תלויות באוויר
+        with suppress(asyncio.CancelledError):
+            await task
 
 
 app = FastAPI(

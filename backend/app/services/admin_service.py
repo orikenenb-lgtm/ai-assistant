@@ -11,11 +11,12 @@ STATUS_TIMESTAMPS = {
     "closed": "closed_at",
 }
 
-# מעברי סטטוס חוקיים — מונע דילוגים לא הגיוניים (למשל closed → pending)
+# מעברי סטטוס חוקיים — מונע דילוגים לא הגיוניים (למשל closed → pending).
+# מ-quoted אין חזרה אחורה: מסמך כבר קיים ב-Rivhit, ולכן רק אישור או ביטול.
 ALLOWED_TRANSITIONS: dict[str, set[str]] = {
     "pending": {"reviewed", "quoted", "cancelled"},
     "reviewed": {"quoted", "cancelled", "pending"},
-    "quoted": {"confirmed", "cancelled", "reviewed"},
+    "quoted": {"confirmed", "cancelled"},
     "confirmed": {"shipped", "cancelled"},
     "shipped": {"closed"},
     "closed": set(),

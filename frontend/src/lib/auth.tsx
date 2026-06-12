@@ -1,7 +1,7 @@
 // ספק (Provider) האימות — מצב המשתמש המחובר זמין לכל המערכת.
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { api, clearTokens, getAccessToken, saveTokens } from './api'
+import { api, AUTH_INVALIDATED_EVENT, clearTokens, getAccessToken, saveTokens } from './api'
 import { AuthContext } from './auth-context'
 import type { User } from './auth-context'
 
@@ -17,6 +17,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ data }) => setUser(data))
       .catch(() => clearTokens())
       .finally(() => setLoading(false))
+  }, [])
+
+  // כשרענון הטוקן נכשל (clearTokens מה-interceptor) — מתנתקים גם ב-React
+  useEffect(() => {
+    const onInvalidated = () => setUser(null)
+    window.addEventListener(AUTH_INVALIDATED_EVENT, onInvalidated)
+    return () => window.removeEventListener(AUTH_INVALIDATED_EVENT, onInvalidated)
   }, [])
 
   async function login(email: string, password: string) {

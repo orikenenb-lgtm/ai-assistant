@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 
-def _resolve_customer_id(client, user: UserOut) -> str:
-    """מאתר את רשומת ה-customer המקושרת למשתמש. לא מקושר → 403 עם הסבר."""
+def _require_linked_customer(user: UserOut) -> None:
+    """ולידציה מוקדמת — לפני כל גישה ל-DB. לא מקושר → 403 עם הסבר."""
     if user.role == "admin":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -30,6 +30,10 @@ def _resolve_customer_id(client, user: UserOut) -> str:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="החשבון עדיין לא קושר ללקוח — פנה למנהל המערכת",
         )
+
+
+def _resolve_customer_id(client, user: UserOut) -> str:
+    """מאתר את רשומת ה-customer המקושרת למשתמש."""
     result = client.table("customers").select("id") \
         .eq("rivhit_id", user.rivhit_customer_id).limit(1).execute()
     if not result.data:
@@ -73,6 +77,7 @@ def create_order(
     הכתיבה בזהות המשתמש — ה-RLS מוודא שההזמנה על שם הלקוח שלו בלבד.
     אחרי השמירה: התראה לאבא ברקע (Email + Telegram) — הלקוח לא מחכה לה.
     """
+    _require_linked_customer(user)     # נכשל מוקדם, לפני כל גישה ל-DB
     client = get_user_client(token)
     customer_id = _resolve_customer_id(client, user)
 

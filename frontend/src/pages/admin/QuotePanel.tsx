@@ -19,6 +19,9 @@ export function QuotePanel({ orderId, status, rivhitQuoteId }: {
 }) {
   const queryClient = useQueryClient()
   const [preview, setPreview] = useState<QuotePreview | null>(null)
+  // נעילה אחרי אישור: בלי זה לחיצה מהירה נוספת יכולה לפתוח flow חדש
+  // לפני שהנתונים המעודכנים (rivhit_quote_id) חזרו מהשרת
+  const [quoteSubmitted, setQuoteSubmitted] = useState(false)
 
   const dryRunMutation = useMutation({
     mutationFn: async () =>
@@ -33,17 +36,20 @@ export function QuotePanel({ orderId, status, rivhitQuoteId }: {
       })).data,
     onSuccess: () => {
       setPreview(null)
+      setQuoteSubmitted(true)
       queryClient.invalidateQueries({ queryKey: ['admin-order', orderId] })
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] })
     },
   })
 
-  // כבר יש הצעה — מציגים אותה בלבד
-  if (rivhitQuoteId) {
+  // כבר יש הצעה (או שזה עתה נשלחה) — אין יצירה נוספת
+  if (rivhitQuoteId || quoteSubmitted) {
     return (
       <div className="mt-4 bg-purple-50 border border-purple-200 rounded-2xl p-4 text-sm text-purple-900">
-        📄 הצעת מחיר קיימת ב-Rivhit — מסמך מספר <b>{rivhitQuoteId}</b>
+        {rivhitQuoteId
+          ? <>📄 הצעת מחיר קיימת ב-Rivhit — מסמך מספר <b>{rivhitQuoteId}</b></>
+          : <>✅ הצעת המחיר נשלחה ל-Rivhit — טוען נתונים מעודכנים…</>}
       </div>
     )
   }

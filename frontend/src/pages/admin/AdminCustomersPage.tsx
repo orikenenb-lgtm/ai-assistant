@@ -108,6 +108,18 @@ function UnlinkedUsers({ customers }: { customers: Customer[] }) {
   const unlinked = usersQuery.data?.filter(
     (p) => p.role === 'customer' && !p.rivhit_customer_id) ?? []
 
+  // כשל בטעינה לא נבלע בשקט — אחרת זרימת הקישור "נעלמת" בלי הסבר
+  if (usersQuery.isLoading) {
+    return <div className="bg-white rounded-2xl p-6 h-24 animate-pulse" />
+  }
+  if (usersQuery.isError) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-700">
+        טעינת המשתמשים נכשלה: {extractErrorMessage(usersQuery.error)}
+      </div>
+    )
+  }
+
   if (unlinked.length === 0) return null
 
   return (

@@ -4,7 +4,7 @@
 
 1. פתח פרויקט ב-[supabase.com](https://supabase.com) (region: Frankfurt — הקרוב לישראל).
 2. ב-Dashboard → **SQL Editor** → הדבק את **כל** התוכן של
-   `migrations/20260612000000_init.sql` → Run.
+   `migrations/` — **את כל הקבצים, לפי סדר השמות** → Run.
 3. ב-**Project Settings → API** העתק:
    - `Project URL` → `SUPABASE_URL`
    - `anon public` → `SUPABASE_ANON_KEY`
@@ -22,10 +22,12 @@ sudo -u postgres psql -c "DROP DATABASE IF EXISTS kerem_test;" -c "CREATE DATABA
 sudo -u postgres psql -d kerem_test -v ON_ERROR_STOP=1 \
     -f supabase/tests/auth_stub.sql \
     -f supabase/migrations/20260612000000_init.sql \
+    -f supabase/migrations/20260612000001_invite_linking.sql \
+    -f supabase/migrations/20260612000002_harden_writes.sql \
     -f supabase/tests/test_rls.sql
 ```
 
-פלט תקין: 17 שורות `✅ עבר` ובסוף `🎉 כל בדיקות ה-RLS עברו בהצלחה`.
+פלט תקין: 21 שורות `✅ עבר` ובסוף `🎉 כל בדיקות ה-RLS עברו בהצלחה`.
 
 ## 🔧 תיקונים שבוצעו ביחס לאפיון המקורי
 

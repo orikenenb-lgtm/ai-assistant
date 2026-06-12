@@ -176,3 +176,35 @@ def test_missing_document_id_raises(monkeypatch):
     client = RivhitClient(api_token="token-test")
     with pytest.raises(RivhitError, match="ידנית"):
         client.create_quote(101, [{"item_id": 1, "quantity": 1, "price_nis": 10.0}])
+
+
+def test_document_id_preferred_over_document_number(monkeypatch):
+    """document_id (המזהה הטכני) מנצח את document_number (ערך תצוגה)."""
+    monkeypatch.setattr(rivhit_service, "get_settings", lambda: Settings(
+        rivhit_api_token="token-test", rivhit_write_enabled=True, _env_file=None))
+    monkeypatch.setattr(rivhit_service.requests, "post", lambda url, json, timeout:
+                        FakeResponse(200, {"error_code": 0, "data": {
+                            "document_id": 555, "document_number": "INV-2026/001"}}))
+
+    client = RivhitClient(api_token="token-test")
+    assert client.create_quote(101, [{"item_id": 1, "quantity": 1, "price_nis": 10.0}]) == 555
+
+
+def test_non_numeric_document_number_clear_error(monkeypatch):
+    """מזהה מפורמט שאינו מספר → שגיאה שמזהירה לא ליצור שוב (המסמך כבר קיים!)."""
+    monkeypatch.setattr(rivhit_service, "get_settings", lambda: Settings(
+        rivhit_api_token="token-test", rivhit_write_enabled=True, _env_file=None))
+    monkeypatch.setattr(rivhit_service.requests, "post", lambda url, json, timeout:
+                        FakeResponse(200, {"error_code": 0, "data": {
+                            "document_number": "INV-2026/001"}}))
+
+    client = RivhitClient(api_token="token-test")
+    with pytest.raises(RivhitError, match="אל תיצור שוב"):
+        client.create_quote(101, [{"item_id": 1, "quantity": 1, "price_nis": 10.0}])
+
+
+def test_q3_token_ignores_row_order():
+    """Q3: אותן שורות בסדר שונה מה-DB → אותו token (אין 409 שווא)."""
+    items = build_quote_items(ITEMS, RIVHIT_IDS)
+    assert confirmation_token("ord-1", items) == \
+           confirmation_token("ord-1", list(reversed(items)))

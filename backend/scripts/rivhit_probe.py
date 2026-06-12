@@ -22,7 +22,11 @@ def main() -> None:
             rows = fetch()
             print(f"✅ {name}: {len(rows)} רשומות")
             if rows:
-                print("   דוגמה:", json.dumps(rows[0], ensure_ascii=False)[:400])
+                # לא מדפיסים פרטים אישיים של לקוחות (אימייל/טלפון) ללוג
+                sample = dict(rows[0])
+                sample.pop("email", None)
+                sample.pop("phone", None)
+                print("   דוגמה:", json.dumps(sample, ensure_ascii=False)[:400])
         except RivhitError as exc:
             print(f"❌ {name}: {exc}")
 

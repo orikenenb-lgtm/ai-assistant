@@ -99,12 +99,61 @@ BEGIN
 END;
 $$;
 
+-- ----- חיזוק כתיבה ישירה (migration 0003): אי אפשר לזייף מחיר או שדות אדמין -----
+
+-- לקוח מנסה להזריק שורה עם מחיר מזויף ישירות ל-DB → המחיר נכפה מהקטלוג (O8)
+INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total)
+VALUES ('30000000-0000-0000-0000-000000000001',
+        '20000000-0000-0000-0000-000000000001', 2, 0.01, 0.02);
+SELECT pg_temp.assert_eq(
+    (SELECT count(*) FROM order_items
+     WHERE order_id = '30000000-0000-0000-0000-000000000001' AND unit_price = 99.90
+       AND quantity = 2), 1,
+    'O8: מחיר מזויף בהזרקה ישירה נדרס במחיר הקטלוג');
+
+-- הסכום של ההזמנה חושב מחדש אוטומטית מהשורות
+SELECT pg_temp.assert_eq(
+    (SELECT count(*) FROM orders
+     WHERE id = '30000000-0000-0000-0000-000000000001'
+       AND total_estimate = (SELECT SUM(line_total) FROM order_items
+                             WHERE order_id = '30000000-0000-0000-0000-000000000001')), 1,
+    'הסכום המשוער מחושב תמיד מהשורות (trigger)');
+
+-- לקוח מנסה להזמין מוצר מושבת בהזרקה ישירה → נחסם (O7)
+DO $$
+BEGIN
+    BEGIN
+        INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+        VALUES ('30000000-0000-0000-0000-000000000001',
+                '20000000-0000-0000-0000-000000000002', 1, 10.00);
+        RAISE EXCEPTION '❌ נכשל: לקוח הזמין מוצר מושבת בהזרקה ישירה!';
+    EXCEPTION WHEN raise_exception THEN
+        IF SQLERRM LIKE '%נכשל%' THEN RAISE; END IF;
+        RAISE NOTICE '✅ עבר: מוצר מושבת חסום גם בהזרקה ישירה (trigger)';
+    END;
+END;
+$$;
+
+-- לקוח מנסה ליצור הזמנה עם שדות אדמין (סטטוס, מסמך Rivhit, סכום סופי) → מאופסים
+INSERT INTO orders (id, customer_id, created_by, status, final_total, admin_notes, rivhit_quote_id)
+VALUES ('30000000-0000-0000-0000-000000000003',
+        '10000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000001',
+        'pending', 1.00, 'זיוף', 999);
+SELECT pg_temp.assert_eq(
+    (SELECT count(*) FROM orders
+     WHERE id = '30000000-0000-0000-0000-000000000003'
+       AND status = 'pending' AND final_total IS NULL
+       AND admin_notes IS NULL AND rivhit_quote_id IS NULL), 1,
+    'שדות בבעלות אדמין מאופסים בהזרקת הזמנה ישירה (trigger)');
+
 -- ============================================================================
 -- בדיקות כ"אדמין"
 -- ============================================================================
 SET LOCAL app.current_user_id = '00000000-0000-0000-0000-00000000000a';
 
-SELECT pg_temp.assert_eq((SELECT count(*) FROM orders), 2,
+-- 3 הזמנות: שתיים מנתוני הבדיקה + אחת מבדיקת ההזרקה למעלה
+SELECT pg_temp.assert_eq((SELECT count(*) FROM orders), 3,
     'admin רואה את כל ההזמנות');
 SELECT pg_temp.assert_eq((SELECT count(*) FROM customers), 2,
     'admin רואה את כל הלקוחות');
@@ -120,14 +169,16 @@ SELECT pg_temp.assert_eq(
     'admin יכול לעדכן סטטוס הזמנה');
 
 -- ============================================================================
--- משתמש לא מחובר (אנונימי) — לא רואה כלום
+-- משתמש לא מחובר (אנונימי) — תחת ה-role האמיתי anon, לא רואה כלום
 -- ============================================================================
+RESET ROLE;
+SET LOCAL ROLE anon;
 SET LOCAL app.current_user_id = '';
 
 SELECT pg_temp.assert_eq((SELECT count(*) FROM orders), 0,
-    'אנונימי: 0 הזמנות');
+    'אנונימי (anon role): 0 הזמנות');
 SELECT pg_temp.assert_eq((SELECT count(*) FROM customers), 0,
-    'אנונימי: 0 לקוחות');
+    'אנונימי (anon role): 0 לקוחות');
 
 RESET ROLE;
 ROLLBACK;  -- ניקוי מלא — הבדיקות לא משאירות נתונים

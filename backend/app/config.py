@@ -4,6 +4,7 @@
 """
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -42,6 +43,18 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:5173"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @model_validator(mode="after")
+    def _require_critical_settings_in_production(self) -> "Settings":
+        """בפרודקשן — קונפיג חסר מפיל את השרת בעלייה, לא באמצע בקשה."""
+        if self.environment == "production":
+            missing = [name for name in
+                       ("supabase_url", "supabase_anon_key", "supabase_service_role_key")
+                       if not getattr(self, name)]
+            if missing:
+                raise ValueError(
+                    f"חסרים משתני סביבה קריטיים לפרודקשן: {', '.join(missing).upper()}")
+        return self
 
     @property
     def origins_list(self) -> list[str]:

@@ -37,4 +37,10 @@
 
 - Rate limiting בזיכרון (worker יחיד) — מספיק לעומס העסק; Redis אם נגדל.
 - אין CSRF token ייעודי — ה-API מבוסס Bearer token (לא cookies), כך שהסיכון נמוך.
-- `quote_confirm` בלי idempotency key מול Rivhit — מוגן ב-token + נעילת כפילות ב-DB.
+- `quote_confirm` מוגן ב-token אישור + שריון אטומי (compare-and-swap) על
+  `rivhit_quote_id` — אין idempotency key בצד Rivhit עצמו.
+- **טוקני ה-session נשמרים ב-localStorage** (`frontend/src/lib/api.ts`) —
+  XSS או תוסף דפדפן זדוני יכולים לגנוב אותם. מקובל ל-MVP כי אין תוכן
+  משתמש משוקף (אין הזרקת HTML) ו-CORS מצומצם; השדרוג העתידי: refresh token
+  ב-HttpOnly cookie + Content-Security-Policy.
+- שורות הזמנה ב-orders ללא מחיקת לקוח (אין DELETE policy) — היסטוריה נשמרת.

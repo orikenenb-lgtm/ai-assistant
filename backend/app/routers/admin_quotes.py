@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/orders", tags=["admin-quotes"])
 
+# ערך שריון זמני ל-rivhit_quote_id בזמן יצירת מסמך (0 = "בתהליך", לא מזהה אמיתי)
+QUOTE_RESERVATION_SENTINEL = 0
+
 
 class ConfirmQuoteRequest(BaseModel):
     confirmation_token: str
@@ -121,17 +124,34 @@ def quote_confirm(
             detail="ההזמנה השתנתה מאז התצוגה המקדימה — הרץ תצוגה מקדימה מחדש ואשר שוב",
         )
 
+    client = get_user_client(token)
+
+    # שריון אטומי (compare-and-swap): רק בקשה אחת תופסת את ההזמנה.
+    # מונע הצעה כפולה ב-Rivhit כששני אדמינים מאשרים במקביל.
+    reservation = client.table("orders") \
+        .update({"rivhit_quote_id": QUOTE_RESERVATION_SENTINEL}) \
+        .eq("id", order_id).is_("rivhit_quote_id", "null").execute()
+    if not reservation.data:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="ההזמנה כבר בטיפול על ידי בקשה אחרת — רענן את הדף",
+        )
+
     try:
         quote_id = rivhit.create_quote(
             customer_rivhit_id, quote_items,
             comments=f"Kerem Orders — הזמנה #{order['order_number']}")
     except RivhitError as exc:
-        # Q5: הכתיבה ל-Rivhit נכשלה — ההזמנה לא השתנתה, אפשר לנסות שוב
+        # Q5: הכתיבה ל-Rivhit נכשלה — משחררים את השריון כדי לאפשר ניסיון חוזר
+        try:
+            client.table("orders").update({"rivhit_quote_id": None}) \
+                .eq("id", order_id).execute()
+        except Exception:
+            logger.exception("שחרור שריון ההצעה נכשל (הזמנה %s)", order_id)
         logger.error("יצירת הצעה ל-Rivhit נכשלה (הזמנה %s): %s", order_id, exc)
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     # המסמך נוצר ב-Rivhit — עכשיו מעדכנים את ההזמנה אצלנו
-    client = get_user_client(token)
     from app.services.admin_service import build_order_update
     from app.schemas.admin import OrderUpdateRequest
     fields = build_order_update(order["status"], OrderUpdateRequest(status="quoted"))

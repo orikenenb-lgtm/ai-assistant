@@ -97,13 +97,20 @@ class RivhitClient:
         """מושך את כל המוצרים מ-Rivhit וממפה לסכמה הפנימית של products."""
         data = self._post(PATH_ITEM_LIST)
         items = data.get("item_list") or []
-        return [self._map_product(item) for item in items]
+        try:
+            return [self._map_product(item) for item in items]
+        except (KeyError, TypeError, ValueError) as exc:
+            # שורה פגומה לא מפילה את הריצה — היא נרשמת ככשל סנכרון מסודר
+            raise RivhitError(f"נתון מוצר לא תקין התקבל מ-Rivhit: {exc}") from exc
 
     def get_customers(self) -> list[dict]:
         """מושך את כל הלקוחות מ-Rivhit וממפה לסכמה הפנימית של customers."""
         data = self._post(PATH_CUSTOMER_LIST)
         customers = data.get("customer_list") or []
-        return [self._map_customer(c) for c in customers]
+        try:
+            return [self._map_customer(c) for c in customers]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise RivhitError(f"נתון לקוח לא תקין התקבל מ-Rivhit: {exc}") from exc
 
     # ----- כתיבה (Write) — הצעת מחיר -----
 
@@ -125,10 +132,19 @@ class RivhitClient:
             "items": items,
             "comments": comments or "",
         })
-        document_id = data.get("document_number") or data.get("document_id")
-        if not document_id:
+        # מעדיפים את המזהה הטכני; document_number עלול להיות ערך תצוגה מפורמט
+        raw_id = data.get("document_id")
+        if raw_id is None:
+            raw_id = data.get("document_number")
+        if raw_id is None:
             raise RivhitError("Rivhit לא החזיר מזהה מסמך — יש לבדוק ידנית בחשבון!")
-        return int(document_id)
+        try:
+            return int(str(raw_id).strip())
+        except (TypeError, ValueError) as exc:
+            # המסמך כבר נוצר ב-Rivhit! שגיאה ברורה במקום 500 שמזמין ניסיון כפול
+            raise RivhitError(
+                f"המסמך נוצר ב-Rivhit אך המזהה שהוחזר אינו מספרי ({raw_id!r}) — "
+                "אל תיצור שוב! בדוק בחשבון ועדכן ידנית") from exc
 
     # ----- מיפוי שדות Rivhit → סכמה פנימית -----
     # אם שמות השדות בחשבון האמיתי שונים — מתקנים רק כאן.

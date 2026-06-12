@@ -249,15 +249,21 @@ def update_user(
     token: str = Depends(get_access_token),
 ) -> ProfileOut:
     """קישור משתמש ללקוח Rivhit ו/או עדכון סטטוס חשבון."""
+    client = get_user_client(token)
     fields: dict = {}
     if body.rivhit_customer_id is not None:
+        # מוודאים שהלקוח באמת קיים אצלנו — כמו ב-invite (אין קישור לריק)
+        exists = client.table("customers").select("id") \
+            .eq("rivhit_id", body.rivhit_customer_id).limit(1).execute()
+        if not exists.data:
+            raise HTTPException(status_code=404,
+                                detail="לקוח Rivhit לא נמצא — הרץ סנכרון קודם")
         fields["rivhit_customer_id"] = body.rivhit_customer_id
     if body.status is not None:
         fields["status"] = body.status
     if not fields:
         raise HTTPException(status_code=400, detail="לא נשלח שום שדה לעדכון")
 
-    client = get_user_client(token)
     current = client.table("profiles").select("*").eq("id", profile_id).limit(1).execute()
     if not current.data:
         raise HTTPException(status_code=404, detail="המשתמש לא נמצא")

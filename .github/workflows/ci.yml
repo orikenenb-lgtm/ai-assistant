@@ -7,6 +7,10 @@ on:
     branches: ["**"]
   pull_request:
 
+# ה-CI רק קורא את הקוד — אין צורך בהרשאות כתיבה
+permissions:
+  contents: read
+
 jobs:
   backend:
     name: בדיקות בקנד (pytest)
@@ -16,6 +20,8 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -41,6 +47,8 @@ jobs:
           - 5432:5432
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: הרצת migrations + בדיקות בידוד נתונים
         env:
           PGPASSWORD: postgres
@@ -50,6 +58,7 @@ jobs:
             -f supabase/tests/auth_stub.sql \
             -f supabase/migrations/20260612000000_init.sql \
             -f supabase/migrations/20260612000001_invite_linking.sql \
+            -f supabase/migrations/20260612000002_harden_writes.sql \
             -f supabase/tests/test_rls.sql
 
   frontend:
@@ -60,6 +69,8 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

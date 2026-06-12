@@ -22,20 +22,23 @@ AS $$
     SELECT NULLIF(current_setting('app.current_user_id', true), '')::uuid;
 $$;
 
--- ה-role של Supabase עבור משתמשים מחוברים
+-- ה-roles של Supabase: authenticated (מחובר) ו-anon (אנונימי)
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
         CREATE ROLE authenticated NOLOGIN;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+        CREATE ROLE anon NOLOGIN;
+    END IF;
 END
 $$;
 
--- ב-Supabase ה-role authenticated מקבל הרשאות בסיס על public אוטומטית —
+-- ב-Supabase שני ה-roles מקבלים הרשאות בסיס על public אוטומטית —
 -- משחזרים זאת כאן כדי שהבדיקות יבחנו את ה-RLS עצמו ולא חוסר GRANT
-GRANT USAGE ON SCHEMA public, auth TO authenticated;
+GRANT USAGE ON SCHEMA public, auth TO authenticated, anon;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT ALL ON TABLES TO authenticated;
+    GRANT ALL ON TABLES TO authenticated, anon;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT ALL ON SEQUENCES TO authenticated;
-GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
+    GRANT ALL ON SEQUENCES TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated, anon;

@@ -145,16 +145,10 @@ def test_orders_require_auth():
     assert client.get("/products").status_code == 401
 
 
-def test_unlinked_customer_cannot_order(monkeypatch):
-    """לקוח בלי rivhit_customer_id → 403 עם הסבר ידידותי."""
-    from app.dependencies import get_access_token
-
+def test_unlinked_customer_cannot_order():
+    """לקוח בלי rivhit_customer_id → 403 לפני כל גישה ל-DB."""
     unlinked = CUSTOMER.model_copy(update={"rivhit_customer_id": None})
     login_as(unlinked)
-
-    # client של Supabase לא אמור בכלל להיווצר — נכשלים על הקישור לפני
-    from app.routers import orders as orders_router
-    monkeypatch.setattr(orders_router, "get_user_client", lambda token: None)
 
     resp = client.post("/orders", json={"items": [{"product_id": "p-a", "quantity": 1}]})
     assert resp.status_code == 403
