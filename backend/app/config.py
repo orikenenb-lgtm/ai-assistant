@@ -39,8 +39,12 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
 
-    # CORS — בפרודקשן מצמצמים לדומיין האמיתי בלבד
-    allowed_origins: str = "http://localhost:5173"
+    # CORS — ALLOWED_ORIGINS ב-env גובר על ברירת המחדל. לעולם לא "*":
+    # wildcard עם allow_credentials=True גם לא נשלח על ידי Starlette וגם מסוכן.
+    allowed_origins: str = (
+        "https://ai-assistant-seven-theta.vercel.app,"
+        "http://localhost:5173,http://localhost:3000"
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

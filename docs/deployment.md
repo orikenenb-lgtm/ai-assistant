@@ -35,7 +35,7 @@
    | `RIVHIT_API_BASE_URL` | `https://online.rivhit.co.il/api/v3` (לאמת מול התיעוד) |
    | `RIVHIT_WRITE_ENABLED` | `false` — ⚠️ מדליקים רק אחרי שהסנכרון אומת! |
    | `SYNC_ENABLED` | `true` |
-   | `ALLOWED_ORIGINS` | הדומיין של הפרונט (משלב 3), למשל `https://kerem-orders.vercel.app` |
+   | `ALLOWED_ORIGINS` | הדומיין של הפרונט (משלב 3), למשל `https://ai-assistant-seven-theta.vercel.app` (כבר בברירת המחדל בקוד) |
    | `RESEND_API_KEY` + `ADMIN_NOTIFICATION_EMAIL` | משלב 4 |
    | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | משלב 5 |
 
