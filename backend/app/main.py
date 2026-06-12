@@ -12,7 +12,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
 from app.rate_limit import limiter
-from app.routers import admin, admin_sync, auth, orders, products
+from app.routers import admin, admin_quotes, admin_sync, auth, orders, products
 from app.scheduler import sync_loop
 
 settings = get_settings()
@@ -51,6 +51,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(admin_quotes.router)
 app.include_router(admin_sync.router)
 app.include_router(products.router)
 app.include_router(orders.router)

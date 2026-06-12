@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     rivhit_api_token: str = ""
     rivhit_api_base_url: str = "https://online.rivhit.co.il/api/v3"
 
+    # ⚠️ מפסק בטיחות: כתיבה ל-Rivhit (יצירת מסמכים) מושבתת כברירת מחדל.
+    # מדליקים רק בפרודקשן, אחרי אישור מפורש של אורי.
+    rivhit_write_enabled: bool = False
+
+    # סוג מסמך "הצעת מחיר" ב-Rivhit (לאימות מול התיעוד בחשבון האמיתי)
+    rivhit_quote_document_type: int = 1
+
     # סנכרון אוטומטי (cron) — מופעל רק בפרודקשן
     sync_enabled: bool = False
     sync_interval_hours: int = 4

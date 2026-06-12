@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # נתיבי ה-API — מרוכזים כאן כדי שכיול מול התיעוד הרשמי יהיה במקום אחד
 PATH_ITEM_LIST = "Item.List"
 PATH_CUSTOMER_LIST = "Customer.List"
+PATH_DOCUMENT_NEW = "Document.New"
 
 # המתנות בין ניסיונות חוזרים (exponential backoff)
 RETRY_DELAYS_SECONDS = [1, 2, 4, 8]
@@ -103,6 +104,31 @@ class RivhitClient:
         data = self._post(PATH_CUSTOMER_LIST)
         customers = data.get("customer_list") or []
         return [self._map_customer(c) for c in customers]
+
+    # ----- כתיבה (Write) — הצעת מחיר -----
+
+    def create_quote(self, customer_rivhit_id: int, items: list[dict],
+                     comments: str | None = None) -> int:
+        """
+        ⚠️ כותב ל-Rivhit! יצירת מסמך הצעת מחיר. מחזיר את מזהה המסמך.
+        מוגן בכפול: ה-endpoint דורש token אישור + מפסק RIVHIT_WRITE_ENABLED.
+        items: [{"item_id": int, "quantity": int, "price_nis": float}]
+        """
+        settings = get_settings()
+        if not settings.rivhit_write_enabled:
+            raise RivhitError(
+                "כתיבה ל-Rivhit מושבתת בסביבה זו (RIVHIT_WRITE_ENABLED=false)")
+
+        data = self._post(PATH_DOCUMENT_NEW, {
+            "document_type": settings.rivhit_quote_document_type,
+            "customer_id": customer_rivhit_id,
+            "items": items,
+            "comments": comments or "",
+        })
+        document_id = data.get("document_number") or data.get("document_id")
+        if not document_id:
+            raise RivhitError("Rivhit לא החזיר מזהה מסמך — יש לבדוק ידנית בחשבון!")
+        return int(document_id)
 
     # ----- מיפוי שדות Rivhit → סכמה פנימית -----
     # אם שמות השדות בחשבון האמיתי שונים — מתקנים רק כאן.

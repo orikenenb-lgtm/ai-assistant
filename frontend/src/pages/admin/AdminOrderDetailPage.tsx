@@ -6,6 +6,7 @@ import { AppHeader } from '../../components/AppHeader'
 import { api, extractErrorMessage } from '../../lib/api'
 import { formatPrice, STATUS_COLORS, STATUS_LABELS } from '../../lib/types'
 import type { Order, OrderStatus } from '../../lib/types'
+import { QuotePanel } from './QuotePanel'
 
 interface AdminOrder extends Order {
   customer_name: string | null
@@ -115,6 +116,12 @@ export function AdminOrderDetailPage() {
                 </div>
               )}
             </div>
+
+            <QuotePanel
+              orderId={order.id}
+              status={order.status}
+              rivhitQuoteId={order.rivhit_quote_id}
+            />
 
             <div className="mt-4 bg-white rounded-2xl shadow-sm p-6">
               <h2 className="font-bold text-gray-900 mb-3">עדכון סטטוס</h2>
