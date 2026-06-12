@@ -1,10 +1,10 @@
 """נתיבי סנכרון לאדמין: הרצת סנכרון (dry-run / אמיתי) וצפייה בלוגים."""
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from app.dependencies import require_admin
+from app.dependencies import get_access_token, require_admin
 from app.schemas.auth import UserOut
 from app.services.rivhit_service import RivhitClient
 from app.services.supabase_client import get_user_client
@@ -43,12 +43,12 @@ def run_sync(
 
 @router.get("/logs")
 def sync_logs(
-    request: Request,
     limit: int = 20,
     user: UserOut = Depends(require_admin),
+    token: str = Depends(get_access_token),
 ) -> list[dict]:
     """היסטוריית סנכרונים אחרונים (sync_logs) — בזהות האדמין, דרך RLS."""
-    client = get_user_client(request.state.access_token)
+    client = get_user_client(token)
     result = (
         client.table("sync_logs")
         .select("*")

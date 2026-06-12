@@ -1,54 +1,51 @@
-// דף הבית אחרי התחברות — placeholder שיוחלף בקטלוג (Phase 3) ודשבורד (Phase 4)
+// דף הבית: ללקוח — הזמנה חדשה / ההזמנות שלי; לאדמין — קיצורי ניהול
 import { Link } from 'react-router-dom'
+import { AppHeader } from '../components/AppHeader'
 import { useAuth } from '../lib/auth-context'
 
+function BigLink({ to, icon, label, sub }: { to: string; icon: string; label: string; sub: string }) {
+  return (
+    <Link
+      to={to}
+      className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center hover:border-blue-300 hover:shadow transition-all"
+    >
+      <span className="text-4xl block">{icon}</span>
+      <span className="block mt-3 text-lg font-bold text-gray-900">{label}</span>
+      <span className="block mt-1 text-sm text-gray-500">{sub}</span>
+    </Link>
+  )
+}
+
 export function HomePage() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
+  const linked = Boolean(user?.rivhit_customer_id)
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🧸</span>
-            <span className="font-bold text-gray-900">Kerem Orders</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              שלום, {user?.full_name ?? user?.email}
-              {user?.role === 'admin' && (
-                <span className="me-2 text-xs bg-blue-100 text-blue-800 rounded-full px-2 py-0.5">
-                  מנהל
-                </span>
-              )}
-            </span>
-            <button
-              onClick={logout}
-              className="text-sm text-red-600 hover:underline"
-            >
-              התנתק
-            </button>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
-      <main className="max-w-5xl mx-auto px-4 py-10 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">ברוכים הבאים 👋</h1>
-        <p className="mt-2 text-gray-600">
-          {user?.role === 'admin'
-            ? 'דשבורד הניהול יהיה זמין כאן בקרוב (Phase 4)'
-            : user?.rivhit_customer_id
-              ? 'הקטלוג שלך יהיה זמין כאן בקרוב (Phase 3)'
-              : 'החשבון שלך נוצר! הוא ימתין לקישור על ידי מנהל המערכת לפני שתוכל להזמין.'}
-        </p>
-        {user?.role === 'admin' && (
-          <Link
-            to="/admin/sync"
-            className="mt-6 inline-block rounded-lg bg-blue-600 text-white px-5 py-2.5 font-medium hover:bg-blue-700"
-          >
-            🔄 סנכרון Rivhit
-          </Link>
+      <main className="max-w-4xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold text-gray-900 text-center">
+          שלום, {user?.full_name ?? user?.email} 👋
+        </h1>
+
+        {user?.role === 'customer' && !linked && (
+          <div className="mt-6 max-w-lg mx-auto rounded-lg bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 text-sm text-center">
+            החשבון שלך נוצר אך עדיין לא קושר ללקוח במערכת.
+            מנהל המערכת יקשר אותו בקרוב — ואז תוכל להזמין.
+          </div>
         )}
+
+        <div className="mt-8 grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          <BigLink to="/catalog" icon="🛒" label="הזמנה חדשה"
+            sub="עיון בקטלוג ובחירת מוצרים" />
+          <BigLink to="/orders" icon="📦" label="ההזמנות שלי"
+            sub="מעקב אחרי סטטוס הזמנות" />
+          {user?.role === 'admin' && (
+            <BigLink to="/admin/sync" icon="🔄" label="סנכרון Rivhit"
+              sub="משיכת מוצרים ולקוחות" />
+          )}
+        </div>
       </main>
     </div>
   )
