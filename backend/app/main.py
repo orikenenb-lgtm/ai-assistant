@@ -2,6 +2,9 @@
 Kerem Orders — שרת ה-API הראשי.
 מערכת ניהול הזמנות לסיטונאות צעצועים, מחוברת ל-Rivhit Online.
 """
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -9,14 +12,28 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
 from app.rate_limit import limiter
-from app.routers import auth
+from app.routers import admin_sync, auth
+from app.scheduler import sync_loop
 
 settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """בעליית השרת: מפעיל את לולאת הסנכרון האוטומטי (אם SYNC_ENABLED)."""
+    task: asyncio.Task | None = None
+    if settings.sync_enabled:
+        task = asyncio.create_task(sync_loop())
+    yield
+    if task:
+        task.cancel()
+
 
 app = FastAPI(
     title="Kerem Orders API",
     description="מערכת ניהול הזמנות — סיטונאות צעצועים",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # הגבלת קצב — מוצמדת לאפליקציה כדי שה-decorators ב-routers יעבדו
@@ -33,6 +50,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(admin_sync.router)
 
 
 @app.get("/health")

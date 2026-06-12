@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     rivhit_api_token: str = ""
     rivhit_api_base_url: str = "https://online.rivhit.co.il/api/v3"
 
+    # סנכרון אוטומטי (cron) — מופעל רק בפרודקשן
+    sync_enabled: bool = False
+    sync_interval_hours: int = 4
+
     # התראות — יתמלא ב-Phase 5
     resend_api_key: str = ""
     telegram_bot_token: str = ""

@@ -1,7 +1,9 @@
 // ניתוב ראשי של Kerem Orders
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { AdminRoute } from './components/AdminRoute'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './lib/auth'
+import { AdminSyncPage } from './pages/AdminSyncPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -21,6 +23,14 @@ function App() {
               <ProtectedRoute>
                 <HomePage />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/sync"
+            element={
+              <AdminRoute>
+                <AdminSyncPage />
+              </AdminRoute>
             }
           />
         </Routes>

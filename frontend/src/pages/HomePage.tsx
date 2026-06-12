@@ -1,4 +1,5 @@
 // דף הבית אחרי התחברות — placeholder שיוחלף בקטלוג (Phase 3) ודשבורד (Phase 4)
+import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth-context'
 
 export function HomePage() {
@@ -40,6 +41,14 @@ export function HomePage() {
               ? 'הקטלוג שלך יהיה זמין כאן בקרוב (Phase 3)'
               : 'החשבון שלך נוצר! הוא ימתין לקישור על ידי מנהל המערכת לפני שתוכל להזמין.'}
         </p>
+        {user?.role === 'admin' && (
+          <Link
+            to="/admin/sync"
+            className="mt-6 inline-block rounded-lg bg-blue-600 text-white px-5 py-2.5 font-medium hover:bg-blue-700"
+          >
+            🔄 סנכרון Rivhit
+          </Link>
+        )}
       </main>
     </div>
   )
