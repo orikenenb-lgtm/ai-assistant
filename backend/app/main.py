@@ -4,8 +4,12 @@ Kerem Orders — שרת ה-API הראשי.
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
+from app.rate_limit import limiter
+from app.routers import auth
 
 settings = get_settings()
 
@@ -15,6 +19,10 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# הגבלת קצב — מוצמדת לאפליקציה כדי שה-decorators ב-routers יעבדו
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # CORS — רק הדומיינים שהוגדרו ב-env מורשים לגשת
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +31,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth.router)
 
 
 @app.get("/health")

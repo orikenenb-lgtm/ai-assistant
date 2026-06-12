@@ -2,7 +2,9 @@ fastapi
 uvicorn[standard]
 pydantic
 pydantic-settings
+email-validator
 supabase
+slowapi
 requests
 pytest
 httpx
