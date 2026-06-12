@@ -123,12 +123,34 @@ def test_s3_missing_product_deactivated():
 def test_s3_reappearing_product_reactivated():
     """מוצר שהושבת וחזר ב-Rivhit → חוזר להיות פעיל."""
     repo = InMemoryRepo()
-    SyncService(FakeRivhit(products=[make_product(1)]), repo).sync_products(dry_run=False)
-    SyncService(FakeRivhit(products=[]), repo).sync_products(dry_run=False)
+    SyncService(FakeRivhit(products=[make_product(1), make_product(2)]), repo) \
+        .sync_products(dry_run=False)
+    SyncService(FakeRivhit(products=[make_product(2)]), repo).sync_products(dry_run=False)
     assert repo.tables["products"][1]["is_active"] is False
 
-    SyncService(FakeRivhit(products=[make_product(1)]), repo).sync_products(dry_run=False)
+    SyncService(FakeRivhit(products=[make_product(1), make_product(2)]), repo) \
+        .sync_products(dry_run=False)
     assert repo.tables["products"][1]["is_active"] is True
+
+
+def test_empty_snapshot_aborts_destructive_sync():
+    """הגנה הרסנית: תשובה ריקה מ-Rivhit לא משביתה את כל הקטלוג."""
+    repo = InMemoryRepo()
+    SyncService(FakeRivhit(products=[make_product(1)]), repo).sync_products(dry_run=False)
+
+    result = SyncService(FakeRivhit(products=[]), repo).sync_products(dry_run=False)
+    assert result.status == "error"
+    assert "ריקה" in result.error_message
+    assert repo.tables["products"][1]["is_active"] is True   # שום דבר לא הושבת
+    assert repo.sync_logs[-1].status == "error"               # והכשל תועד
+
+
+def test_empty_snapshot_on_empty_db_is_fine():
+    """על DB ריק — תשובה ריקה היא תקינה (אין מה להרוס)."""
+    repo = InMemoryRepo()
+    result = SyncService(FakeRivhit(products=[]), repo).sync_products(dry_run=False)
+    assert result.status == "success"
+    assert result.records_synced == 0
 
 
 # ---------- S4: Rivhit נופל — לוג error, DB לא נגוע ----------

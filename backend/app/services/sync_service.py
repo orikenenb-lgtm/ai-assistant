@@ -75,7 +75,11 @@ class SyncService:
             result.status = "error"
             result.error_message = str(exc)
             if not dry_run:
-                self._repo.insert_sync_log(result)
+                try:
+                    self._repo.insert_sync_log(result)
+                except Exception:
+                    # כשל הלוג לא מסתיר את שגיאת Rivhit המקורית
+                    logger.exception("גם רישום ה-sync_log נכשל")
             logger.error("סנכרון %s נכשל: %s", sync_type, exc)
             return result
 
@@ -104,6 +108,20 @@ class SyncService:
         result.records_created = len(incoming_ids - existing_ids)
         result.records_updated = len(incoming_ids & existing_ids)
         missing_ids = existing_ids - incoming_ids
+
+        # הגנה הרסנית: תשובה ריקה מ-Rivhit כשיש נתונים קיימים הייתה משביתה
+        # את כל הקטלוג. עוצרים את הריצה האמיתית — כנראה תקלה זמנית ב-Rivhit.
+        if not dry_run and not rows and existing_ids:
+            result.status = "error"
+            result.error_message = (
+                "Rivhit החזיר רשימה ריקה כשקיימות רשומות — הסנכרון בוטל "
+                "למניעת השבתה המונית")
+            try:
+                self._repo.insert_sync_log(result)
+            except Exception:
+                logger.exception("גם רישום ה-sync_log נכשל")
+            logger.error("סנכרון %s בוטל: רשימה ריקה מ-Rivhit", sync_type)
+            return result
 
         if dry_run:
             result.records_deactivated = len(missing_ids)

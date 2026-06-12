@@ -69,11 +69,21 @@ SET search_path = public
 AS $$
 DECLARE
     target_order UUID;
+    source_order UUID;
 BEGIN
-    target_order := COALESCE(NEW.order_id, OLD.order_id);
-    UPDATE orders SET total_estimate = (
-        SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = target_order
-    ) WHERE id = target_order;
+    -- אם אדמין מעביר שורה בין הזמנות — מחשבים מחדש את שתיהן
+    target_order := CASE WHEN TG_OP = 'DELETE' THEN NULL ELSE NEW.order_id END;
+    source_order := CASE WHEN TG_OP = 'INSERT' THEN NULL ELSE OLD.order_id END;
+    IF target_order IS NOT NULL THEN
+        UPDATE orders SET total_estimate = (
+            SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = target_order
+        ) WHERE id = target_order;
+    END IF;
+    IF source_order IS NOT NULL AND source_order IS DISTINCT FROM target_order THEN
+        UPDATE orders SET total_estimate = (
+            SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = source_order
+        ) WHERE id = source_order;
+    END IF;
     RETURN NULL;    -- AFTER trigger — אין צורך בערך
 END;
 $$;
