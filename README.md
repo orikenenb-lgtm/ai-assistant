@@ -50,4 +50,4 @@ cd frontend && npm run build
 - הרשאות בשתי שכבות: RLS ב-Supabase + dependencies ב-FastAPI.
 - Dry-run תמיד לפני כתיבה ל-Rivhit; כתיבת production רק באישור מפורש.
 
-פירוט מלא: [docs/architecture.md](docs/architecture.md)
+פירוט מלא: [docs/architecture.md](docs/architecture.md) · [מדריך deploy](docs/deployment.md) · [סיכום אבטחה](docs/security.md)
