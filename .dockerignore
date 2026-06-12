@@ -1,0 +1,8 @@
+# רשימה לבנה: ל-build context של הבקנד נכנס רק מה שה-Dockerfile צריך.
+# כך frontend/, סודות (.env) ו-node_modules לעולם לא נשלחים ל-Docker daemon.
+*
+!backend/app/
+!backend/requirements.txt
+**/__pycache__
+**/*.pyc
+**/.env
