@@ -20,7 +20,9 @@
 ## שלב 2 — Railway (בקנד)
 
 1. פתח פרויקט ב-[railway.app](https://railway.app) → Deploy from GitHub repo.
-2. **Settings → Root Directory**: `backend`  (קובץ `railway.toml` כבר שם — כולל health check).
+2. **אין צורך בהגדרות build** — `railway.json` בשורש הריפו מפנה את Railway ל-`backend/Dockerfile`,
+   שבונה את הבקנד בלבד (כולל health check על `/health` והאזנה ל-`$PORT`).
+   השאר את Root Directory ריק (ברירת המחדל). הפרונט נפרס בנפרד ב-Vercel (שלב 3).
 3. **Variables** — הגדר:
 
    | משתנה | ערך |
