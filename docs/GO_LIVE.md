@@ -20,6 +20,10 @@
 
 ## שלב 2 — Railway (בקנד) — משתני סביבה
 
+> ⚠️ **לפני הכל — ודא ש-Railway מחובר ל-repo הנכון!**
+> ב-Railway → השירות → **Settings → Source** → ה-repo חייב להיות **`ai-assistant`** (ענף `main`).
+> אם כתוב שם `kerem-orders` (repo ריק) — ה-build ייכשל תמיד. החלף ל-`ai-assistant`.
+
 ב-Railway → השירות → **Variables** → הגדר (Raw Editor מאפשר הדבקה בבת אחת):
 
 | משתנה | ערך |
@@ -40,13 +44,13 @@
 
 ## שלב 3 — Vercel (האתר) — הכי קריטי לבעיה הנוכחית
 
-ב-Vercel → הפרויקט → **Settings → Environment Variables** → הגדר:
+ב-Vercel → הפרויקט → **Settings → Environment Variables** → הגדר משתנה **אחד** בלבד:
 
 | משתנה | ערך |
 |--------|-----|
 | `VITE_API_URL` | הכתובת המלאה של Railway, למשל `https://xxx.up.railway.app` — **בלי `/` בסוף** |
-| `VITE_SUPABASE_URL` | מ-Supabase שלב 1 |
-| `VITE_SUPABASE_ANON_KEY` | מ-Supabase שלב 1 (anon בלבד!) |
+
+(הפרונט לא צריך מפתחות Supabase — הכל עובר דרך הבקנד.)
 
 ⚠️ **חובה אחרי זה: Deployments → ... → Redeploy.**
 ‏Vite "צורב" את `VITE_API_URL` בזמן הבנייה — בלי Redeploy השינוי לא נכנס, וזה הגורם הכי שכיח ל"אין חיבור לשרת".
