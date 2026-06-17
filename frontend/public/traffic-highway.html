@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>🛣️ כביש התעבורה — Network Traffic Highway</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: rgba(18, 24, 42, 0.82);
+    --border: rgba(120, 150, 220, 0.18);
+    --text: #e7ecf6;
+    --muted: #93a0bd;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+  }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .overlay {
+    position: fixed; inset: 0; pointer-events: none;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 18px;
+  }
+  .topbar { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,.35);
+  }
+  .title { font-size: 18px; font-weight: 800; letter-spacing: .2px; }
+  .title small { display:block; font-weight: 500; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+  .stats { display: flex; gap: 18px; }
+  .stat { text-align: center; min-width: 70px; }
+  .stat .v { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 11px; color: var(--muted); }
+
+  .legend { display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 8px 18px; max-width: 360px; }
+  .lrow { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; user-select: none; transition: opacity .15s; }
+  .lrow.off { opacity: .35; }
+  .dot { width: 14px; height: 14px; border-radius: 4px; flex: 0 0 auto; box-shadow: 0 0 10px currentColor; }
+  .lname { font-weight: 600; }
+  .lrate { color: var(--muted); margin-inline-start: auto; font-variant-numeric: tabular-nums; font-size: 12px; }
+
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  button.ctrl {
+    pointer-events: auto;
+    background: rgba(80,110,200,.18);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background .15s, transform .05s;
+  }
+  button.ctrl:hover { background: rgba(80,110,200,.32); }
+  button.ctrl:active { transform: scale(.97); }
+  .slider { display:flex; align-items:center; gap:8px; pointer-events:auto; font-size:12px; color:var(--muted); }
+  input[type=range] { accent-color: #6f8cff; }
+  .hint { font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div id="stage"><canvas id="c"></canvas></div>
+
+  <div class="overlay">
+    <div class="topbar">
+      <div class="card">
+        <div class="title">🛣️ כביש התעבורה
+          <small>כל מכונית = חבילת מידע אחת שעוברת ברשת</small>
+        </div>
+      </div>
+      <div class="card stats">
+        <div class="stat"><div class="v" id="sPackets">0</div><div class="l">חבילות / שנייה</div></div>
+        <div class="stat"><div class="v" id="sActive">0</div><div class="l">על הכביש</div></div>
+        <div class="stat"><div class="v" id="sTotal">0</div><div class="l">סה״כ עברו</div></div>
+      </div>
+    </div>
+
+    <div class="topbar" style="align-items:flex-end;">
+      <div class="card">
+        <div class="legend" id="legend"></div>
+        <div class="hint" style="margin-top:10px;">לחיצה על סוג תעבורה מסתירה/מציגה אותו על הכביש</div>
+      </div>
+      <div class="card controls">
+        <button class="ctrl" id="btnPause">⏸️ עצור</button>
+        <button class="ctrl" id="btnBurst">⚡ Burst תעבורה</button>
+        <div class="slider">
+          <span>עומס</span>
+          <input type="range" id="load" min="0.2" max="3" step="0.1" value="1" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  // --- סוגי תעבורה (כל אחד = "מסלול" בכביש) ---
+  const TYPES = [
+    { key: "HTTPS", name: "HTTPS · גלישה מאובטחת", color: "#4ade80", weight: 9,  speed: 1.0 },
+    { key: "VIDEO", name: "Streaming · וידאו",      color: "#f472b6", weight: 7,  speed: 0.85, big: true },
+    { key: "DNS",   name: "DNS · תרגום שמות",       color: "#fbbf24", weight: 5,  speed: 1.6, small: true },
+    { key: "GAME",  name: "Gaming · משחקים",        color: "#a78bfa", weight: 4,  speed: 1.8, small: true },
+    { key: "EMAIL", name: "Email · דוא״ל",          color: "#60a5fa", weight: 3,  speed: 0.9 },
+    { key: "VOIP",  name: "VoIP · שיחות קול",       color: "#22d3ee", weight: 3,  speed: 1.3, small: true },
+    { key: "FILE",  name: "File · העברת קבצים",     color: "#fb923c", weight: 4,  speed: 0.6, big: true },
+    { key: "OTHER", name: "Other · שונות",          color: "#94a3b8", weight: 2,  speed: 1.1 },
+  ];
+  const enabled = Object.fromEntries(TYPES.map(t => [t.key, true]));
+
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  let W = 0, H = 0, DPR = 1;
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // --- מסלולים (lanes) ---
+  function lanes() {
+    const n = TYPES.length;
+    const top = H * 0.16, bottom = H * 0.92;
+    const span = bottom - top;
+    const gap = span / n;
+    return TYPES.map((t, i) => ({ ...t, y: top + gap * (i + 0.5), h: gap }));
+  }
+  let LANES = lanes();
+
+  // --- מכוניות (חבילות) ---
+  const cars = [];
+  let total = 0;
+  let packetsThisSec = 0, packetsPerSec = 0;
+  let paused = false;
+  let loadMul = 1;
+
+  const totalWeight = TYPES.reduce((s, t) => s + t.weight, 0);
+
+  function pickType() {
+    let r = Math.random() * totalWeight;
+    for (const t of TYPES) { if ((r -= t.weight) <= 0) return t; }
+    return TYPES[0];
+  }
+
+  function spawn(type) {
+    const lane = LANES.find(l => l.key === type.key);
+    if (!lane || !enabled[type.key]) return;
+    const dir = 1; // נע ימינה -> שמאלה (RTL feel) או הפוך; נשאיר משמאל לימין
+    const baseSpeed = (110 + Math.random() * 60) * type.speed;
+    let w = 30, h = 16;
+    if (type.big)   { w = 52; h = 22; }
+    if (type.small) { w = 20; h = 13; }
+    cars.push({
+      type, color: type.color,
+      x: -w - 10,
+      y: lane.y + (Math.random() - 0.5) * (lane.h * 0.35),
+      w, h,
+      speed: baseSpeed,
+      wob: Math.random() * Math.PI * 2,
+    });
+    total++; packetsThisSec++;
+  }
+
+  // קצב הופעה לכל סוג, מצטבר
+  const acc = Object.fromEntries(TYPES.map(t => [t.key, 0]));
+
+  let last = performance.now();
+  let secTimer = 0;
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    if (!paused) {
+      // spawn לפי משקל/עומס
+      for (const t of TYPES) {
+        if (!enabled[t.key]) continue;
+        const rate = (t.weight * 0.45) * loadMul; // חבילות לשנייה
+        acc[t.key] += rate * dt;
+        while (acc[t.key] >= 1) { acc[t.key] -= 1; spawn(t); }
+      }
+      // עדכון תנועה
+      for (let i = cars.length - 1; i >= 0; i--) {
+        const c = cars[i];
+        c.x += c.speed * dt;
+        c.wob += dt * 6;
+        if (c.x > W + 60) cars.splice(i, 1);
+      }
+      secTimer += dt;
+      if (secTimer >= 1) { packetsPerSec = packetsThisSec; packetsThisSec = 0; secTimer -= 1; }
+    }
+
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function draw() {
+    // רקע מדורג
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#0a0e1a");
+    g.addColorStop(1, "#070a14");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // מסלולים
+    for (let i = 0; i < LANES.length; i++) {
+      const lane = LANES[i];
+      if (!enabled[lane.key]) continue;
+      const top = lane.y - lane.h / 2;
+      // רצועת מסלול
+      ctx.fillStyle = i % 2 === 0 ? "rgba(255,255,255,0.012)" : "rgba(255,255,255,0.028)";
+      ctx.fillRect(0, top, W, lane.h);
+
+      // קו מקווקו אמצעי בצבע הסוג
+      ctx.save();
+      ctx.strokeStyle = lane.color;
+      ctx.globalAlpha = 0.18;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([14, 18]);
+      ctx.lineDashOffset = -(performance.now() / 22) % 32;
+      ctx.beginPath();
+      ctx.moveTo(0, lane.y);
+      ctx.lineTo(W, lane.y);
+      ctx.stroke();
+      ctx.restore();
+
+      // תווית מסלול בצד
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = lane.color;
+      ctx.font = "600 12px ui-sans-serif, system-ui";
+      ctx.textAlign = "left";
+      ctx.fillText(lane.key, 12, top + 16);
+      ctx.restore();
+    }
+
+    // מכוניות
+    for (const c of cars) {
+      const yy = c.y + Math.sin(c.wob) * 1.2;
+      ctx.save();
+      // זוהר
+      ctx.shadowColor = c.color;
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = c.color;
+      roundRect(c.x, yy - c.h / 2, c.w, c.h, 5);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // "חלון" בהיר
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      roundRect(c.x + c.w * 0.55, yy - c.h * 0.28, c.w * 0.3, c.h * 0.56, 2);
+      ctx.fill();
+      // פנס אחורי קטן
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.fillRect(c.x + c.w - 3, yy - 2, 2, 4);
+      ctx.restore();
+    }
+
+    // עדכון מונים
+    sPackets.textContent = packetsPerSec;
+    sActive.textContent = cars.length;
+    sTotal.textContent = total.toLocaleString("he-IL");
+  }
+
+  // --- UI ---
+  const sPackets = document.getElementById("sPackets");
+  const sActive  = document.getElementById("sActive");
+  const sTotal   = document.getElementById("sTotal");
+
+  const legend = document.getElementById("legend");
+  TYPES.forEach(t => {
+    const row = document.createElement("div");
+    row.className = "lrow";
+    row.innerHTML = `<span class="dot" style="background:${t.color};color:${t.color}"></span>
+                     <span class="lname">${t.name}</span>`;
+    row.addEventListener("click", () => {
+      enabled[t.key] = !enabled[t.key];
+      row.classList.toggle("off", !enabled[t.key]);
+    });
+    legend.appendChild(row);
+  });
+
+  document.getElementById("btnPause").addEventListener("click", (e) => {
+    paused = !paused;
+    e.target.textContent = paused ? "▶️ המשך" : "⏸️ עצור";
+    if (!paused) last = performance.now();
+  });
+
+  document.getElementById("btnBurst").addEventListener("click", () => {
+    // נחיל פתאומי של תעבורה — כמו עומס שיא
+    for (let i = 0; i < 120; i++) {
+      const t = pickType();
+      const lane = LANES.find(l => l.key === t.key);
+      if (!lane || !enabled[t.key]) continue;
+      setTimeout(() => spawn(t), i * 8);
+    }
+  });
+
+  document.getElementById("load").addEventListener("input", (e) => {
+    loadMul = parseFloat(e.target.value);
+  });
+
+  window.addEventListener("resize", () => { LANES = lanes(); });
+  LANES = lanes();
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
