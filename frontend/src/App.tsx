@@ -16,6 +16,8 @@ import { MyOrdersPage } from './pages/MyOrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SignupPage } from './pages/SignupPage'
+import { CRM_ENABLED } from './crm/config'
+import { CrmApp } from './crm/CrmApp'
 
 function App() {
   return (
@@ -35,6 +37,9 @@ function App() {
             <Route path="/admin/orders/:orderId" element={<AdminRoute><AdminOrderDetailPage /></AdminRoute>} />
             <Route path="/admin/customers" element={<AdminRoute><AdminCustomersPage /></AdminRoute>} />
             <Route path="/admin/sync" element={<AdminRoute><AdminSyncPage /></AdminRoute>} />
+            {CRM_ENABLED && (
+              <Route path="/crm/*" element={<AdminRoute><CrmApp /></AdminRoute>} />
+            )}
           </Routes>
         </CartProvider>
       </AuthProvider>

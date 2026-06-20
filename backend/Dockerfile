@@ -7,6 +7,8 @@ WORKDIR /fe
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
+# מפעיל את שכבת ה-CRM בבניית הפרודקשן (אדיטיבי; ברירת המחדל בקוד כבויה)
+ENV VITE_ENABLE_CRM=1
 RUN npm run build
 # התוצר: /fe/dist
 
