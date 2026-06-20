@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     sync_enabled: bool = False
     sync_interval_hours: int = 4
 
+    # שכבת CRM (אדיטיבי) — כבוי כברירת מחדל; ה-router נטען רק כשדלוק.
+    enable_crm: bool = True
+
     # התראות — יתמלא ב-Phase 5
     resend_api_key: str = ""
     email_from: str = "Kerem Orders <onboarding@resend.dev>"

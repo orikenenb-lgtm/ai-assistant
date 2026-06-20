@@ -59,6 +59,11 @@ app.include_router(admin_sync.router)
 app.include_router(products.router)
 app.include_router(orders.router)
 
+# שכבת CRM (אדיטיבי) — נטענת רק כשהדגל דלוק; אחרת המערכת זהה לחלוטין.
+if settings.enable_crm:
+    from app.routers import crm
+    app.include_router(crm.router)
+
 
 @app.get("/health")
 def health_check() -> dict:
