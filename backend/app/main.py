@@ -64,6 +64,11 @@ if settings.enable_crm:
     from app.routers import crm
     app.include_router(crm.router)
 
+# קטלוג רווחית (קריאה בלבד, אדיטיבי) — נטען רק כש-ENABLE_CATALOG דלוק.
+if settings.enable_catalog:
+    from app.routers import catalog
+    app.include_router(catalog.router)
+
 
 @app.get("/health")
 def health_check() -> dict:

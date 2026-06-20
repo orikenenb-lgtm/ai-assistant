@@ -38,7 +38,9 @@ class Settings(BaseSettings):
     # קטלוג רווחית (קריאה בלבד, אדיטיבי) — כבוי כברירת מחדל (staging).
     # טוקן נפרד לחלוטין מ-RIVHIT_API_TOKEN האמיתי: מתחילים על הדמו בלבד.
     enable_catalog: bool = False
-    catalog_rivhit_token: str = ""
+    # ברירת מחדל = טוקן הדמו הציבורי של רווחית (לא סוד; מופיע בתיעוד הרשמי).
+    # לטוקן האמיתי: מגדירים CATALOG_RIVHIT_TOKEN ב-env (גובר) — רק אחרי אישור.
+    catalog_rivhit_token: str = "DECD03E5-E35C-41E8-84F7-FBA2FB483928"
     catalog_rivhit_base_url: str = "https://api.rivhit.co.il/online/RivhitOnlineAPI.svc"
 
     # התראות — יתמלא ב-Phase 5

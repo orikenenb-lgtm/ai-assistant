@@ -43,12 +43,15 @@ def test_blocked_method_never_hits_network(monkeypatch):
         ro.call("Document.New", {"x": 1})
 
 
-def test_read_method_passes_gate_then_needs_token(monkeypatch):
-    """פקודת קריאה עוברת את השער; נעצרת רק בהיעדר טוקן (לא חסומה כ-write)."""
-    monkeypatch.setattr(ro.requests, "post", lambda *a, **k: (_ for _ in ()).throw(AssertionError("לא אמור להגיע לרשת בלי טוקן")))
-    # אין טוקן דמו בבדיקות → RivhitReadOnlyError (לא WriteAttempt)
-    with pytest.raises(ro.RivhitReadOnlyError):
-        ro.call("Item.List")
+def test_read_method_passes_gate(monkeypatch):
+    """פקודת קריאה עוברת את שער ה-whitelist ומגיעה לרשת (mocked) — לא נחסמת."""
+    class FakeResp:
+        def raise_for_status(self):
+            return None
+        def json(self):
+            return {"error_code": 0, "data": {"item_list": [{"item_id": 1}]}}
+    monkeypatch.setattr(ro.requests, "post", lambda *a, **k: FakeResp())
+    assert ro.call("Item.List") == {"item_list": [{"item_id": 1}]}
 
 
 def test_map_item_provisional():

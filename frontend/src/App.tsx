@@ -18,6 +18,9 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SignupPage } from './pages/SignupPage'
 import { CRM_ENABLED } from './crm/config'
 import { CrmApp } from './crm/CrmApp'
+import { CATALOG_ENABLED } from './catalog/config'
+import { StorePage } from './catalog/StorePage'
+import { AdminCatalogPage } from './catalog/AdminCatalogPage'
 
 function App() {
   return (
@@ -39,6 +42,12 @@ function App() {
             <Route path="/admin/sync" element={<AdminRoute><AdminSyncPage /></AdminRoute>} />
             {CRM_ENABLED && (
               <Route path="/crm/*" element={<AdminRoute><CrmApp /></AdminRoute>} />
+            )}
+            {CATALOG_ENABLED && (
+              <>
+                <Route path="/store" element={<ProtectedRoute><StorePage /></ProtectedRoute>} />
+                <Route path="/admin/catalog" element={<AdminRoute><AdminCatalogPage /></AdminRoute>} />
+              </>
             )}
           </Routes>
         </CartProvider>
