@@ -3,7 +3,14 @@
 import axios, { AxiosError } from 'axios'
 import type { InternalAxiosRequestConfig } from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+// כתובת הבקנד. אפשר תמיד לעקוף עם VITE_API_URL, אבל אם הוא חסר/שגוי —
+// בבנייה לפרודקשן ברירת המחדל היא ה-Railway של Kerem Orders (מונע את התקלה
+// החוזרת של "אין חיבור לשרת"); בפיתוח — localhost.
+const API_URL =
+  import.meta.env.VITE_API_URL ??
+  (import.meta.env.PROD
+    ? 'https://kerem-orders-production-142c.up.railway.app'
+    : 'http://localhost:8000')
 
 export const api = axios.create({ baseURL: API_URL })
 
