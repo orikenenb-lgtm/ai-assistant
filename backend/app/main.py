@@ -68,3 +68,32 @@ def health_check() -> dict:
         "service": "kerem-orders-api",
         "environment": settings.environment,
     }
+
+
+# ----- הגשת הפרונט (SPA) מאותו שרת -----
+# בפרודקשן ה-Dockerfile בונה את frontend/dist ומעתיק אותו ל-/app/static.
+# כך אותו דומיין מגיש גם את ה-API וגם את האתר — בלי CORS ובלי אירוח נפרד.
+# בבדיקות אין תיקיית static, ולכן ההגשה לא נרשמת וההתנהגות לא משתנה.
+import os  # noqa: E402
+
+from fastapi.responses import FileResponse  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+
+_STATIC_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
+)
+
+if os.path.isdir(_STATIC_DIR):
+    app.mount(
+        "/assets",
+        StaticFiles(directory=os.path.join(_STATIC_DIR, "assets")),
+        name="assets",
+    )
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_spa(full_path: str) -> FileResponse:
+        """כל נתיב שאינו API — מגיש קובץ סטטי אם קיים, אחרת index.html (ניתוב צד-לקוח)."""
+        candidate = os.path.join(_STATIC_DIR, full_path)
+        if full_path and os.path.isfile(candidate):
+            return FileResponse(candidate)
+        return FileResponse(os.path.join(_STATIC_DIR, "index.html"))
