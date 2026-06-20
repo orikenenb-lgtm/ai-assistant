@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     # שכבת CRM (אדיטיבי) — כבוי כברירת מחדל; ה-router נטען רק כשדלוק.
     enable_crm: bool = True
 
+    # קטלוג רווחית (קריאה בלבד, אדיטיבי) — כבוי כברירת מחדל (staging).
+    # טוקן נפרד לחלוטין מ-RIVHIT_API_TOKEN האמיתי: מתחילים על הדמו בלבד.
+    enable_catalog: bool = False
+    catalog_rivhit_token: str = ""
+    catalog_rivhit_base_url: str = "https://api.rivhit.co.il/online/RivhitOnlineAPI.svc"
+
     # התראות — יתמלא ב-Phase 5
     resend_api_key: str = ""
     email_from: str = "Kerem Orders <onboarding@resend.dev>"
