@@ -59,3 +59,12 @@ def test_map_item_provisional():
     out = ro.map_item({"item_id": 7, "item_name": "דובי", "sale_nis": 25.5, "quantity": 12})
     assert out["rivhit_item_id"] == 7 and out["name"] == "דובי"
     assert out["price"] == 25.5 and out["quantity"] == 12
+
+
+def test_map_item_coerces_bad_types():
+    """עמידות: ערכי מחיר/כמות לא-מספריים (אובייקט/מחרוזת) לא מפילים — הופכים ל-0."""
+    out = ro.map_item({"item_id": 9, "item_name": "x", "sale_nis": {"amount": 50}, "quantity": "אין"})
+    assert out["price"] == 0.0 and out["quantity"] == 0.0
+    # פריט ריק לגמרי לא מתרסק — שם ריק, מספרים 0
+    blank = ro.map_item({"item_id": 1})
+    assert blank["name"] == "" and blank["price"] == 0.0

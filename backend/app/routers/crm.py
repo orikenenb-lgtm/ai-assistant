@@ -88,9 +88,14 @@ def _parse_dt(value: Any) -> datetime | None:
     if not value:
         return None
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     except (ValueError, TypeError):
         return None
+    # תאריך ללא אזור-זמן (כמו DATE "2020-01-01") — מצמידים UTC כדי שחיסור
+    # מול now(tz-aware) לא יקרוס (offset-naive vs offset-aware).
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 def _month_key(value: Any) -> str:

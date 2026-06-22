@@ -79,11 +79,22 @@ def map_item(raw: dict) -> dict:
             if raw.get(k) not in (None, ""):
                 return raw.get(k)
         return None
+
+    def num(v) -> float:
+        # רווחית עשויה להחזיר מספר, מחרוזת, או אובייקט — לא נותנים לזה להפיל סנכרון
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def text(v) -> str | None:
+        return v if isinstance(v, str) else (None if v is None else str(v))
+
     return {
         "rivhit_item_id": first("item_id", "item_part_num", "id"),
-        "name": first("item_name", "item_extended_description", "description") or "",
-        "price": first("sale_nis", "item_price", "price") or 0,
-        "quantity": first("quantity", "item_quantity", "stock") or 0,
-        "image_url": first("item_picture", "image_url", "picture"),
-        "category": first("group_name", "item_group_id", "category"),
+        "name": text(first("item_name", "item_extended_description", "description")) or "",
+        "price": num(first("sale_nis", "item_price", "price")),
+        "quantity": num(first("quantity", "item_quantity", "stock")),
+        "image_url": text(first("item_picture", "image_url", "picture")),
+        "category": text(first("group_name", "item_group_id", "category")),
     }

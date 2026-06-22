@@ -48,3 +48,10 @@ def sync(_: UserOut = Depends(require_admin)) -> dict:
         # רווחית לא זמינה/שגיאה — לא קורסים; ה-cache הקיים ממשיך להיות מוגש ב-GET
         logger.error("סנכרון קטלוג נכשל: %s", exc)
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+    except Exception as exc:
+        # כל כשל אחר (כתיבה ל-DB, נתון לא צפוי) — תשובה ברורה במקום 500; ה-cache נשמר
+        logger.exception("סנכרון קטלוג נכשל (כללי)")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"הסנכרון נכשל: {exc}",
+        ) from exc

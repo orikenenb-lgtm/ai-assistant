@@ -6,7 +6,7 @@ import { CrmThemeProvider, useTheme } from '../crm/design-system/theme'
 import { Badge, Card, EmptyState, Input, Select, Skeleton } from '../crm/design-system/ui'
 import { fetchCatalog, type CatalogProduct } from './api'
 
-const shekel = (n: number) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(n)
+const shekel = (n: number) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(Number.isFinite(n) ? n : 0)
 
 function ProductCard({ p }: { p: CatalogProduct }) {
   const inStock = Number(p.quantity) > 0
