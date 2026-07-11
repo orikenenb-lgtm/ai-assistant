@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Earth 3D — Interactive Globe</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #F4F1EC;      /* off-white default, overridden from CONFIG.colors.background */
+      overflow: hidden;
+    }
+    /* Center the canvas — only matters in COMPACT mode, harmless in full-screen */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #globeViz {
+      width: 100vw;
+      height: 100vh;
+    }
+    /* COMPACT = small square "loading indicator" variant */
+    body.compact #globeViz {
+      width: 200px;
+      height: 200px;
+    }
+    /* Route touch gestures (drag / pinch) to the canvas instead of scrolling the page */
+    #globeViz, #globeViz canvas {
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="globeViz"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* =====================================================================
+       CONFIG — the single place to tune everything.
+       Change colors / speeds / vortex / zoom / assets here and nowhere else.
+       ===================================================================== */
+    var CONFIG = {
+      // false = full-screen interactive globe (default)
+      // true  = centered 200x200 square "loading indicator" variant (spins, no interaction)
+      COMPACT: false,
+      compactSize: 200,
+      pixelRatioCap: 2,           // clamp devicePixelRatio for performance
+
+      colors: {
+        background: '#F4F1EC',    // off-white backdrop
+        borders:    '#ffffff',    // real country outlines (polygonStrokeColor)
+        atmosphere: '#3a86ff',    // colorful built-in atmosphere glow
+        specular:   '#5a5a5a'     // grey ocean specular tint
+      },
+
+      globe: {
+        bumpScale: 10,            // relief strength from the topology map
+        shininess: 15,            // ocean glint sharpness
+        polygonAltitude: 0.005,   // how far the border lines float above the surface
+        atmosphereAltitude: 0.25  // thickness of the atmosphere shell
+      },
+
+      clouds: {
+        altitude: 0.004,          // cloud shell radius factor: globeRadius * (1 + altitude)
+        opacity: 0.8,
+        rotationSpeed: -0.006     // degrees / frame, opposite direction to the globe
+      },
+
+      rotation: {
+        auto: true,
+        speed: 0.5,               // autoRotateSpeed
+        resumeDelay: 3000         // ms of inactivity before auto-rotate resumes
+      },
+
+      zoom: {
+        enabled: true,
+        min: 101,                 // closest distance (globe radius is 100 -> almost at surface)
+        max: 600,                 // farthest distance (full view)
+        damping: 0.1              // OrbitControls dampingFactor -> smooth feel
+      },
+
+      lights: {
+        ambient: 2.2,             // gentle fill light (tuned for three's physical lighting)
+        directional: 3.0,         // one key light from the side -> texture relief + ocean glint
+        direction: { x: 1, y: 0.4, z: 1 }
+      },
+
+      // Particle vortex that surrounds the globe (added to world.scene())
+      vortex: {
+        count: 600,               // number of particles
+        innerRadius: 1.30,        // factor of globe radius (where the disc starts)
+        outerRadius: 2.60,        // factor of globe radius (where the disc ends)
+        thickness: 0.12,          // factor of globe radius (vertical scatter of the disc)
+        tilt: 1.15,               // disc tilt in radians
+        arms: 3,                  // number of spiral arms
+        swirl: 1.6,               // how many turns the spiral makes
+        size: 3.5,                // particle size (world units)
+        opacity: 0.85,
+        speed: 0.12,              // degrees / frame, slow rotation around the disc axis
+        blending: 'additive',     // 'additive' (glow, pops on darker bg) | 'normal'
+        colorInner: '#2bd6c6',    // turquoise
+        colorMid:   '#7b5cff',    // purple
+        colorOuter: '#ff5fa2'     // pink
+      },
+
+      // Asset URLs. First entry = primary, following entries = fallback mirrors.
+      assets: {
+        // NOTE: the latest `three` ships ONLY ESM/CJS (the UMD build was removed in r160),
+        // so a bare <script src="https://unpkg.com/three"> would NOT create the global
+        // `THREE` this app relies on (and would log a console error). We therefore pin to
+        // the last UMD-capable line (0.158.0) — still loaded before globe.gl, as required —
+        // with a jsDelivr mirror as fallback.
+        three: [
+          'https://unpkg.com/three@0.158.0/build/three.min.js',
+          'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js'
+        ],
+        globeGl: [
+          'https://unpkg.com/globe.gl',
+          'https://cdn.jsdelivr.net/npm/globe.gl/dist/globe.gl.min.js'
+        ],
+        earthTexture: [
+          'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
+          'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg'
+        ],
+        bumpTexture: [
+          'https://unpkg.com/three-globe/example/img/earth-topology.png',
+          'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png'
+        ],
+        waterTexture: [
+          'https://unpkg.com/three-globe/example/img/earth-water.png',
+          'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-water.png'
+        ],
+        cloudsTexture: [
+          'https://raw.githubusercontent.com/turban/webgl-earth/master/images/fair_clouds_4k.png'
+        ],
+        countriesGeoJson: [
+          'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'
+        ]
+      }
+    };
+
+    /* ---- early page setup (background + compact class) -------------------- */
+    document.documentElement.style.background = CONFIG.colors.background;
+    document.body.style.background = CONFIG.colors.background;
+    if (CONFIG.COMPACT) document.body.classList.add('compact');
+
+    var elViz = document.getElementById('globeViz');
+
+    function getSize() {
+      if (CONFIG.COMPACT) return { w: CONFIG.compactSize, h: CONFIG.compactSize };
+      return { w: window.innerWidth, h: window.innerHeight };
+    }
+
+    function deg2rad(d) { return d * Math.PI / 180; }
+
+    /* ---------------------------------------------------------------------
+       Robust sequential script loader.
+       Tries each URL in order; treats "loaded but expected global missing"
+       as a failure and moves to the next mirror. Never throws to the console.
+       --------------------------------------------------------------------- */
+    function loadScript(urls, isReady) {
+      return new Promise(function (resolve, reject) {
+        var i = 0;
+        (function next() {
+          if (i >= urls.length) { reject(new Error('All sources failed')); return; }
+          var url = urls[i++];
+          var s = document.createElement('script');
+          s.src = url;
+          s.async = false;
+          s.onload = function () {
+            if (!isReady || isReady()) resolve(url);
+            else { if (s.parentNode) s.parentNode.removeChild(s); next(); }
+          };
+          s.onerror = function () { if (s.parentNode) s.parentNode.removeChild(s); next(); };
+          document.head.appendChild(s);
+        })();
+      });
+    }
+
+    /* ---------------------------------------------------------------------
+       Texture loader with CDN fallback. Graceful: if every mirror fails it
+       simply does nothing (the colorful globe still renders without it).
+       --------------------------------------------------------------------- */
+    function loadTexture(urls, onLoad, opts) {
+      opts = opts || {};
+      var loader = new THREE.TextureLoader();
+      loader.setCrossOrigin('anonymous');
+      var i = 0;
+      (function next() {
+        if (i >= urls.length) return;            // give up silently
+        var url = urls[i++];
+        loader.load(
+          url,
+          function (tex) {
+            try {
+              if (opts.srgb && ('colorSpace' in tex)) tex.colorSpace = THREE.SRGBColorSpace;
+              if (opts.anisotropy) tex.anisotropy = opts.anisotropy;
+              onLoad(tex);
+            } catch (e) { /* never surface to console in normal use */ }
+          },
+          undefined,
+          function () { next(); }                 // try the next mirror
+        );
+      })();
+    }
+
+    /* ---------------------------------------------------------------------
+       JSON fetch with fallback. Resolves to null on total failure so the
+       caller can simply skip the borders without any user-facing error.
+       --------------------------------------------------------------------- */
+    function fetchJSON(urls) {
+      var i = 0;
+      function attempt() {
+        if (i >= urls.length) return Promise.resolve(null);
+        var url = urls[i++];
+        return fetch(url).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        }).catch(function () { return attempt(); });
+      }
+      return attempt();
+    }
+
+    /* ---------------------------------------------------------------------
+       Procedural round, soft particle sprite (canvas -> texture).
+       Keeps the vortex fully self-contained (no external sprite asset).
+       --------------------------------------------------------------------- */
+    function makeParticleSprite() {
+      var c = document.createElement('canvas');
+      c.width = c.height = 64;
+      var g = c.getContext('2d');
+      var grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grd.addColorStop(0.00, 'rgba(255,255,255,1)');
+      grd.addColorStop(0.25, 'rgba(255,255,255,0.7)');
+      grd.addColorStop(1.00, 'rgba(255,255,255,0)');
+      g.fillStyle = grd;
+      g.fillRect(0, 0, 64, 64);
+      var tex = new THREE.CanvasTexture(c);
+      if ('colorSpace' in tex) tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    /* ===================================================================== */
+    function init() {
+      var size = getSize();
+
+      var world = Globe()(elViz)
+        .width(size.w)
+        .height(size.h)
+        .backgroundColor(CONFIG.colors.background)
+        .showGraticules(false)
+        .showAtmosphere(true)
+        .atmosphereColor(CONFIG.colors.atmosphere)
+        .atmosphereAltitude(CONFIG.globe.atmosphereAltitude);
+
+      var scene = world.scene();
+      var renderer = world.renderer();
+      var controls = world.controls();
+      var globeRadius = world.getGlobeRadius();
+
+      elViz.style.width = size.w + 'px';
+      elViz.style.height = size.h + 'px';
+
+      // Performance: clamp pixel ratio.
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, CONFIG.pixelRatioCap));
+
+      var cloudsMesh = null;
+      var vortexPoints = null;
+
+      /* ---- globe material: colorful texture + bump relief + ocean shine ---- */
+      try {
+        var gm = world.globeMaterial();
+        if (gm) {
+          gm.bumpScale = CONFIG.globe.bumpScale;
+          gm.shininess = CONFIG.globe.shininess;
+          if (gm.specular && gm.specular.set) gm.specular.set(CONFIG.colors.specular);
+          gm.needsUpdate = true;
+
+          // Loaded manually (instead of .globeImageUrl) so we control the CDN fallback:
+          // the colorful globe must still appear if unpkg is down (-> jsDelivr mirror).
+          loadTexture(CONFIG.assets.earthTexture, function (tex) {
+            gm.map = tex; gm.needsUpdate = true;
+          }, { srgb: true, anisotropy: 4 });
+
+          loadTexture(CONFIG.assets.bumpTexture, function (tex) {
+            gm.bumpMap = tex; gm.needsUpdate = true;
+          });
+
+          loadTexture(CONFIG.assets.waterTexture, function (tex) {
+            gm.specularMap = tex; gm.needsUpdate = true;
+          });
+        }
+      } catch (e) { /* keep going — a plain globe is better than a crash */ }
+
+      /* ---- lighting: gentle ambient + one directional key light from the side ---- */
+      try {
+        var amb = new THREE.AmbientLight(0xffffff, CONFIG.lights.ambient);
+        var dir = new THREE.DirectionalLight(0xffffff, CONFIG.lights.directional);
+        dir.position.set(CONFIG.lights.direction.x, CONFIG.lights.direction.y, CONFIG.lights.direction.z);
+
+        if (typeof world.lights === 'function') {
+          world.lights([amb, dir]);
+        } else {
+          // Replace globe.gl's default lights so we end up with exactly these two.
+          var toRemove = [];
+          scene.traverse(function (o) { if (o.isLight) toRemove.push(o); });
+          toRemove.forEach(function (l) { if (l.parent) l.parent.remove(l); });
+          scene.add(amb);
+          scene.add(dir);
+        }
+      } catch (e) { /* default globe.gl lights remain — still visible */ }
+
+      /* ---- controls: drag = rotate, wheel/pinch = zoom, smooth damping ---- */
+      controls.enableZoom = CONFIG.zoom.enabled;
+      controls.minDistance = CONFIG.zoom.min;
+      controls.maxDistance = CONFIG.zoom.max;
+      controls.enableDamping = true;
+      controls.dampingFactor = CONFIG.zoom.damping;
+      controls.enablePan = false;                       // keep the globe centered
+      controls.autoRotate = CONFIG.rotation.auto;
+      controls.autoRotateSpeed = CONFIG.rotation.speed;
+      controls.enabled = !CONFIG.COMPACT;               // compact variant = non-interactive loader
+
+      // Initial framing.
+      try { world.pointOfView({ lat: 18, lng: 10, altitude: 2.4 }); } catch (e) {}
+
+      /* ---- pause auto-rotate on interaction, resume after inactivity ---- */
+      if (!CONFIG.COMPACT && CONFIG.rotation.auto) {
+        var resumeTimer = null;
+        var pause = function () {
+          controls.autoRotate = false;
+          if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+        };
+        var scheduleResume = function () {
+          if (resumeTimer) clearTimeout(resumeTimer);
+          resumeTimer = setTimeout(function () { controls.autoRotate = true; }, CONFIG.rotation.resumeDelay);
+        };
+        controls.addEventListener('start', pause);
+        controls.addEventListener('end', scheduleResume);
+        // Wheel + touch are covered explicitly so zoom always pauses/resumes too.
+        elViz.addEventListener('wheel', function () { pause(); scheduleResume(); }, { passive: true });
+        elViz.addEventListener('touchstart', pause, { passive: true });
+        elViz.addEventListener('touchend', scheduleResume, { passive: true });
+      }
+
+      /* ---- clouds layer (independent, opposite-direction slow rotation) ---- */
+      loadTexture(CONFIG.assets.cloudsTexture, function (tex) {
+        try {
+          var cloudsMat = new THREE.MeshPhongMaterial({
+            map: tex,
+            transparent: true,
+            opacity: CONFIG.clouds.opacity,
+            depthWrite: false
+          });
+          var cloudsGeo = new THREE.SphereGeometry(globeRadius * (1 + CONFIG.clouds.altitude), 64, 48);
+          cloudsMesh = new THREE.Mesh(cloudsGeo, cloudsMat);
+          scene.add(cloudsMesh);
+        } catch (e) { /* globe stays fine without clouds */ }
+      }, { srgb: true });
+
+      /* ---- particle vortex surrounding the globe ---- */
+      try {
+        var v = CONFIG.vortex;
+        var N = v.count;
+        var positions = new Float32Array(N * 3);
+        var colors = new Float32Array(N * 3);
+        var cIn = new THREE.Color(v.colorInner);
+        var cMid = new THREE.Color(v.colorMid);
+        var cOut = new THREE.Color(v.colorOuter);
+        var tmp = new THREE.Color();
+        var rIn = globeRadius * v.innerRadius;
+        var rOut = globeRadius * v.outerRadius;
+        var thick = globeRadius * v.thickness;
+
+        for (var i = 0; i < N; i++) {
+          var t = Math.sqrt(Math.random());                 // bias toward the outer edge -> disc look
+          var r = rIn + (rOut - rIn) * t;
+          var branch = (i % v.arms) / v.arms * Math.PI * 2;  // which spiral arm
+          var spin = (r / rOut) * v.swirl * Math.PI * 2;     // spiral twist with radius
+          var ang = branch + spin + (Math.random() - 0.5) * 0.8;
+
+          positions[i * 3]     = Math.cos(ang) * r;
+          positions[i * 3 + 1] = (Math.random() - 0.5) * thick;
+          positions[i * 3 + 2] = Math.sin(ang) * r;
+
+          // 3-stop gradient (turquoise -> purple -> pink) by normalized radius.
+          var f = (r - rIn) / (rOut - rIn);
+          if (f < 0.5) tmp.copy(cIn).lerp(cMid, f / 0.5);
+          else tmp.copy(cMid).lerp(cOut, (f - 0.5) / 0.5);
+          colors[i * 3]     = tmp.r;
+          colors[i * 3 + 1] = tmp.g;
+          colors[i * 3 + 2] = tmp.b;
+        }
+
+        var geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        var mat = new THREE.PointsMaterial({
+          size: v.size,
+          map: makeParticleSprite(),
+          vertexColors: true,
+          transparent: true,
+          opacity: v.opacity,
+          depthWrite: false,
+          blending: (v.blending === 'normal') ? THREE.NormalBlending : THREE.AdditiveBlending,
+          sizeAttenuation: true
+        });
+
+        vortexPoints = new THREE.Points(geo, mat);
+        var vortexGroup = new THREE.Group();
+        vortexGroup.rotation.x = v.tilt;       // tilt the whole disc
+        vortexGroup.add(vortexPoints);
+        scene.add(vortexGroup);
+      } catch (e) { /* globe stays fine without the vortex */ }
+
+      /* ---- real country borders (transparent fill, white outline) ---- */
+      fetchJSON(CONFIG.assets.countriesGeoJson).then(function (geo) {
+        if (!geo || !geo.features) return;     // no borders, no error
+        try {
+          world
+            .polygonsData(geo.features)
+            .polygonCapColor(function () { return 'rgba(0,0,0,0)'; })
+            .polygonSideColor(function () { return 'rgba(0,0,0,0)'; })
+            .polygonStrokeColor(function () { return CONFIG.colors.borders; })
+            .polygonAltitude(CONFIG.globe.polygonAltitude);
+        } catch (e) { /* ignore */ }
+      });
+
+      /* ---- animation: only mutate rotations; globe.gl owns the render loop ---- */
+      var cloudsStep = deg2rad(CONFIG.clouds.rotationSpeed);
+      var vortexStep = deg2rad(CONFIG.vortex.speed);
+      (function animate() {
+        requestAnimationFrame(animate);
+        if (cloudsMesh) cloudsMesh.rotation.y += cloudsStep;
+        if (vortexPoints) vortexPoints.rotation.y += vortexStep;
+      })();
+
+      /* ---- responsiveness ---- */
+      window.addEventListener('resize', function () {
+        if (CONFIG.COMPACT) return;            // compact size is fixed
+        var s = getSize();
+        elViz.style.width = s.w + 'px';
+        elViz.style.height = s.h + 'px';
+        world.width(s.w).height(s.h);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, CONFIG.pixelRatioCap));
+      });
+    }
+
+    /* ---- bootstrap: load three FIRST, then globe.gl, then init ---- */
+    loadScript(CONFIG.assets.three, function () { return typeof window.THREE !== 'undefined'; })
+      .then(function () {
+        return loadScript(CONFIG.assets.globeGl, function () { return typeof window.Globe !== 'undefined'; });
+      })
+      .then(function () { init(); })
+      .catch(function (e) {
+        if (window.console && console.warn) {
+          console.warn('Globe libraries could not be loaded:', e && e.message);
+        }
+      });
+  })();
+  </script>
+</body>
+</html>
