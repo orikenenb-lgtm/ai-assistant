@@ -8,8 +8,8 @@ const base =
   "group inline-flex min-h-11 select-none items-center justify-center gap-3 rounded-full font-normal tracking-wide whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform] duration-300 ease-[var(--ease-premium)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
-  /** Solid light pill; picks up the iridescent gradient on hover */
-  primary: "bg-cream text-night hover:bg-iridescent",
+  /** Solid pink pill (the lead color); picks up the full iridescent gradient on hover */
+  primary: "bg-orchid text-night shadow-[0_18px_50px_-18px_rgb(233_139_196/0.7)] hover:bg-iridescent",
   /** Hairline outline */
   secondary: "border border-cream/20 text-cream hover:border-cream/60",
 };

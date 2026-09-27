@@ -21,7 +21,7 @@ export function GallerySection() {
             <GalleryGrid items={galleryItems} />
           ) : (
             <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-line bg-night px-6 py-16 text-center">
-              <ImageOff aria-hidden className="h-8 w-8 text-violet" strokeWidth={1.4} />
+              <ImageOff aria-hidden className="h-8 w-8 text-orchid" strokeWidth={1.4} />
               <p className="text-mist">{copy.empty}</p>
             </div>
           )}

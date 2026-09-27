@@ -12,7 +12,7 @@
 
   /* Iridescent accents (all AA as text on night) */
   --color-violet: #9b7bff; /* 6.3:1 */
-  --color-orchid: #e98bc4; /* 8.4:1 */
+  --color-orchid: #e98bc4; /* 8.4:1 — the lead accent */
   --color-ice: #8fd3f4; /* 12:1 */
 
   /* Text */
@@ -45,16 +45,16 @@
   }
 }
 
-/* The signature gradient — violet → orchid → ice */
+/* The signature gradient — pink leads, violet and ice as undertones */
 @utility text-iridescent {
-  background: linear-gradient(100deg, var(--color-violet), var(--color-orchid) 50%, var(--color-ice));
+  background: linear-gradient(100deg, var(--color-orchid) 0%, var(--color-orchid) 45%, var(--color-violet) 80%, var(--color-ice));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 @utility bg-iridescent {
-  background: linear-gradient(100deg, var(--color-violet), var(--color-orchid) 50%, var(--color-ice));
+  background: linear-gradient(100deg, var(--color-orchid) 0%, var(--color-orchid) 45%, var(--color-violet) 80%, var(--color-ice));
 }
 
 /* ───────────────────────── Base ───────────────────────── */
@@ -81,12 +81,12 @@
   }
 
   ::selection {
-    background: var(--color-violet);
+    background: var(--color-orchid);
     color: var(--color-night);
   }
 
   :focus-visible {
-    outline: 1.5px solid var(--color-ice);
+    outline: 1.5px solid var(--color-orchid);
     outline-offset: 3px;
     border-radius: 4px;
   }

@@ -29,7 +29,7 @@ export function TestimonialsSection() {
           </ul>
         ) : (
           <div className="mx-auto mt-12 flex max-w-md flex-col items-center gap-4 rounded-2xl border border-line bg-night px-6 py-14 text-center">
-            <MessageSquareHeart aria-hidden className="h-8 w-8 text-violet" strokeWidth={1.4} />
+            <MessageSquareHeart aria-hidden className="h-8 w-8 text-orchid" strokeWidth={1.4} />
             <p className="text-mist">{copy.description}</p>
           </div>
         )}

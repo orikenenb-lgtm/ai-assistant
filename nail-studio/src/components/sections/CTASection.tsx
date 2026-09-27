@@ -12,7 +12,7 @@ export function CTASection() {
     <section id={SECTION_IDS.booking} aria-labelledby="cta-title" className="relative isolate overflow-hidden border-y border-line bg-coal">
       {/* One large, slow iridescent glow — the page's single loud moment */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute top-1/2 left-1/2 h-[80vmax] w-[80vmax] -translate-x-1/2 -translate-y-1/2 animate-aura rounded-full bg-[conic-gradient(from_90deg,rgb(155_123_255/0.28),rgb(233_139_196/0.22),rgb(143_211_244/0.22),rgb(155_123_255/0.28))] blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 h-[80vmax] w-[80vmax] -translate-x-1/2 -translate-y-1/2 animate-aura rounded-full bg-[conic-gradient(from_90deg,rgb(233_139_196/0.34),rgb(233_139_196/0.26),rgb(155_123_255/0.2),rgb(143_211_244/0.14),rgb(233_139_196/0.34))] blur-3xl" />
       </div>
       <Container size="narrow" className="py-24 text-center sm:py-32 lg:py-40">
         <Reveal className="flex flex-col items-center gap-8">

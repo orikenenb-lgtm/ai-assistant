@@ -14,9 +14,9 @@ export function HeroSection() {
     <section id={SECTION_IDS.home} aria-labelledby="hero-title" className="relative isolate overflow-hidden">
       {/* Ambient iridescent light */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute top-[-25%] end-[-15%] h-[60vmax] w-[60vmax] rounded-full bg-[radial-gradient(closest-side,rgb(155_123_255/0.22),transparent)]" />
-        <div className="absolute top-[20%] start-[-25%] h-[50vmax] w-[50vmax] rounded-full bg-[radial-gradient(closest-side,rgb(143_211_244/0.12),transparent)]" />
-        <div className="absolute bottom-[-30%] end-[20%] h-[45vmax] w-[45vmax] rounded-full bg-[radial-gradient(closest-side,rgb(233_139_196/0.12),transparent)]" />
+        <div className="absolute top-[-25%] end-[-15%] h-[65vmax] w-[65vmax] rounded-full bg-[radial-gradient(closest-side,rgb(233_139_196/0.26),transparent)]" />
+        <div className="absolute top-[25%] start-[-25%] h-[50vmax] w-[50vmax] rounded-full bg-[radial-gradient(closest-side,rgb(155_123_255/0.14),transparent)]" />
+        <div className="absolute bottom-[-30%] end-[20%] h-[40vmax] w-[40vmax] rounded-full bg-[radial-gradient(closest-side,rgb(143_211_244/0.08),transparent)]" />
       </div>
 
       <Container className="grid items-center gap-16 pt-12 pb-20 sm:pt-16 lg:grid-cols-[1.2fr_1fr] lg:gap-20 lg:pt-20 lg:pb-32">
@@ -53,7 +53,7 @@ export function HeroSection() {
           </div>
           <figcaption className="mt-5 flex items-center justify-between text-sm text-mist">
             <span dir="ltr" className="text-xs tracking-[0.18em]">AURA CHROME</span>
-            <span>גוונים: סגול · ורוד · תכלת</span>
+            <span>גוונים: ורוד · סגול · תכלת</span>
           </figcaption>
         </figure>
       </Container>
