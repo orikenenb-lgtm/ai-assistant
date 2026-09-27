@@ -5,32 +5,27 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 
+/** Full-bleed cherry block — the loudest moment on the page. */
 export function CTASection() {
   const copy = sectionContent.cta;
   const booking = getBookingLink();
   return (
-    <section id={SECTION_IDS.booking} aria-labelledby="cta-title" className="bg-ivory py-20 sm:py-24">
-      <Container>
-        <Reveal>
-          <div className="relative isolate overflow-hidden rounded-[2rem] bg-ink px-6 py-16 text-center sm:px-12 sm:py-20 lg:py-24">
-            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-              <div className="absolute -top-24 start-1/4 h-72 w-72 rounded-full bg-rose-400/25 blur-3xl" />
-              <div className="absolute -bottom-32 end-1/4 h-80 w-80 rounded-full bg-nude/20 blur-3xl" />
-              <div className="absolute inset-4 rounded-[1.5rem] border border-ivory/10 sm:inset-6" />
-            </div>
-            <h2 id="cta-title" className="mx-auto max-w-2xl font-display text-4xl leading-tight font-medium text-balance text-ivory sm:text-5xl lg:text-6xl">
-              {copy.title}
-            </h2>
-            <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-pretty text-ivory/80">{copy.description}</p>
-            <div className="mt-10 flex flex-col items-stretch justify-center gap-3 min-[420px]:flex-row min-[420px]:items-center">
-              <Button href={booking.href} external={booking.external} variant="light" size="lg">
-                {copy.primary}
-                <ArrowLeft aria-hidden className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" strokeWidth={1.8} />
-              </Button>
-              <Button href={anchor(SECTION_IDS.contact)} variant="outline-light" size="lg">
-                {copy.secondary}
-              </Button>
-            </div>
+    <section id={SECTION_IDS.booking} aria-labelledby="cta-title" className="grain relative overflow-hidden bg-cherry text-night">
+      <div aria-hidden className="pointer-events-none absolute -end-24 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgb(255_255_255/0.35),transparent)]" />
+      <Container className="relative py-20 sm:py-28 lg:py-32">
+        <Reveal className="flex flex-col items-start gap-8">
+          <h2 id="cta-title" className="max-w-4xl font-display text-7xl leading-[0.85] font-bold text-balance sm:text-8xl lg:text-[10rem]">
+            {copy.title}
+          </h2>
+          <p className="max-w-xl text-xl leading-relaxed font-medium text-pretty text-night/80">{copy.description}</p>
+          <div className="flex w-full flex-col gap-3 min-[440px]:w-auto min-[440px]:flex-row">
+            <Button href={booking.href} external={booking.external} variant="dark" size="lg">
+              {copy.primary}
+              <ArrowLeft aria-hidden className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1" strokeWidth={2.2} />
+            </Button>
+            <Button href={anchor(SECTION_IDS.contact)} variant="outline-dark" size="lg">
+              {copy.secondary}
+            </Button>
           </div>
         </Reveal>
       </Container>

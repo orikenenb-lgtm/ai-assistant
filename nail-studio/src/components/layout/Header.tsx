@@ -29,8 +29,8 @@ export function Header() {
       className={cn(
         "sticky top-0 z-40 transition-[background-color,box-shadow,border-color] duration-500",
         scrolled
-          ? "border-b border-line/60 bg-ivory/80 shadow-[0_8px_30px_-20px_rgb(43_36_39/0.25)] backdrop-blur-md"
-          : "border-b border-transparent bg-ivory/0",
+          ? "border-b border-line bg-night/80 backdrop-blur-md"
+          : "border-b border-transparent bg-night/0",
       )}
     >
       <Container className="flex h-18 items-center justify-between gap-4 lg:h-20">
@@ -46,9 +46,9 @@ export function Header() {
                     href={item.href}
                     aria-current={current ? "location" : undefined}
                     className={cn(
-                      "relative inline-flex min-h-11 items-center rounded-full px-4 text-[15px] transition-colors",
-                      "after:absolute after:inset-x-4 after:bottom-2 after:h-px after:origin-center after:scale-x-0 after:bg-rose-400 after:transition-transform after:duration-300",
-                      current ? "text-ink after:scale-x-100" : "text-ink-soft hover:text-ink hover:after:scale-x-100",
+                      "relative inline-flex min-h-11 items-center rounded-full px-4 text-[15px] font-medium transition-colors",
+                      "after:absolute after:inset-x-4 after:bottom-2 after:h-0.5 after:origin-center after:scale-x-0 after:rounded-full after:bg-cherry after:transition-transform after:duration-300",
+                      current ? "text-cream after:scale-x-100" : "text-mist hover:text-cream hover:after:scale-x-100",
                     )}
                   >
                     {item.label}
@@ -72,7 +72,7 @@ export function Header() {
             aria-expanded={menuOpen}
             aria-controls={MENU_ID}
             aria-haspopup="dialog"
-            className="grid h-11 w-11 place-items-center rounded-full border border-ink/10 text-ink transition-colors hover:bg-cream lg:hidden"
+            className="grid h-11 w-11 place-items-center rounded-full border border-cream/20 text-cream transition-colors hover:border-cherry hover:bg-cherry hover:text-night lg:hidden"
           >
             <Menu aria-hidden className="h-5 w-5" strokeWidth={1.6} />
           </button>

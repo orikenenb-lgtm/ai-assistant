@@ -94,7 +94,7 @@ function ExternalValue({ href, children, newTab, ltr }: { href: string; children
     <a
       href={href}
       dir={ltr ? "ltr" : undefined}
-      className="inline-flex min-h-11 items-center underline decoration-rose-300 underline-offset-4 transition-colors hover:text-rose-600"
+      className="inline-flex min-h-11 items-center underline decoration-cherry decoration-2 underline-offset-4 transition-colors hover:text-cherry"
       {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
       {children}
@@ -109,10 +109,10 @@ export function ContactSection() {
   const whatsapp = toWhatsAppHref(siteConfig.contact.whatsapp);
 
   return (
-    <Section id={SECTION_IDS.contact} tone="cream" aria-labelledby="contact-title">
+    <Section id={SECTION_IDS.contact} aria-labelledby="contact-title">
       <Container className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
         <Reveal className="flex flex-col gap-8">
-          <SectionHeading id="contact-title" eyebrow={copy.eyebrow} title={copy.title} description={copy.description} align="start" />
+          <SectionHeading id="contact-title" eyebrow={copy.eyebrow} title={copy.title} highlight={copy.highlight} description={copy.description} />
           {whatsapp && (
             <Button href={whatsapp} external size="lg" className="self-start">
               <Send aria-hidden className="h-4 w-4 rtl:-scale-x-100" strokeWidth={1.8} />
@@ -123,23 +123,23 @@ export function ContactSection() {
 
         <Reveal delay={0.1}>
           {rows.length > 0 ? (
-            <ul className="divide-y divide-line/80 rounded-2xl border border-line/80 bg-ivory px-6 shadow-soft sm:px-8">
+            <ul className="divide-y divide-line rounded-3xl border border-line bg-coal px-6 sm:px-8">
               {rows.map((row) => (
                 <li key={row.key} className="flex items-start gap-4 py-5">
-                  <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blush text-rose-700">{row.icon}</span>
+                  <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full bg-cherry text-night">{row.icon}</span>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="text-sm text-muted">{row.label}</span>
-                    <div className="text-lg text-ink">{row.content}</div>
+                    <span className="text-sm text-mist">{row.label}</span>
+                    <div className="text-lg text-cream">{row.content}</div>
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="flex h-full min-h-56 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-nude bg-ivory/60 px-6 py-14 text-center">
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-blush text-rose-700">
+            <div className="flex h-full min-h-56 flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-cream/20 bg-coal px-6 py-14 text-center">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-cherry text-night">
                 <MessageCircle aria-hidden className="h-5 w-5" strokeWidth={1.5} />
               </span>
-              <p className="max-w-xs text-lg text-muted">{copy.empty}</p>
+              <p className="max-w-xs text-lg text-mist">{copy.empty}</p>
             </div>
           )}
         </Reveal>

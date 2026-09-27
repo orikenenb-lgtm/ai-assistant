@@ -66,10 +66,10 @@ export function Lightbox({ items, index, onIndexChange, onClose }: LightboxProps
       aria-modal="true"
       aria-labelledby={titleId}
       tabIndex={-1}
-      className="fixed inset-0 z-50 flex animate-fade flex-col bg-ink/92 text-ivory outline-none backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex animate-fade flex-col bg-night/95 text-cream outline-none backdrop-blur-sm"
     >
       <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
-        <p className="text-sm text-ivory/80" aria-live="polite">
+        <p className="text-sm text-mist" aria-live="polite">
           <span className="sr-only">פריט </span>
           <span dir="ltr">{index + 1} / {count}</span>
         </p>
@@ -78,7 +78,7 @@ export function Lightbox({ items, index, onIndexChange, onClose }: LightboxProps
           type="button"
           onClick={onClose}
           aria-label="סגירת הגלריה"
-          className="grid h-11 w-11 place-items-center rounded-full border border-ivory/20 transition-colors hover:bg-ivory/10"
+          className="grid h-11 w-11 place-items-center rounded-full border border-cream/20 transition-colors hover:border-cherry hover:bg-cherry hover:text-night"
         >
           <X aria-hidden className="h-5 w-5" strokeWidth={1.6} />
         </button>
@@ -93,12 +93,12 @@ export function Lightbox({ items, index, onIndexChange, onClose }: LightboxProps
         }}
       >
         <figure key={item.id} className="flex h-full max-h-[78svh] w-full max-w-lg animate-fade flex-col items-center justify-center gap-4">
-          <div className="relative aspect-[4/5] max-h-full w-full overflow-hidden rounded-2xl shadow-lift">
+          <div className="relative aspect-[4/5] max-h-full w-full overflow-hidden rounded-3xl shadow-lift">
             <GalleryVisual item={item} sizes="(min-width: 640px) 512px, 100vw" priority />
           </div>
           <figcaption className="flex flex-col items-center gap-1 text-center">
-            <span id={titleId} dir="auto" className="font-display text-xl">{item.category}</span>
-            <span className="text-sm text-ivory/75">{item.description}</span>
+            <span id={titleId} dir="auto" className="font-display text-4xl font-bold">{item.category}</span>
+            <span className="text-sm text-mist">{item.description}</span>
             <span className="sr-only">{item.alt}</span>
           </figcaption>
         </figure>
@@ -124,7 +124,7 @@ function NavButton({ side, label, onClick }: { side: "start" | "end"; label: str
       onClick={onClick}
       aria-label={label}
       className={
-        "absolute top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-ivory/20 bg-ink/40 backdrop-blur transition-colors hover:bg-ivory/10 " +
+        "absolute top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-cream/20 bg-night/60 backdrop-blur transition-colors hover:border-cherry hover:bg-cherry hover:text-night " +
         (side === "start" ? "start-2 sm:start-6" : "end-2 sm:end-6")
       }
     >

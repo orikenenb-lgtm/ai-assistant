@@ -13,7 +13,7 @@ export function ServicesSection() {
     <Section id={SECTION_IDS.services} aria-labelledby="services-title">
       <Container>
         <Reveal>
-          <SectionHeading id="services-title" eyebrow={copy.eyebrow} title={copy.title} description={copy.description} />
+          <SectionHeading id="services-title" eyebrow={copy.eyebrow} title={copy.title} highlight={copy.highlight} description={copy.description} />
         </Reveal>
 
         {/* Mobile: swipeable row with snap. sm+: grid. */}
@@ -28,7 +28,7 @@ export function ServicesSection() {
             </Reveal>
           ))}
         </ul>
-        <p aria-hidden className="mt-1 text-center text-xs text-muted sm:hidden">החליקי לצפייה בכל הטיפולים ←</p>
+        <p aria-hidden className="mt-1 text-center text-xs text-mist sm:hidden">החליקי לצפייה בכל הטיפולים ←</p>
       </Container>
     </Section>
   );

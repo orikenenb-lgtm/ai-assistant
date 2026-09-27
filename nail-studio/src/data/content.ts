@@ -8,6 +8,9 @@ import type { TrustItem } from "@/types";
 export const heroContent = {
   eyebrow: "סטודיו לציפורניים",
   headline: "ציפורניים שמרגישות בדיוק כמוך.",
+  /** Word inside the headline painted in the accent color. */
+  highlight: "כמוך",
+  badge: "BOOK NOW · NAIL STUDIO · ",
   subheadline:
     "עיצוב מדויק, חומרים איכותיים ותשומת לב לכל פרט — בחוויה רגועה ואישית.",
   primaryCta: "קביעת תור",
@@ -25,12 +28,14 @@ export const sectionContent = {
   services: {
     eyebrow: "טיפולים",
     title: "הטיפולים שלנו",
+    highlight: "שלנו",
     description: "כל טיפול מותאם לציפורן, לסגנון ולקצב החיים שלך.",
     pricePending: "מחיר יעודכן בהמשך",
   },
   gallery: {
     eyebrow: "גלריה",
     title: "העבודות שלנו",
+    highlight: "העבודות",
     description: "טעימה מהסגנון של הסטודיו. תמונות עבודות אמיתיות יתווספו בקרוב.",
     empty: "העבודות יעלו לכאן ממש בקרוב.",
   },
@@ -42,6 +47,7 @@ export const sectionContent = {
   testimonials: {
     eyebrow: "המלצות",
     title: "מה הלקוחות אומרות",
+    highlight: "אומרות",
     description: "המלצות אמיתיות של לקוחות יתווספו כאן בקרוב.",
     demoBadge: "תוכן לדוגמה",
   },
@@ -54,6 +60,7 @@ export const sectionContent = {
   contact: {
     eyebrow: "יצירת קשר",
     title: "נשמח לשמוע ממך",
+    highlight: "ממך",
     description: "לתיאום תור, שאלה או התייעצות על העיצוב הבא.",
     empty: "פרטי ההתקשרות יתעדכנו כאן בקרוב.",
     labels: {

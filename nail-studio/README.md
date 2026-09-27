@@ -2,6 +2,8 @@
 
 אתר תדמית פרימיום לסטודיו ציפורניים. עברית / RTL, Mobile-first.
 
+**עיצוב:** "Lacquer" — שחור, אדום-דובדבן (#FF2A5F) וזהב כרום · Karantina + Heebo
+
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Motion · Lucide
 
 ## הרצה
@@ -57,7 +59,7 @@ src/
 ├── components/
 │   ├── layout/     Header, MobileMenu, Footer
 │   ├── sections/   Hero, TrustStrip, Services, Gallery(+Grid, Lightbox), About, Testimonials, CTA, Contact
-│   ├── ui/         Button, Container, Section, SectionHeading, *Card, NailArt, Reveal, Logo...
+│   ├── ui/         Button, Container, Section, SectionHeading, *Card, Lacquer, Reveal, Logo...
 │   └── providers/  MotionProvider (LazyMotion + reduced motion)
 ├── config/site.ts  ← כל פרטי העסק
 ├── data/           תוכן

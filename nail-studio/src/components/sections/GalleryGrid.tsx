@@ -22,7 +22,7 @@ export function GalleryGrid({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <ul className="grid auto-rows-[150px] grid-flow-dense grid-cols-2 gap-3 min-[400px]:auto-rows-[170px] sm:auto-rows-[220px] sm:gap-4 lg:auto-rows-[240px] lg:grid-cols-4">
+      <ul className="grid auto-rows-[160px] grid-flow-dense grid-cols-2 gap-3 min-[400px]:auto-rows-[170px] sm:auto-rows-[220px] sm:gap-4 lg:auto-rows-[240px] lg:grid-cols-4">
         {items.map((item, index) => (
           <Reveal as="li" key={item.id} delay={(index % 4) * 0.06} className={cn("min-w-0", shapeClasses[item.shape])}>
             <GalleryCard item={item} onOpen={() => setOpenIndex(index)} />

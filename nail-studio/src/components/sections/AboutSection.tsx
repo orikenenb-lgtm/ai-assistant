@@ -5,7 +5,7 @@ import { siteConfig } from "@/config/site";
 import { SECTION_IDS } from "@/lib/links";
 import { hasValue } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
-import { NailArt } from "@/components/ui/NailArt";
+import { Lacquer } from "@/components/ui/Lacquer";
 import { Reveal } from "@/components/ui/Reveal";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -18,9 +18,11 @@ export function AboutSection() {
 
   return (
     <Section id={SECTION_IDS.about} aria-labelledby="about-title">
-      <Container className="grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
+      <Container className="grid items-center gap-16 lg:grid-cols-2 lg:gap-20">
         <Reveal className="relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-t-full rounded-b-[2rem] bg-sand shadow-lift">
+          {/* Cherry offset block behind the portrait */}
+          <div aria-hidden className="absolute inset-0 translate-x-[-5%] translate-y-[5%] rounded-3xl bg-cherry" />
+          <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-coal">
             {ownerImage ? (
               <Image
                 src={ownerImage.src}
@@ -31,26 +33,23 @@ export function AboutSection() {
               />
             ) : (
               <>
-                <NailArt tone="sand" composition="single" />
-                <span className="absolute inset-x-0 bottom-8 text-center text-xs tracking-[0.06em] text-ink-soft/70">
-                  מקום לתמונה
-                </span>
+                <Lacquer tone="noir" />
+                <span className="absolute inset-x-0 bottom-6 text-center text-sm font-bold text-mist">מקום לתמונה</span>
               </>
             )}
           </div>
-          <div aria-hidden className="absolute -bottom-5 -start-5 -z-10 h-2/3 w-2/3 rounded-[2rem] bg-blush" />
         </Reveal>
 
-        <Reveal delay={0.1} className="flex flex-col gap-6">
-          <SectionHeading id="about-title" eyebrow={copy.eyebrow} title={aboutContent.heading} align="start" />
-          {ownerName && <p className="font-display text-2xl text-rose-700">{ownerName}</p>}
-          <div className="flex flex-col gap-4 text-lg leading-relaxed text-muted">
+        <Reveal delay={0.1} className="flex flex-col gap-7">
+          <SectionHeading id="about-title" eyebrow={copy.eyebrow} title={aboutContent.heading} highlight="עליי" />
+          {ownerName && <p className="font-display text-4xl font-bold text-gold">{ownerName}</p>}
+          <div className="flex flex-col gap-4 text-lg leading-relaxed text-mist">
             {paragraphs.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
-          {hasValue(experience) && <p className="text-ink-soft">{experience}</p>}
-          <blockquote className="border-s-2 border-rose-300 ps-5 font-display text-xl leading-relaxed text-ink-soft sm:text-2xl">
+          {hasValue(experience) && <p className="text-cream">{experience}</p>}
+          <blockquote className="border-s-4 border-cherry ps-5 font-display text-4xl leading-tight font-bold text-cream">
             {hasValue(philosophy) ? philosophy : copy.placeholderPhilosophy}
           </blockquote>
         </Reveal>

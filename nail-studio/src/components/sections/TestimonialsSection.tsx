@@ -14,10 +14,10 @@ export function TestimonialsSection() {
   const visible = testimonials.filter((t) => !t.isDemo || siteConfig.features.showDemoTestimonials);
 
   return (
-    <Section id={SECTION_IDS.testimonials} tone="cream" aria-labelledby="testimonials-title">
+    <Section id={SECTION_IDS.testimonials} tone="coal" aria-labelledby="testimonials-title">
       <Container>
         <Reveal>
-          <SectionHeading id="testimonials-title" eyebrow={copy.eyebrow} title={copy.title} description={copy.description} />
+          <SectionHeading id="testimonials-title" eyebrow={copy.eyebrow} title={copy.title} highlight={copy.highlight} description={copy.description} />
         </Reveal>
         {visible.length > 0 ? (
           <ul className="mt-12 grid gap-5 sm:mt-16 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
@@ -28,9 +28,9 @@ export function TestimonialsSection() {
             ))}
           </ul>
         ) : (
-          <div className="mx-auto mt-12 flex max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-nude bg-ivory/60 px-6 py-14 text-center">
-            <MessageSquareHeart aria-hidden className="h-8 w-8 text-rose-400" strokeWidth={1.4} />
-            <p className="text-muted">{copy.description}</p>
+          <div className="mx-auto mt-12 flex max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-cream/20 bg-night px-6 py-14 text-center">
+            <MessageSquareHeart aria-hidden className="h-8 w-8 text-cherry" strokeWidth={1.4} />
+            <p className="text-mist">{copy.description}</p>
           </div>
         )}
       </Container>

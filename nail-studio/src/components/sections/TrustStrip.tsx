@@ -1,25 +1,31 @@
+import { Asterisk } from "lucide-react";
 import { trustItems } from "@/data/content";
-import { Container } from "@/components/ui/Container";
-import { Reveal } from "@/components/ui/Reveal";
 
+/** Loud cherry marquee carrying the trust points. Screen readers get the plain list once. */
 export function TrustStrip() {
+  const words = trustItems.map((item) => item.title);
+  const run = [...words, ...words];
   return (
-    <section aria-label="למה אצלנו" className="border-y border-line/70 bg-cream/60">
-      <Container>
-        <ul className="grid grid-cols-2 gap-x-6 gap-y-8 py-10 sm:py-12 lg:grid-cols-4">
-          {trustItems.map(({ title, description, icon: Icon }, index) => (
-            <Reveal as="li" key={title} delay={index * 0.06} className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rose-300/50 text-rose-600">
-                <Icon aria-hidden className="h-5 w-5" strokeWidth={1.5} />
+    <section aria-label="למה אצלנו" className="relative overflow-hidden bg-cherry py-5 text-night sm:py-6">
+      <ul className="sr-only">
+        {trustItems.map((item) => (
+          <li key={item.title}>
+            {item.title} — {item.description}
+          </li>
+        ))}
+      </ul>
+      <div aria-hidden className="flex w-max animate-marquee">
+        {[0, 1].map((copy) => (
+          <div key={copy} className="flex shrink-0 items-center">
+            {run.map((word, i) => (
+              <span key={`${copy}-${i}`} className="flex items-center gap-6 px-6 font-display text-5xl leading-none font-bold whitespace-nowrap sm:text-6xl">
+                {word}
+                <Asterisk className="h-8 w-8" strokeWidth={2.5} />
               </span>
-              <div>
-                <p className="font-medium text-ink">{title}</p>
-                <p className="mt-0.5 text-sm leading-snug text-muted">{description}</p>
-              </div>
-            </Reveal>
-          ))}
-        </ul>
-      </Container>
+            ))}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

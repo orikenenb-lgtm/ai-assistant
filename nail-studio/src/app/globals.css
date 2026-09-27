@@ -1,54 +1,56 @@
 @import "tailwindcss";
 
-/* ───────────────────────── Design tokens ───────────────────────── */
+/* ───────────────────────── Design tokens — "Lacquer" ─────────────────────────
+   Near-black base, one loud cherry-lacquer accent, chrome gold used sparingly. */
 @theme {
-  /* Neutrals */
-  --color-ivory: #fbf8f4;
-  --color-cream: #f5eee6;
-  --color-sand: #ece1d5;
-  --color-nude: #d8c0ad;
-  --color-mocha: #8c6f62;
+  /* Surfaces */
+  --color-night: #0d0a0b; /* page background */
+  --color-coal: #171113; /* cards / raised surfaces */
+  --color-coal-2: #221a1d; /* hover / nested surfaces */
+  --color-line: rgb(255 243 236 / 0.1);
 
-  /* Accent — dusty rose, used sparingly */
-  --color-blush: #f2e2dd;
-  --color-rose-200: #e9cfcb;
-  --color-rose-300: #d4a5a5;
-  --color-rose-400: #c08e8e;
-  --color-rose-600: #94585e; /* AA on ivory (5.2:1) */
-  --color-rose-700: #8a4f55; /* AA on cream/blush */
+  /* Accent */
+  --color-cherry: #ff2a5f; /* 5.4:1 on night — text-safe */
+  --color-cherry-deep: #d90f45;
+  --color-gold: #f2c46d; /* 12:1 on night */
 
   /* Text */
-  --color-ink: #2b2427; /* charcoal, 14:1 on ivory */
-  --color-ink-soft: #4a4043;
-  --color-muted: #6e625f; /* AA on ivory & cream */
-  --color-line: #e6dbd0;
+  --color-cream: #fff3ec; /* 18:1 on night */
+  --color-mist: #b8a9ad; /* secondary text, 8.7:1 on night */
 
   /* Typography */
   --font-sans: var(--font-body), "Heebo", system-ui, sans-serif;
-  --font-display: var(--font-heading), "Frank Ruhl Libre", Georgia, serif;
+  --font-display: var(--font-heading), "Karantina", Impact, sans-serif;
 
-  /* Shadows — soft & natural */
-  --shadow-soft: 0 1px 2px rgb(43 36 39 / 0.04), 0 8px 24px -14px rgb(43 36 39 / 0.14);
-  --shadow-lift: 0 2px 4px rgb(43 36 39 / 0.04), 0 22px 44px -22px rgb(43 36 39 / 0.24);
+  /* Shadows & glow */
+  --shadow-lift: 0 30px 60px -30px rgb(0 0 0 / 0.8);
+  --shadow-glow: 0 0 0 1px rgb(255 42 95 / 0.4), 0 20px 60px -20px rgb(255 42 95 / 0.55);
 
   /* Motion */
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-rise: rise 0.9s var(--ease-premium) both;
-  --animate-float: float 9s ease-in-out infinite;
   --animate-fade: fade 0.35s var(--ease-premium) both;
+  --animate-spin-slow: spin 22s linear infinite;
+  --animate-marquee: marquee 28s linear infinite;
+  --animate-shine: shine 6s ease-in-out infinite;
 
   @keyframes rise {
-    from { opacity: 0; transform: translateY(14px); }
+    from { opacity: 0; transform: translateY(24px); }
     to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
   }
   @keyframes fade {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  /* RTL: content moves toward the right, so the track travels +50% */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(50%); }
+  }
+  @keyframes shine {
+    0%, 100% { transform: translate(-6%, -4%) rotate(0deg); }
+    50% { transform: translate(6%, 4%) rotate(8deg); }
   }
 }
 
@@ -57,6 +59,7 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    color-scheme: dark;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -66,24 +69,38 @@
   }
 
   body {
-    @apply bg-ivory font-sans text-ink antialiased;
+    @apply bg-night font-sans text-cream antialiased;
     overflow-x: clip;
   }
 
   /* Anchored sections land below the sticky header */
   [id] {
-    scroll-margin-top: 5.5rem;
+    scroll-margin-top: 5rem;
   }
 
   ::selection {
-    background: var(--color-rose-200);
-    color: var(--color-ink);
+    background: var(--color-cherry);
+    color: var(--color-night);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-rose-600);
+    outline: 2px solid var(--color-gold);
     outline-offset: 3px;
     border-radius: 6px;
+  }
+}
+
+/* Subtle film grain for depth on dark surfaces */
+@utility grain {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 }
 

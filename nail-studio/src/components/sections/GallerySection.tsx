@@ -11,18 +11,18 @@ import { GalleryGrid } from "@/components/sections/GalleryGrid";
 export function GallerySection() {
   const copy = sectionContent.gallery;
   return (
-    <Section id={SECTION_IDS.gallery} tone="cream" aria-labelledby="gallery-title">
+    <Section id={SECTION_IDS.gallery} tone="coal" aria-labelledby="gallery-title">
       <Container>
         <Reveal>
-          <SectionHeading id="gallery-title" eyebrow={copy.eyebrow} title={copy.title} description={copy.description} />
+          <SectionHeading id="gallery-title" eyebrow={copy.eyebrow} title={copy.title} highlight={copy.highlight} description={copy.description} />
         </Reveal>
         <div className="mt-12 sm:mt-16">
           {galleryItems.length > 0 ? (
             <GalleryGrid items={galleryItems} />
           ) : (
-            <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-nude bg-ivory/60 px-6 py-16 text-center">
-              <ImageOff aria-hidden className="h-8 w-8 text-rose-400" strokeWidth={1.4} />
-              <p className="text-muted">{copy.empty}</p>
+            <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-cream/20 bg-night px-6 py-16 text-center">
+              <ImageOff aria-hidden className="h-8 w-8 text-cherry" strokeWidth={1.4} />
+              <p className="text-mist">{copy.empty}</p>
             </div>
           )}
         </div>
