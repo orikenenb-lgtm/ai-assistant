@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Design tokens ───────────────────────── */
+@theme {
+  /* Neutrals */
+  --color-ivory: #fbf8f4;
+  --color-cream: #f5eee6;
+  --color-sand: #ece1d5;
+  --color-nude: #d8c0ad;
+  --color-mocha: #8c6f62;
+
+  /* Accent — dusty rose, used sparingly */
+  --color-blush: #f2e2dd;
+  --color-rose-200: #e9cfcb;
+  --color-rose-300: #d4a5a5;
+  --color-rose-400: #c08e8e;
+  --color-rose-600: #94585e; /* AA on ivory (5.2:1) */
+  --color-rose-700: #8a4f55; /* AA on cream/blush */
+
+  /* Text */
+  --color-ink: #2b2427; /* charcoal, 14:1 on ivory */
+  --color-ink-soft: #4a4043;
+  --color-muted: #6e625f; /* AA on ivory & cream */
+  --color-line: #e6dbd0;
+
+  /* Typography */
+  --font-sans: var(--font-body), "Heebo", system-ui, sans-serif;
+  --font-display: var(--font-heading), "Frank Ruhl Libre", Georgia, serif;
+
+  /* Shadows — soft & natural */
+  --shadow-soft: 0 1px 2px rgb(43 36 39 / 0.04), 0 8px 24px -14px rgb(43 36 39 / 0.14);
+  --shadow-lift: 0 2px 4px rgb(43 36 39 / 0.04), 0 22px 44px -22px rgb(43 36 39 / 0.24);
+
+  /* Motion */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-rise: rise 0.9s var(--ease-premium) both;
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-fade: fade 0.35s var(--ease-premium) both;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* ───────────────────────── Base ───────────────────────── */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-ivory font-sans text-ink antialiased;
+    overflow-x: clip;
+  }
+
+  /* Anchored sections land below the sticky header */
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  ::selection {
+    background: var(--color-rose-200);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-rose-600);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+/* Honour reduced-motion for CSS animations everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
