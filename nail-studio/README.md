@@ -2,7 +2,7 @@
 
 אתר תדמית פרימיום לסטודיו ציפורניים. עברית / RTL, Mobile-first.
 
-**עיצוב:** "Aura Chrome" — רקע כהה עם סגול, ורוד ותכלת כזוהר הולוגרפי · Noto Serif Hebrew + Heebo
+**עיצוב:** "Rose Aura" — רקע בהיר ורדרד, טקסט שזיף, ורוד מוביל עם לילך ותכלת פסטליים · Noto Serif Hebrew + Heebo
 
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Motion · Lucide
 

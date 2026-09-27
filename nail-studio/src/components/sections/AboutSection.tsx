@@ -20,7 +20,7 @@ export function AboutSection() {
     <Section id={SECTION_IDS.about} aria-labelledby="about-title">
       <Container className="grid items-center gap-16 lg:grid-cols-[1fr_1.1fr] lg:gap-24">
         <Reveal className="relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-line bg-coal">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-line bg-blush">
             {ownerImage ? (
               <Image
                 src={ownerImage.src}
@@ -32,7 +32,7 @@ export function AboutSection() {
             ) : (
               <>
                 <Aura tone="dusk" />
-                <span className="absolute inset-x-0 bottom-6 text-center text-sm text-cream/70">מקום לתמונה</span>
+                <span className="absolute inset-x-0 bottom-6 text-center text-sm text-ink/70">מקום לתמונה</span>
               </>
             )}
           </div>
@@ -41,13 +41,13 @@ export function AboutSection() {
         <Reveal delay={0.1} className="flex flex-col gap-8">
           <SectionHeading id="about-title" eyebrow={copy.eyebrow} title={aboutContent.heading} highlight="עליי" />
           {ownerName && <p className="font-display text-3xl font-light text-iridescent">{ownerName}</p>}
-          <div className="flex flex-col gap-4 text-lg leading-relaxed text-mist">
+          <div className="flex flex-col gap-4 text-lg leading-relaxed text-muted">
             {paragraphs.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
-          {hasValue(experience) && <p className="text-cream">{experience}</p>}
-          <blockquote className="border-s border-line ps-6 font-display text-3xl leading-snug font-extralight text-cream">
+          {hasValue(experience) && <p className="text-ink">{experience}</p>}
+          <blockquote className="border-s border-line ps-6 font-display text-3xl leading-snug font-extralight text-ink">
             {hasValue(philosophy) ? philosophy : copy.placeholderPhilosophy}
           </blockquote>
         </Reveal>

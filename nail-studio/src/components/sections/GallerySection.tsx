@@ -20,9 +20,9 @@ export function GallerySection() {
           {galleryItems.length > 0 ? (
             <GalleryGrid items={galleryItems} />
           ) : (
-            <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-line bg-night px-6 py-16 text-center">
-              <ImageOff aria-hidden className="h-8 w-8 text-orchid" strokeWidth={1.4} />
-              <p className="text-mist">{copy.empty}</p>
+            <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-line bg-paper px-6 py-16 text-center">
+              <ImageOff aria-hidden className="h-8 w-8 text-rose" strokeWidth={1.4} />
+              <p className="text-muted">{copy.empty}</p>
             </div>
           )}
         </div>

@@ -17,8 +17,8 @@ export function TrustStrip() {
                 (index < 2 ? "border-b border-line lg:border-b-0" : "")
               }
             >
-              <p className="font-display text-xl font-light text-cream">{item.title}</p>
-              <p className="text-sm leading-snug text-mist">{item.description}</p>
+              <p className="font-display text-xl font-light text-ink">{item.title}</p>
+              <p className="text-sm leading-snug text-muted">{item.description}</p>
             </li>
           ))}
         </ul>

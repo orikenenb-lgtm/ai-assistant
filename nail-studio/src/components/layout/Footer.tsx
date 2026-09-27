@@ -15,11 +15,11 @@ export function Footer() {
   const location = [address, city].filter(hasValue).join(", ");
 
   return (
-    <footer className="overflow-hidden border-t border-line bg-night text-cream">
+    <footer className="overflow-hidden border-t border-line bg-paper text-ink">
       <Container className="grid gap-12 py-16 sm:py-20 md:grid-cols-[1.4fr_1fr_1fr]">
         <div className="flex flex-col gap-5">
           <Logo className="self-start" />
-          <p className="max-w-xs leading-relaxed text-mist">{siteConfig.description}</p>
+          <p className="max-w-xs leading-relaxed text-muted">{siteConfig.description}</p>
           {socials.length > 0 && (
             <div className="flex gap-2">
               {socials.map((social) => (
@@ -30,11 +30,11 @@ export function Footer() {
         </div>
 
         <nav aria-label="ניווט בתחתית העמוד">
-          <h2 className="mb-4 text-sm text-mist">ניווט</h2>
+          <h2 className="mb-4 text-sm text-muted">ניווט</h2>
           <ul className="grid grid-cols-2 gap-x-6 md:grid-cols-1">
             {mainNav.map((item) => (
               <li key={item.href}>
-                <a href={item.href} className="inline-flex min-h-11 min-w-11 items-center text-cream/80 transition-colors hover:text-cream">
+                <a href={item.href} className="inline-flex min-h-11 min-w-11 items-center text-ink/80 transition-colors hover:text-ink">
                   {item.label}
                 </a>
               </li>
@@ -43,12 +43,12 @@ export function Footer() {
         </nav>
 
         <div>
-          <h2 className="mb-4 text-sm text-mist">יצירת קשר</h2>
+          <h2 className="mb-4 text-sm text-muted">יצירת קשר</h2>
           {tel || location ? (
-            <ul className="flex flex-col gap-1 text-mist">
+            <ul className="flex flex-col gap-1 text-muted">
               {tel && (
                 <li>
-                  <a href={tel} dir="ltr" className="inline-flex min-h-11 items-center transition-colors hover:text-cream">
+                  <a href={tel} dir="ltr" className="inline-flex min-h-11 items-center transition-colors hover:text-ink">
                     {siteConfig.contact.phone}
                   </a>
                 </li>
@@ -56,18 +56,18 @@ export function Footer() {
               {location && <li className="py-2.5">{location}</li>}
             </ul>
           ) : (
-            <p className="leading-relaxed text-mist">פרטי ההתקשרות יתעדכנו בקרוב.</p>
+            <p className="leading-relaxed text-muted">פרטי ההתקשרות יתעדכנו בקרוב.</p>
           )}
         </div>
       </Container>
 
 
       <div className="border-t border-line">
-        <Container className="flex flex-col items-center justify-between gap-2 py-6 text-sm text-mist sm:flex-row">
+        <Container className="flex flex-col items-center justify-between gap-2 py-6 text-sm text-muted sm:flex-row">
           <p>
             © <CurrentYear serverYear={new Date().getFullYear()} /> <span dir="auto">{brandName}</span>. כל הזכויות שמורות.
           </p>
-          <Link href="/#home" className="inline-flex min-h-11 items-center transition-colors hover:text-cream">
+          <Link href="/#home" className="inline-flex min-h-11 items-center transition-colors hover:text-ink">
             חזרה למעלה ↑
           </Link>
         </Container>

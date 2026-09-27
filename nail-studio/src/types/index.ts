@@ -74,7 +74,7 @@ export interface Service {
 }
 
 /** Visual tone used by the abstract placeholder art until real photos exist. */
-export type PlaceholderTone = "aura" | "violet" | "orchid" | "ice" | "chrome" | "dusk" | "noir";
+export type PlaceholderTone = "aura" | "lilac" | "rose" | "ice" | "chrome" | "dusk" | "noir";
 
 export interface GalleryImage {
   src: string;

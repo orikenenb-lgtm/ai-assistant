@@ -7,7 +7,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <Link
       href="/#home"
-      className={cn("inline-flex min-h-11 items-center gap-3 rounded-md text-cream", className)}
+      className={cn("inline-flex min-h-11 items-center gap-3 rounded-md text-ink", className)}
       aria-label={`${brandName} — לעמוד הבית`}
     >
       <span aria-hidden className="bg-iridescent h-2 w-2 rotate-45" />

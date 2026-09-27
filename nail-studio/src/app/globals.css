@@ -1,29 +1,33 @@
 @import "tailwindcss";
 
-/* ───────────────────────── Design tokens — "Aura Chrome" ─────────────────────────
-   Deep violet-black base. Violet, orchid pink and ice blue appear only as light:
-   iridescent gradients, glows and hairlines — never as flat blocks. */
+/* ───────────────────────── Design tokens — "Rose Aura" ─────────────────────────
+   Soft blush-white paper, deep plum ink, rose as the lead accent.
+   Lilac and ice appear only as light: glows, gradients and hairlines. */
 @theme {
   /* Surfaces */
-  --color-night: #0b0a10; /* page background */
-  --color-coal: #14121b; /* raised surfaces */
-  --color-coal-2: #1c1926;
-  --color-line: rgb(244 241 248 / 0.1);
+  --color-paper: #fff8fa; /* page background */
+  --color-blush: #fbeff3; /* raised / alternate surfaces */
+  --color-blush-2: #f6e3ea;
+  --color-line: rgb(58 34 51 / 0.1);
 
-  /* Iridescent accents (all AA as text on night) */
-  --color-violet: #9b7bff; /* 6.3:1 */
-  --color-orchid: #e98bc4; /* 8.4:1 — the lead accent */
-  --color-ice: #8fd3f4; /* 12:1 */
+  /* Accents */
+  --color-rose: #c93a76; /* lead — 4.6:1 on paper, white text on it 4.8:1 */
+  --color-rose-deep: #b8336b;
+  --color-rose-soft: #f4b6cf;
+  --color-lilac: #6e55c9; /* 5.3:1 on paper */
+  --color-lilac-soft: #cdbff7;
+  --color-ice: #2f86b0; /* large text / decoration only */
+  --color-ice-soft: #bfe6f7;
 
   /* Text */
-  --color-cream: #f4f1f8; /* 17.6:1 */
-  --color-mist: #a9a3b8; /* 8:1 */
+  --color-ink: #3a2233; /* deep plum, 13.8:1 */
+  --color-muted: #7a6272; /* 5.2:1 */
 
   /* Typography */
   --font-sans: var(--font-body), "Heebo", system-ui, sans-serif;
   --font-display: var(--font-heading), "Noto Serif Hebrew", Georgia, serif;
 
-  --shadow-lift: 0 40px 80px -40px rgb(0 0 0 / 0.9);
+  --shadow-lift: 0 40px 80px -40px rgb(201 58 118 / 0.35);
 
   /* Motion — slow and quiet */
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
@@ -45,16 +49,16 @@
   }
 }
 
-/* The signature gradient — pink leads, violet and ice as undertones */
+/* The signature gradient — rose leads, lilac and ice as undertones */
 @utility text-iridescent {
-  background: linear-gradient(100deg, var(--color-orchid) 0%, var(--color-orchid) 45%, var(--color-violet) 80%, var(--color-ice));
+  background: linear-gradient(100deg, var(--color-rose) 0%, var(--color-rose) 45%, var(--color-lilac) 80%, var(--color-ice));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 @utility bg-iridescent {
-  background: linear-gradient(100deg, var(--color-orchid) 0%, var(--color-orchid) 45%, var(--color-violet) 80%, var(--color-ice));
+  background: linear-gradient(100deg, var(--color-rose) 0%, var(--color-rose) 45%, var(--color-lilac) 80%, var(--color-ice));
 }
 
 /* ───────────────────────── Base ───────────────────────── */
@@ -62,7 +66,7 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -72,7 +76,7 @@
   }
 
   body {
-    @apply bg-night font-sans font-light text-cream antialiased;
+    @apply bg-paper font-sans font-light text-ink antialiased;
     overflow-x: clip;
   }
 
@@ -81,12 +85,12 @@
   }
 
   ::selection {
-    background: var(--color-orchid);
-    color: var(--color-night);
+    background: var(--color-rose-soft);
+    color: var(--color-ink);
   }
 
   :focus-visible {
-    outline: 1.5px solid var(--color-orchid);
+    outline: 1.5px solid var(--color-rose);
     outline-offset: 3px;
     border-radius: 4px;
   }

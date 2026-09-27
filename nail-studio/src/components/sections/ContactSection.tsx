@@ -94,7 +94,7 @@ function ExternalValue({ href, children, newTab, ltr }: { href: string; children
     <a
       href={href}
       dir={ltr ? "ltr" : undefined}
-      className="inline-flex min-h-11 items-center underline decoration-orchid decoration-1 underline-offset-[6px] transition-colors hover:text-orchid"
+      className="inline-flex min-h-11 items-center underline decoration-rose decoration-1 underline-offset-[6px] transition-colors hover:text-rose"
       {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
       {children}
@@ -126,20 +126,20 @@ export function ContactSection() {
             <ul className="divide-y divide-line border-y border-line">
               {rows.map((row) => (
                 <li key={row.key} className="flex items-start gap-4 py-5">
-                  <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-orchid/30 text-orchid">{row.icon}</span>
+                  <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-rose/30 text-rose">{row.icon}</span>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="text-sm text-mist">{row.label}</span>
-                    <div className="text-lg text-cream">{row.content}</div>
+                    <span className="text-sm text-muted">{row.label}</span>
+                    <div className="text-lg text-ink">{row.content}</div>
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="flex h-full min-h-56 flex-col items-center justify-center gap-4 rounded-[2rem] border border-line bg-coal px-6 py-14 text-center">
-              <span className="grid h-12 w-12 place-items-center rounded-full border border-orchid/30 text-orchid">
+            <div className="flex h-full min-h-56 flex-col items-center justify-center gap-4 rounded-[2rem] border border-line bg-blush px-6 py-14 text-center">
+              <span className="grid h-12 w-12 place-items-center rounded-full border border-rose/30 text-rose">
                 <MessageCircle aria-hidden className="h-5 w-5" strokeWidth={1.2} />
               </span>
-              <p className="max-w-xs text-lg text-mist">{copy.empty}</p>
+              <p className="max-w-xs text-lg text-muted">{copy.empty}</p>
             </div>
           )}
         </Reveal>

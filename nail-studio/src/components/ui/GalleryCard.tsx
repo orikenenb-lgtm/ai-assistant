@@ -24,15 +24,15 @@ export function GalleryCard({ item, onOpen, className }: GalleryCardProps) {
       onClick={onOpen}
       aria-haspopup="dialog"
       aria-label={`הגדלה: ${item.alt}`}
-      className={cn("group relative block h-full w-full overflow-hidden rounded-xl bg-coal text-start", className)}
+      className={cn("group relative block h-full w-full overflow-hidden rounded-xl bg-blush text-start", className)}
     >
       <div className="absolute inset-0 transition-transform duration-[1.2s] ease-[var(--ease-premium)] group-hover:scale-[1.04] group-focus-visible:scale-[1.04]">
         <GalleryVisual item={item} sizes="(min-width: 1024px) 25vw, 50vw" />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-night/70 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-paper/70 via-transparent to-transparent" />
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 sm:p-5">
-        <span dir="auto" className="text-sm text-cream">{item.category}</span>
-        <span dir="ltr" className="hidden text-[11px] tracking-[0.2em] text-cream/70 uppercase sm:inline">
+        <span dir="auto" className="text-sm text-ink">{item.category}</span>
+        <span dir="ltr" className="hidden text-[11px] tracking-[0.2em] text-ink/70 uppercase sm:inline">
           {item.swatchName}
         </span>
       </div>

@@ -39,7 +39,7 @@ export function MobileMenu({ id, open, onClose, items, activeId, booking, social
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <m.div
-            className="absolute inset-0 bg-night/60 backdrop-blur-md"
+            className="absolute inset-0 bg-paper/60 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -54,20 +54,20 @@ export function MobileMenu({ id, open, onClose, items, activeId, booking, social
             aria-modal="true"
             aria-label="תפריט ניווט"
             tabIndex={-1}
-            className="absolute inset-y-0 end-0 flex w-[min(90vw,400px)] flex-col border-s border-line bg-coal text-cream outline-none"
+            className="absolute inset-y-0 end-0 flex w-[min(90vw,400px)] flex-col border-s border-line bg-blush text-ink outline-none"
             initial={{ x: offscreenX }}
             animate={{ x: 0 }}
             exit={{ x: offscreenX }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="relative flex h-18 items-center justify-between border-b border-line px-5">
-              <span className="text-sm text-mist">תפריט</span>
+              <span className="text-sm text-muted">תפריט</span>
               <button
                 ref={closeRef}
                 type="button"
                 onClick={onClose}
                 aria-label="סגירת התפריט"
-                className="grid h-11 w-11 place-items-center rounded-full border border-cream/15 text-cream transition-colors hover:border-cream/60"
+                className="grid h-11 w-11 place-items-center rounded-full border border-ink/15 text-ink transition-colors hover:border-ink/60"
               >
                 <X aria-hidden className="h-5 w-5" strokeWidth={1.2} />
               </button>
@@ -90,7 +90,7 @@ export function MobileMenu({ id, open, onClose, items, activeId, booking, social
                         aria-current={current ? "location" : undefined}
                         className={cn(
                           "flex min-h-16 items-center justify-between border-b border-line font-display text-3xl font-extralight transition-colors",
-                          current ? "text-cream" : "text-mist hover:text-cream",
+                          current ? "text-ink" : "text-muted hover:text-ink",
                         )}
                       >
                         {item.label}

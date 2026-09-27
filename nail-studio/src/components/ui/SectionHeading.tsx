@@ -34,15 +34,15 @@ export function SectionHeading({ eyebrow, title, highlight, description, id, ali
       )}
     >
       {eyebrow && (
-        <p className="flex items-center gap-4 text-sm tracking-wide text-mist">
+        <p className="flex items-center gap-4 text-sm tracking-wide text-muted">
           <span aria-hidden className="bg-iridescent h-px w-10" />
           {eyebrow}
         </p>
       )}
-      <h2 id={id} className="font-display text-5xl leading-[1.05] font-extralight text-balance text-cream sm:text-6xl lg:text-7xl">
+      <h2 id={id} className="font-display text-5xl leading-[1.05] font-extralight text-balance text-ink sm:text-6xl lg:text-7xl">
         {renderTitle(title, highlight)}
       </h2>
-      {description && <p className="max-w-xl text-lg leading-relaxed text-pretty text-mist">{description}</p>}
+      {description && <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted">{description}</p>}
     </div>
   );
 }

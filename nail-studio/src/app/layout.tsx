@@ -51,8 +51,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0a10",
-  colorScheme: "dark",
+  themeColor: "#fff8fa",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -61,7 +61,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body className="flex min-h-svh flex-col">
         <a
           href="#main"
-          className="sr-only rounded-full bg-cream px-5 py-3 text-sm font-medium text-night focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[60]"
+          className="sr-only rounded-full bg-ink px-5 py-3 text-sm font-medium text-paper focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[60]"
         >
           דילוג לתוכן הראשי
         </a>

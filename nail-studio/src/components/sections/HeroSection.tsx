@@ -21,19 +21,19 @@ export function HeroSection() {
 
       <Container className="grid items-center gap-16 pt-12 pb-20 sm:pt-16 lg:grid-cols-[1.2fr_1fr] lg:gap-20 lg:pt-20 lg:pb-32">
         <div className="flex flex-col items-start gap-8">
-          <p className="flex animate-rise items-center gap-4 text-sm tracking-wide text-mist">
+          <p className="flex animate-rise items-center gap-4 text-sm tracking-wide text-muted">
             <span aria-hidden className="bg-iridescent h-px w-10" />
             {heroContent.eyebrow}
           </p>
           <h1
             id="hero-title"
-            className="animate-rise font-display text-[3.1rem] leading-[1.02] font-extralight text-balance text-cream [animation-delay:100ms] min-[400px]:text-6xl sm:text-7xl lg:text-8xl"
+            className="animate-rise font-display text-[3.1rem] leading-[1.02] font-extralight text-balance text-ink [animation-delay:100ms] min-[400px]:text-6xl sm:text-7xl lg:text-8xl"
           >
             {before}
             <span className="text-iridescent">{heroContent.highlight}</span>
             {after}
           </h1>
-          <p className="max-w-md animate-rise text-lg leading-relaxed text-pretty text-mist [animation-delay:200ms]">
+          <p className="max-w-md animate-rise text-lg leading-relaxed text-pretty text-muted [animation-delay:200ms]">
             {heroContent.subheadline}
           </p>
           <div className="flex w-full animate-rise flex-col gap-3 [animation-delay:300ms] min-[440px]:w-auto min-[440px]:flex-row">
@@ -51,7 +51,7 @@ export function HeroSection() {
           <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-line shadow-lift">
             <Aura tone="aura" animated />
           </div>
-          <figcaption className="mt-5 flex items-center justify-between text-sm text-mist">
+          <figcaption className="mt-5 flex items-center justify-between text-sm text-muted">
             <span dir="ltr" className="text-xs tracking-[0.18em]">AURA CHROME</span>
             <span>גוונים: ורוד · סגול · תכלת</span>
           </figcaption>

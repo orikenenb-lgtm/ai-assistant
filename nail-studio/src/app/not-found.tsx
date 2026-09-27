@@ -17,10 +17,10 @@ export default function NotFound() {
         <p className="font-display text-[8rem] leading-none font-extralight text-iridescent sm:text-[11rem]" dir="ltr">
           404
         </p>
-        <h1 id="not-found-title" className="font-display text-4xl font-extralight text-cream sm:text-5xl">
+        <h1 id="not-found-title" className="font-display text-4xl font-extralight text-ink sm:text-5xl">
           העמוד שחיפשת לא נמצא
         </h1>
-        <p className="max-w-md text-lg leading-relaxed text-mist">
+        <p className="max-w-md text-lg leading-relaxed text-muted">
           ייתכן שהקישור שגוי או שהעמוד הוסר. אפשר לחזור לעמוד הבית ולהמשיך משם.
         </p>
         <Button href="/" size="lg">
