@@ -5,25 +5,27 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 
-/** Full-bleed cherry block — the loudest moment on the page. */
 export function CTASection() {
   const copy = sectionContent.cta;
   const booking = getBookingLink();
   return (
-    <section id={SECTION_IDS.booking} aria-labelledby="cta-title" className="grain relative overflow-hidden bg-cherry text-night">
-      <div aria-hidden className="pointer-events-none absolute -end-24 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgb(255_255_255/0.35),transparent)]" />
-      <Container className="relative py-20 sm:py-28 lg:py-32">
-        <Reveal className="flex flex-col items-start gap-8">
-          <h2 id="cta-title" className="max-w-4xl font-display text-7xl leading-[0.85] font-bold text-balance sm:text-8xl lg:text-[10rem]">
+    <section id={SECTION_IDS.booking} aria-labelledby="cta-title" className="relative isolate overflow-hidden border-y border-line bg-coal">
+      {/* One large, slow iridescent glow — the page's single loud moment */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute top-1/2 left-1/2 h-[80vmax] w-[80vmax] -translate-x-1/2 -translate-y-1/2 animate-aura rounded-full bg-[conic-gradient(from_90deg,rgb(155_123_255/0.28),rgb(233_139_196/0.22),rgb(143_211_244/0.22),rgb(155_123_255/0.28))] blur-3xl" />
+      </div>
+      <Container size="narrow" className="py-24 text-center sm:py-32 lg:py-40">
+        <Reveal className="flex flex-col items-center gap-8">
+          <h2 id="cta-title" className="font-display text-5xl leading-[1.05] font-extralight text-balance text-cream sm:text-7xl">
             {copy.title}
           </h2>
-          <p className="max-w-xl text-xl leading-relaxed font-medium text-pretty text-night/80">{copy.description}</p>
-          <div className="flex w-full flex-col gap-3 min-[440px]:w-auto min-[440px]:flex-row">
-            <Button href={booking.href} external={booking.external} variant="dark" size="lg">
+          <p className="max-w-lg text-lg leading-relaxed text-pretty text-mist">{copy.description}</p>
+          <div className="flex w-full flex-col items-stretch justify-center gap-3 min-[440px]:w-auto min-[440px]:flex-row">
+            <Button href={booking.href} external={booking.external} size="lg">
               {copy.primary}
-              <ArrowLeft aria-hidden className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1" strokeWidth={2.2} />
+              <ArrowLeft aria-hidden className="h-4 w-4 transition-transform duration-500 group-hover:-translate-x-1" strokeWidth={1.4} />
             </Button>
-            <Button href={anchor(SECTION_IDS.contact)} variant="outline-dark" size="lg">
+            <Button href={anchor(SECTION_IDS.contact)} variant="secondary" size="lg">
               {copy.secondary}
             </Button>
           </div>

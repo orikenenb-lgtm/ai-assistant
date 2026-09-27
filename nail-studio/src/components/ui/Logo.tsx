@@ -7,13 +7,11 @@ export function Logo({ className }: { className?: string }) {
   return (
     <Link
       href="/#home"
-      className={cn("inline-flex min-h-11 items-center gap-2.5 rounded-md text-cream", className)}
+      className={cn("inline-flex min-h-11 items-center gap-3 rounded-md text-cream", className)}
       aria-label={`${brandName} — לעמוד הבית`}
     >
-      <span aria-hidden className="grid h-9 w-9 place-items-center rounded-full bg-cherry font-display text-2xl leading-none font-bold text-night">
-        {brandName.charAt(0)}
-      </span>
-      <span dir="auto" className="font-display text-3xl leading-none font-bold tracking-wide">
+      <span aria-hidden className="bg-iridescent h-2 w-2 rotate-45" />
+      <span dir="auto" className="font-display text-xl font-light tracking-[0.12em] uppercase">
         {brandName}
       </span>
     </Link>

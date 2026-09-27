@@ -16,7 +16,7 @@ export function SocialIconLink({ social }: { social: SocialLink }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`${social.label} (נפתח בחלון חדש)`}
-      className="grid h-11 w-11 place-items-center rounded-full border border-cream/20 text-cream transition-colors hover:border-cherry hover:bg-cherry hover:text-night"
+      className="grid h-11 w-11 place-items-center rounded-full border border-cream/15 text-cream transition-colors hover:border-cream/60"
     >
       <Icon aria-hidden className="h-[18px] w-[18px]" strokeWidth={1.6} />
     </a>

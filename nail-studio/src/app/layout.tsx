@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
-import { Heebo, Karantina } from "next/font/google";
+import { Heebo, Noto_Serif_Hebrew } from "next/font/google";
 import { siteConfig, brandName } from "@/config/site";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -8,10 +8,10 @@ import { MotionProvider } from "@/components/providers/MotionProvider";
 import { LocalBusinessJsonLd } from "@/components/JsonLd";
 import "./globals.css";
 
-const heading = Karantina({
+const heading = Noto_Serif_Hebrew({
   variable: "--font-heading",
   subsets: ["hebrew", "latin"],
-  weight: ["400", "700"],
+  weight: ["200", "300", "400"],
   display: "swap",
 });
 
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d0a0b",
+  themeColor: "#0b0a10",
   colorScheme: "dark",
 };
 
@@ -61,7 +61,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body className="flex min-h-svh flex-col">
         <a
           href="#main"
-          className="sr-only rounded-full bg-cherry px-5 py-3 text-sm font-bold text-night focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[60]"
+          className="sr-only rounded-full bg-cream px-5 py-3 text-sm font-medium text-night focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[60]"
         >
           דילוג לתוכן הראשי
         </a>

@@ -31,7 +31,7 @@ function getContactRows(): ContactRow[] {
     rows.push({
       key: "phone",
       label: labels.phone,
-      icon: <Phone aria-hidden className={iconClass} strokeWidth={1.5} />,
+      icon: <Phone aria-hidden className={iconClass} strokeWidth={1.2} />,
       content: <ExternalValue href={tel} ltr>{contact.phone}</ExternalValue>,
     });
   }
@@ -41,7 +41,7 @@ function getContactRows(): ContactRow[] {
     rows.push({
       key: "whatsapp",
       label: labels.whatsapp,
-      icon: <MessageCircle aria-hidden className={iconClass} strokeWidth={1.5} />,
+      icon: <MessageCircle aria-hidden className={iconClass} strokeWidth={1.2} />,
       content: <ExternalValue href={whatsapp} newTab>שליחת הודעה</ExternalValue>,
     });
   }
@@ -62,7 +62,7 @@ function getContactRows(): ContactRow[] {
     rows.push({
       key: "address",
       label: labels.address,
-      icon: <MapPin aria-hidden className={iconClass} strokeWidth={1.5} />,
+      icon: <MapPin aria-hidden className={iconClass} strokeWidth={1.2} />,
       content: maps ? <ExternalValue href={maps} newTab>{location}</ExternalValue> : <span>{location}</span>,
     });
   }
@@ -72,7 +72,7 @@ function getContactRows(): ContactRow[] {
     rows.push({
       key: "hours",
       label: labels.hours,
-      icon: <Clock aria-hidden className={iconClass} strokeWidth={1.5} />,
+      icon: <Clock aria-hidden className={iconClass} strokeWidth={1.2} />,
       content: (
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1">
           {hours.map((entry) => (
@@ -94,7 +94,7 @@ function ExternalValue({ href, children, newTab, ltr }: { href: string; children
     <a
       href={href}
       dir={ltr ? "ltr" : undefined}
-      className="inline-flex min-h-11 items-center underline decoration-cherry decoration-2 underline-offset-4 transition-colors hover:text-cherry"
+      className="inline-flex min-h-11 items-center underline decoration-violet decoration-1 underline-offset-[6px] transition-colors hover:text-ice"
       {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
       {children}
@@ -123,10 +123,10 @@ export function ContactSection() {
 
         <Reveal delay={0.1}>
           {rows.length > 0 ? (
-            <ul className="divide-y divide-line rounded-3xl border border-line bg-coal px-6 sm:px-8">
+            <ul className="divide-y divide-line border-y border-line">
               {rows.map((row) => (
                 <li key={row.key} className="flex items-start gap-4 py-5">
-                  <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full bg-cherry text-night">{row.icon}</span>
+                  <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-violet">{row.icon}</span>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-sm text-mist">{row.label}</span>
                     <div className="text-lg text-cream">{row.content}</div>
@@ -135,9 +135,9 @@ export function ContactSection() {
               ))}
             </ul>
           ) : (
-            <div className="flex h-full min-h-56 flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-cream/20 bg-coal px-6 py-14 text-center">
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-cherry text-night">
-                <MessageCircle aria-hidden className="h-5 w-5" strokeWidth={1.5} />
+            <div className="flex h-full min-h-56 flex-col items-center justify-center gap-4 rounded-[2rem] border border-line bg-coal px-6 py-14 text-center">
+              <span className="grid h-12 w-12 place-items-center rounded-full border border-line text-violet">
+                <MessageCircle aria-hidden className="h-5 w-5" strokeWidth={1.2} />
               </span>
               <p className="max-w-xs text-lg text-mist">{copy.empty}</p>
             </div>

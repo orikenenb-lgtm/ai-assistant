@@ -74,7 +74,7 @@ export interface Service {
 }
 
 /** Visual tone used by the abstract placeholder art until real photos exist. */
-export type PlaceholderTone = "cherry" | "noir" | "gold" | "nude" | "fuchsia" | "plum" | "chrome";
+export type PlaceholderTone = "aura" | "violet" | "orchid" | "ice" | "chrome" | "dusk" | "noir";
 
 export interface GalleryImage {
   src: string;
@@ -89,7 +89,7 @@ export interface GalleryItem {
   alt: string;
   category: string;
   description: string;
-  /** Polish-style swatch name shown on the placeholder, e.g. "Cherry Lacquer". */
+  /** Polish-style swatch name shown on the placeholder, e.g. "Aura Chrome". */
   swatchName: string;
   /** Grid footprint on larger screens. */
   shape: "square" | "tall" | "wide";

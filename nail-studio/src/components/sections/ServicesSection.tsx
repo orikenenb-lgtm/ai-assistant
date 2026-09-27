@@ -15,20 +15,13 @@ export function ServicesSection() {
         <Reveal>
           <SectionHeading id="services-title" eyebrow={copy.eyebrow} title={copy.title} highlight={copy.highlight} description={copy.description} />
         </Reveal>
-
-        {/* Mobile: swipeable row with snap. sm+: grid. */}
-        <ul
-          aria-label="רשימת טיפולים"
-          tabIndex={0}
-          className="-mx-5 mt-12 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pt-2 pb-6 [scrollbar-width:none] sm:mx-0 sm:mt-16 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden"
-        >
+        <ul className="mt-14 divide-y divide-line border-y border-line sm:mt-20">
           {services.map((service, index) => (
-            <Reveal as="li" key={service.id} delay={(index % 3) * 0.08} className="w-[80%] max-w-[340px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+            <Reveal as="li" key={service.id} delay={index * 0.05}>
               <ServiceCard service={service} pricePending={copy.pricePending} />
             </Reveal>
           ))}
         </ul>
-        <p aria-hidden className="mt-1 text-center text-xs text-mist sm:hidden">החליקי לצפייה בכל הטיפולים ←</p>
       </Container>
     </Section>
   );

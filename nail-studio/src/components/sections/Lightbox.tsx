@@ -78,7 +78,7 @@ export function Lightbox({ items, index, onIndexChange, onClose }: LightboxProps
           type="button"
           onClick={onClose}
           aria-label="סגירת הגלריה"
-          className="grid h-11 w-11 place-items-center rounded-full border border-cream/20 transition-colors hover:border-cherry hover:bg-cherry hover:text-night"
+          className="grid h-11 w-11 place-items-center rounded-full border border-cream/20 transition-colors hover:border-cream/60"
         >
           <X aria-hidden className="h-5 w-5" strokeWidth={1.6} />
         </button>
@@ -93,11 +93,11 @@ export function Lightbox({ items, index, onIndexChange, onClose }: LightboxProps
         }}
       >
         <figure key={item.id} className="flex h-full max-h-[78svh] w-full max-w-lg animate-fade flex-col items-center justify-center gap-4">
-          <div className="relative aspect-[4/5] max-h-full w-full overflow-hidden rounded-3xl shadow-lift">
+          <div className="relative aspect-[4/5] max-h-full w-full overflow-hidden rounded-2xl shadow-lift">
             <GalleryVisual item={item} sizes="(min-width: 640px) 512px, 100vw" priority />
           </div>
           <figcaption className="flex flex-col items-center gap-1 text-center">
-            <span id={titleId} dir="auto" className="font-display text-4xl font-bold">{item.category}</span>
+            <span id={titleId} dir="auto" className="font-display text-3xl font-extralight">{item.category}</span>
             <span className="text-sm text-mist">{item.description}</span>
             <span className="sr-only">{item.alt}</span>
           </figcaption>
@@ -124,7 +124,7 @@ function NavButton({ side, label, onClick }: { side: "start" | "end"; label: str
       onClick={onClick}
       aria-label={label}
       className={
-        "absolute top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-cream/20 bg-night/60 backdrop-blur transition-colors hover:border-cherry hover:bg-cherry hover:text-night " +
+        "absolute top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-cream/20 bg-night/60 backdrop-blur transition-colors hover:border-cream/60 " +
         (side === "start" ? "start-2 sm:start-6" : "end-2 sm:end-6")
       }
     >

@@ -46,8 +46,8 @@ export function Header() {
                     href={item.href}
                     aria-current={current ? "location" : undefined}
                     className={cn(
-                      "relative inline-flex min-h-11 items-center rounded-full px-4 text-[15px] font-medium transition-colors",
-                      "after:absolute after:inset-x-4 after:bottom-2 after:h-0.5 after:origin-center after:scale-x-0 after:rounded-full after:bg-cherry after:transition-transform after:duration-300",
+                      "relative inline-flex min-h-11 items-center rounded-full px-4 text-sm tracking-wide transition-colors",
+                      "after:absolute after:inset-x-4 after:bottom-2 after:h-px after:origin-center after:scale-x-0 after:bg-linear-to-l after:from-violet after:via-orchid after:to-ice after:transition-transform after:duration-300",
                       current ? "text-cream after:scale-x-100" : "text-mist hover:text-cream hover:after:scale-x-100",
                     )}
                   >
@@ -72,9 +72,9 @@ export function Header() {
             aria-expanded={menuOpen}
             aria-controls={MENU_ID}
             aria-haspopup="dialog"
-            className="grid h-11 w-11 place-items-center rounded-full border border-cream/20 text-cream transition-colors hover:border-cherry hover:bg-cherry hover:text-night lg:hidden"
+            className="grid h-11 w-11 place-items-center rounded-full border border-cream/15 text-cream transition-colors hover:border-cream/60 lg:hidden"
           >
-            <Menu aria-hidden className="h-5 w-5" strokeWidth={1.6} />
+            <Menu aria-hidden className="h-5 w-5" strokeWidth={1.2} />
           </button>
         </div>
       </Container>

@@ -1,26 +1,22 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "dark" | "outline-dark";
+type Variant = "primary" | "secondary";
 type Size = "md" | "lg";
 
 const base =
-  "group inline-flex min-h-11 select-none items-center justify-center gap-2 rounded-full font-bold tracking-wide whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform] duration-300 ease-[var(--ease-premium)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
+  "group inline-flex min-h-11 select-none items-center justify-center gap-3 rounded-full font-normal tracking-wide whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform] duration-300 ease-[var(--ease-premium)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
-  /** Loud cherry pill — the main call to action */
-  primary: "bg-cherry text-night shadow-glow hover:bg-cream hover:shadow-none",
-  /** Outline on dark backgrounds */
-  secondary: "border border-cream/25 text-cream hover:border-cream hover:bg-cream hover:text-night",
-  /** Solid black — for use on cherry/gold backgrounds */
-  dark: "bg-night text-cream hover:bg-coal-2",
-  /** Outline black — for use on cherry/gold backgrounds */
-  "outline-dark": "border-2 border-night text-night hover:bg-night hover:text-cream",
+  /** Solid light pill; picks up the iridescent gradient on hover */
+  primary: "bg-cream text-night hover:bg-iridescent",
+  /** Hairline outline */
+  secondary: "border border-cream/20 text-cream hover:border-cream/60",
 };
 
 const sizes: Record<Size, string> = {
   md: "h-11 px-6 text-sm",
-  lg: "h-14 px-8 text-base",
+  lg: "h-13 px-8 text-[15px]",
 };
 
 interface CommonProps {

@@ -1,57 +1,60 @@
 @import "tailwindcss";
 
-/* ───────────────────────── Design tokens — "Lacquer" ─────────────────────────
-   Near-black base, one loud cherry-lacquer accent, chrome gold used sparingly. */
+/* ───────────────────────── Design tokens — "Aura Chrome" ─────────────────────────
+   Deep violet-black base. Violet, orchid pink and ice blue appear only as light:
+   iridescent gradients, glows and hairlines — never as flat blocks. */
 @theme {
   /* Surfaces */
-  --color-night: #0d0a0b; /* page background */
-  --color-coal: #171113; /* cards / raised surfaces */
-  --color-coal-2: #221a1d; /* hover / nested surfaces */
-  --color-line: rgb(255 243 236 / 0.1);
+  --color-night: #0b0a10; /* page background */
+  --color-coal: #14121b; /* raised surfaces */
+  --color-coal-2: #1c1926;
+  --color-line: rgb(244 241 248 / 0.1);
 
-  /* Accent */
-  --color-cherry: #ff2a5f; /* 5.4:1 on night — text-safe */
-  --color-cherry-deep: #d90f45;
-  --color-gold: #f2c46d; /* 12:1 on night */
+  /* Iridescent accents (all AA as text on night) */
+  --color-violet: #9b7bff; /* 6.3:1 */
+  --color-orchid: #e98bc4; /* 8.4:1 */
+  --color-ice: #8fd3f4; /* 12:1 */
 
   /* Text */
-  --color-cream: #fff3ec; /* 18:1 on night */
-  --color-mist: #b8a9ad; /* secondary text, 8.7:1 on night */
+  --color-cream: #f4f1f8; /* 17.6:1 */
+  --color-mist: #a9a3b8; /* 8:1 */
 
   /* Typography */
   --font-sans: var(--font-body), "Heebo", system-ui, sans-serif;
-  --font-display: var(--font-heading), "Karantina", Impact, sans-serif;
+  --font-display: var(--font-heading), "Noto Serif Hebrew", Georgia, serif;
 
-  /* Shadows & glow */
-  --shadow-lift: 0 30px 60px -30px rgb(0 0 0 / 0.8);
-  --shadow-glow: 0 0 0 1px rgb(255 42 95 / 0.4), 0 20px 60px -20px rgb(255 42 95 / 0.55);
+  --shadow-lift: 0 40px 80px -40px rgb(0 0 0 / 0.9);
 
-  /* Motion */
+  /* Motion — slow and quiet */
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
-
-  --animate-rise: rise 0.9s var(--ease-premium) both;
-  --animate-fade: fade 0.35s var(--ease-premium) both;
-  --animate-spin-slow: spin 22s linear infinite;
-  --animate-marquee: marquee 28s linear infinite;
-  --animate-shine: shine 6s ease-in-out infinite;
+  --animate-rise: rise 1.1s var(--ease-premium) both;
+  --animate-fade: fade 0.4s var(--ease-premium) both;
+  --animate-aura: aura 18s ease-in-out infinite alternate;
 
   @keyframes rise {
-    from { opacity: 0; transform: translateY(24px); }
+    from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
   }
   @keyframes fade {
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  /* RTL: content moves toward the right, so the track travels +50% */
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(50%); }
+  @keyframes aura {
+    from { transform: translate(-4%, -3%) rotate(0deg) scale(1); }
+    to { transform: translate(4%, 3%) rotate(12deg) scale(1.08); }
   }
-  @keyframes shine {
-    0%, 100% { transform: translate(-6%, -4%) rotate(0deg); }
-    50% { transform: translate(6%, 4%) rotate(8deg); }
-  }
+}
+
+/* The signature gradient — violet → orchid → ice */
+@utility text-iridescent {
+  background: linear-gradient(100deg, var(--color-violet), var(--color-orchid) 50%, var(--color-ice));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-iridescent {
+  background: linear-gradient(100deg, var(--color-violet), var(--color-orchid) 50%, var(--color-ice));
 }
 
 /* ───────────────────────── Base ───────────────────────── */
@@ -69,42 +72,26 @@
   }
 
   body {
-    @apply bg-night font-sans text-cream antialiased;
+    @apply bg-night font-sans font-light text-cream antialiased;
     overflow-x: clip;
   }
 
-  /* Anchored sections land below the sticky header */
   [id] {
     scroll-margin-top: 5rem;
   }
 
   ::selection {
-    background: var(--color-cherry);
+    background: var(--color-violet);
     color: var(--color-night);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-gold);
+    outline: 1.5px solid var(--color-ice);
     outline-offset: 3px;
-    border-radius: 6px;
+    border-radius: 4px;
   }
 }
 
-/* Subtle film grain for depth on dark surfaces */
-@utility grain {
-  position: relative;
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.06;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-}
-
-/* Honour reduced-motion for CSS animations everywhere */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

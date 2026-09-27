@@ -39,7 +39,7 @@ export function MobileMenu({ id, open, onClose, items, activeId, booking, social
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <m.div
-            className="absolute inset-0 bg-night/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-night/60 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -54,22 +54,22 @@ export function MobileMenu({ id, open, onClose, items, activeId, booking, social
             aria-modal="true"
             aria-label="תפריט ניווט"
             tabIndex={-1}
-            className="grain absolute inset-y-0 end-0 flex w-[min(90vw,400px)] flex-col bg-cherry text-night outline-none"
+            className="absolute inset-y-0 end-0 flex w-[min(90vw,400px)] flex-col border-s border-line bg-coal text-cream outline-none"
             initial={{ x: offscreenX }}
             animate={{ x: 0 }}
             exit={{ x: offscreenX }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="relative flex h-18 items-center justify-between border-b border-night/15 px-5">
-              <span className="text-sm font-bold">תפריט</span>
+            <div className="relative flex h-18 items-center justify-between border-b border-line px-5">
+              <span className="text-sm text-mist">תפריט</span>
               <button
                 ref={closeRef}
                 type="button"
                 onClick={onClose}
                 aria-label="סגירת התפריט"
-                className="grid h-11 w-11 place-items-center rounded-full bg-night text-cream transition-transform hover:rotate-90"
+                className="grid h-11 w-11 place-items-center rounded-full border border-cream/15 text-cream transition-colors hover:border-cream/60"
               >
-                <X aria-hidden className="h-5 w-5" strokeWidth={2} />
+                <X aria-hidden className="h-5 w-5" strokeWidth={1.2} />
               </button>
             </div>
 
@@ -89,12 +89,12 @@ export function MobileMenu({ id, open, onClose, items, activeId, booking, social
                         onClick={onClose}
                         aria-current={current ? "location" : undefined}
                         className={cn(
-                          "flex min-h-16 items-center justify-between font-display text-6xl leading-none font-bold transition-opacity",
-                          current ? "opacity-100" : "opacity-70 hover:opacity-100",
+                          "flex min-h-16 items-center justify-between border-b border-line font-display text-3xl font-extralight transition-colors",
+                          current ? "text-cream" : "text-mist hover:text-cream",
                         )}
                       >
                         {item.label}
-                        {current && <span aria-hidden className="h-3 w-3 rotate-45 bg-night" />}
+                        {current && <span aria-hidden className="bg-iridescent h-1.5 w-1.5 rotate-45" />}
                       </a>
                     </m.li>
                   );
@@ -102,8 +102,8 @@ export function MobileMenu({ id, open, onClose, items, activeId, booking, social
               </ul>
             </nav>
 
-            <div className="relative flex flex-col gap-5 border-t border-night/15 p-5">
-              <Button href={booking.href} external={booking.external} onClick={onClose} variant="dark" size="lg" className="w-full">
+            <div className="relative flex flex-col gap-5 border-t border-line p-5">
+              <Button href={booking.href} external={booking.external} onClick={onClose} size="lg" className="w-full">
                 קביעת תור
               </Button>
               {socials.length > 0 && (

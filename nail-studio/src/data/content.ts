@@ -6,11 +6,10 @@ import type { TrustItem } from "@/types";
  * or moved to a CMS without touching layout code.
  */
 export const heroContent = {
-  eyebrow: "סטודיו לציפורניים",
+  eyebrow: "Nail Studio — סטודיו לציפורניים",
   headline: "ציפורניים שמרגישות בדיוק כמוך.",
   /** Word inside the headline painted in the accent color. */
   highlight: "כמוך",
-  badge: "BOOK NOW · NAIL STUDIO · ",
   subheadline:
     "עיצוב מדויק, חומרים איכותיים ותשומת לב לכל פרט — בחוויה רגועה ואישית.",
   primaryCta: "קביעת תור",
