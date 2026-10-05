@@ -190,3 +190,37 @@ describe('createSpeechPlaybackWith (mock)', () => {
     await expect(second).resolves.toBe('stopped');
   });
 });
+
+describe('createSpeechPlaybackWith — started signal (mock)', () => {
+  it('onStarted fires right after source.start(), after decoding (mock)', async () => {
+    let release!: () => void;
+    const { playback, contexts } = setup(() => new Promise((r) => (release = () => r({ duration: 1 }))));
+    let started = 0;
+    const playing = playback.play(MP3, 'audio/mpeg', { onStarted: () => started++ });
+    await flush();
+    expect(started).toBe(0);
+    release();
+    await flush();
+    expect(contexts[0]!.sources[0]!.started).toBe(1);
+    expect(started).toBe(1);
+    contexts[0]!.sources[0]!.finish();
+    await expect(playing).resolves.toBe('ended');
+  });
+
+  it('no onStarted when stopped during decoding or when decoding fails (mock)', async () => {
+    let release!: () => void;
+    const a = setup(() => new Promise((r) => (release = () => r({ duration: 1 }))));
+    let started = 0;
+    const playing = a.playback.play(MP3, 'audio/mpeg', { onStarted: () => started++ });
+    await flush();
+    a.playback.stop();
+    release();
+    await flush();
+    await expect(playing).resolves.toBe('stopped');
+    expect(started).toBe(0);
+
+    const b = setup(() => Promise.reject(new Error('bad data')));
+    await expect(b.playback.play(MP3, 'audio/mpeg', { onStarted: () => started++ })).rejects.toThrow();
+    expect(started).toBe(0);
+  });
+});

@@ -59,19 +59,56 @@ export function ScreenCaptureIndicator() {
   );
 }
 
-export function Toasts() {
+/** בפס (בהגדרות ובתצוגה הקומפקטית) מוצגות רק ההודעות האחרונות, בשורה אחת. */
+const STRIP_MAX = 2;
+
+/**
+ * הודעות קופצות.
+ * - stack: ערימה צפה בפינה (תצוגה מלאה בלי הגדרות). רק ההודעה עצמה קולטת לחיצות.
+ * - strip: פס דק בתחתית מסך ההגדרות — חלק מהפריסה, לכן לעולם לא מכסה שדות או כפתורים.
+ *   כל הודעה בשורה אחת עם "…", והטקסט המלא ב-title.
+ */
+export function Toasts({ variant = 'stack', inert = false }: { variant?: 'stack' | 'strip'; inert?: boolean }) {
   const controller = useController();
-  const toasts = useUiState((s) => s.toasts);
+  const all = useUiState((s) => s.toasts);
+  if (variant === 'strip' && all.length === 0) return null;
+  const toasts = variant === 'strip' ? all.slice(-STRIP_MAX) : all;
   return (
-    <div className="toasts" role="region" aria-label={he.toasts.region}>
+    <div className="toasts" data-variant={variant} role="region" aria-label={he.toasts.region} inert={inert || undefined}>
       {toasts.map((t) => (
-        <div key={t.id} className="toast" data-kind={t.kind} role={t.kind === 'error' ? 'alert' : 'status'}>
+        <div
+          key={t.id}
+          className="toast"
+          data-kind={t.kind}
+          role={t.kind === 'error' ? 'alert' : 'status'}
+          title={variant === 'strip' ? t.text : undefined}
+        >
           <span className="toast-text">{t.text}</span>
           <button type="button" className="toast-close" aria-label={he.toasts.close} onClick={() => controller.dismissToast(t.id)}>
             <IconClose size={14} />
           </button>
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * ההודעה האחרונה בתצוגה הקומפקטית: פס דק בשורה אחת בתוך עמודת המידע (במקום שורת השיחה),
+ * כך שהיא לא מכסה את המיקרופון / העצירה. הטקסט המלא ב-title.
+ */
+export function CompactToast() {
+  const controller = useController();
+  const toast = useUiState((s) => s.toasts[s.toasts.length - 1] ?? null);
+  if (!toast) return null;
+  return (
+    <div className="compact-toast" data-kind={toast.kind} role={toast.kind === 'error' ? 'alert' : 'status'} title={toast.text}>
+      <span className="compact-toast-text" dir="auto">
+        {toast.text}
+      </span>
+      <button type="button" className="toast-close" aria-label={he.toasts.close} onClick={() => controller.dismissToast(toast.id)}>
+        <IconClose size={12} />
+      </button>
     </div>
   );
 }

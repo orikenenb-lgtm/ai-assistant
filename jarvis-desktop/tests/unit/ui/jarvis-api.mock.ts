@@ -68,6 +68,7 @@ export function mockJarvisApi(initial?: { settings?: Settings; snapshot?: Assist
     voice: {
       transcribe: vi.fn(async () => ({ ok: true as const, text: 'תפתח את EPLAN', provider: 'mock', durationMs: 1500 })),
       synthesize: vi.fn(async () => ({ ok: true as const, audio: new Uint8Array([1, 2, 3]), mimeType: 'audio/mpeg', provider: 'mock' })),
+      cancel: vi.fn(async () => ({ cancelled: true })),
       reportAudioPhase: vi.fn(async () => undefined),
     },
     settings: {
@@ -109,8 +110,9 @@ export function mockJarvisApi(initial?: { settings?: Settings; snapshot?: Assist
       quit: vi.fn(async () => undefined),
     },
     wakeword: {
-      startPorcupine: vi.fn(async () => ({ ok: true as const, frameLength: 512, sampleRate: 16000 })),
+      startPorcupine: vi.fn(async () => ({ ok: true as const, frameLength: 512, sampleRate: 16000, sessionId: '11111111-1111-4111-8111-111111111111' })),
       stopPorcupine: vi.fn(async () => undefined),
+      statusPorcupine: vi.fn(async () => ({ state: 'running' as const })),
       pushFrames: vi.fn(),
     },
     onCommand: vi.fn((listener: (c: UiCommand) => void) => {

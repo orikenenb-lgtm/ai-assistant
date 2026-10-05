@@ -167,3 +167,47 @@ describe('createSystemSpeakerWith (mock)', () => {
     expect(synth.spoken).toHaveLength(0);
   });
 });
+
+describe('createSystemSpeakerWith — started signal (mock)', () => {
+  it('onStarted fires at utterance.onstart, not when speak() is called (mock)', async () => {
+    const { speaker, synth } = setup();
+    let started = 0;
+    const speaking = speaker.speak('שלום', { rate: 1, onStarted: () => started++ });
+    await flush();
+    expect(synth.spoken).toHaveLength(1);
+    expect(started).toBe(0);
+    synth.startCurrent();
+    expect(started).toBe(1);
+    synth.finishCurrent();
+    await expect(speaking).resolves.toBe('ended');
+    expect(started).toBe(1);
+  });
+
+  it('an engine that never fires onstart still reports started by the time it ends (mock)', async () => {
+    const { speaker, synth } = setup();
+    let started = 0;
+    const speaking = speaker.speak('שלום', { rate: 1, onStarted: () => started++ });
+    await flush();
+    synth.finishCurrent();
+    await expect(speaking).resolves.toBe('ended');
+    expect(started).toBe(1);
+  });
+
+  it("no Hebrew voice: 'no-voice' and onStarted is never called (mock)", async () => {
+    const { speaker } = setup([DAVID, ZIRA]);
+    let started = 0;
+    await expect(speaker.speak('שלום', { rate: 1, onStarted: () => started++ })).resolves.toBe('no-voice');
+    expect(started).toBe(0);
+  });
+
+  it('stopped before it started: onStarted is never called (mock)', async () => {
+    const { speaker, synth } = setup();
+    let started = 0;
+    const speaking = speaker.speak('שלום', { rate: 1, onStarted: () => started++ });
+    await flush();
+    speaker.stop();
+    synth.startCurrent();
+    await expect(speaking).resolves.toBe('stopped');
+    expect(started).toBe(0);
+  });
+});

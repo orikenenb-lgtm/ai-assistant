@@ -1,14 +1,20 @@
 /**
- * מקטע "כללי": שם, תצוגה, תמיד מעל, סגירה למגש, הפעלה מוסתרת והפחתת תנועה.
+ * מקטע "כללי": שם, תצוגה, תמיד מעל, סגירה למגש, הפעלה מוסתרת, הפעלה עם Windows, הפחתת תנועה,
+ * וחלון החסד של תזכורות שהוחמצו.
  */
 import { he } from '../i18n/he';
 import { useController } from '../state/controller';
 import { RadioGroup, Select, TextInput, Toggle, type SectionProps } from './fields';
+import { parseIntInRange, rangeError } from './helpers';
+
+/** הטווח של reminders.graceMinutes ב-SettingsSchema. */
+const GRACE_MIN = 0;
+const GRACE_MAX = 60;
 
 export function GeneralSection({ settings, saver }: SectionProps) {
   const controller = useController();
   const t = he.settings.general;
-  const { ui, profile } = settings;
+  const { ui, profile, reminders } = settings;
 
   return (
     <div className="section">
@@ -53,6 +59,13 @@ export function GeneralSection({ settings, saver }: SectionProps) {
         onChange={(v) => void saver.save('startHidden', { ui: { startHidden: v } })}
         status={saver.status.startHidden}
       />
+      <Toggle
+        label={t.openAtLogin}
+        checked={ui.openAtLogin}
+        hint={t.openAtLoginHint}
+        onChange={(v) => void saver.save('openAtLogin', { ui: { openAtLogin: v } })}
+        status={saver.status.openAtLogin}
+      />
       <RadioGroup
         label={t.reducedMotion}
         value={ui.reducedMotion}
@@ -63,6 +76,24 @@ export function GeneralSection({ settings, saver }: SectionProps) {
         ]}
         onChange={(v) => void saver.save('reducedMotion', { ui: { reducedMotion: v } })}
         status={saver.status.reducedMotion}
+      />
+
+      <h3 className="section-head">{t.remindersTitle}</h3>
+      <TextInput
+        key={`grace-${reminders.graceMinutes}`}
+        label={t.graceMinutes}
+        value={String(reminders.graceMinutes)}
+        hint={t.graceMinutesHint}
+        ltr
+        inputMode="numeric"
+        maxLength={2}
+        validate={(v) => (parseIntInRange(v, GRACE_MIN, GRACE_MAX) === null ? rangeError(GRACE_MIN, GRACE_MAX) : null)}
+        onCommit={(v) =>
+          void saver.save('graceMinutes', {
+            reminders: { graceMinutes: parseIntInRange(v, GRACE_MIN, GRACE_MAX) ?? reminders.graceMinutes },
+          })
+        }
+        status={saver.status.graceMinutes}
       />
     </div>
   );

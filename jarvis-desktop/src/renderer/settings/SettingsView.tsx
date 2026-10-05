@@ -6,6 +6,7 @@ import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { SecretsStatus } from '../../shared/settings-schema';
 import { Tabs, type TabItem } from '../components/Tabs';
 import { IconClose } from '../components/Icons';
+import { Toasts } from '../components/Notices';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { he } from '../i18n/he';
@@ -94,6 +95,8 @@ export function SettingsView({ inert }: { inert: boolean }) {
             )}
           </div>
         </div>
+        {/* הודעות כשמסך ההגדרות פתוח: פס בתחתית המסגרת — לא מכסה שדות */}
+        <Toasts variant="strip" />
       </div>
     </div>
   );

@@ -47,11 +47,54 @@
 .compact-actions {
   display: grid;
   grid-template-columns: auto auto;
-  gap: 6px;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, auto);
+  gap: 4px 6px;
   align-items: center;
   justify-items: center;
   -webkit-app-region: no-drag;
 }
 .compact-actions .mic-btn {
-  grid-row: span 2;
+  grid-row: span 3;
+}
+.compact-actions .icon-btn[data-size='small'] {
+  inline-size: 30px;
+  block-size: 30px;
+}
+
+/* הודעה בתצוגה הקומפקטית: פס דק בשורה אחת במקום שורת השיחה — לא מכסה את הכפתורים */
+.compact-toast {
+  --tone: var(--cyan);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  font-size: 12px;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  border-inline-start: 3px solid var(--tone);
+  border-radius: var(--radius);
+  background: rgba(4, 13, 22, 0.9);
+  -webkit-app-region: no-drag;
+}
+.compact-toast[data-kind='success'] {
+  --tone: var(--green);
+}
+.compact-toast[data-kind='warning'] {
+  --tone: var(--amber);
+}
+.compact-toast[data-kind='error'] {
+  --tone: var(--red);
+}
+.compact-toast-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.compact-toast .toast-close {
+  inline-size: 18px;
+  block-size: 18px;
 }

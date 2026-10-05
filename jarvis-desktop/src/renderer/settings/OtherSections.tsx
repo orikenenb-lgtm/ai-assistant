@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import type { UsageSummaryRow } from '../../shared/types';
 import { useAsyncData } from '../hooks/useAsyncData';
-import { he } from '../i18n/he';
+import { he, providerName } from '../i18n/he';
 import { useController, useUiState } from '../state/controller';
 import { formatNumber, formatSeconds } from '../state/format';
 import { ConfirmButton, Field, TextInput, Toggle, type SectionProps } from './fields';
@@ -47,10 +47,11 @@ const DASHBOARDS: ReadonlyArray<{ name: string; url: string | null; text?: strin
   { name: 'Azure', url: null, text: he.settings.privacy.azureDashboard },
 ];
 
-function UsageTable() {
+/** טבלת השימוש נטענת מחדש ב-data-changed של 'usage'/'history', ואחרי מחיקה מהמסך הזה (refreshKey). */
+function UsageTable({ refreshKey }: { refreshKey: number }) {
   const controller = useController();
   const version = useUiState((s) => s.dataVersion.usage + s.dataVersion.history);
-  const usage = useAsyncData<UsageSummaryRow[]>(`usage:${version}`, () => controller.api.data.usageSummary());
+  const usage = useAsyncData<UsageSummaryRow[]>(`usage:${version}:${refreshKey}`, () => controller.api.data.usageSummary());
   const t = he.settings.privacy;
 
   if (usage.data === null) {
@@ -77,7 +78,7 @@ function UsageTable() {
           {usage.data.map((row) => (
             <tr key={`${row.period}|${row.provider}|${row.kind}|${row.model}`}>
               <td>{t.periods[row.period] ?? <span dir="ltr">{row.period}</span>}</td>
-              <td dir="ltr">{row.provider}</td>
+              <td dir="auto">{providerName(row.provider)}</td>
               <td>{t.kinds[row.kind] ?? row.kind}</td>
               <td className="mono" dir="ltr">
                 {row.model}
@@ -101,6 +102,7 @@ export function PrivacySection({ settings, saver }: SectionProps) {
   const t = he.settings.privacy;
   const { privacy } = settings;
   const [clearResult, setClearResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const [usageRefresh, setUsageRefresh] = useState(0);
 
   const clear = async (scope: 'conversation' | 'all') => {
     setClearResult(null);
@@ -110,6 +112,8 @@ export function PrivacySection({ settings, saver }: SectionProps) {
     } catch {
       setClearResult({ ok: false, text: t.clearFailed });
     }
+    // גם אם האירוע מ-main מתעכב — הטבלה משקפת מיד את מה שנמחק
+    setUsageRefresh((n) => n + 1);
   };
 
   return (
@@ -151,7 +155,7 @@ export function PrivacySection({ settings, saver }: SectionProps) {
 
       <h3 className="section-head">{t.usageTitle}</h3>
       <p className="field-hint">{t.usageNote}</p>
-      <UsageTable />
+      <UsageTable refreshKey={usageRefresh} />
 
       <Field label={t.dashboards}>
         <ul className="dashboards">

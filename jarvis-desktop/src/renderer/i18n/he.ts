@@ -207,7 +207,8 @@ export const he = {
     approve: 'אשר',
     reject: 'דחה',
     queue: (i: number, n: number) => `בקשה ${i} מתוך ${n}`,
-    keyboardHint: 'Esc = דחייה. האישור מתבצע רק בלחיצה מפורשת על "אשר".',
+    keyboardHint: 'Esc = דחייה. Enter לא מאשר — מאשרים בלחיצה על "אשר".',
+    voiceHint: 'אפשר גם ללחוץ על המיקרופון ולומר "כן" או "לא".',
     sending: 'שולח…',
     failed: 'שליחת ההחלטה נכשלה.',
   },
@@ -218,7 +219,6 @@ export const he = {
     sttNotConfigured: 'תמלול לא מוגדר — בחר ספק תמלול בהגדרות ← קול',
     noSpeech: 'לא שמעתי דיבור',
     echoIgnored: 'התעלמתי מהקלטה שנשמעה כמו הקול שלי (הד).',
-    emptyTranscript: 'לא זוהה טקסט בהקלטה.',
     transcribeFailed: (msg: string) => `התמלול נכשל: ${msg}`,
     captureFailed: 'ההקלטה נכשלה. נסה שוב.',
     synthFallback: (msg: string) => `ההקראה בענן נכשלה (${msg}) — משתמש בקול המערכת.`,
@@ -238,7 +238,6 @@ export const he = {
     initFailed: 'טעינת ההגדרות נכשלה. חלק מהיכולות לא יפעלו עד הפעלה מחדש.',
     micTestRunning: 'בדיקת המיקרופון בהגדרות הופסקה כדי להתחיל האזנה.',
     busyListening: 'JARVIS מאזין כרגע.',
-    approvalPending: 'יש בקשת אישור פתוחה — אשר או דחה אותה קודם.',
   },
 
   mic: {
@@ -572,6 +571,22 @@ export const UNITS = {
   dayOne: 'יום אחד',
   days: (n: number) => `${n} ימים`,
 } as const;
+
+/** שמות תצוגה לספקים (במקום מזהים טכניים כמו local-openai-compatible). מזהה לא מוכר (למשל מודל) מוצג כמו שהוא. */
+export const PROVIDER_NAMES: Readonly<Record<string, string>> = {
+  openai: 'OpenAI',
+  azure: 'Azure Speech',
+  'local-openai-compatible': 'שרת תמלול מקומי',
+  system: 'קול המערכת',
+  none: 'ללא',
+  anthropic: 'Claude',
+  porcupine: 'Porcupine',
+  openwakeword: 'openWakeWord',
+};
+
+export function providerName(id: string): string {
+  return PROVIDER_NAMES[id] ?? id;
+}
 
 /** הודעת טווח לשדות מספריים. */
 export function rangeErrorText(min: number, max: number): string {

@@ -1,6 +1,8 @@
 /**
  * דיאלוג אישור מודאלי: מה יתבצע, על מה, ההשפעה, אזהרה (ענבר), סיבה וספירה לאחור עד פקיעה.
  * Esc = דחייה. Enter לא מאשר כברירת מחדל: המיקוד ההתחלתי על הדיאלוג עצמו, לא על "אשר".
+ * כל שאר האפליקציה inert בזמן שהדיאלוג פתוח (ראה App.tsx), כך ש-Tab לא יוצא ממנו.
+ * אפשר גם לענות בקול: כפתור מיקרופון בתוך הדיאלוג, ואז "כן" / "לא".
  */
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { ApprovalRequest } from '../../shared/types';
@@ -10,6 +12,7 @@ import { he } from '../i18n/he';
 import { useController, useUiState } from '../state/controller';
 import { formatCountdown } from '../state/format';
 import { IconShield } from './Icons';
+import { MicButton } from './VoiceButtons';
 
 function ApprovalBody({ request, index, total }: { request: ApprovalRequest; index: number; total: number }) {
   const controller = useController();
@@ -128,6 +131,11 @@ function ApprovalBody({ request, index, total }: { request: ApprovalRequest; ind
         </p>
       )}
       <p className="approval-hint">{he.approval.keyboardHint}</p>
+      {/* אפשר לענות בקול: "כן"/"לא" נשלחים כתשובה לאישור (המנוע מזהה אותם). הדיאלוג נשאר עד שהאישור נסגר. */}
+      <div className="approval-voice">
+        <MicButton size="small" />
+        <p className="approval-hint">{he.approval.voiceHint}</p>
+      </div>
 
       <div className="approval-actions">
         <button type="button" className="btn" disabled={busy} onClick={() => void decide(false)}>

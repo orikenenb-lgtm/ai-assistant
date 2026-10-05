@@ -31,15 +31,23 @@ function useGlobalKeys(controller: JarvisController): void {
         controller.openSettings();
         return;
       }
-      // כשיש דיאלוג אישור — הוא מטפל במקשים שלו (Esc = דחייה)
-      if (s.pendingApprovals.length > 0) return;
+      const space = (e.code === 'Space' || e.key === ' ') && !e.repeat && !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
+      // כשיש דיאלוג אישור — הוא מטפל במקשים שלו (Esc = דחייה). רווח מחוץ לכפתורים = לחיצה לדיבור,
+      // כדי לענות "כן"/"לא" בקול (זה לא מאשר בעצמו — רק פותח את המיקרופון).
+      if (s.pendingApprovals.length > 0) {
+        if (space && !isInteractiveTarget(e.target)) {
+          e.preventDefault();
+          void controller.toggleListen('keyboard');
+        }
+        return;
+      }
       if (e.key === 'Escape') {
         e.preventDefault();
         if (s.settingsOpen) controller.closeSettings();
         else controller.stop();
         return;
       }
-      if ((e.code === 'Space' || e.key === ' ') && !e.repeat && !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+      if (space) {
         if (s.settingsOpen || isInteractiveTarget(e.target)) return;
         e.preventDefault();
         void controller.toggleListen('keyboard');
@@ -83,17 +91,19 @@ export function App() {
   const approvalOpen = pendingCount > 0;
   const showSettings = settingsOpen && viewMode === 'full';
 
+  // דיאלוג אישור פתוח: כל השאר inert (גם שורת הכותרת וההודעות) — Tab לא יוצא מהדיאלוג.
+  // הודעות: בתצוגה מלאה — ערימה צפה; בהגדרות — פס בתחתית המסגרת; בקומפקטית — פס בתוך ה-HUD.
   return (
     <div className="app" data-view={viewMode} data-state={state}>
       {viewMode === 'full' ? (
-        <FullHud state={state} label={label} reducedMotion={reducedMotion} obscured={showSettings || approvalOpen} />
+        <FullHud state={state} label={label} reducedMotion={reducedMotion} obscured={showSettings || approvalOpen} inert={approvalOpen} />
       ) : (
-        <CompactHud state={state} label={label} reducedMotion={reducedMotion} />
+        <CompactHud state={state} label={label} reducedMotion={reducedMotion} inert={approvalOpen} />
       )}
       {showSettings && <SettingsView inert={approvalOpen} />}
       <ScreenCaptureIndicator />
       <ApprovalDialog />
-      <Toasts />
+      {viewMode === 'full' && !showSettings && <Toasts inert={approvalOpen} />}
     </div>
   );
 }

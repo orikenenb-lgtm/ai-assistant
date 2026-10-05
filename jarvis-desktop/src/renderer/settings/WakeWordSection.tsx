@@ -65,6 +65,9 @@ export function WakeWordSection({
             {wake.error}
           </p>
         )}
+        {wake.status === 'error' && wakeWord.enabled && (
+          <p className="field-hint">{wake.retryExhausted ? he.wake.retryExhausted : he.wake.retryingAuto}</p>
+        )}
         {wake.detail && (
           <p className="field-hint">
             {he.wake.technicalDetail}{' '}
@@ -75,7 +78,7 @@ export function WakeWordSection({
         )}
         {wakeWord.enabled && (
           <button type="button" className="btn" onClick={() => controller.restartWakeWord()}>
-            {t.restart}
+            {wake.status === 'error' ? he.wake.retry : t.restart}
           </button>
         )}
       </Field>

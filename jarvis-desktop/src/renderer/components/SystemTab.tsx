@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import type { ServiceStatus, SystemStatus } from '../../shared/types';
 import { useDocumentVisible } from '../hooks/environment';
-import { he } from '../i18n/he';
+import { he, providerName } from '../i18n/he';
 import { useController } from '../state/controller';
 import { formatBytes, formatPercent, formatShortTime, formatUptime } from '../state/format';
 
@@ -47,8 +47,8 @@ function ServiceRow({ service }: { service: ServiceStatus }) {
     <li className="service-row" title={service.lastError_he}>
       <span className="chip-dot" data-tone={tone} aria-hidden="true" />
       <span className="service-name">{he.system.serviceNames[service.service]}</span>
-      <span className="service-provider mono" dir="ltr">
-        {service.provider}
+      <span className="service-provider" dir="auto">
+        {providerName(service.provider)}
       </span>
       <span className="service-state" data-tone={tone}>
         {he.system.serviceStates[service.state]}

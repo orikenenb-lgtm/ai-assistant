@@ -2,7 +2,7 @@ import { ipcMain, type WebContents } from 'electron';
 import type { z } from 'zod';
 import { IPC } from '../../shared/ipc-channels';
 import { IPC_REQUEST_SCHEMAS, IPC_SEND_SCHEMAS, WakewordSessionIdSchema } from '../../shared/ipc-schemas';
-import type { AudioPhase, ServiceStatus } from '../../shared/types';
+import type { AudioPhase, ReminderDTO, ServiceStatus } from '../../shared/types';
 import type { SettingsPatch } from '../../shared/settings-schema';
 import type {
   ApprovalService,
@@ -54,7 +54,7 @@ export interface IpcDeps {
   onRemindersChanged(): void;
   onTasksChanged(): void;
   onHistoryCleared(scope: 'conversation' | 'all'): void;
-  missedReminders(): import('../../shared/types').ReminderDTO[];
+  missedReminders(): ReminderDTO[];
   wakeword: PorcupineService;
   onWakeDetected(): void;
   window: {

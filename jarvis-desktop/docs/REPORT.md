@@ -16,8 +16,8 @@ JARVIS V1 בנוי: קוד מלא, בדיקות, מתקין ל-Windows ותיע�
 
 | | |
 |---|---|
-| בדיקות יחידה | {{UNIT_COUNT}} בדיקות, עוברות ב-Linux וב-Windows |
-| בדיקות E2E (האפליקציה האמיתית, Playwright + Electron) | {{E2E_LINUX}} ב-Linux, {{E2E_WINDOWS}} ב-Windows |
+| בדיקות יחידה | 780 בדיקות (44 קבצים), עוברות ב-Linux וב-Windows |
+| בדיקות E2E (האפליקציה האמיתית, Playwright + Electron) | 25 ב-Linux, 27 ב-Windows (3 בדיקות רצות רק ב-Windows, ואחת רק ב-Linux) |
 | typecheck + lint | נקיים |
 | מתקין | `JARVIS Setup 0.1.0.exe` + ZIP נבנים ב-CI על Windows ומועלים כ-artifact |
 

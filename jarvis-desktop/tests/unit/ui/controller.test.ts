@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defaultSettings, type Settings } from '../../../src/shared/settings-schema';
 import type { ApprovalRequest, AssistantEvent, ReminderDTO } from '../../../src/shared/types';
-import { JarvisController, WAKE_TAIL_MS, type BatteryLike } from '../../../src/renderer/state/controller';
+import { FOLLOW_UP_DELAY_MS, JarvisController, WAKE_TAIL_MS, type BatteryLike } from '../../../src/renderer/state/controller';
 import { deriveDisplayState } from '../../../src/renderer/state/derive';
 import { he } from '../../../src/renderer/i18n/he';
 import { flush, mockAudio, mockClock, speechCapture } from './audio.mock';
@@ -162,13 +162,14 @@ describe('JarvisController — voice flow (mock)', () => {
     expect(toastTexts(controller)).toContain(he.toasts.echoIgnored);
   });
 
-  it('passes Infinity as msSinceSpeechEnded when JARVIS never spoke (mock)', async () => {
-    const { audio, controller } = await setup();
+  it('skips the echo check entirely when JARVIS never spoke (mock)', async () => {
+    const { audio, controller, jarvis } = await setup();
+    audio.echo = true;
     await controller.toggleListen('ui');
     audio.mic.finish(speechCapture());
     await flush();
-    expect(audio.echoCalls[0]?.[1]).toBeNull();
-    expect(audio.echoCalls[0]?.[2]).toBe(Number.POSITIVE_INFINITY);
+    expect(audio.echoCalls).toHaveLength(0);
+    expect(jarvis.api.assistant.submit).toHaveBeenCalledTimes(1);
   });
 
   it('stop during transcription discards the result — nothing is submitted (mock)', async () => {
@@ -339,11 +340,18 @@ describe('JarvisController — speech output (mock)', () => {
     expect(controller.state.audioPhase).toBe('LISTENING');
   });
 
-  it('follow-up listening starts after speech ends when enabled (mock)', async () => {
-    const { audio, controller, jarvis } = await setup({ settings: settingsWith((s) => (s.voice.followUpListening = true)) });
+  it('follow-up listening starts after the same 600 ms tail as the wake word, not in the same tick (mock)', async () => {
+    const { audio, clock, controller, jarvis } = await setup({ settings: settingsWith((s) => (s.voice.followUpListening = true)) });
     jarvis.emit(response('מה עוד?'));
     await flush();
     audio.speaker.end();
+    await flush();
+    // סוף ההקראה עוד בחדר — המיקרופון לא נפתח מיד
+    expect(audio.mic.startCalls).toHaveLength(0);
+    clock.advance(FOLLOW_UP_DELAY_MS - 50);
+    await flush();
+    expect(audio.mic.startCalls).toHaveLength(0);
+    clock.advance(60);
     await flush();
     expect(audio.mic.startCalls).toHaveLength(1);
     expect(controller.state.audioPhase).toBe('LISTENING');

@@ -59,6 +59,8 @@ function browserDeps(): ControllerDeps {
     api: window.jarvis,
     audio: { createMicCapture, createSpeechPlayback, createSystemSpeaker, createWakeWordDetector, isLikelyEcho },
     now: () => Date.now(),
+    // פערים קצרים (הגנת הד) נמדדים בשעון מונוטוני — שינוי שעון המערכת לא משבש אותם
+    monotonicNow: () => performance.now(),
     timers: {
       setTimeout: (fn, ms) => window.setTimeout(fn, ms),
       clearTimeout: (h) => window.clearTimeout(h as number | undefined),
@@ -67,6 +69,12 @@ function browserDeps(): ControllerDeps {
     },
     randomId: () => uuidV4(),
     getBattery: typeof nav.getBattery === 'function' ? () => nav.getBattery?.() : undefined,
+    onDeviceChange: (listener) => {
+      const devices = navigator.mediaDevices;
+      if (!devices || typeof devices.addEventListener !== 'function') return () => undefined;
+      devices.addEventListener('devicechange', listener);
+      return () => devices.removeEventListener('devicechange', listener);
+    },
   };
 }
 

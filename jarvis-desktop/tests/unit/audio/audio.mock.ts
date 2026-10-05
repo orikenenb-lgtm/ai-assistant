@@ -321,6 +321,7 @@ export class MockUtterance {
   rate = 1;
   pitch = 1;
   volume = 1;
+  onstart: (() => void) | null = null;
   onend: (() => void) | null = null;
   onerror: ((event: { error: string }) => void) | null = null;
   constructor(public readonly text: string) {}
@@ -360,6 +361,10 @@ export class MockSynth {
   loadVoices(voices: MockVoice[]): void {
     this.voices = voices;
     for (const l of [...this.listeners]) l();
+  }
+  /** מדמה תחילת הקראה בפועל (utterance.onstart). */
+  startCurrent(): void {
+    this.spoken[this.spoken.length - 1]?.onstart?.();
   }
   /** מדמה סיום הקראה. */
   finishCurrent(): void {

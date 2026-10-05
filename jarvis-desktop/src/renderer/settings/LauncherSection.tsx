@@ -21,10 +21,19 @@ import {
 
 const t = he.settings.launcher;
 type Launcher = Settings['launcher'];
-type CheckResult = { ok: boolean; text: string } | null;
+/** ok: null = הבדיקה עוד רצה. */
+type CheckResult = { ok: boolean | null; text: string } | null;
+type PathKind = AppEntry['kind'] | ProjectEntry['kind'];
 
 function CheckLine({ result }: { result: CheckResult }) {
   if (!result) return null;
+  if (result.ok === null) {
+    return (
+      <p className="check-line" role="status">
+        {result.text}
+      </p>
+    );
+  }
   return (
     <p className={result.ok ? 'check-line' : 'check-line field-error'} data-ok={result.ok ? 'on' : undefined} role={result.ok ? 'status' : 'alert'}>
       <span className="check-mark" aria-hidden="true">
@@ -37,6 +46,38 @@ function CheckLine({ result }: { result: CheckResult }) {
 
 function validationToCheck(v: PathValidation): CheckResult {
   return { ok: v.ok, text: v.message_he };
+}
+
+/**
+ * תוצאת בדיקת נתיב לשורה. validate רץ אוטומטית אחרי בחירה בבורר הקבצים ואחרי עריכת השדה (blur/Enter),
+ * כך שנתיב שלא קיים לא נשמר "בשקט" — הוא נשמר, אבל מיד מוצג ✗ עם ההסבר. תוצאה ישנה נזרקת.
+ */
+function usePathCheck() {
+  const controller = useController();
+  const [check, setCheckState] = useState<CheckResult>(null);
+  const seq = useRef(0);
+  const setCheck = useCallback((next: CheckResult) => {
+    seq.current++;
+    setCheckState(next);
+  }, []);
+  const validate = useCallback(
+    async (path: string, expected: PathKind) => {
+      const mine = ++seq.current;
+      if (!path.trim()) {
+        setCheckState(null);
+        return;
+      }
+      setCheckState({ ok: null, text: t.validating });
+      try {
+        const v = await controller.api.settings.validatePath({ path: path.trim(), expected });
+        if (mine === seq.current) setCheckState(validationToCheck(v));
+      } catch {
+        if (mine === seq.current) setCheckState({ ok: false, text: he.errors.ipc });
+      }
+    },
+    [controller],
+  );
+  return { check, setCheck, validate };
 }
 
 /* ---------------- כינויים ---------------- */
@@ -95,7 +136,7 @@ function AppRow({
   onRemove: () => Promise<void>;
 }) {
   const controller = useController();
-  const [check, setCheck] = useState<CheckResult>(null);
+  const { check, setCheck, validate } = usePathCheck();
 
   return (
     <li className="entry" data-disabled={app.enabled ? undefined : 'on'}>
@@ -118,8 +159,9 @@ function AppRow({
           value={app.kind}
           options={(['exe', 'shortcut', 'uri'] as const).map((k) => ({ value: k, label: t.appKinds[k] }))}
           onChange={(kind) => {
-            setCheck(null);
             onChange({ kind });
+            if (app.target) void validate(app.target, kind);
+            else setCheck(null);
           }}
         />
         <TextInput
@@ -128,13 +170,14 @@ function AppRow({
           value={app.target}
           ltr
           maxLength={1024}
-          placeholder={app.kind === 'uri' ? 'spotify:' : 'C:\\Program Files\\…\\app.exe'}
+          placeholder={app.kind === 'uri' ? 'spotify:' : app.kind === 'shortcut' ? 'C:\\Users\\…\\app.lnk' : 'C:\\Program Files\\…\\app.exe'}
           onCommit={(v) => {
-            setCheck(null);
             onChange({ target: v.trim() });
+            void validate(v, app.kind);
           }}
         />
       </div>
+      {app.kind === 'shortcut' && <p className="field-hint">{t.shortcutHint}</p>}
       <div className="entry-actions">
         {app.kind !== 'uri' && (
           <ActionButton
@@ -143,8 +186,9 @@ function AppRow({
               try {
                 const path = await controller.api.settings.pickPath('app-exe');
                 if (!path) return;
-                setCheck(null);
-                onChange({ target: path, kind: appKindFromPath(path) ?? app.kind });
+                const kind = appKindFromPath(path) ?? app.kind;
+                onChange({ target: path, kind });
+                await validate(path, kind);
               } catch {
                 setCheck({ ok: false, text: he.settings.saveFailed });
               }
@@ -155,11 +199,7 @@ function AppRow({
           label={t.validate}
           disabled={!app.target}
           onRun={async () => {
-            try {
-              setCheck(validationToCheck(await controller.api.settings.validatePath({ path: app.target, expected: app.kind })));
-            } catch {
-              setCheck({ ok: false, text: he.errors.ipc('validatePath') });
-            }
+            await validate(app.target, app.kind);
           }}
         />
         <ActionButton
@@ -170,7 +210,7 @@ function AppRow({
               const res = await controller.api.settings.testOpen({ kind: 'app', id: app.id });
               setCheck(res.ok ? { ok: true, text: res.summary_he } : { ok: false, text: res.message_he });
             } catch {
-              setCheck({ ok: false, text: he.errors.ipc('testOpen') });
+              setCheck({ ok: false, text: he.errors.ipc });
             }
           }}
         />
@@ -202,7 +242,7 @@ function ProjectRow({
   onRemove: () => Promise<void>;
 }) {
   const controller = useController();
-  const [check, setCheck] = useState<CheckResult>(null);
+  const { check, setCheck, validate } = usePathCheck();
 
   return (
     <li className="entry" data-disabled={project.enabled ? undefined : 'on'}>
@@ -228,8 +268,9 @@ function ProjectRow({
           value={project.kind}
           options={(['eplan', 'file', 'folder'] as const).map((k) => ({ value: k, label: t.projectKinds[k] }))}
           onChange={(kind) => {
-            setCheck(null);
             onChange({ kind });
+            if (project.path) void validate(project.path, kind);
+            else setCheck(null);
           }}
         />
         <TextInput
@@ -240,8 +281,8 @@ function ProjectRow({
           maxLength={1024}
           placeholder={project.kind === 'folder' ? 'D:\\Projects\\…' : 'D:\\Projects\\…\\project.elk'}
           onCommit={(v) => {
-            setCheck(null);
             onChange({ path: v.trim() });
+            void validate(v, project.kind);
           }}
         />
       </div>
@@ -252,8 +293,8 @@ function ProjectRow({
             try {
               const path = await controller.api.settings.pickPath(pickPurposeForProject(project.kind));
               if (!path) return;
-              setCheck(null);
               onChange({ path });
+              await validate(path, project.kind);
             } catch {
               setCheck({ ok: false, text: he.settings.saveFailed });
             }
@@ -263,11 +304,7 @@ function ProjectRow({
           label={t.validate}
           disabled={!project.path}
           onRun={async () => {
-            try {
-              setCheck(validationToCheck(await controller.api.settings.validatePath({ path: project.path, expected: project.kind })));
-            } catch {
-              setCheck({ ok: false, text: he.errors.ipc('validatePath') });
-            }
+            await validate(project.path, project.kind);
           }}
         />
         <ActionButton
@@ -278,7 +315,7 @@ function ProjectRow({
               const res = await controller.api.settings.testOpen({ kind: 'project', id: project.id });
               setCheck(res.ok ? { ok: true, text: res.summary_he } : { ok: false, text: res.message_he });
             } catch {
-              setCheck({ ok: false, text: he.errors.ipc('testOpen') });
+              setCheck({ ok: false, text: he.errors.ipc });
             }
           }}
         />

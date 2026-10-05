@@ -274,11 +274,15 @@ async function bootstrap(): Promise<void> {
   settings.addCommitGuard((next, prev) => {
     const accelerator = next.voice.pushToTalkHotkey;
     if (accelerator === registeredHotkey) return null;
+    // משחררים קודם את הקיצור הנוכחי — כך גם כתיב שקול לאותם מקשים (Ctrl / CommandOrControl) לא ייחשב "תפוס"
+    const previous = registeredHotkey;
+    if (previous) globalShortcut.unregister(previous);
     if (tryRegisterHotkey(accelerator)) {
-      if (registeredHotkey) globalShortcut.unregister(registeredHotkey);
       registeredHotkey = accelerator;
       return null;
     }
+    // הרישום נכשל — מחזירים את הקיצור הקודם
+    registeredHotkey = previous && tryRegisterHotkey(previous) ? previous : null;
     // הקיצור לא השתנה (ורק נכשל ברישום קודם) — לא חוסמים שמירה של הגדרות אחרות
     if (accelerator === prev.voice.pushToTalkHotkey) return null;
     return `לא ניתן להגדיר את קיצור המקשים "${accelerator}": הוא לא תקין או תפוס ע"י תוכנה אחרת. בחר צירוף אחר.`;

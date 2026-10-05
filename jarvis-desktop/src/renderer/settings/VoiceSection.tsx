@@ -251,7 +251,7 @@ export function VoiceSection({
       set(await controller.api.system.testService(service));
       void controller.refreshServices();
     } catch {
-      set({ error: he.errors.ipc('testService') });
+      set({ error: he.errors.ipc });
     }
   };
 

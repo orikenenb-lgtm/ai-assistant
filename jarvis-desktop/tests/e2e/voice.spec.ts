@@ -153,3 +153,41 @@ test('wake word: "Hey Jarvis" from the microphone starts listening (local openWa
     await app.close();
   }
 });
+
+test('voice cancel and wake-word session IPC: ids are validated, stale sessions are harmless', async () => {
+  const { app, page } = await launchJarvis();
+  try {
+    const result = await page.evaluate(async () => {
+      const out: Record<string, unknown> = {};
+      out.cancelUnknown = await window.jarvis.voice.cancel('no-such-request');
+      try {
+        await window.jarvis.voice.cancel('bad id!');
+        out.badCancel = 'accepted';
+      } catch {
+        out.badCancel = 'rejected';
+      }
+      const stale = crypto.randomUUID();
+      out.staleStatus = await window.jarvis.wakeword.statusPorcupine(stale);
+      await window.jarvis.wakeword.stopPorcupine(stale);
+      out.staleStop = 'ok';
+      try {
+        await window.jarvis.wakeword.stopPorcupine('not-a-uuid');
+        out.badStop = 'accepted';
+      } catch {
+        out.badStop = 'rejected';
+      }
+      // פריימים עם מזהה ישן — main מתעלם (בלי חריגה)
+      window.jarvis.wakeword.pushFrames(stale, new Int16Array(512));
+      return out;
+    });
+    expect(result).toEqual({
+      cancelUnknown: { cancelled: false },
+      badCancel: 'rejected',
+      staleStatus: { state: 'stopped' },
+      staleStop: 'ok',
+      badStop: 'rejected',
+    });
+  } finally {
+    await app.close();
+  }
+});

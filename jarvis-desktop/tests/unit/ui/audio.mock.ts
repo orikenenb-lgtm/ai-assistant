@@ -132,15 +132,25 @@ export interface MockPlayback extends SpeechPlayback {
   /** מסיים את ההשמעה הנוכחית כאילו הגיעה לסוף. */
   end(): void;
   failNextPlay: unknown;
+  /** כש-true: onStarted לא נקרא ב-play עד ש-startNow() (מדמה פענוח/הפעלת התקן איטיים). */
+  holdStart: boolean;
+  startNow(): void;
 }
 
 export function mockSpeechPlayback(log: string[]): MockPlayback {
   let current: Deferred<'ended' | 'stopped'> | null = null;
+  let pendingStart: (() => void) | null = null;
   const pb: MockPlayback = {
     played: [],
     stopCalls: 0,
     failNextPlay: null,
-    async play(audio, mimeType) {
+    holdStart: false,
+    startNow() {
+      const fn = pendingStart;
+      pendingStart = null;
+      fn?.();
+    },
+    async play(audio, mimeType, options) {
       log.push('playback.play');
       if (pb.failNextPlay) {
         const err = pb.failNextPlay;
@@ -149,11 +159,15 @@ export function mockSpeechPlayback(log: string[]): MockPlayback {
       }
       pb.played.push({ bytes: audio.byteLength, mimeType });
       current = deferred();
+      // כמו source.start(): האודיו "התחיל להישמע"
+      if (pb.holdStart) pendingStart = () => options?.onStarted?.();
+      else options?.onStarted?.();
       return current.promise;
     },
     stop() {
       log.push('playback.stop');
       pb.stopCalls++;
+      pendingStart = null;
       const c = current;
       current = null;
       c?.resolve('stopped');
@@ -181,14 +195,24 @@ export interface MockSystemSpeaker extends SystemSpeaker {
   stopCalls: number;
   end(result?: 'ended' | 'no-voice'): void;
   voices: SystemVoiceInfo[];
+  /** כש-true: utterance.onstart לא "נורה" עד ש-startNow() (למשל אין קול — לא יתחיל לעולם). */
+  holdStart: boolean;
+  startNow(): void;
 }
 
 export function mockSystemSpeaker(log: string[]): MockSystemSpeaker {
   let current: Deferred<'ended' | 'stopped' | 'no-voice'> | null = null;
+  let pendingStart: (() => void) | null = null;
   const sp: MockSystemSpeaker = {
     spoken: [],
     stopCalls: 0,
     voices: [{ name: 'Microsoft Asaf - Hebrew (Israel)', lang: 'he-IL', localService: true }],
+    holdStart: false,
+    startNow() {
+      const fn = pendingStart;
+      pendingStart = null;
+      fn?.();
+    },
     async listVoices() {
       return sp.voices;
     },
@@ -196,11 +220,15 @@ export function mockSystemSpeaker(log: string[]): MockSystemSpeaker {
       log.push('system.speak');
       sp.spoken.push({ text, voiceName: options.voiceName, rate: options.rate });
       current = deferred();
+      // כמו utterance.onstart
+      if (sp.holdStart) pendingStart = () => options.onStarted?.();
+      else options.onStarted?.();
       return current.promise;
     },
     stop() {
       log.push('system.stop');
       sp.stopCalls++;
+      pendingStart = null;
       const c = current;
       current = null;
       c?.resolve('stopped');
@@ -223,12 +251,25 @@ export interface MockWakeWord extends WakeWordDetector {
   resumeCalls: number;
   stopCalls: number;
   failStart: string | null;
+  /** כש-true: start מחכה עד releaseStart() (מדמה getUserMedia / טעינת מודל איטיים). */
+  holdStart: boolean;
+  releaseStart(): void;
   trigger(): void;
+  /** תקלה אחרי הפעלה מוצלחת (מיקרופון נותק וכו'): state='error' ודיווח ב-onStateChange. */
+  failNow(message: string, detail?: string): void;
 }
 
 export function mockWakeWordDetector(engine: 'openwakeword' | 'porcupine', log: string[], failStart: string | null = null): MockWakeWord {
   let state: WakeWordDetector['state'] = 'stopped';
   let lastError: string | null = null;
+  let lastErrorDetail: string | null = null;
+  let gate: Deferred<void> | null = null;
+  let generation = 0;
+  const setState = (next: WakeWordDetector['state']) => {
+    if (state === next) return;
+    state = next;
+    det.startOptions?.onStateChange?.(next);
+  };
   const det: MockWakeWord = {
     engine,
     startOptions: null,
@@ -236,31 +277,46 @@ export function mockWakeWordDetector(engine: 'openwakeword' | 'porcupine', log: 
     resumeCalls: 0,
     stopCalls: 0,
     failStart,
+    holdStart: false,
+    releaseStart() {
+      gate?.resolve();
+    },
     async start(options) {
       log.push('wake.start');
+      const mine = ++generation;
       det.startOptions = options;
-      state = 'loading';
+      setState('loading');
       await Promise.resolve();
+      if (det.holdStart) {
+        gate = deferred<void>();
+        await gate.promise;
+      }
+      if (mine !== generation) {
+        // נעצר בזמן ההפעלה — כמו הגלאי האמיתי: AbortError, לא "מאזין"
+        throw Object.assign(new Error('MOCK: aborted'), { name: 'AbortError' });
+      }
       if (det.failStart) {
-        state = 'error';
         lastError = det.failStart;
+        setState('error');
         throw new Error(det.failStart);
       }
-      state = 'listening';
+      setState('listening');
     },
     pause() {
       log.push('wake.pause');
       det.pauseCalls++;
-      if (state === 'listening') state = 'paused';
+      if (state === 'listening') setState('paused');
     },
     resume() {
       log.push('wake.resume');
       det.resumeCalls++;
-      if (state === 'paused') state = 'listening';
+      if (state === 'paused') setState('listening');
     },
     async stop() {
+      generation++;
       det.stopCalls++;
-      state = 'stopped';
+      gate?.resolve();
+      setState('stopped');
     },
     get state() {
       return state;
@@ -268,8 +324,16 @@ export function mockWakeWordDetector(engine: 'openwakeword' | 'porcupine', log: 
     get lastError() {
       return lastError;
     },
+    get lastErrorDetail() {
+      return lastErrorDetail;
+    },
     trigger() {
       det.startOptions?.onDetected();
+    },
+    failNow(message, detail) {
+      lastError = message;
+      lastErrorDetail = detail ?? null;
+      setState('error');
     },
   };
   return det;

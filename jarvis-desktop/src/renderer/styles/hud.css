@@ -509,11 +509,28 @@
     transform: translateY(6px);
   }
 }
-.app[data-view='compact'] .toasts {
-  inset-block-end: 8px;
-  inset-inline: 8px;
+/*
+ * פס הודעות בתחתית מסך ההגדרות: חלק מהפריסה (לא צף), ולכן לא מכסה שדות או כפתורים.
+ * כל הודעה בשורה אחת עם "…"; הטקסט המלא ב-title.
+ */
+.toasts[data-variant='strip'] {
+  position: static;
+  flex: none;
   inline-size: auto;
+  gap: 4px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--line-soft);
+  pointer-events: auto;
 }
-.app[data-view='compact'] .toast:not(:last-child) {
-  display: none;
+.toasts[data-variant='strip'] .toast {
+  align-items: center;
+  padding: 3px 6px 3px 10px;
+  font-size: 12.5px;
+  animation: none;
+}
+.toasts[data-variant='strip'] .toast-text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

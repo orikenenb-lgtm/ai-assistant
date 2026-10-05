@@ -41,6 +41,16 @@ export function wakeChip(wake: WakeView): ChipView | null {
   }
 }
 
+/**
+ * צ'יפ מילת ההפעלה לתצוגה הקומפקטית: רק כשהמיקרופון פתוח מקומית למילת ההפעלה, או בשגיאה.
+ * מושהה/טוען/כבוי — אין צ'יפ (אין מקום, ואין מה לדווח על מיקרופון פתוח).
+ */
+export function compactWakeChip(wake: WakeView): ChipView | null {
+  if (wake.status === 'listening') return { tone: 'cyan', text: he.compact.wakeListening };
+  if (wake.status === 'error') return { tone: 'amber', text: he.compact.wakeError, title: wake.error ? he.compact.wakeRetryTitle(wake.error) : undefined };
+  return null;
+}
+
 export function aiChip(settings: Settings | null, services: readonly ServiceStatus[]): ChipView {
   const model = settings?.ai.model;
   if (settings?.ai.brainMode === 'local-only') return { tone: 'dim', text: he.header.aiLocalOnly };

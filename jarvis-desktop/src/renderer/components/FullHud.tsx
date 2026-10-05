@@ -20,12 +20,15 @@ export function FullHud({
   label,
   reducedMotion,
   obscured,
+  inert = false,
 }: {
   state: AssistantState;
   label: string;
   reducedMotion: boolean;
   /** הגדרות או דיאלוג אישור פתוחים: גוף ה-HUD לא נגיש (inert), שורת הכותרת נשארת פעילה לגרירה/סגירה. */
   obscured: boolean;
+  /** דיאלוג אישור מודאלי פתוח: גם שורת הכותרת לא נגישה (המיקוד נשאר בדיאלוג). */
+  inert?: boolean;
 }) {
   // בחלון צר אין מקום לעמודת פעולות נפרדת — היא עוברת ללשונית בלוח הצד
   const narrow = useMediaQuery('(max-width: 899px)');
@@ -33,7 +36,7 @@ export function FullHud({
   const showEngineLabel = engineLabel && (state === 'THINKING' || state === 'EXECUTING');
 
   return (
-    <div className="hud" data-state={state}>
+    <div className="hud" data-state={state} inert={inert || undefined}>
       <TitleBar />
       <div className="hud-body" inert={obscured || undefined}>
         <HeaderBar />

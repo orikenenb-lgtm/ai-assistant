@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createVoiceService, looksLikeWav, vocabularyFrom } from '../../../src/main/voice/voice-service';
-import { sanitizeKeywords, supportsLanguageHints } from '../../../src/main/voice/stt-providers';
+import { isHintsRejection, sanitizeKeywords, supportsLanguageHints } from '../../../src/main/voice/stt-providers';
+import { IPC_REQUEST_SCHEMAS, TranscribeRequestSchema, VoiceCancelSchema } from '../../../src/shared/ipc-schemas';
+import { IPC } from '../../../src/shared/ipc-channels';
 import { buildAzureSsml, escapeXml, ssmlRate } from '../../../src/main/voice/tts-providers';
 import { silentLogger } from '../../../src/main/app/logger';
 import { defaultSettings, type SecretName, type Settings } from '../../../src/shared/settings-schema';
@@ -261,5 +263,108 @@ describe('voice service — TTS (mock HTTP)', () => {
     expect(statuses.find((x) => x.service === 'stt')).toMatchObject({ provider: 'openai', configured: false, state: 'not_configured' });
     expect(statuses.find((x) => x.service === 'tts')).toMatchObject({ provider: 'system', configured: true, state: 'local' });
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe('voice service — review fixes (mock HTTP)', () => {
+  const openai = () => mockSecrets({ openaiApiKey: 'sk-test-openai-1234567' });
+
+  it('retries without hints only when the 400 is about languages/keywords, not on every 400 (mock)', async () => {
+    expect(isHintsRejection('{"error":{"message":"Unrecognized request argument supplied: languages"}}')).toBe(true);
+    expect(isHintsRejection('{"error":{"param":"keywords","message":"invalid"}}')).toBe(true);
+    expect(isHintsRejection('{"error":{"message":"Audio file might be corrupted or unsupported"}}')).toBe(false);
+    const { fetchImpl, calls } = mockFetch([new Response('{"error":{"message":"Audio file might be corrupted"}}', { status: 400 })]);
+    const svc = createVoiceService({ getSettings: () => defaultSettings(), secrets: openai(), usage: mockUsage(), logger: silentLogger, clock, fetchImpl });
+    const res = await svc.transcribe({ audio: wav(), mimeType: 'audio/wav', durationMs: 1500 });
+    expect(res).toMatchObject({ ok: false, code: 'PROVIDER_ERROR' });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('Azure BabbleTimeout is an empty transcript; an unknown status gets a Hebrew message (mock)', async () => {
+    const s = settingsWith((x) => {
+      x.stt.provider = 'azure';
+      x.azure.region = 'westeurope';
+    });
+    for (const status of ['BabbleTimeout', 'InitialSilenceTimeout', 'NoMatch']) {
+      const { fetchImpl } = mockFetch([new Response(JSON.stringify({ RecognitionStatus: status }), { status: 200 })]);
+      const svc = createVoiceService({ getSettings: () => s, secrets: mockSecrets({ azureSpeechKey: 'azure-key-123456' }), usage: mockUsage(), logger: silentLogger, clock, fetchImpl });
+      expect(await svc.transcribe({ audio: wav(), mimeType: 'audio/wav', durationMs: 1000 })).toMatchObject({ ok: false, code: 'EMPTY_TRANSCRIPT' });
+    }
+    const { fetchImpl } = mockFetch([new Response(JSON.stringify({ RecognitionStatus: 'Error' }), { status: 200 })]);
+    const svc = createVoiceService({ getSettings: () => s, secrets: mockSecrets({ azureSpeechKey: 'azure-key-123456' }), usage: mockUsage(), logger: silentLogger, clock, fetchImpl });
+    const res = await svc.transcribe({ audio: wav(), mimeType: 'audio/wav', durationMs: 1000 });
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.message_he).toMatch(/^[^A-Za-z]*Azure Speech [א-ת]/);
+      expect(res.message_he).not.toContain('Error');
+    }
+  });
+
+  it('cancel(requestId) aborts an in-flight transcription; the service is not marked as failing (mock)', async () => {
+    let seenSignal: AbortSignal | undefined;
+    const fetchImpl = (_url: string, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        seenSignal = init?.signal ?? undefined;
+        init?.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })));
+      });
+    const usage = mockUsage();
+    const svc = createVoiceService({ getSettings: () => defaultSettings(), secrets: openai(), usage, logger: silentLogger, clock, fetchImpl });
+    const pending = svc.transcribe({ audio: wav(), mimeType: 'audio/wav', durationMs: 1500, requestId: 'req-1' });
+    await Promise.resolve();
+    expect(svc.cancel('req-1')).toBe(true);
+    expect(seenSignal?.aborted).toBe(true);
+    expect(await pending).toEqual({ ok: false, code: 'CANCELLED', message_he: 'הבקשה בוטלה.' });
+    expect(usage.entries).toHaveLength(0);
+    expect(svc.configuredStatuses().find((x) => x.service === 'stt')?.state).not.toBe('error');
+    // ביטול של מזהה שכבר הסתיים — אין מה לבטל
+    expect(svc.cancel('req-1')).toBe(false);
+  });
+
+  it('a cancel that arrives before its synthesis request still cancels it (mock)', async () => {
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.signal?.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+      return new Response(new Uint8Array([1, 2, 3]), { status: 200 });
+    });
+    const s = settingsWith((x) => {
+      x.tts.provider = 'azure';
+    });
+    const svc = createVoiceService({ getSettings: () => s, secrets: mockSecrets({ azureSpeechKey: 'azure-key-123456' }), usage: mockUsage(), logger: silentLogger, clock, fetchImpl });
+    expect(svc.cancel('chunk-2')).toBe(false);
+    expect(await svc.synthesize({ text: 'שלום', requestId: 'chunk-2' })).toMatchObject({ ok: false, code: 'CANCELLED' });
+    expect(await svc.synthesize({ text: 'שלום', requestId: 'chunk-3' })).toMatchObject({ ok: true });
+  });
+
+  it('connection-test messages name the provider in Hebrew, not by its technical id (mock)', async () => {
+    const s = settingsWith((x) => {
+      x.stt.provider = 'local-openai-compatible';
+      x.stt.localBaseUrl = 'http://127.0.0.1:8000/v1';
+    });
+    const { fetchImpl } = mockFetch([new TypeError('fetch failed')]);
+    const svc = createVoiceService({ getSettings: () => s, secrets: mockSecrets({}), usage: mockUsage(), logger: silentLogger, clock, fetchImpl });
+    const st = await svc.test('stt');
+    expect(st.lastError_he).toContain('שרת התמלול המקומי');
+    expect(st.lastError_he).not.toContain('local-openai-compatible');
+  });
+
+  it('SSML drops XML-illegal control characters (Azure would reject the request)', () => {
+    const ssml = buildAzureSsml('שלום\u0007עולם\u001b\u000b\u0000', 'he-IL-AvriNeural', 1);
+    // eslint-disable-next-line no-control-regex -- בודקים בדיוק את התווים האלה
+    expect(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(ssml)).toBe(false);
+    expect(ssml).toContain('שלוםעולם');
+    expect(escapeXml('a\tb\nc\rd')).toBe('a\tb\nc\rd');
+  });
+
+  it('IPC schemas: requestId is a short safe token; voice:cancel requires one', () => {
+    expect(TranscribeRequestSchema.safeParse({ audio: wav(), mimeType: 'audio/wav', durationMs: 1000, requestId: 'a1-b_2' }).success).toBe(true);
+    expect(TranscribeRequestSchema.safeParse({ audio: wav(), mimeType: 'audio/wav', durationMs: 1000, requestId: 'bad id!' }).success).toBe(false);
+    expect(TranscribeRequestSchema.safeParse({ audio: wav(), mimeType: 'audio/wav', durationMs: 1000, requestId: 'x'.repeat(65) }).success).toBe(false);
+    expect(VoiceCancelSchema.safeParse({ requestId: 'r1' }).success).toBe(true);
+    expect(VoiceCancelSchema.safeParse({}).success).toBe(false);
+    expect(IPC_REQUEST_SCHEMAS[IPC.voiceCancel]).toBe(VoiceCancelSchema);
+    // מילת הפעלה: stop/status דורשים מזהה סשן (UUID)
+    const sid = '00000000-0000-4000-8000-000000000001';
+    expect(IPC_REQUEST_SCHEMAS[IPC.wakewordStop].safeParse({ sessionId: sid }).success).toBe(true);
+    expect(IPC_REQUEST_SCHEMAS[IPC.wakewordStop].safeParse({}).success).toBe(false);
+    expect(IPC_REQUEST_SCHEMAS[IPC.wakewordStatus].safeParse({ sessionId: 'not-a-uuid' }).success).toBe(false);
   });
 });

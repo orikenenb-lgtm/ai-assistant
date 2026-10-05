@@ -125,7 +125,7 @@ export function BrainSection({
               setTest(res);
               void controller.refreshServices();
             } catch {
-              setTest({ error: he.errors.ipc('testService') });
+              setTest({ error: he.errors.ipc });
             }
           }}
         />

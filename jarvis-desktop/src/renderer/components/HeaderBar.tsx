@@ -4,7 +4,7 @@
 import { useNowMs } from '../hooks/environment';
 import { he } from '../i18n/he';
 import { aiChip, micChip, wakeChip, type ChipView } from '../state/chips';
-import { useUiState } from '../state/controller';
+import { useController, useUiState } from '../state/controller';
 import { formatClock, formatHebrewCalendarDate, formatHebrewDate } from '../state/format';
 
 export function Chip({ chip, compact = false }: { chip: ChipView; compact?: boolean }) {
@@ -30,6 +30,7 @@ export function LiveClock() {
 }
 
 export function StatusChips() {
+  const controller = useController();
   const audioPhase = useUiState((s) => s.audioPhase);
   const micStarting = useUiState((s) => s.micStarting);
   const micTest = useUiState((s) => s.micTest);
@@ -44,7 +45,22 @@ export function StatusChips() {
   return (
     <div className="chips" role="status" aria-label={he.header.statusRegion}>
       <Chip chip={mic} />
-      {wakeView && <Chip chip={wakeView} />}
+      {wakeView &&
+        (wake.status === 'error' ? (
+          // מילת ההפעלה בשגיאה: לחיצה על הצ'יפ = "נסה שוב"
+          <button
+            type="button"
+            className="chip chip-btn"
+            data-tone={wakeView.tone}
+            title={wake.error ? he.compact.wakeRetryTitle(wake.error) : undefined}
+            onClick={() => controller.restartWakeWord()}
+          >
+            <span className="chip-dot" aria-hidden="true" />
+            <span className="chip-text">{wakeView.text}</span>
+          </button>
+        ) : (
+          <Chip chip={wakeView} />
+        ))}
       <Chip chip={ai} />
     </div>
   );

@@ -4,12 +4,15 @@
  *
  * עקרונות:
  * - מצב התצוגה משקף רק פעילות אמיתית: LISTENING רק אחרי שהמיקרופון נפתח בפועל,
- *   SPEAKING רק כשההשמעה התחילה בפועל.
+ *   SPEAKING רק כשהאודיו התחיל להישמע בפועל (source.start / utterance.onstart).
  * - כל פעולה אסינכרונית מסומנת במספר רצף (seq). תוצאה שמגיעה אחרי עצירה/החלפה — נזרקת.
+ * - "עצור" עוצר גם תשובה שכבר יצאה מ-main באותו רגע (לא מקריאים אותה), וגם עבודה בענן שבדרך.
  * - אין תלות ישירה במימוש שכבת האודיו: הכול מוזרק (כך הבדיקות רצות עם MOCK).
+ *
+ * מחזור החיים של מילת ההפעלה נמצא ב-WakeWordSupervisor, וההקראה ב-SpeechOutput.
  */
 import { createContext, useContext } from 'react';
-import type { JarvisApi, Result, SubmitResult, SynthesizeResult, TranscribeResult } from '../../shared/api-types';
+import type { JarvisApi, Result, SubmitResult, TranscribeResult } from '../../shared/api-types';
 import { MAX_TEXT_INPUT } from '../../shared/ipc-channels';
 import type { Settings, SettingsPatch } from '../../shared/settings-schema';
 import type {
@@ -26,20 +29,15 @@ import type {
   ServiceStatus,
   UiCommand,
 } from '../../shared/types';
-import type {
-  CaptureResult,
-  EchoCheck,
-  LevelSource,
-  MicCapture,
-  SpeechPlayback,
-  SystemSpeaker,
-  SystemVoiceInfo,
-  WakeWordDetector,
-} from '../audio';
+import type { CaptureResult, EchoCheck, LevelSource, MicCapture, SpeechPlayback, SystemSpeaker, SystemVoiceInfo, WakeWordDetector } from '../audio';
 import { he } from '../i18n/he';
-import { errorText, micErrorMessage } from './messages';
-import { splitForSynthesis } from './speech-text';
+import { ipcErrorMessage, micErrorMessage } from './messages';
+import { SpeechOutput, type SpeechChannel } from './speech-output';
 import { createStore, useStore, type Store } from './store';
+import { WAKE_TAIL_MS, WakeWordSupervisor, type WakeView } from './wake-supervisor';
+
+export { WAKE_POLL_MS, WAKE_RETRY_DELAYS_MS, WAKE_TAIL_MS } from './wake-supervisor';
+export type { WakeStatus, WakeView } from './wake-supervisor';
 
 /* ------------------------------------------------------------------ */
 /* טיפוסים                                                              */
@@ -76,16 +74,19 @@ export interface ControllerDeps {
   audio: AudioFactories;
   /** זמן נוכחי במילישניות (epoch). */
   now: () => number;
+  /** שעון מונוטוני (performance.now) למדידת פערים קצרים. ברירת מחדל: now. */
+  monotonicNow?: () => number;
   timers: TimerApi;
-  /** UUID לכל שליחה (clientRequestId). */
+  /** UUID לכל שליחה (clientRequestId) ולבקשות קול (requestId לביטול). */
   randomId: () => string;
   /** navigator.getBattery אם קיים. */
   getBattery?: () => Promise<BatteryLike> | undefined;
+  /** הרשמה ל-navigator.mediaDevices 'devicechange' (ניסיון חוזר של מילת ההפעלה כשמיקרופון חובר). */
+  onDeviceChange?: (listener: () => void) => () => void;
 }
 
 export type ListenSource = 'ui' | 'keyboard' | 'hotkey' | 'tray' | 'wakeword' | 'followup';
-export type WakeStatus = 'off' | 'loading' | 'listening' | 'paused' | 'stopped' | 'error';
-export type SpeechOutput = 'none' | 'audio' | 'system';
+export type SpeechOutputKind = 'none' | 'audio' | 'system';
 export type MicTestState = 'off' | 'meter' | 'recording' | 'transcribing';
 export type ToastKind = 'info' | 'success' | 'warning' | 'error';
 export type DataScope = 'tasks' | 'reminders' | 'settings' | 'secrets' | 'history' | 'usage';
@@ -111,15 +112,6 @@ export interface ReplyLine {
   turnId: string;
 }
 
-export interface WakeView {
-  status: WakeStatus;
-  /** הודעה מלאה בעברית כשהסטטוס error. */
-  error: string | null;
-  /** פירוט טכני (לא בעברית) לאבחון — מוצג רק במסך ההגדרות. */
-  detail?: string | null;
-  engine: 'openwakeword' | 'porcupine' | null;
-}
-
 export interface UiState {
   ready: boolean;
   settings: Settings | null;
@@ -132,7 +124,7 @@ export interface UiState {
   micTest: MicTestState;
   /** יש הקראה בתהליך (כולל המתנה לסינתזה, לפני שהשמע התחיל) — אפשר לעצור אותה. */
   speechActive: boolean;
-  speechOutput: SpeechOutput;
+  speechOutput: SpeechOutputKind;
   activeTurnId: string | null;
   pendingApprovals: ApprovalRequest[];
   errorActive: boolean;
@@ -166,8 +158,6 @@ export type VoiceTestResult = { ok: true; text: string } | { ok: false; message:
 /* קבועים                                                               */
 /* ------------------------------------------------------------------ */
 
-/** כמה זמן מילת ההפעלה נשארת מושהית אחרי ש-JARVIS סיים לדבר (מניעת הפעלה עצמית מהד). */
-export const WAKE_TAIL_MS = 600;
 /** כמה זמן מצב השגיאה מוצג אחרי תקלה מקומית. */
 export const ERROR_FLASH_MS = 6000;
 export const TOAST_MS = 5000;
@@ -175,10 +165,20 @@ export const TOAST_ERROR_MS = 9000;
 export const MAX_TOASTS = 4;
 export const MAX_ACTIONS = 30;
 export const SERVICES_POLL_MS = 30_000;
-export const WAKE_POLL_MS = 1000;
+/** האזנת המשך נפתחת אחרי אותו זנב כמו מילת ההפעלה — שסוף ההקראה לא ייכנס להקלטה. */
+export const FOLLOW_UP_DELAY_MS = WAKE_TAIL_MS;
+/** כמה האזנות המשך אוטומטיות ברצף בלי הפעלה מפורשת (כפתור / קיצור / מילת הפעלה / הקלדה). */
+export const MAX_AUTO_FOLLOW_UPS = 2;
+/**
+ * מסנן ההד הטקסטואלי מופעל רק כשאין ביטול הד אמיתי (קול המערכת יוצא מחוץ ל-Chromium),
+ * או כשההקלטה התחילה זמן קצר כל כך אחרי סוף ההקראה שהשארית עוד בחדר.
+ */
+export const ECHO_FILTER_MAX_GAP_MS = 1500;
 const SCREEN_STAGE_LINGER_MS = 3500;
 const MIC_RELEASE_TIMEOUT_MS = 1500;
 const SETTINGS_RETRY_MS = 5000;
+/** כמה מזהי תורות שנעצרו זוכרים (כדי לא להקריא תשובה שהגיעה אחרי "עצור"). */
+const MAX_REMEMBERED_TURNS = 100;
 
 export function initialUiState(): UiState {
   return {
@@ -215,7 +215,6 @@ export function initialUiState(): UiState {
 }
 
 type ListenPhase = 'idle' | 'starting' | 'listening' | 'finishing' | 'transcribing';
-type SpeakOutcome = 'ended' | 'stopped' | 'failed';
 
 function clampDurationMs(ms: number): number {
   if (!Number.isFinite(ms)) return 100;
@@ -240,6 +239,15 @@ function wakeSettingsChanged(prev: Settings, next: Settings): boolean {
     prev.wakeWord.sensitivity !== next.wakeWord.sensitivity ||
     prev.voice.micDeviceId !== next.voice.micDeviceId
   );
+}
+
+/** מוסיף לסט/מפה עם גבול גודל (הישנים נמחקים ראשונים). */
+function boundedAdd<K>(set: Set<K>, key: K, max: number): void {
+  set.add(key);
+  while (set.size > max) {
+    const oldest = set.values().next().value as K;
+    set.delete(oldest);
+  }
 }
 
 /** מחכה לסיום הבטחה, אבל לא יותר מ-ms (שחרור מיקרופון שנתקע לא יקפיא את הממשק). */
@@ -277,29 +285,40 @@ export class JarvisController {
   private listenPhase: ListenPhase = 'idle';
   private listenSeq = 0;
   private mic: MicCapture | null = null;
+  /** מתי המיקרופון נפתח בפועל בהקלטה הנוכחית (שעון מונוטוני) — למדידת הפער מסוף ההקראה. */
+  private captureStartedAt: number | null = null;
+  /** בקשת התמלול שבדרך (לביטול בענן בעצירה). */
+  private transcribeRequestId: string | null = null;
 
   // --- הקראה ---
-  private playback: SpeechPlayback | null = null;
-  private systemSpeaker: SystemSpeaker | null = null;
+  private readonly speech: SpeechOutput;
   private speakSeq = 0;
   private speakActive = false;
   private speechStarted = false;
+  private speechUsedSystem = false;
   private lastSpokenText: string | null = null;
+  private lastSpeechUsedSystem = false;
   private speechEndedAt: number | null = null;
+  private followUpTimer: unknown = null;
+  private autoFollowUps = 0;
+  /** תשובה שהגיעה בזמן הקלטה: מוקראת אם ההקלטה הסתיימה בלי שליחה, נזרקת אם נשלחה בקשה חדשה. */
+  private deferredReply: { text: string; turnId: string } | null = null;
+
+  // --- עצירה ---
+  /** עולה בכל "עצור". תור שהתחיל לפני העצירה — התשובה שלו לא מוקראת. */
+  private stopEpoch = 0;
+  private readonly stoppedTurns = new Set<string>();
+  private readonly turnEpochs = new Map<string, number>();
 
   // --- מילת הפעלה ---
-  private wake: WakeWordDetector | null = null;
-  private wakeSeq = 0;
-  private wakePausedByUs = false;
-  private wakeTailUntil = 0;
-  private wakeTailTimer: unknown = null;
-  private wakePollTimer: unknown = null;
-  private wakeErrorNotified: string | null = null;
+  private readonly wake: WakeWordSupervisor;
+  private reported: { phase: AudioPhase; wake: boolean } = { phase: 'IDLE', wake: false };
 
   // --- בדיקות קול (מסך ההגדרות) ---
   private meterSeq = 0;
   private voiceTestBusy = false;
   private voiceTestCancelled = false;
+  private testRequestId: string | null = null;
 
   // --- שונות ---
   private errorTimer: unknown = null;
@@ -311,11 +330,40 @@ export class JarvisController {
   private sawPhaseEvent = false;
   private readonly resolvedApprovals = new Set<string>();
   private expandedTemporarily = false;
+  private missedFetchSeq = 0;
+  private missedEventSeq = 0;
 
   constructor(deps: ControllerDeps) {
     this.deps = deps;
     this.api = deps.api;
     this.store = createStore<UiState>(initialUiState());
+    this.speech = new SpeechOutput({
+      synthesize: (input) => this.api.voice.synthesize(input),
+      cancelSynthesis: (requestId) => this.cancelVoiceRequest(requestId),
+      createPlayback: () => deps.audio.createSpeechPlayback(),
+      createSystemSpeaker: () => deps.audio.createSystemSpeaker(),
+      newRequestId: () => deps.randomId(),
+      notify: (kind, text, opts) => {
+        this.notify(kind, text, opts);
+      },
+    });
+    this.wake = new WakeWordSupervisor({
+      createDetector: (engine) => deps.audio.createWakeWordDetector(engine),
+      timers: deps.timers,
+      getSettings: () => this.state.settings,
+      isBusy: () => this.isWakeBlocked(),
+      onDetected: () => this.handleWakeDetection(),
+      onView: (view) => {
+        if (this.disposed) return;
+        this.store.setState({ wake: view });
+        // מצב מילת ההפעלה מדווח ל-main בכל שינוי (חיווי מיקרופון במגש), לא רק בשינוי מצב אודיו
+        this.reportAudio();
+      },
+      onFailureNotice: (message) => {
+        this.notify('warning', message, { ttlMs: 12_000 });
+      },
+      ...(deps.onDeviceChange ? { onDeviceChange: deps.onDeviceChange } : {}),
+    });
   }
 
   get state(): UiState {
@@ -368,10 +416,9 @@ export class JarvisController {
     }
     const t = this.deps.timers;
     t.clearTimeout(this.errorTimer);
-    t.clearTimeout(this.wakeTailTimer);
     t.clearTimeout(this.screenStageTimer);
     t.clearTimeout(this.settingsRetryTimer);
-    t.clearInterval(this.wakePollTimer);
+    t.clearTimeout(this.followUpTimer);
     t.clearInterval(this.servicesTimer);
     for (const handle of this.toastTimers.values()) t.clearTimeout(handle);
     this.toastTimers.clear();
@@ -380,16 +427,16 @@ export class JarvisController {
     this.listenSeq++;
     this.speakSeq++;
     this.meterSeq++;
-    this.wakeSeq++;
     this.listenPhase = 'idle';
     this.speakActive = false;
     this.safely(() => this.mic?.cancel());
-    this.safely(() => this.playback?.stop());
-    this.safely(() => this.systemSpeaker?.stop());
-    const detector = this.wake;
-    this.wake = null;
-    if (detector) void detector.stop().catch(() => undefined);
-    if (this.state.audioPhase !== 'IDLE') void this.api.voice.reportAudioPhase('IDLE').catch(() => undefined);
+    this.speech.stop();
+    if (this.transcribeRequestId) this.cancelVoiceRequest(this.transcribeRequestId);
+    this.wake.dispose();
+    if (this.reported.phase !== 'IDLE' || this.reported.wake) {
+      this.reported = { phase: 'IDLE', wake: false };
+      void this.api.voice.reportAudioPhase('IDLE', false).catch(() => undefined);
+    }
   }
 
   /* ---------------- קול: האזנה ---------------- */
@@ -397,10 +444,14 @@ export class JarvisController {
   /**
    * לחיצה על המיקרופון / רווח / קיצור מקשים / מילת הפעלה.
    * מדבר -> עוצר הקראה ומתחיל להאזין (barge-in). מאזין -> מסיים ושולח. אחרת -> מתחיל להאזין.
+   * גם בזמן בקשת אישור פתוחה מותר (המנוע מבין "כן"/"לא" כתשובה לאישור). מילת הפעלה — לא (ראה isWakeBlocked).
    */
   async toggleListen(source: ListenSource): Promise<void> {
     if (this.disposed) return;
     this.clearError();
+    // הפעלה מפורשת מאפסת את מונה האזנות ההמשך האוטומטיות
+    if (source !== 'followup') this.autoFollowUps = 0;
+    this.cancelFollowUp();
     switch (this.listenPhase) {
       case 'listening':
         this.finishListening();
@@ -421,13 +472,17 @@ export class JarvisController {
   stop(): void {
     if (this.disposed) return;
     this.clearError();
+    this.stopEpoch++;
+    this.deferredReply = null;
+    this.cancelFollowUp();
     this.stopSpeech();
     this.cancelListening();
     this.cancelVoiceTests();
     const { activeTurnId, enginePhase } = this.state;
+    if (activeTurnId) this.markTurnStopped(activeTurnId);
     if (activeTurnId || enginePhase === 'THINKING' || enginePhase === 'EXECUTING' || enginePhase === 'AWAITING_APPROVAL') {
       this.api.assistant.cancel(activeTurnId ?? undefined).catch(() => {
-        this.notify('error', he.errors.ipc('cancel'));
+        this.notify('error', he.errors.cancelFailed);
       });
     }
   }
@@ -461,6 +516,7 @@ export class JarvisController {
     }
     const seq = ++this.listenSeq;
     this.listenPhase = 'starting';
+    this.captureStartedAt = null;
     this.store.setState({ micStarting: true });
     this.syncWakePause();
 
@@ -484,6 +540,7 @@ export class JarvisController {
       const message = micErrorMessage(err);
       this.notify('error', message, { ttlMs: 14_000 });
       this.flashError(message);
+      this.flushDeferredReply();
       return;
     }
     if (seq !== this.listenSeq || this.disposed) {
@@ -496,9 +553,11 @@ export class JarvisController {
       this.endListen();
       this.notify('error', he.toasts.captureFailed);
       this.flashError(he.toasts.captureFailed);
+      this.flushDeferredReply();
       return;
     }
     this.listenPhase = 'listening';
+    this.captureStartedAt = this.mono();
     this.store.setState({ micStarting: false });
     this.setAudioPhase('LISTENING');
     // ההמשך (סיום הקלטה -> תמלול -> שליחה) רץ ברקע; toggleListen חוזר ברגע שהמיקרופון פתוח
@@ -514,15 +573,19 @@ export class JarvisController {
       this.endListen();
       this.notify('error', he.toasts.captureFailed);
       this.flashError(he.toasts.captureFailed);
+      this.flushDeferredReply();
       return;
     }
     if (seq !== this.listenSeq || this.disposed) return;
+    let submitted = false;
     try {
-      await this.handleCapture(seq, result);
+      submitted = await this.handleCapture(seq, result);
     } catch {
       // לא אמור לקרות (כל קריאה חיצונית עטופה), אבל לא משאירים את הממשק תקוע במצב ביניים
       if (seq === this.listenSeq && this.listenPhase !== 'idle') this.endListen();
     }
+    // ההקלטה הסתיימה בלי בקשה חדשה (שקט / ביטול / הד / תקלה) — מקריאים תשובה שהמתינה לה
+    if (!submitted && !this.disposed) this.flushDeferredReply();
   }
 
   private finishListening(): void {
@@ -538,6 +601,11 @@ export class JarvisController {
     if (phase === 'starting' || phase === 'listening' || phase === 'finishing') {
       this.safely(() => this.mic?.cancel());
     }
+    if (phase === 'transcribing' && this.transcribeRequestId) {
+      // התמלול בענן נעצר גם הוא (לא רק התוצאה נזרקת)
+      this.cancelVoiceRequest(this.transcribeRequestId);
+      this.transcribeRequestId = null;
+    }
     this.endListen();
   }
 
@@ -548,61 +616,83 @@ export class JarvisController {
     this.syncWakePause();
   }
 
-  private async handleCapture(seq: number, result: CaptureResult): Promise<void> {
+  /** מטפל בהקלטה שהסתיימה. מחזיר true אם נשלחה בקשה ל-JARVIS. */
+  private async handleCapture(seq: number, result: CaptureResult): Promise<boolean> {
     if (result.reason === 'cancelled') {
       this.endListen();
-      return;
+      return false;
     }
     if (result.reason === 'error') {
       this.endListen();
       this.notify('error', he.toasts.captureFailed);
       this.flashError(he.toasts.captureFailed);
-      return;
+      return false;
     }
     if (!result.speechDetected || result.wav.byteLength <= 44) {
       this.endListen();
       this.notify('info', he.toasts.noSpeech);
-      return;
+      return false;
     }
 
     this.listenPhase = 'transcribing';
     this.setAudioPhase('TRANSCRIBING');
+    const requestId = this.deps.randomId();
+    this.transcribeRequestId = requestId;
     let res: TranscribeResult;
     try {
       res = await this.api.voice.transcribe({
         audio: result.wav,
         mimeType: 'audio/wav',
         durationMs: clampDurationMs(result.durationMs),
+        requestId,
       });
     } catch (err) {
-      res = { ok: false, code: 'INTERNAL', message_he: he.errors.ipc(errorText(err)) };
+      res = { ok: false, code: 'INTERNAL', message_he: ipcErrorMessage(err) };
     }
+    if (this.transcribeRequestId === requestId) this.transcribeRequestId = null;
     // נעצר בזמן התמלול — זורקים את התוצאה, לא שולחים כלום
-    if (seq !== this.listenSeq || this.disposed) return;
+    if (seq !== this.listenSeq || this.disposed) return false;
     this.endListen();
 
     if (!res.ok) {
+      if (res.code === 'EMPTY_TRANSCRIPT') {
+        // שקט / רעש בלבד (למשל NoMatch / BabbleTimeout של Azure) — לא תקלה
+        this.notify('info', he.toasts.noSpeech);
+        return false;
+      }
       this.notify('error', he.toasts.transcribeFailed(res.message_he));
       this.flashError(res.message_he);
-      return;
+      return false;
     }
     const text = res.text.trim();
     if (!text) {
-      this.notify('info', he.toasts.emptyTranscript);
-      return;
+      this.notify('info', he.toasts.noSpeech);
+      return false;
     }
-    const msSince = this.speechEndedAt === null ? Number.POSITIVE_INFINITY : Math.max(0, this.deps.now() - this.speechEndedAt);
-    let echo: boolean;
-    try {
-      echo = this.deps.audio.isLikelyEcho(text, this.lastSpokenText, msSince);
-    } catch {
-      echo = false;
-    }
-    if (echo) {
+    if (this.isEcho(text)) {
       this.notify('info', he.toasts.echoIgnored);
-      return;
+      return false;
     }
-    await this.submit(text, 'voice');
+    return this.submit(text, 'voice');
+  }
+
+  /**
+   * הגנת הד טקסטואלית. ביטול ההד של Chromium מטפל בהשמעה מהענן (Web Audio), אבל לא בקול המערכת
+   * של Windows — ולכן המסנן הטקסטואלי חל רק על קול מערכת, או על הקלטה שהתחילה פחות מ-1.5 שניות
+   * אחרי סוף ההקראה (נמדד מפתיחת המיקרופון, לא מהגעת התמלול).
+   * כך תשובה אמיתית שחוזרת על מילים מהשאלה ("את פרויקט המעבדה") לא נזרקת כהד.
+   */
+  private isEcho(text: string): boolean {
+    const spoken = this.lastSpokenText;
+    const endedAt = this.speechEndedAt;
+    if (!spoken || endedAt === null) return false;
+    const gap = this.captureStartedAt === null ? Number.POSITIVE_INFINITY : Math.max(0, this.captureStartedAt - endedAt);
+    if (!this.lastSpeechUsedSystem && gap >= ECHO_FILTER_MAX_GAP_MS) return false;
+    try {
+      return this.deps.audio.isLikelyEcho(text, spoken, gap);
+    } catch {
+      return false;
+    }
   }
 
   /* ---------------- שליחה ---------------- */
@@ -613,6 +703,9 @@ export class JarvisController {
     const clean = text.trim();
     if (!clean) return false;
     this.clearError();
+    // בקשה מוקלדת היא הפעלה מפורשת
+    this.autoFollowUps = 0;
+    this.cancelFollowUp();
     // בקשה חדשה עוצרת הקראה של התשובה הקודמת
     this.stopSpeech();
     this.store.setState({ submitting: true });
@@ -626,6 +719,10 @@ export class JarvisController {
   private async submit(text: string, source: 'text' | 'voice'): Promise<boolean> {
     const clean = text.trim().slice(0, MAX_TEXT_INPUT);
     if (!clean) return false;
+    // בקשה חדשה — תשובה קודמת שחיכתה לסוף ההקלטה כבר לא רלוונטית
+    this.deferredReply = null;
+    const epoch = this.stopEpoch;
+    const activeBefore = this.state.activeTurnId;
     let res: SubmitResult;
     try {
       res = await this.api.assistant.submit({ text: clean, source, clientRequestId: this.deps.randomId() });
@@ -642,11 +739,40 @@ export class JarvisController {
       if (!busy) this.flashError(res.message_he);
       return false;
     }
+    this.rememberTurnEpoch(res.turnId, epoch);
+    if (this.stopEpoch !== epoch) {
+      // המשתמש לחץ "עצור" בזמן שהבקשה נשלחה (התור עוד לא היה ידוע) — מבטלים את התור החדש מיד
+      this.markTurnStopped(res.turnId);
+      this.api.assistant.cancel(res.turnId).catch(() => undefined);
+      return true;
+    }
+    // "כן"/"לא" בזמן בקשת אישור: main מחזיר את התור שהיה פעיל — זו תשובה לאישור, לא תור חדש
+    const sameTurn = activeBefore !== null && res.turnId === activeBefore;
     // בדרך כלל turn-started כבר עדכן את השורה; אם לא — מציגים את מה שנשלח בפועל
-    if (this.state.lastUser?.turnId !== res.turnId) {
+    if (!sameTurn && this.state.lastUser?.turnId !== res.turnId) {
       this.store.setState({ lastUser: { text: clean, source, turnId: res.turnId } });
     }
     return true;
+  }
+
+  private rememberTurnEpoch(turnId: string, epoch: number): void {
+    const prev = this.turnEpochs.get(turnId);
+    this.turnEpochs.set(turnId, prev === undefined ? epoch : Math.min(prev, epoch));
+    while (this.turnEpochs.size > MAX_REMEMBERED_TURNS) {
+      const oldest = this.turnEpochs.keys().next().value as string;
+      this.turnEpochs.delete(oldest);
+    }
+  }
+
+  private markTurnStopped(turnId: string): void {
+    boundedAdd(this.stoppedTurns, turnId, MAX_REMEMBERED_TURNS);
+  }
+
+  /** תור שנעצר במפורש, או שהתחיל לפני ה"עצור" האחרון — לא מקריאים את התשובה שלו. */
+  private isTurnStopped(turnId: string): boolean {
+    if (this.stoppedTurns.has(turnId)) return true;
+    const epoch = this.turnEpochs.get(turnId);
+    return epoch !== undefined && epoch < this.stopEpoch;
   }
 
   /* ---------------- הקראה ---------------- */
@@ -659,115 +785,95 @@ export class JarvisController {
     await this.speak(text, { followUp: true });
   }
 
+  private flushDeferredReply(): void {
+    const reply = this.deferredReply;
+    this.deferredReply = null;
+    if (!reply || this.disposed || this.listenPhase !== 'idle') return;
+    if (this.isTurnStopped(reply.turnId)) return;
+    void this.speakResponse(reply.text);
+  }
+
   private async speak(text: string, opts: { followUp: boolean }): Promise<void> {
     const s = this.state.settings;
-    if (!s || s.tts.provider === 'none' || this.disposed) return;
+    if (!s || this.disposed) return;
+    const provider = s.tts.provider;
+    if (provider === 'none') return;
     const clean = text.trim();
     if (!clean) return;
     this.stopSpeech();
+    this.cancelFollowUp();
     const seq = ++this.speakSeq;
     this.speakActive = true;
     this.speechStarted = false;
+    this.speechUsedSystem = false;
     this.store.setState({ speechActive: true });
     this.syncWakePause();
 
-    let outcome: SpeakOutcome;
-    try {
-      outcome = s.tts.provider === 'system' ? await this.speakWithSystem(clean, seq, s) : await this.speakWithCloud(clean, seq, s);
-    } catch {
-      outcome = 'failed';
-      if (seq === this.speakSeq) this.notify('error', he.toasts.speechFailed);
-    }
+    const outcome = await this.speech.speak({
+      text: clean,
+      provider,
+      rate: s.tts.rate,
+      systemVoiceName: s.tts.systemVoiceName || undefined,
+      onStarted: (channel) => {
+        if (seq === this.speakSeq && !this.disposed) this.markSpeechStarted(clean, channel);
+      },
+    });
     // נעצר באמצע (barge-in / עצירה / הקראה חדשה) — מי שעצר כבר סגר את המצב
     if (seq !== this.speakSeq || this.disposed) return;
     this.finishSpeaking();
-
-    const latest = this.state.settings;
-    if (
-      outcome === 'ended' &&
-      opts.followUp &&
-      latest?.voice.followUpListening &&
-      latest.stt.provider !== 'none' &&
-      this.listenPhase === 'idle'
-    ) {
-      await this.startListening('followup');
-    }
+    if (outcome === 'ended' && opts.followUp) this.scheduleFollowUp();
   }
 
-  private markSpeechStarted(text: string, output: 'audio' | 'system'): void {
+  /** האודיו באמת התחיל להישמע. בין קטעים של אותה תשובה המצב נשאר SPEAKING. */
+  private markSpeechStarted(text: string, channel: SpeechChannel): void {
     this.speechStarted = true;
     this.lastSpokenText = text;
-    this.store.setState({ speechOutput: output });
+    if (channel === 'system') this.speechUsedSystem = true;
+    this.store.setState({ speechOutput: channel });
     this.setAudioPhase('SPEAKING');
   }
 
-  private async speakWithSystem(text: string, seq: number, s: Settings): Promise<SpeakOutcome> {
-    const speaker = this.getSystemSpeaker();
-    this.markSpeechStarted(text, 'system');
-    const result = await speaker.speak(text, { voiceName: s.tts.systemVoiceName || undefined, rate: s.tts.rate });
-    if (seq !== this.speakSeq) return 'stopped';
-    if (result === 'no-voice') {
-      // לא הושמע כלום בפועל — לא נרשם כהקראה (הגנת ההד וזנב מילת ההפעלה לא רלוונטיים)
-      this.speechStarted = false;
-      this.notify('warning', he.toasts.noSystemVoice, { ttlMs: 14_000 });
-      return 'failed';
-    }
-    return result;
+  /**
+   * האזנת המשך: נפתחת WAKE_TAIL_MS אחרי סוף ההקראה (לא באותו רגע — שסוף הקול לא ייכנס להקלטה),
+   * ולכל היותר MAX_AUTO_FOLLOW_UPS פעמים ברצף בלי הפעלה מפורשת. לא בזמן בקשת אישור פתוחה.
+   */
+  private scheduleFollowUp(): void {
+    const s = this.state.settings;
+    if (!s?.voice.followUpListening || s.stt.provider === 'none') return;
+    if (this.autoFollowUps >= MAX_AUTO_FOLLOW_UPS) return;
+    this.cancelFollowUp();
+    this.followUpTimer = this.deps.timers.setTimeout(() => {
+      this.followUpTimer = null;
+      const latest = this.state.settings;
+      if (this.disposed || !latest?.voice.followUpListening || latest.stt.provider === 'none') return;
+      if (this.listenPhase !== 'idle' || this.speakActive || this.state.micTest !== 'off' || this.voiceTestBusy) return;
+      if (this.state.pendingApprovals.length > 0) return;
+      this.autoFollowUps++;
+      void this.startListening('followup');
+    }, FOLLOW_UP_DELAY_MS);
   }
 
-  private async speakWithCloud(text: string, seq: number, s: Settings): Promise<SpeakOutcome> {
-    const chunks = splitForSynthesis(text);
-    if (chunks.length === 0) return 'ended';
-    const synth = (chunk: string): Promise<SynthesizeResult> =>
-      this.api.voice
-        .synthesize({ text: chunk })
-        .catch((err: unknown): SynthesizeResult => ({ ok: false, code: 'INTERNAL', message_he: he.errors.ipc(errorText(err)) }));
-
-    let pending = synth(chunks[0] as string);
-    for (let i = 0; i < chunks.length; i++) {
-      const res = await pending;
-      if (seq !== this.speakSeq) return 'stopped';
-      const rest = chunks.slice(i).join(' ');
-      if (!res.ok) {
-        // נפילה לקול המערכת — עם הודעה, כדי שלא ייראה כאילו הקול בענן עבד
-        this.notify('warning', he.toasts.synthFallback(res.message_he));
-        return this.speakWithSystem(rest, seq, s);
-      }
-      // טעינה מוקדמת של הקטע הבא בזמן שהנוכחי מושמע
-      const next = chunks[i + 1];
-      if (next !== undefined) pending = synth(next);
-
-      let played: 'ended' | 'stopped';
-      try {
-        const playback = this.getPlayback();
-        this.markSpeechStarted(text, 'audio');
-        played = await playback.play(res.audio, res.mimeType);
-      } catch {
-        if (seq !== this.speakSeq) return 'stopped';
-        this.notify('warning', he.toasts.playbackFallback);
-        return this.speakWithSystem(rest, seq, s);
-      }
-      if (seq !== this.speakSeq || played === 'stopped') return 'stopped';
-    }
-    return 'ended';
+  private cancelFollowUp(): void {
+    if (this.followUpTimer === null) return;
+    this.deps.timers.clearTimeout(this.followUpTimer);
+    this.followUpTimer = null;
   }
 
-  /** עוצר הקראה (אם יש) ומחזיר את מצב האודיו ל-IDLE. */
+  /** עוצר הקראה (אם יש), כולל סינתזה שבדרך, ומחזיר את מצב האודיו ל-IDLE. */
   private stopSpeech(): void {
     if (!this.speakActive) return;
     this.speakSeq++;
-    this.safely(() => this.playback?.stop());
-    this.safely(() => this.systemSpeaker?.stop());
+    this.speech.stop();
     this.finishSpeaking();
   }
 
   private finishSpeaking(): void {
     this.speakActive = false;
     if (this.speechStarted) {
-      // הגנת הד: זוכרים מתי JARVIS סיים לדבר, ומשהים את מילת ההפעלה עוד רגע קצר
-      this.speechEndedAt = this.deps.now();
-      this.wakeTailUntil = this.speechEndedAt + WAKE_TAIL_MS;
-      this.scheduleWakeTail();
+      // הגנת הד: זוכרים מתי JARVIS סיים לדבר ובאיזה ערוץ, ומשהים את מילת ההפעלה עוד רגע קצר
+      this.speechEndedAt = this.mono();
+      this.lastSpeechUsedSystem = this.speechUsedSystem;
+      this.wake.startTail();
     }
     this.speechStarted = false;
     this.store.setState({ speechOutput: 'none', speechActive: false });
@@ -783,8 +889,9 @@ export class JarvisController {
     if ((audioPhase === 'LISTENING' || micTest === 'meter' || micTest === 'recording') && this.mic) {
       return { kind: 'mic', source: this.mic };
     }
-    if (audioPhase === 'SPEAKING' && speechOutput === 'audio' && this.playback) {
-      return { kind: 'playback', source: this.playback };
+    const playback = this.speech.playback;
+    if (audioPhase === 'SPEAKING' && speechOutput === 'audio' && playback) {
+      return { kind: 'playback', source: playback };
     }
     if (audioPhase === 'SPEAKING' && speechOutput === 'system') return { kind: 'system', source: null };
     return { kind: 'none', source: null };
@@ -792,146 +899,43 @@ export class JarvisController {
 
   /* ---------------- מילת הפעלה ---------------- */
 
+  /** "הפעל מחדש" / "נסה שוב" — מאפס גם את מונה הנסיונות האוטומטיים. */
   restartWakeWord(): void {
-    void this.configureWakeWord();
+    void this.wake.restart();
   }
 
-  private async configureWakeWord(): Promise<void> {
-    const seq = ++this.wakeSeq;
-    const old = this.wake;
-    this.wake = null;
-    this.wakePausedByUs = false;
-    if (old) {
-      try {
-        await old.stop();
-      } catch {
-        // עצירה של גלאי ישן שנכשל — לא חוסם הפעלה מחדש
-      }
-    }
-    if (seq !== this.wakeSeq || this.disposed) return;
-    const s = this.state.settings;
-    if (!s || !s.wakeWord.enabled) {
-      this.deps.timers.clearInterval(this.wakePollTimer);
-      this.wakePollTimer = null;
-      this.wakeErrorNotified = null;
-      this.setWake({ status: 'off', error: null, engine: null });
-      return;
-    }
-    const engine = s.wakeWord.engine;
-    this.setWake({ status: 'loading', error: null, engine });
-
-    let detector: WakeWordDetector;
-    try {
-      detector = this.deps.audio.createWakeWordDetector(engine);
-    } catch (err) {
-      this.failWake(errorText(err), engine);
-      return;
-    }
-    this.wake = detector;
-    try {
-      await detector.start({
-        deviceId: s.voice.micDeviceId || undefined,
-        sensitivity: s.wakeWord.sensitivity,
-        onDetected: () => this.onWakeDetected(detector),
-      });
-    } catch (err) {
-      if (seq !== this.wakeSeq || this.disposed) return;
-      this.wake = null;
-      this.failWake(detector.lastError || errorText(err), engine);
-      void detector.stop().catch(() => undefined);
-      return;
-    }
-    if (seq !== this.wakeSeq || this.disposed) {
-      void detector.stop().catch(() => undefined);
-      return;
-    }
-    this.wakeErrorNotified = null;
-    this.syncWakePause();
-    if (this.wakePollTimer === null) {
-      this.wakePollTimer = this.deps.timers.setInterval(() => this.syncWakeView(), WAKE_POLL_MS);
-    }
-  }
-
-  private failWake(reason: string, engine: 'openwakeword' | 'porcupine'): void {
-    // סיבה טכנית באנגלית לא נכנסת להודעה העברית — היא נשמרת כפירוט למסך ההגדרות
-    const hebrewReason = /[\u0590-\u05FF]/.test(reason) ? reason.trim().replace(/[.。]+$/u, '') : null;
-    const message = he.wake.unavailable(hebrewReason || (reason ? he.wake.technicalReason : he.wake.unknownReason));
-    const detail = !hebrewReason && reason ? reason.slice(0, 300) : null;
-    this.setWake({ status: 'error', error: message, detail, engine });
-    if (this.wakeErrorNotified !== message) {
-      this.wakeErrorNotified = message;
-      this.notify('warning', message, { ttlMs: 12_000 });
-    }
-  }
-
-  private onWakeDetected(detector: WakeWordDetector): void {
-    if (detector !== this.wake) return;
-    this.handleWakeDetection();
+  /** לבדיקות: מחכה שהגדרת מילת ההפעלה שבתור תסתיים. */
+  wakeSettled(): Promise<void> {
+    return this.wake.whenSettled();
   }
 
   /**
-   * זיהוי מילת הפעלה (מהגלאי ב-renderer או מ-main). מתחיל האזנה רק כשאין פעילות קול:
-   * בזמן האזנה/תמלול/בדיקה, בזמן ש-JARVIS מדבר ובזנב שאחריו — מתעלמים (מונע הפעלה עצמית).
+   * מתי מילת ההפעלה מושהית: בזמן האזנה/תמלול, הקראה, בדיקות קול — וגם כשיש בקשת אישור פתוחה
+   * (הפעלה שגויה + "כן" ברקע לא יאשרו פעולה בטעות; לחיצה על המיקרופון עדיין מותרת).
    */
-  private handleWakeDetection(): void {
-    if (this.disposed || !this.state.settings?.wakeWord.enabled) return;
-    if (this.shouldPauseWake()) return;
-    void this.toggleListen('wakeword');
-  }
-
-  private shouldPauseWake(): boolean {
+  private isWakeBlocked(): boolean {
     return (
       this.listenPhase !== 'idle' ||
       this.speakActive ||
       this.state.micTest !== 'off' ||
       this.voiceTestBusy ||
-      this.deps.now() < this.wakeTailUntil
+      this.state.pendingApprovals.length > 0
     );
   }
 
+  /**
+   * זיהוי מילת הפעלה (מהגלאי ב-renderer או מ-main). מתחיל האזנה רק כשאין פעילות קול:
+   * בזמן האזנה/תמלול/בדיקה, בזמן ש-JARVIS מדבר ובזנב שאחריו, ובזמן בקשת אישור — מתעלמים.
+   */
+  private handleWakeDetection(): void {
+    if (this.disposed || !this.state.settings?.wakeWord.enabled) return;
+    if (this.wake.pausedNow) return;
+    void this.toggleListen('wakeword');
+  }
+
   private syncWakePause(): void {
-    const detector = this.wake;
-    if (!detector) return;
-    const pause = this.shouldPauseWake();
-    try {
-      if (pause && !this.wakePausedByUs && detector.state === 'listening') {
-        detector.pause();
-        this.wakePausedByUs = true;
-      } else if (!pause && this.wakePausedByUs) {
-        this.wakePausedByUs = false;
-        if (detector.state === 'paused') detector.resume();
-      }
-    } catch {
-      // גלאי שנכשל ידווח דרך state/lastError בסנכרון הבא
-    }
-    this.syncWakeView();
-  }
-
-  private scheduleWakeTail(): void {
-    this.deps.timers.clearTimeout(this.wakeTailTimer);
-    this.wakeTailTimer = this.deps.timers.setTimeout(() => {
-      this.wakeTailTimer = null;
-      this.syncWakePause();
-    }, WAKE_TAIL_MS + 10);
-  }
-
-  /** מעתיק את מצב הגלאי האמיתי ל-store (למשל אם נפל באמצע). */
-  private syncWakeView(): void {
-    const detector = this.wake;
-    if (!detector) return;
-    if (detector.state === 'error') {
-      this.failWake(detector.lastError || he.wake.unknownReason, detector.engine);
-      return;
-    }
-    this.setWake({ status: detector.state, error: null, engine: detector.engine });
-  }
-
-  private setWake(next: WakeView): void {
-    const cur = this.state.wake;
-    if (cur.status === next.status && cur.error === next.error && (cur.detail ?? null) === (next.detail ?? null) && cur.engine === next.engine) {
-      return;
-    }
-    this.store.setState({ wake: next });
+    if (this.disposed) return;
+    this.wake.syncPause();
   }
 
   /* ---------------- בדיקות קול (הגדרות) ---------------- */
@@ -993,6 +997,10 @@ export class JarvisController {
     if (this.voiceTestBusy) {
       this.voiceTestCancelled = true;
       if (this.state.micTest === 'recording') this.safely(() => this.mic?.cancel());
+      if (this.testRequestId) {
+        this.cancelVoiceRequest(this.testRequestId);
+        this.testRequestId = null;
+      }
     }
   }
 
@@ -1018,10 +1026,20 @@ export class JarvisController {
     this.syncWakePause();
     try {
       const mic = this.getMic();
-      await mic.start({ deviceId: s.voice.micDeviceId || undefined, silenceTimeoutMs: 60_000, maxUtteranceSec: 3 });
+      // תקלת מיקרופון ותקלת תמלול הן שתי הודעות שונות — לא "המיקרופון לא זמין" על כל דבר
+      try {
+        await mic.start({ deviceId: s.voice.micDeviceId || undefined, silenceTimeoutMs: 60_000, maxUtteranceSec: 3 });
+      } catch (err) {
+        return { ok: false, message: micErrorMessage(err) };
+      }
       const done = mic.done;
       if (!done) return { ok: false, message: he.toasts.captureFailed };
-      const result = await done;
+      let result: CaptureResult;
+      try {
+        result = await done;
+      } catch {
+        return { ok: false, message: he.toasts.captureFailed };
+      }
       if (this.disposed) return { ok: false, message: he.errors.unknown };
       if (result.reason === 'cancelled' || this.voiceTestCancelled) return { ok: false, message: he.settings.voice.testCancelled };
       if (result.reason === 'error') return { ok: false, message: he.toasts.captureFailed };
@@ -1029,17 +1047,29 @@ export class JarvisController {
         return { ok: false, message: he.settings.voice.transcribeNoSpeech };
       }
       this.store.setState({ micTest: 'transcribing' });
-      const res = await this.api.voice.transcribe({
-        audio: result.wav,
-        mimeType: 'audio/wav',
-        durationMs: clampDurationMs(result.durationMs),
-      });
+      const requestId = this.deps.randomId();
+      this.testRequestId = requestId;
+      let res: TranscribeResult;
+      try {
+        res = await this.api.voice.transcribe({
+          audio: result.wav,
+          mimeType: 'audio/wav',
+          durationMs: clampDurationMs(result.durationMs),
+          requestId,
+        });
+      } catch (err) {
+        res = { ok: false, code: 'INTERNAL', message_he: ipcErrorMessage(err) };
+      } finally {
+        if (this.testRequestId === requestId) this.testRequestId = null;
+      }
       if (this.voiceTestCancelled) return { ok: false, message: he.settings.voice.testCancelled };
-      if (!res.ok) return { ok: false, message: res.message_he };
+      if (!res.ok) {
+        return { ok: false, message: res.code === 'EMPTY_TRANSCRIPT' ? he.settings.voice.transcribeNoSpeech : he.toasts.transcribeFailed(res.message_he) };
+      }
       const text = res.text.trim();
-      return text ? { ok: true, text } : { ok: false, message: he.toasts.emptyTranscript };
-    } catch (err) {
-      return { ok: false, message: micErrorMessage(err) };
+      return text ? { ok: true, text } : { ok: false, message: he.settings.voice.transcribeNoSpeech };
+    } catch {
+      return { ok: false, message: he.errors.unknown };
     } finally {
       this.voiceTestBusy = false;
       if (!this.disposed) {
@@ -1061,7 +1091,7 @@ export class JarvisController {
   }
 
   async listSystemVoices(): Promise<SystemVoiceInfo[]> {
-    return this.getSystemSpeaker().listVoices();
+    return this.speech.systemSpeaker.listVoices();
   }
 
   /* ---------------- אירועים מ-main ---------------- */
@@ -1079,6 +1109,7 @@ export class JarvisController {
         break;
       }
       case 'turn-started':
+        if (!this.turnEpochs.has(event.turnId)) this.rememberTurnEpoch(event.turnId, this.stopEpoch);
         this.store.setState({
           activeTurnId: event.turnId,
           lastUser: { text: event.text, source: event.source, turnId: event.turnId },
@@ -1095,6 +1126,8 @@ export class JarvisController {
         this.store.setState((s) => ({
           pendingApprovals: [...s.pendingApprovals.filter((a) => a.approvalId !== req.approvalId), req],
         }));
+        // בקשת אישור פתוחה משהה את מילת ההפעלה
+        this.syncWakePause();
         this.maybeExpandForApproval();
         break;
       }
@@ -1103,14 +1136,19 @@ export class JarvisController {
         this.removeApproval(event.approvalId);
         if (event.outcome === 'expired') this.notify('warning', he.toasts.approvalExpired);
         break;
-      case 'response':
+      case 'response': {
         this.store.setState({
           lastReply: { text: event.text, mode: event.mode, turnId: event.turnId },
           awaitingReply: false,
         });
         this.upsertActions(event.actions);
-        if (event.speak) void this.speakResponse(event.text);
+        // תשובה של תור שנעצר (או שהתחיל לפני "עצור") — מוצגת, אבל לא מוקראת
+        if (event.speak && !this.isTurnStopped(event.turnId)) {
+          if (this.listenPhase !== 'idle') this.deferredReply = { text: event.text, turnId: event.turnId };
+          else void this.speakResponse(event.text);
+        }
         break;
+      }
       case 'error':
         this.notify('error', event.message_he);
         this.flashError(event.message_he);
@@ -1131,16 +1169,19 @@ export class JarvisController {
         this.bumpData('reminders');
         break;
       case 'missed-reminders':
+        this.missedEventSeq++;
         this.store.setState((s) => ({ missedReminders: mergeById(s.missedReminders, event.reminders) }));
         break;
       case 'data-changed':
         this.bumpData(event.scope);
         if (event.scope === 'settings') void this.reloadSettings();
+        // תזכורות השתנו (אושרו / בוטלו / הופעלו) — מסירים מהבאנר את מה שכבר לא "הוחמץ"
+        if (event.scope === 'reminders') void this.refreshMissedReminders();
         if (event.scope === 'secrets') {
           void this.refreshServices();
           const s = this.state.settings;
           // מפתח Picovoice חדש -> מפעילים מחדש את הגלאי כדי שיטען אותו
-          if (s?.wakeWord.enabled && s.wakeWord.engine === 'porcupine') void this.configureWakeWord();
+          if (s?.wakeWord.enabled && s.wakeWord.engine === 'porcupine') void this.wake.configure();
         }
         break;
     }
@@ -1178,7 +1219,26 @@ export class JarvisController {
     patch.pendingApprovals = [...s.pendingApprovals, ...fresh];
     patch.missedReminders = mergeById(s.missedReminders, snapshot.missedReminders);
     this.store.setState(patch);
-    if (patch.pendingApprovals.length > 0) this.maybeExpandForApproval();
+    if (patch.pendingApprovals.length > 0) {
+      this.syncWakePause();
+      this.maybeExpandForApproval();
+    }
+  }
+
+  /** רשימת התזכורות שהוחמצו מ-main מחדש (אחרי data-changed 'reminders'). */
+  private async refreshMissedReminders(): Promise<void> {
+    const seq = ++this.missedFetchSeq;
+    const eventsBefore = this.missedEventSeq;
+    let snapshot: AssistantSnapshot;
+    try {
+      snapshot = await this.api.assistant.snapshot();
+    } catch {
+      return;
+    }
+    if (this.disposed || seq !== this.missedFetchSeq) return;
+    const fresh = Array.isArray(snapshot.missedReminders) ? snapshot.missedReminders : [];
+    // אם הגיע אירוע missed-reminders בזמן הבקשה — לא מאבדים אותו (הרענון הבא ינקה)
+    this.store.setState((s) => ({ missedReminders: this.missedEventSeq === eventsBefore ? fresh : mergeById(fresh, s.missedReminders) }));
   }
 
   private upsertActions(incoming: readonly ActionRecord[]): void {
@@ -1196,6 +1256,7 @@ export class JarvisController {
 
   private removeApproval(approvalId: string): void {
     this.store.setState((s) => ({ pendingApprovals: s.pendingApprovals.filter((a) => a.approvalId !== approvalId) }));
+    this.syncWakePause();
     this.maybeRestoreCompact();
   }
 
@@ -1227,7 +1288,7 @@ export class JarvisController {
     if (!prev) patch.viewMode = next.ui.mode;
     else if (prev.ui.mode !== next.ui.mode && !this.expandedTemporarily) patch.viewMode = next.ui.mode;
     this.store.setState(patch);
-    if (!prev || wakeSettingsChanged(prev, next)) void this.configureWakeWord();
+    if (!prev || wakeSettingsChanged(prev, next)) void this.wake.configure();
   }
 
   private async reloadSettings(): Promise<boolean> {
@@ -1368,6 +1429,7 @@ export class JarvisController {
     if (this.disposed || this.state.screenRequestPending) return false;
     this.clearError();
     this.stopSpeech();
+    this.deferredReply = null;
     const question = opts.question?.trim().slice(0, 500);
     this.store.setState({ screenRequestPending: true });
     try {
@@ -1504,26 +1566,38 @@ export class JarvisController {
 
   /* ---------------- עזרים ---------------- */
 
+  private mono(): number {
+    return (this.deps.monotonicNow ?? this.deps.now)();
+  }
+
   private setAudioPhase(phase: AudioPhase): void {
     if (this.state.audioPhase === phase) return;
     this.store.setState({ audioPhase: phase });
-    this.api.voice.reportAudioPhase(phase).catch(() => undefined);
+    this.reportAudio();
     this.syncWakePause();
+  }
+
+  /** מדווח ל-main את מצב האודיו ואת מצב מילת ההפעלה (חיווי במגש) — רק כשמשהו השתנה. */
+  private reportAudio(): void {
+    if (this.disposed) return;
+    const phase = this.state.audioPhase;
+    const wake = this.wake.listening;
+    if (this.reported.phase === phase && this.reported.wake === wake) return;
+    this.reported = { phase, wake };
+    this.api.voice.reportAudioPhase(phase, wake).catch(() => undefined);
+  }
+
+  private cancelVoiceRequest(requestId: string): void {
+    try {
+      this.api.voice.cancel(requestId).catch(() => undefined);
+    } catch {
+      // ביטול הוא ניסיון בלבד
+    }
   }
 
   private getMic(): MicCapture {
     if (!this.mic) this.mic = this.deps.audio.createMicCapture();
     return this.mic;
-  }
-
-  private getPlayback(): SpeechPlayback {
-    if (!this.playback) this.playback = this.deps.audio.createSpeechPlayback();
-    return this.playback;
-  }
-
-  private getSystemSpeaker(): SystemSpeaker {
-    if (!this.systemSpeaker) this.systemSpeaker = this.deps.audio.createSystemSpeaker();
-    return this.systemSpeaker;
   }
 
   private safely(fn: () => void): void {
