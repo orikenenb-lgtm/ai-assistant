@@ -24,7 +24,7 @@ async function box(locator: Locator): Promise<Box> {
   return b;
 }
 
-/** תשובה מקומית שמוקראת ב-Azure בלי מפתח → הודעת "ההקראה בענן נכשלה …" ארוכה. */
+/** תשובה מקומית שמוקראת ב-Azure בלי מפתח → הודעה ארוכה ("ההקראה בענן נכשלה …", ואחריה אולי "לא נמצא קול מערכת …"). */
 async function produceLongToast(page: Page): Promise<void> {
   const res = await page.evaluate(async () => {
     const s = await window.jarvis.settings.get();
@@ -43,7 +43,10 @@ test('(mock) compact view: a long toast is a one-line strip that never covers th
     const strip = page.locator('.compact-toast');
     await expect(strip).toBeVisible({ timeout: 20_000 });
     const title = (await strip.getAttribute('title')) ?? '';
-    expect(title).toContain('ההקראה בענן נכשלה');
+    // אחרי כשל Azure JARVIS עובר לקול המערכת; במחשב בלי קול עברי (כמו מכונת CI של Windows) מגיעה מיד הודעה ארוכה שנייה.
+    // מה שנבדק כאן הוא הפריסה של הודעה ארוכה, לא איזו מהשתיים מוצגת אחרונה.
+    expect(title).toMatch(/ההקראה בענן נכשלה|לא נמצא קול מערכת להקראה/);
+    expect(title.length).toBeGreaterThan(40);
     expect(await strip.locator('.compact-toast-text').evaluate((el) => getComputedStyle(el).whiteSpace)).toBe('nowrap');
     const stripBox = await box(strip);
     for (const label of ['התחל האזנה (רווח)', 'עצור (Esc)', 'הגדרות (Ctrl+,)', 'הרחב לתצוגה מלאה']) {
