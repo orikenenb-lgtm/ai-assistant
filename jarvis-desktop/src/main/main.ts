@@ -21,7 +21,7 @@ import { join } from 'node:path';
 import { IPC } from '../shared/ipc-channels';
 import type { AssistantEvent, AudioPhase, EnginePhase, ServiceStatus, UiCommand } from '../shared/types';
 import type { Settings } from '../shared/settings-schema';
-import { systemClock, type Database, type EventSink } from './core/contracts';
+import { systemClock, type EventSink } from './core/contracts';
 import { createFileLogger } from './app/logger';
 import { APP_SCHEME, developmentCsp, serveAppRequest } from './app/protocol';
 import { hardenSession, hardenWebContentsCreation } from './app/security';
@@ -32,7 +32,8 @@ import { createSettingsStore } from './settings/settings-store';
 import { createSecretStore } from './secrets/secret-store';
 import { describeChangesForDialog, launcherChangesRequiringConfirmation, pathKey } from './settings/launcher-guard';
 import { createVoiceService } from './voice/voice-service';
-import { openDatabase } from './db/database';
+import { openDatabase, openDatabaseWithRetry, type DataDatabase } from './db/database';
+import { ACTION_LOG_RETENTION_MS } from './db/action-log-repository';
 import { todayLocal } from './time/time';
 import { createReminderScheduler } from './reminders/scheduler';
 import { createElectronNotifier } from './reminders/notifier';
@@ -69,15 +70,25 @@ protocol.registerSchemesAsPrivileged([
 // מזהה האפליקציה ב-Windows — נדרש להתראות (toast) ולקיבוץ בשורת המשימות
 app.setAppUserModelId('com.ori.jarvis');
 
+// הפעלה שנייה (קליק כפול נוסף על האייקון) מציגה את החלון הקיים.
+// נרשם מיד, כדי שגם הפעלה שנייה בזמן העלייה לא תלך לאיבוד.
+let showWindowHandler: (() => void) | null = null;
+let showRequestedDuringStartup = false;
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
+  app.on('second-instance', () => {
+    if (showWindowHandler) showWindowHandler();
+    else showRequestedDuringStartup = true;
+  });
   void bootstrap();
 }
 
 async function bootstrap(): Promise<void> {
   await app.whenReady();
   const clock = systemClock;
+  const appStartedAt = clock.now().toISOString();
   const userData = app.getPath('userData');
 
   let verbose = false;
@@ -91,10 +102,15 @@ async function bootstrap(): Promise<void> {
   await secrets.init();
 
   // מסד הנתונים המקומי. אם הקובץ לא נפתח — ממשיכים בזיכרון ומודיעים למשתמש (בלי לאבד את JARVIS כולו).
-  let db: Database;
+  let db: DataDatabase;
   let dbWarning: string | null = null;
   try {
-    db = openDatabase(join(userData, 'jarvis.db'), { clock });
+    // קובץ נעול לרגע (אנטי-וירוס, גיבוי, מופע קודם שנסגר) — כמה ניסיונות קצרים לפני מעבר לזיכרון
+    db = await openDatabaseWithRetry(
+      join(userData, 'jarvis.db'),
+      { clock },
+      { onRetry: ({ attempt, error }) => logger.warn('db.open_retry', { attempt, code: error.code }) },
+    );
   } catch (err) {
     logger.error('db.open_failed', { error: err instanceof Error ? err.message : String(err) });
     db = openDatabase(':memory:', { clock });
@@ -117,11 +133,16 @@ async function bootstrap(): Promise<void> {
       tray?.update({ phase: enginePhase });
     }
     sendToRenderer(IPC.evtAssistant, event);
+    // בקשת אישור חייבת להיות גלויה — גם כש-JARVIS במגש או מאחורי EPLAN
+    if (event.type === 'approval-required') {
+      showWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.flashFrame(true);
+    }
   };
   const sendCommand = (cmd: UiCommand): void => sendToRenderer(IPC.evtCommand, cmd);
 
   const showWindow = (): void => {
-    if (!mainWindow) return;
+    if (!mainWindow || mainWindow.isDestroyed()) return;
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
@@ -218,24 +239,42 @@ async function bootstrap(): Promise<void> {
 
   // ---------- קיצור מקשים גלובלי ----------
   let registeredHotkey: string | null = null;
-  const registerHotkey = (accelerator: string): void => {
-    if (registeredHotkey) globalShortcut.unregister(registeredHotkey);
-    registeredHotkey = null;
+  const tryRegisterHotkey = (accelerator: string): boolean => {
     try {
       const ok = globalShortcut.register(accelerator, () => {
         sendCommand({ type: 'toggle-listen', source: 'hotkey' });
       });
-      if (ok) registeredHotkey = accelerator;
-      else logger.warn('hotkey.register_failed', { accelerator });
+      if (!ok) logger.warn('hotkey.register_failed', { accelerator });
+      return ok;
     } catch (err) {
       logger.warn('hotkey.invalid', { accelerator, error: err instanceof Error ? err.message : String(err) });
+      return false;
     }
   };
+  // לפני ששומרים קיצור חדש — רושמים אותו ב-Windows. אם Windows מסרב (צירוף תפוס או לא תקין),
+  // ההגדרה לא נשמרת, מוצגת שגיאה במסך ההגדרות, והקיצור הקודם ממשיך לעבוד.
+  settings.addCommitGuard((next, prev) => {
+    const accelerator = next.voice.pushToTalkHotkey;
+    if (accelerator === registeredHotkey) return null;
+    if (tryRegisterHotkey(accelerator)) {
+      if (registeredHotkey) globalShortcut.unregister(registeredHotkey);
+      registeredHotkey = accelerator;
+      return null;
+    }
+    // הקיצור לא השתנה (ורק נכשל ברישום קודם) — לא חוסמים שמירה של הגדרות אחרות
+    if (accelerator === prev.voice.pushToTalkHotkey) return null;
+    return `לא ניתן להגדיר את קיצור המקשים "${accelerator}": הוא לא תקין או תפוס ע"י תוכנה אחרת. בחר צירוף אחר.`;
+  });
 
   // ---------- חלון ראשי ----------
   const s0 = settings.get();
   const iconPath = join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'resources', 'icon.png');
-  const trayIconPath = join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'resources', 'tray.png');
+  // ב-Windows: ICO עם כמה גדלים, כדי שהאייקון במגש יהיה חד גם בקנה מידה 150%–200%
+  const trayIconPath = join(
+    app.isPackaged ? process.resourcesPath : app.getAppPath(),
+    'resources',
+    process.platform === 'win32' ? 'tray.ico' : 'tray.png',
+  );
 
   if (!devServerUrl) {
     const rendererRoot = rendererRootFor(app.getAppPath());
@@ -274,11 +313,25 @@ async function bootstrap(): Promise<void> {
           // לא קריטי
         }
       }
+      return;
     }
+    // "סגירה למגש" כבויה: סגירת החלון = יציאה מלאה
+    isQuitting = true;
+    app.quit();
   });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+  mainWindow.on('focus', () => mainWindow?.flashFrame(false));
 
+  // תזכורת שהופעלה בזמן שהממשק עוד נטען (למשל בהפעלה) — האירוע לא הגיע אליו, ולכן מציגים אותה שוב כשהוא מוכן
+  let rendererLoadStartedAt = appStartedAt;
+  mainWindow.webContents.on('did-start-loading', () => {
+    rendererLoadStartedAt = clock.now().toISOString();
+  });
   mainWindow.webContents.on('did-finish-load', () => {
     if (dbWarning) emit({ type: 'error', code: 'INTERNAL', message_he: dbWarning, retryable: false });
+    for (const reminder of scheduler.firedSince(rendererLoadStartedAt)) emit({ type: 'reminder-fired', reminder });
     const missed = scheduler.missedUnacknowledged();
     if (missed.length) emit({ type: 'missed-reminders', reminders: missed });
   });
@@ -321,6 +374,7 @@ async function bootstrap(): Promise<void> {
         sendCommand({ type: 'toggle-listen', source: 'tray' });
       },
       // מהמגש: מבקשים מה-renderer להחליף מצב (הוא ישנה את החלון וישמור את ההעדפה)
+      stop: () => sendCommand({ type: 'stop' }),
       setMode: (mode) => {
         showWindow();
         sendCommand({ type: 'view-mode', mode });
@@ -332,19 +386,29 @@ async function bootstrap(): Promise<void> {
       },
       quit: () => windowControl.quit(),
     },
-    { mode: s0.ui.mode, alwaysOnTop: s0.ui.alwaysOnTop, hotkey: s0.voice.pushToTalkHotkey, phase: 'IDLE', micActive: false },
+    { mode: s0.ui.mode, alwaysOnTop: s0.ui.alwaysOnTop, hotkey: '', phase: 'IDLE', micActive: false, wakeListening: false },
     logger,
   );
 
-  registerHotkey(s0.voice.pushToTalkHotkey);
+  if (tryRegisterHotkey(s0.voice.pushToTalkHotkey)) registeredHotkey = s0.voice.pushToTalkHotkey;
+  tray.update({ hotkey: registeredHotkey ?? '' });
+
+  // הפעלה אוטומטית עם Windows — רק בגרסה המותקנת (בפיתוח זה היה רושם את electron.exe)
+  const applyOpenAtLogin = (enabled: boolean): void => {
+    if (!app.isPackaged || process.platform !== 'win32') return;
+    try {
+      app.setLoginItemSettings({ openAtLogin: enabled });
+    } catch (err) {
+      logger.warn('login_item.failed', { error: err instanceof Error ? err.message : String(err) });
+    }
+  };
+  applyOpenAtLogin(s0.ui.openAtLogin);
 
   let lastSettings: Settings = s0;
   settings.onChange((next) => {
     verbose = next.privacy.verboseLogs;
-    if (next.voice.pushToTalkHotkey !== lastSettings.voice.pushToTalkHotkey) {
-      registerHotkey(next.voice.pushToTalkHotkey);
-      tray?.update({ hotkey: next.voice.pushToTalkHotkey });
-    }
+    tray?.update({ hotkey: registeredHotkey ?? '' });
+    if (next.ui.openAtLogin !== lastSettings.ui.openAtLogin) applyOpenAtLogin(next.ui.openAtLogin);
     lastSettings = next;
     emit({ type: 'data-changed', scope: 'settings' });
   });
@@ -366,17 +430,26 @@ async function bootstrap(): Promise<void> {
     screen: screenCapture,
     todayLocal: () => todayLocal(clock.now()),
     clearAllLogs: () => logger.clearAll(),
-    onAudioPhase: (phase) => {
+    onAudioPhase: (phase, wakeWordListening) => {
       audioPhase = phase;
-      tray?.update({ micActive: phase === 'LISTENING' });
+      tray?.update({ micActive: phase === 'LISTENING', ...(wakeWordListening !== undefined ? { wakeListening: wakeWordListening } : {}) });
       logger.debug('audio.phase', { phase, enginePhase });
     },
     onSecretsChanged: () => {
       llmStatus.value = null;
       emit({ type: 'data-changed', scope: 'secrets' });
     },
-    onRemindersChanged: () => scheduler.checkNow('created'),
+    onRemindersChanged: () => {
+      scheduler.checkNow('created');
+      emit({ type: 'data-changed', scope: 'reminders' });
+    },
     onTasksChanged: () => emit({ type: 'data-changed', scope: 'tasks' }),
+    onHistoryCleared: (scope) => {
+      engine.clearHistory();
+      emit({ type: 'data-changed', scope: 'history' });
+      if (scope === 'all') emit({ type: 'data-changed', scope: 'usage' });
+    },
+    missedReminders: () => scheduler.missedUnacknowledged(),
     wakeword: porcupine,
     onWakeDetected: () => {
       logger.info('wakeword.detected', { engine: 'porcupine' });
@@ -434,7 +507,8 @@ async function bootstrap(): Promise<void> {
         properties: purpose === 'project-folder' ? ['openDirectory'] : ['openFile'],
         filters:
           purpose === 'app-exe'
-            ? [{ name: 'תוכנות וקיצורי דרך', extensions: ['exe', 'lnk'] }]
+            ? // Windows פותר קיצורי דרך בבורר הקבצים, לכן ‎.lnk לא יכול לחזור מכאן — מדביקים את הנתיב שלו ידנית
+              [{ name: 'תוכנות (‎.exe)', extensions: ['exe'] }]
             : purpose === 'project-file'
               ? [
                   { name: 'פרויקט EPLAN', extensions: ['elk', 'elp', 'els', 'ell', 'elr', 'elx'] },
@@ -454,11 +528,13 @@ async function bootstrap(): Promise<void> {
   powerMonitor.on('unlock-screen', () => scheduler.checkNow('unlock'));
   system.start();
 
-  // שמירת היסטוריה לפי מדיניות השמירה — פעם ביום
+  // שמירת היסטוריה לפי מדיניות השמירה, ויומן הפעולות ליום אחד בלבד (הוא משמש רק למניעת כפילות) — פעם ביום
   const prune = (): void => {
     try {
       const removed = db.history.prune(settings.get().privacy.historyRetentionDays, clock.now());
       if (removed) logger.info('history.pruned', { removed });
+      const actions = db.actions.prune(new Date(clock.now().getTime() - ACTION_LOG_RETENTION_MS).toISOString());
+      if (actions) logger.info('actions.pruned', { removed: actions });
     } catch (err) {
       logger.warn('history.prune_failed', { error: err instanceof Error ? err.message : String(err) });
     }
@@ -466,7 +542,8 @@ async function bootstrap(): Promise<void> {
   prune();
   const pruneTimer = setInterval(prune, 24 * 3600 * 1000);
 
-  app.on('second-instance', showWindow);
+  showWindowHandler = showWindow;
+  if (showRequestedDuringStartup) showWindow();
   app.on('activate', showWindow);
   app.on('window-all-closed', () => {
     // נשארים במגש — יציאה רק מ"יציאה מלאה"

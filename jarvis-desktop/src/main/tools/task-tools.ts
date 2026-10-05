@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Clock, Database, ToolContext, ToolDefinition } from '../core/contracts';
 import type { ErrorCode, TaskDTO, ToolResult } from '../../shared/types';
 import { normalizeForMatch } from '../../shared/text-normalize';
-import { TaskValidationError } from '../db/tasks-repository';
+import { TaskValidationError, type TaskRepositoryExtras } from '../db/tasks-repository';
 import { pickSingle, rankByText } from '../db/text-search';
 import { addDaysLocal, formatHebrewDate, formatHebrewDayMonth, parseLocalDate, todayLocal } from '../time/time';
 import { clip, countFeminine, joinHebrew, joinHebrewCapped, stripTrailingPunctuation } from '../time/hebrew-text';
@@ -45,6 +45,11 @@ export function clarifyResult(
     error_code: code,
     ...(options && options.length > 0 ? { options } : {}),
   };
+}
+
+/** הפריט כבר קיים במצב המבוקש — הצלחה בלי כתיבה (אידמפוטנטיות לפי מצב, לא לפי יומן הפעולות). */
+export function dedupedResult(summary_he: string, data?: unknown): ToolResult {
+  return { ok: true, status: 'deduplicated', summary_he, ...(data === undefined ? {} : { data }) };
 }
 
 export function cancelledResult(): ToolResult {
@@ -150,6 +155,28 @@ export function summarizeTasks(filter: 'today' | 'open' | 'all', tasks: readonly
 /* הכלים                                                                */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/* חיפושים מדויקים — דרך העזרים של המאגר כשהם קיימים, אחרת דרך החוזה      */
+/* ------------------------------------------------------------------ */
+
+type TasksWithExtras = Database['tasks'] & Partial<TaskRepositoryExtras>;
+
+/** משימה פתוחה עם אותה כותרת מנורמלת ואותו תאריך יעד. */
+function findOpenTaskExact(db: Database, title: string, dueDate: string | null, today: string): TaskDTO | null {
+  const repo = db.tasks as TasksWithExtras;
+  if (typeof repo.findOpenExact === 'function') return repo.findOpenExact(title, dueDate);
+  const norm = normalizeForMatch(title);
+  return repo.list('open', today).find((t) => t.dueDate === dueDate && normalizeForMatch(t.title) === norm) ?? null;
+}
+
+/** משימה שבוצעה/בוטלה עם בדיוק אותה כותרת מנורמלת (האחרונה). */
+function findClosedTaskExact(db: Database, title: string, today: string): TaskDTO | null {
+  const repo = db.tasks as TasksWithExtras;
+  if (typeof repo.findClosedExact === 'function') return repo.findClosedExact(title);
+  const norm = normalizeForMatch(title);
+  return repo.list('all', today).find((t) => t.status !== 'open' && normalizeForMatch(t.title) === norm) ?? null;
+}
+
 export interface TaskToolsDeps {
   db: Database;
   clock: Clock;
@@ -168,7 +195,9 @@ export function createTaskTools(deps: TaskToolsDeps): ToolDefinition[] {
     inputSchema: CreateTaskInputSchema,
     risk: 'low',
     sideEffect: true,
-    dedupeWindowMs: 120_000,
+    // בלי חלון כפילות של המנוע (שמבוסס על יומן הפעולות ועיוור למצב): הכלי עצמו אידמפוטנטי לפי מצב —
+    // משימה פתוחה זהה לא נוצרת שוב, אבל אחרי שסומנה כבוצעה אפשר להוסיף אותה מחדש מיד.
+    dedupeWindowMs: 0,
     title: (input) => `הוספת משימה: ${clip(input.title, 40)}`,
     describeForApproval: (input) => ({
       action_he: 'הוספת משימה חדשה',
@@ -185,15 +214,22 @@ export function createTaskTools(deps: TaskToolsDeps): ToolDefinition[] {
         return errorResult('INVALID_PARAMS', `התאריך "${due}" לא תקין. לאיזה תאריך לקבוע את המשימה?`);
       }
       const notes = input.notes?.trim() ? input.notes.trim() : null;
+      const today = todayLocal(clock.now());
       let task: TaskDTO;
       try {
+        const existing = findOpenTaskExact(db, title, due, today);
+        if (existing) {
+          return dedupedResult(
+            `המשימה הזו כבר ברשימה: ${clip(stripTrailingPunctuation(existing.title), 120)}${dueSuffix(existing.dueDate, today)} — לא הוספתי כפילות.`,
+            { id: existing.id, title: existing.title, due_date: existing.dueDate },
+          );
+        }
         task = db.tasks.create({ title, notes, dueDate: due, source: 'tool' });
       } catch (err) {
         if (err instanceof TaskValidationError) return errorResult('INVALID_PARAMS', err.message_he);
         return storageErrorResult('שמירת המשימה');
       }
       ctx.emit({ type: 'data-changed', scope: 'tasks' });
-      const today = todayLocal(clock.now());
       return okResult(`הוספתי משימה: ${clip(stripTrailingPunctuation(task.title), 120)}${dueSuffix(task.dueDate, today)}.`, {
         id: task.id,
         title: task.title,
@@ -265,20 +301,28 @@ export function createTaskTools(deps: TaskToolsDeps): ToolDefinition[] {
         if (!target && !query) return errorResult('NOT_FOUND', 'לא מצאתי את המשימה הזו. אולי היא כבר נמחקה?');
         if (!target) {
           const ranked = rankByText(query, db.tasks.search(query), (t) => t.title);
-          const pick = pickSingle(ranked, MAX_OPTIONS);
-          if (pick.kind === 'none') {
-            return errorResult('NOT_FOUND', `לא מצאתי משימה פתוחה שמתאימה ל${quoted(query)}.`);
+          // אין משימה פתוחה בדיוק בשם הזה, אבל יש כזו שכבר בוצעה/בוטלה — עונים עליה ("כבר בוצעה"),
+          // ולא בוחרים משימה דומה אחרת ("לנועה" -> "לנועם") בפעם השנייה שאורי אומר "סיימתי".
+          const closed = ranked.some((r) => r.score >= 1) ? null : findClosedTaskExact(db, query, todayLocal(clock.now()));
+          if (closed) {
+            target = closed;
+          } else {
+            const pick = pickSingle(ranked, MAX_OPTIONS);
+            if (pick.kind === 'none') {
+              return errorResult('NOT_FOUND', `לא מצאתי משימה פתוחה שמתאימה ל${quoted(query)}.`);
+            }
+            // רק התאמה מדויקת או של מילים שלמות נבחרת לבד; כל השאר — שאלת הבהרה עם אפשרויות
+            if (pick.kind === 'many' || pick.kind === 'weak') {
+              const options = pick.items.map((t) => ({ id: t.id, label: taskLabel(t) }));
+              const names = joinHebrew(pick.items.map((t) => quoted(t.title)));
+              const summary =
+                pick.kind === 'many'
+                  ? `מצאתי כמה משימות שמתאימות ל${quoted(query)}: ${names}. איזו מהן לסמן כבוצעה?`
+                  : `לא מצאתי משימה שמתאימה בדיוק ל${quoted(query)}. התכוונת ל${names}?`;
+              return clarifyResult('AMBIGUOUS', summary, options);
+            }
+            target = pick.item;
           }
-          if (pick.kind === 'many' || pick.kind === 'weak') {
-            const options = pick.items.map((t) => ({ id: t.id, label: taskLabel(t) }));
-            const names = joinHebrew(pick.items.map((t) => quoted(t.title)));
-            const summary =
-              pick.kind === 'many'
-                ? `מצאתי כמה משימות שמתאימות ל${quoted(query)}: ${names}. איזו מהן לסמן כבוצעה?`
-                : `לא מצאתי משימה שמתאימה בדיוק ל${quoted(query)}. התכוונת ל${names}?`;
-            return clarifyResult('AMBIGUOUS', summary, options);
-          }
-          target = pick.item;
         }
 
         if (target.status === 'done') {

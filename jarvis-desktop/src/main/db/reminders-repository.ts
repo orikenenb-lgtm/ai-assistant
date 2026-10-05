@@ -35,6 +35,25 @@ function toReminder(row: Row): ReminderDTO {
   };
 }
 
+/**
+ * עזרים מעבר לחוזה ReminderRepository (contracts.ts). ממומשים כאן; הכלים והמתזמן משתמשים בהם
+ * כשהם קיימים, עם נפילה לשאילתות החוזה (כך שגם mock שמממש רק את החוזה עובד).
+ */
+export interface ReminderRepositoryExtras {
+  /**
+   * תזכורת בסטטוס scheduled עם אותו טקסט (אחרי normalizeForMatch — מנורמל כאן שוב, אז אפשר להעביר גם טקסט גולמי)
+   * ובדיוק אותו מועד UTC. בסיס לאידמפוטנטיות של create_reminder לפי מצב ולא לפי יומן הפעולות.
+   */
+  findScheduledExact(textNorm: string, dueAtUtc: string): ReminderDTO | null;
+  /** התזכורת האחרונה (לפי עדכון) עם אותו טקסט מנורמל שכבר "נסגרה": fired / acknowledged / cancelled. */
+  findClosedExact(textNorm: string): ReminderDTO | null;
+  /**
+   * תזכורות שהופעלו (fired_at) ברגע הזה או אחריו ועדיין לא סומנו כנקראו (status='fired'), בסדר כרונולוגי.
+   * לשידור חוזר ל-renderer שנטען אחרי שהתזכורת קפצה.
+   */
+  firedSince(sinceIso: string): ReminderDTO[];
+}
+
 export class ReminderValidationError extends Error {
   constructor(public readonly message_he: string) {
     super(message_he);
@@ -45,7 +64,7 @@ export class ReminderValidationError extends Error {
 export function createReminderRepository(
   db: DatabaseSync,
   deps: { clock: Clock; idFactory: () => string },
-): ReminderRepository {
+): ReminderRepository & ReminderRepositoryExtras {
   const insertStmt = db.prepare(
     `INSERT INTO reminders (id, text, text_norm, due_at_utc, timezone, due_local_he, status, created_at, updated_at, fired_at, deleted)
      VALUES (?, ?, ?, ?, ?, ?, 'scheduled', ?, ?, NULL, 0)`,
@@ -89,6 +108,24 @@ export function createReminderRepository(
   const markMissedStmt = db.prepare(
     `UPDATE reminders SET status = 'missed', updated_at = ?
      WHERE id = ? AND status = 'scheduled' AND deleted = 0`,
+  );
+  const scheduledExactStmt = db.prepare(
+    `SELECT ${COLUMNS} FROM reminders
+     WHERE deleted = 0 AND status = 'scheduled' AND text_norm = ? AND due_at_utc = ?
+     ORDER BY created_at ASC
+     LIMIT 1`,
+  );
+  const closedExactStmt = db.prepare(
+    `SELECT ${COLUMNS} FROM reminders
+     WHERE deleted = 0 AND status IN ('fired', 'acknowledged', 'cancelled') AND text_norm = ?
+     ORDER BY updated_at DESC, created_at DESC
+     LIMIT 1`,
+  );
+  const firedSinceStmt = db.prepare(
+    `SELECT ${COLUMNS} FROM reminders
+     WHERE deleted = 0 AND status = 'fired' AND fired_at IS NOT NULL AND fired_at >= ?
+     ORDER BY fired_at ASC, due_at_utc ASC
+     LIMIT ?`,
   );
   const acknowledgeStmt = db.prepare(
     `UPDATE reminders SET status = 'acknowledged', updated_at = ?
@@ -179,6 +216,27 @@ export function createReminderRepository(
 
     listMissedUnacknowledged() {
       return (listMissedStmt.all() as Row[]).map(toReminder);
+    },
+
+    findScheduledExact(textNorm, dueAtUtc) {
+      const norm = normalizeForMatch(textNorm);
+      const ms = Date.parse(dueAtUtc);
+      if (!norm || !Number.isFinite(ms)) return null;
+      const row = scheduledExactStmt.get(norm, new Date(ms).toISOString()) as Row | undefined;
+      return row ? toReminder(row) : null;
+    },
+
+    findClosedExact(textNorm) {
+      const norm = normalizeForMatch(textNorm);
+      if (!norm) return null;
+      const row = closedExactStmt.get(norm) as Row | undefined;
+      return row ? toReminder(row) : null;
+    },
+
+    firedSince(sinceIso) {
+      const ms = Date.parse(sinceIso);
+      if (!Number.isFinite(ms)) return [];
+      return (firedSinceStmt.all(new Date(ms).toISOString(), LIST_ALL_LIMIT) as Row[]).map(toReminder);
     },
   };
 }

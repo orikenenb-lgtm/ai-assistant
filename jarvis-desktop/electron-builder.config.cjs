@@ -1,6 +1,5 @@
 // הגדרות האריזה של JARVIS ל-Windows (electron-builder).
-// ב-Windows (CI או מחשב מקומי) עורכים את ה-exe (אייקון ומטא-דאטה). ב-Linux אין Wine, לכן מדלגים.
-const editExe = process.platform === 'win32' || process.env.JARVIS_EDIT_EXE === 'true';
+// עריכת ה-exe (אייקון, שם ומטא-דאטה) נעשית ב-JS (resedit) — עובדת גם כשבונים מ-Linux, בלי Wine.
 
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
@@ -30,7 +29,6 @@ module.exports = {
       { target: 'zip', arch: ['x64'] },
     ],
     icon: 'build/icon.ico',
-    signAndEditExecutable: editExe,
   },
   nsis: {
     oneClick: false,

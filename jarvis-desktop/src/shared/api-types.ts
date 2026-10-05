@@ -38,6 +38,8 @@ export type TranscribeResult = Result<{ text: string; provider: string; duration
 
 export type SynthesizeResult = Result<{ audio: Uint8Array; mimeType: string; provider: string }>;
 
+export type WakewordSessionStatus = { state: 'running' } | { state: 'failed'; message_he: string } | { state: 'stopped' };
+
 export interface JarvisApi {
   readonly version: string;
   readonly platform: string;
@@ -50,9 +52,12 @@ export interface JarvisApi {
     onEvent(listener: (event: AssistantEvent) => void): Unsubscribe;
   };
   voice: {
-    transcribe(input: { audio: Uint8Array; mimeType: 'audio/wav'; durationMs: number }): Promise<TranscribeResult>;
-    synthesize(input: { text: string }): Promise<SynthesizeResult>;
-    reportAudioPhase(phase: AudioPhase): Promise<void>;
+    /** requestId (אופציונלי): מזהה קצר לביטול הבקשה דרך cancel. */
+    transcribe(input: { audio: Uint8Array; mimeType: 'audio/wav'; durationMs: number; requestId?: string }): Promise<TranscribeResult>;
+    synthesize(input: { text: string; requestId?: string }): Promise<SynthesizeResult>;
+    /** מבטל בקשת תמלול/הקראה שעוד בדרך (עוצר גם את הבקשה לענן). */
+    cancel(requestId: string): Promise<{ cancelled: boolean }>;
+    reportAudioPhase(phase: AudioPhase, wakeWordListening?: boolean): Promise<void>;
   };
   settings: {
     get(): Promise<Settings>;
@@ -97,9 +102,12 @@ export interface JarvisApi {
    * ה-renderer מזרים אודיו 16kHz int16; זיהוי מגיע כ-onCommand({type:'toggle-listen', source:'wakeword'}).
    */
   wakeword: {
-    startPorcupine(sensitivity: number): Promise<Result<{ frameLength: number; sampleRate: number }>>;
-    stopPorcupine(): Promise<void>;
-    pushFrames(samples: Int16Array): void;
+    /** מתחיל סשן חדש ב-main. sessionId מזהה אותו בכל קריאה אחרת — קריאות עם מזהה ישן נזרקות. */
+    startPorcupine(sensitivity: number): Promise<Result<{ frameLength: number; sampleRate: number; sessionId: string }>>;
+    stopPorcupine(sessionId: string): Promise<void>;
+    /** מצב הסשן: running / failed (המנוע נפל באמצע — עם הודעה בעברית) / stopped. */
+    statusPorcupine(sessionId: string): Promise<WakewordSessionStatus>;
+    pushFrames(sessionId: string, samples: Int16Array): void;
   };
   onCommand(listener: (command: UiCommand) => void): Unsubscribe;
 }

@@ -35,12 +35,12 @@ V1 נבנה כך שאפשר להרחיב אותו בלי לשבור את הבס�
 
 הבסיס כבר קיים ב-V1:
 
-- **עמודות בכל רשומה:** `updated_at` ו-`deleted` (tombstone).
+- **עמודות סנכרון:** `updated_at` ו-`deleted` (tombstone) בטבלאות `tasks` ו-`reminders`.
 - **ממשק:** `SyncAdapter` ב-`src/main/db/sync.ts`.
 
 מה צריך להוסיף:
 
-- **הטבלאות:** `tasks`, `reminders` ו-`history` (אופציונלי), עם RLS לפי `auth.uid()`.
+- **הטבלאות:** `tasks` ו-`reminders`, עם RLS לפי `auth.uid()`. סנכרון `history` (אופציונלי) ידרוש קודם להוסיף לה `updated_at` ו-`deleted`.
 - **התחברות:** Supabase Auth עם magic link. ה-refresh token נשמר ב-safeStorage.
 - **סנכרון:** last-write-wins לפי `updated_at`, ומחיקה רכה.
 - **הצפנה בצד הלקוח:** לשדות טקסט חופשי, לפני העלאה.

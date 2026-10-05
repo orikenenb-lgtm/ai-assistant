@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import type { ErrorCode } from '../../shared/types';
 import {
   ProviderError,
   type CapturedImage,
@@ -107,6 +108,50 @@ export function mapAnthropicError(err: unknown): ProviderError {
   return new ProviderError('PROVIDER_ERROR', 'אירעה שגיאה לא צפויה בתקשורת עם Claude.', false, { cause: err });
 }
 
+/** תוצאת קריאה ל-Claude, לדיווח מצב החיבור (בלי סודות ובלי תוכן הבקשה). */
+export type LlmCallResult = { ok: true } | { ok: false; code: ErrorCode; message_he: string };
+
+/** כמה ניסיונות חוזרים ה-SDK רשאי לעשות — כולם בתוך אותו תקציב זמן כולל. */
+export const MAX_SDK_RETRIES = 1;
+/** תקציב כולל לקריאת vision (כל הניסיונות יחד) — חייב להיכנס במגבלת 90 השניות של כלי הצילום. */
+export const VISION_TOTAL_TIMEOUT_MS = 75_000;
+
+const TIMEOUT_MESSAGE_HE = 'Claude לא הגיב בזמן. נסה שוב בעוד רגע.';
+
+/**
+ * מועד אחרון כולל לקריאה: ה-SDK מקבל signal שמשלב את ביטול המשתמש עם deadline אחד לכל הניסיונות,
+ * כך ש-timeout לניסיון × מספר הניסיונות לא יכול לחרוג מהתקציב.
+ */
+function withDeadline(callerSignal: AbortSignal, totalMs: number): { signal: AbortSignal; deadline: AbortSignal; timeoutMs: number } {
+  const timeoutMs = Math.max(1, Math.floor(totalMs));
+  const deadline = AbortSignal.timeout(timeoutMs);
+  return { signal: AbortSignal.any([callerSignal, deadline]), deadline, timeoutMs };
+}
+
+/** ביטול שנגרם מה-deadline (ולא מהמשתמש) הוא TIMEOUT, לא CANCELLED. */
+function mapCallError(err: unknown, callerSignal: AbortSignal, deadline: AbortSignal): ProviderError {
+  const mapped = mapAnthropicError(err);
+  if (mapped.code === 'CANCELLED' && deadline.aborted && !callerSignal.aborted) {
+    return new ProviderError('TIMEOUT', TIMEOUT_MESSAGE_HE, true, { cause: err });
+  }
+  return mapped;
+}
+
+function notify(cb: ((r: LlmCallResult) => void) | undefined, result: LlmCallResult, logger: Logger): void {
+  if (!cb) return;
+  try {
+    cb(result);
+  } catch (err) {
+    logger.warn('llm.result_listener_failed', { error: err instanceof Error ? err.name : typeof err });
+  }
+}
+
+/** דיווח על כישלון — לא על ביטול של המשתמש (שאינו אומר דבר על החיבור). */
+function notifyFailure(cb: ((r: LlmCallResult) => void) | undefined, err: ProviderError, logger: Logger): void {
+  if (err.code === 'CANCELLED') return;
+  notify(cb, { ok: false, code: err.code, message_he: err.message_he }, logger);
+}
+
 function missingKeyError(): ProviderError {
   return new ProviderError('MISSING_API_KEY', `לא הוגדר מפתח API של Claude. הוסף אותו בהגדרות ← מוח.`, false);
 }
@@ -189,6 +234,11 @@ export interface AnthropicLlmClientDeps {
   createClient?: (apiKey: string) => AnthropicLike;
   /** המודל לבדיקת ping (ברירת מחדל: claude-opus-5-5). */
   getModel?: () => string;
+  /**
+   * נקרא אחרי כל קריאת runTurn: {ok:true} כשהתקבלה תשובה מ-Claude (גם סירוב), או {ok:false, code, message_he}
+   * כשהקריאה נכשלה. לא נקרא כשהמשתמש ביטל (CANCELLED) — ביטול לא אומר דבר על החיבור. לעולם לא כולל מפתח או תוכן.
+   */
+  onLlmResult?: (r: LlmCallResult) => void;
 }
 
 export function createAnthropicLlmClient(deps: AnthropicLlmClientDeps): LlmClient {
@@ -199,7 +249,11 @@ export function createAnthropicLlmClient(deps: AnthropicLlmClientDeps): LlmClien
 
     async runTurn(req) {
       const entry = cache.get();
-      if (!entry) throw missingKeyError();
+      if (!entry) {
+        const err = missingKeyError();
+        notifyFailure(deps.onLlmResult, err, deps.logger);
+        throw err;
+      }
       const params: Anthropic.Beta.MessageCreateParamsNonStreaming = {
         model: req.model,
         max_tokens: MAX_TOKENS,
@@ -210,18 +264,22 @@ export function createAnthropicLlmClient(deps: AnthropicLlmClientDeps): LlmClien
         ...fallbackParams(req.model),
       };
       const startedAt = deps.clock.now().getTime();
+      // requestTimeoutSec הוא תקציב כולל לקריאה (כולל ניסיון חוזר), לא לכל ניסיון
+      const budget = withDeadline(req.signal, req.timeoutMs);
       let message: Anthropic.Beta.BetaMessage;
       try {
         message = await entry.client.beta.messages.create(params, {
-          signal: req.signal,
-          timeout: req.timeoutMs,
-          maxRetries: 2,
+          signal: budget.signal,
+          timeout: budget.timeoutMs,
+          maxRetries: MAX_SDK_RETRIES,
         });
       } catch (err) {
-        const mapped = mapAnthropicError(err);
+        const mapped = mapCallError(err, req.signal, budget.deadline);
         if (mapped.code !== 'CANCELLED') deps.logger.warn('llm.request_failed', { model: req.model, ...errorLogData(err, mapped) });
+        notifyFailure(deps.onLlmResult, mapped, deps.logger);
         throw mapped;
       }
+      notify(deps.onLlmResult, { ok: true }, deps.logger);
       recordUsage(deps.usage, deps.logger, deps.clock, 'llm', req.model, message);
       deps.logger.info('llm.response', {
         model: message.model || req.model,
@@ -281,20 +339,26 @@ export interface AnthropicVisionAnalyzerDeps {
   usage: UsageRepository;
   clock: Clock;
   createClient?: (apiKey: string) => AnthropicLike;
-  /** זמן מקסימלי לבקשת vision אחת (ברירת מחדל 80 שניות; הכלי עצמו מוגבל ל-90). */
+  /** זמן כולל לבקשת vision, כולל ניסיון חוזר (ברירת מחדל 75 שניות; הכלי עצמו מוגבל ל-90). */
   timeoutMs?: number;
+  /** כמו ב-createAnthropicLlmClient: נקרא אחרי כל קריאת vision (לא בביטול של המשתמש), בלי סודות. */
+  onLlmResult?: (r: LlmCallResult) => void;
 }
 
 export function createAnthropicVisionAnalyzer(deps: AnthropicVisionAnalyzerDeps): VisionAnalyzer {
   const cache = createClientCache(deps.getApiKey, deps.createClient ?? defaultCreateClient);
-  const timeoutMs = deps.timeoutMs ?? 80_000;
+  const totalTimeoutMs = deps.timeoutMs ?? VISION_TOTAL_TIMEOUT_MS;
 
   return {
     isConfigured: () => Boolean(deps.getApiKey()?.trim()),
 
     async analyze(input: { image: CapturedImage; question: string; signal: AbortSignal }): Promise<string> {
       const entry = cache.get();
-      if (!entry) throw missingKeyError();
+      if (!entry) {
+        const err = missingKeyError();
+        notifyFailure(deps.onLlmResult, err, deps.logger);
+        throw err;
+      }
       const model = deps.getModel() || DEFAULT_MODEL;
       const question = input.question.trim() || 'מה רואים במסך? אם יש בעיה — מה היא ומה כדאי לבדוק?';
       const params: Anthropic.Beta.MessageCreateParamsNonStreaming = {
@@ -318,14 +382,21 @@ export function createAnthropicVisionAnalyzer(deps: AnthropicVisionAnalyzerDeps)
         ...fallbackParams(model),
       };
 
+      const budget = withDeadline(input.signal, totalTimeoutMs);
       let message: Anthropic.Beta.BetaMessage;
       try {
-        message = await entry.client.beta.messages.create(params, { signal: input.signal, timeout: timeoutMs, maxRetries: 1 });
+        message = await entry.client.beta.messages.create(params, {
+          signal: budget.signal,
+          timeout: budget.timeoutMs,
+          maxRetries: MAX_SDK_RETRIES,
+        });
       } catch (err) {
-        const mapped = mapAnthropicError(err);
+        const mapped = mapCallError(err, input.signal, budget.deadline);
         if (mapped.code !== 'CANCELLED') deps.logger.warn('vision.request_failed', { model, ...errorLogData(err, mapped) });
+        notifyFailure(deps.onLlmResult, mapped, deps.logger);
         throw mapped;
       }
+      notify(deps.onLlmResult, { ok: true }, deps.logger);
       recordUsage(deps.usage, deps.logger, deps.clock, 'vision', model, message);
 
       if (message.stop_reason === 'refusal') {

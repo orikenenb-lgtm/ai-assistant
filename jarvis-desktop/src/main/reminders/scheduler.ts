@@ -1,14 +1,17 @@
 import type { Clock, Database, EventSink, Logger } from '../core/contracts';
 import type { AssistantEvent, ReminderDTO } from '../../shared/types';
 import type { Settings } from '../../shared/settings-schema';
-import { formatLocalTime } from '../time/time';
+import type { ReminderRepositoryExtras } from '../db/reminders-repository';
+import { formatLocalTime, todayLocal } from '../time/time';
 import type { Notifier, NotificationRequest } from './notifier';
 
 /**
  * מתזמן התזכורות. רץ ב-main כל עוד JARVIS פועל (גם ממוזער למגש).
  *
- * - בדיקה מחזורית (ברירת מחדל כל 30 שניות) + טיימר מדויק לתזכורת הבאה שבחלון הקרוב,
+ * - בדיקה מחזורית (ברירת מחדל כל 10 שניות) + טיימר מדויק לתזכורת הבאה שבחלון הקרוב,
  *   כדי שההתראה תקפוץ בדיוק בדקה.
+ * - מעבר יום (חצות בשעון ישראל) מזוהה בבדיקה המחזורית ומשודר כ-data-changed ל-tasks ול-reminders,
+ *   כי "היום"/"מחר"/"באיחור" בממשק תלויים בתאריך המקומי.
  * - תזכורת שאיחורה בתוך חלון החסד (settings.reminders.graceMinutes) — מוצגת כרגיל.
  *   מעבר לו (המחשב היה כבוי/ישן, או JARVIS לא רץ) — מסומנת "הוחמצה", ומוצגת התראת סיכום אחת.
  * - המעברים במסד הם אטומיים (UPDATE מותנה בסטטוס), ורק מי שביצע את המעבר מציג התראה —
@@ -23,6 +26,11 @@ export interface ReminderScheduler {
   stop(): void;
   checkNow(reason: CheckReason): void;
   missedUnacknowledged(): ReminderDTO[];
+  /**
+   * תזכורות שהופעלו ברגע sinceIso או אחריו ועוד לא סומנו כנקראו (status='fired'), בסדר כרונולוגי.
+   * לשידור חוזר של reminder-fired ל-renderer שנטען (או נטען מחדש) אחרי שהתזכורת קפצה. לא זורק.
+   */
+  firedSince(sinceIso: string): ReminderDTO[];
 }
 
 /** ידית טיימר אטומה (NodeJS.Timeout בפועל, או כל ערך בבדיקות). */
@@ -35,20 +43,24 @@ export interface ReminderSchedulerDeps {
   emit: EventSink;
   logger: Logger;
   getSettings: () => Settings;
-  /** מרווח הבדיקה המחזורית. ברירת מחדל 30 שניות. */
+  /** מרווח הבדיקה המחזורית. ברירת מחדל 10 שניות. */
   intervalMs?: number;
   setTimer?: (fn: () => void, ms: number) => TimerHandle;
   clearTimer?: (handle: TimerHandle) => void;
 }
 
-const DEFAULT_INTERVAL_MS = 30_000;
+export const DEFAULT_INTERVAL_MS = 10_000;
 const MIN_INTERVAL_MS = 1_000;
 const MAX_INTERVAL_MS = 5 * 60_000;
 /**
- * גם כשחלון החסד בהגדרות הוא 0, תזכורת שמגיעה באיחור של שניות בגלל תזמון הטיימר
- * היא "בזמן" ולא "הוחמצה". לכן הסף המעשי לא יורד מדקה (או ממרווח הבדיקה, אם גדול יותר).
+ * רצפת סובלנות מעל מרווח הבדיקה. למה צריך רצפה בכלל, גם כשחלון החסד בהגדרות הוא 0:
+ * הטיימר המדויק מכוון רק לתזכורת שבתוך המרווח הקרוב, ו-setTimeout ב-Electron יכול להתעכב
+ * (לולאת אירועים עסוקה, Windows שמאט טיימרים, טיימר שהוחמץ ונתפס רק בבדיקה המחזורית הבאה).
+ * במקרה הגרוע תזכורת נבדקת מרווח-בדיקה אחד אחרי מועדה, ועוד כמה שניות של רעד —
+ * והיא עדיין "בזמן" ולא "הוחמצה". לכן graceMinutes=0 פירושו intervalMs + 5 שניות (15 שניות כברירת מחדל),
+ * ולא דקה שלמה; graceMinutes>0 קובע את הסף כרגיל.
  */
-const MIN_ON_TIME_TOLERANCE_MS = 60_000;
+const TIMER_JITTER_TOLERANCE_MS = 5_000;
 /** הטיימר המדויק מכוון מעט אחרי המועד, כדי שבזמן הבדיקה due_at_utc <= now בוודאות. */
 const PRECISE_SLACK_MS = 20;
 /** מגבלת סבבים כשבקשות בדיקה נכנסות תוך כדי בדיקה (מניעת לולאה). */
@@ -123,7 +135,24 @@ export function createReminderScheduler(deps: ReminderSchedulerDeps): ReminderSc
       logger.warn('reminders.settings_unavailable', { error: errorMessage(err) });
     }
     const graceMs = Number.isFinite(graceMinutes) && graceMinutes >= 0 ? graceMinutes * 60_000 : 5 * 60_000;
-    return Math.max(graceMs, MIN_ON_TIME_TOLERANCE_MS, intervalMs + 5_000);
+    return Math.max(graceMs, intervalMs + TIMER_JITTER_TOLERANCE_MS);
+  };
+
+  /** התאריך המקומי בבדיקה הקודמת; null עד הבדיקה הראשונה. */
+  let lastDayLocal: string | null = null;
+
+  /** האם התאריך המקומי (Asia/Jerusalem) התחלף מאז הבדיקה הקודמת. הבדיקה הראשונה רק מאתחלת. */
+  const detectDayRollover = (): boolean => {
+    try {
+      const day = todayLocal(clock.now());
+      const changed = lastDayLocal !== null && day !== lastDayLocal;
+      lastDayLocal = day;
+      if (changed) logger.info('reminders.day_rollover', { day });
+      return changed;
+    } catch (err) {
+      logger.warn('reminders.day_check_failed', { error: errorMessage(err) });
+      return false;
+    }
   };
 
   const clearPrecise = (): void => {
@@ -169,6 +198,7 @@ export function createReminderScheduler(deps: ReminderSchedulerDeps): ReminderSc
   const runCheck = (reason: CheckReason): void => {
     const isStartup = reason === 'startup' && !startupDone;
     if (reason === 'startup') startupDone = true;
+    const dayChanged = detectDayRollover();
 
     let snapshot: { nowMs: number; nowIso: string; due: ReminderDTO[] };
     try {
@@ -177,6 +207,10 @@ export function createReminderScheduler(deps: ReminderSchedulerDeps): ReminderSc
       snapshot = { nowMs: now.getTime(), nowIso, due: db.reminders.dueScheduled(nowIso) };
     } catch (err) {
       logger.error('reminders.check_failed', { reason, error: errorMessage(err) });
+      if (dayChanged) {
+        safeEmit({ type: 'data-changed', scope: 'tasks' });
+        safeEmit({ type: 'data-changed', scope: 'reminders' });
+      }
       return;
     }
     const { nowMs, nowIso, due } = snapshot;
@@ -221,7 +255,9 @@ export function createReminderScheduler(deps: ReminderSchedulerDeps): ReminderSc
       logger.error('reminders.missed_report_failed', { error: errorMessage(err) });
     }
 
-    if (fired > 0 || newlyMissed.length > 0) {
+    // מעבר יום: "היום"/"באיחור" של משימות ו"היום"/"מחר" של תזכורות השתנו — הממשק טוען מחדש
+    if (dayChanged) safeEmit({ type: 'data-changed', scope: 'tasks' });
+    if (fired > 0 || newlyMissed.length > 0 || dayChanged) {
       safeEmit({ type: 'data-changed', scope: 'reminders' });
     }
   };
@@ -275,6 +311,23 @@ export function createReminderScheduler(deps: ReminderSchedulerDeps): ReminderSc
         return db.reminders.listMissedUnacknowledged();
       } catch (err) {
         logger.error('reminders.list_missed_failed', { error: errorMessage(err) });
+        return [];
+      }
+    },
+
+    firedSince(sinceIso) {
+      try {
+        const repo = db.reminders as Database['reminders'] & Partial<ReminderRepositoryExtras>;
+        if (typeof repo.firedSince === 'function') return repo.firedSince(sinceIso);
+        // נפילה לחוזה בלבד (mock): אותה הגדרה — fired, fired_at >= since, בסדר כרונולוגי
+        const sinceMs = Date.parse(sinceIso);
+        if (!Number.isFinite(sinceMs)) return [];
+        return repo
+          .list('all')
+          .filter((r) => r.status === 'fired' && r.firedAt !== null && Date.parse(r.firedAt) >= sinceMs)
+          .sort((a, b) => Date.parse(a.firedAt ?? '') - Date.parse(b.firedAt ?? ''));
+      } catch (err) {
+        logger.error('reminders.fired_since_failed', { error: errorMessage(err) });
         return [];
       }
     },

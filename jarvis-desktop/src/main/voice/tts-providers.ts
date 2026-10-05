@@ -11,8 +11,13 @@ import { combineSignals, mapFetchError, mapHttpStatus, safeErrorSnippet, type Fe
 
 const TTS_TIMEOUT_MS = 30_000;
 
+/** תווי בקרה שאסורים ב-XML 1.0 (Azure דוחה SSML איתם ב-400, והקראה נופלת לקול המערכת). */
+// eslint-disable-next-line no-control-regex -- זה בדיוק מה שמסננים
+const XML_ILLEGAL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g;
+
 export function escapeXml(text: string): string {
   return text
+    .replace(XML_ILLEGAL_CHARS, '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

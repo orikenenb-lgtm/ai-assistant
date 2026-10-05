@@ -71,7 +71,10 @@ describe('createAnthropicLlmClient (MOCK Anthropic client)', () => {
       fallbacks: 'default',
     });
     for (const forbidden of ['thinking', 'temperature', 'top_p', 'top_k', 'tool_choice']) expect(params).not.toHaveProperty(forbidden);
-    expect(options).toEqual({ signal: req.signal, timeout: 60_000, maxRetries: 2 });
+    // signal משולב (ביטול המשתמש + deadline כולל), timeout לניסיון ≤ התקציב, ולכל היותר ניסיון חוזר אחד
+    expect(options).toEqual({ signal: expect.any(AbortSignal), timeout: 60_000, maxRetries: 1 });
+    expect(options.signal).not.toBe(req.signal);
+    expect((options.signal as AbortSignal).aborted).toBe(false);
   });
 
   it('server-side fallback only for the supported models (mock)', async () => {

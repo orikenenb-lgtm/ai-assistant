@@ -2,9 +2,17 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Database } from '../../../src/main/core/contracts';
-import { DatabaseOpenError, openDatabase } from '../../../src/main/db/database';
+import {
+  DatabaseOpenError,
+  applyPragmas,
+  openDatabase,
+  openDatabaseWithRetry,
+  toOpenError,
+  type DataDatabase,
+} from '../../../src/main/db/database';
 import { LATEST_SCHEMA_VERSION, MigrationError, readUserVersion, runMigrations, type Migration } from '../../../src/main/db/migrations';
 import { NoopSyncAdapter } from '../../../src/main/db/sync';
+import { ACTION_LOG_RETENTION_MS } from '../../../src/main/db/action-log-repository';
 import { mockClock, mockIdFactory, tempDir, type MockClock } from './mock-helpers';
 
 const T0 = '2026-10-05T10:00:00.000Z'; // 13:00 בישראל
@@ -376,5 +384,212 @@ describe('two connections on one file', () => {
     } finally {
       tmp.cleanup();
     }
+  });
+});
+
+describe('review fixes — durability and open retry', () => {
+  let tmp: ReturnType<typeof tempDir>;
+  beforeEach(() => {
+    tmp = tempDir();
+  });
+  afterEach(() => tmp.cleanup());
+
+  it('file connections use WAL + synchronous=FULL, with busy_timeout set first', () => {
+    const raw = new DatabaseSync(tmp.file('p.db'));
+    try {
+      applyPragmas(raw, false);
+      expect(raw.prepare('PRAGMA journal_mode').get()).toEqual({ journal_mode: 'wal' });
+      expect(raw.prepare('PRAGMA synchronous').get()).toEqual({ synchronous: 2 }); // 2 = FULL
+      expect(raw.prepare('PRAGMA busy_timeout').get()).toEqual({ timeout: 3000 });
+      expect(raw.prepare('PRAGMA foreign_keys').get()).toEqual({ foreign_keys: 1 });
+    } finally {
+      raw.close();
+    }
+  });
+
+  it('classifies SQLITE_BUSY/LOCKED (also inside a MigrationError) as BUSY, corruption as CORRUPT', () => {
+    const sqliteErr = (errcode: number) => Object.assign(new Error('sqlite'), { errcode });
+    expect(toOpenError(sqliteErr(5)).code).toBe('BUSY');
+    expect(toOpenError(sqliteErr(6)).code).toBe('BUSY');
+    expect(toOpenError(sqliteErr(5 | (1 << 8))).code).toBe('BUSY'); // extended code SQLITE_BUSY_RECOVERY
+    expect(toOpenError(new MigrationError('MIGRATION_FAILED', 'x', { cause: sqliteErr(5) })).code).toBe('BUSY');
+    expect(toOpenError(sqliteErr(11)).code).toBe('CORRUPT');
+    expect(toOpenError(sqliteErr(14)).code).toBe('IO');
+    expect(toOpenError(new MigrationError('NEWER_SCHEMA', 'x')).code).toBe('NEWER_SCHEMA');
+    expect(toOpenError(sqliteErr(5)).message_he).toContain('נעול');
+  });
+
+  it('openDatabaseWithRetry retries BUSY/IO and then succeeds', async () => {
+    const sleeps: number[] = [];
+    const retries: string[] = [];
+    let calls = 0;
+    const real = openDatabase(':memory:', { clock: mockClock(T0) });
+    const db = await openDatabaseWithRetry(
+      'x.db',
+      { clock: mockClock(T0) },
+      {
+        attempts: 3,
+        delayMs: 500,
+        sleep: async (ms) => {
+          sleeps.push(ms);
+        },
+        onRetry: ({ attempt, error }) => retries.push(`${attempt}:${error.code}`),
+        open: () => {
+          calls++;
+          if (calls === 1) throw new DatabaseOpenError('BUSY', 'נעול');
+          if (calls === 2) throw Object.assign(new Error('io'), { errcode: 10 });
+          return real;
+        },
+      },
+    );
+    expect(db).toBe(real);
+    expect(calls).toBe(3);
+    expect(sleeps).toEqual([500, 500]);
+    expect(retries).toEqual(['1:BUSY', '2:IO']);
+    db.close();
+  });
+
+  it('openDatabaseWithRetry gives up after the attempts and never retries CORRUPT / NEWER_SCHEMA', async () => {
+    const sleep = async () => undefined;
+    let calls = 0;
+    await expect(
+      openDatabaseWithRetry('x.db', { clock: mockClock(T0) }, {
+        sleep,
+        open: () => {
+          calls++;
+          throw new DatabaseOpenError('IO', 'io');
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'IO' });
+    expect(calls).toBe(3); // ברירת המחדל: 3 ניסיונות
+
+    for (const code of ['CORRUPT', 'NEWER_SCHEMA', 'MIGRATION_FAILED'] as const) {
+      calls = 0;
+      await expect(
+        openDatabaseWithRetry('x.db', { clock: mockClock(T0) }, {
+          sleep,
+          open: () => {
+            calls++;
+            throw new DatabaseOpenError(code, 'x');
+          },
+        }),
+      ).rejects.toMatchObject({ code });
+      expect(calls).toBe(1);
+    }
+
+    // קובץ פגום אמיתי: נדחה מיד כ-CORRUPT, בלי המתנה
+    const file = tmp.file('corrupt.db');
+    writeFileSync(file, 'not a database '.repeat(80));
+    const sleeps: number[] = [];
+    await expect(
+      openDatabaseWithRetry(file, { clock: mockClock(T0) }, { sleep: async (ms) => void sleeps.push(ms) }),
+    ).rejects.toMatchObject({ code: 'CORRUPT' });
+    expect(sleeps).toEqual([]);
+  });
+
+  it('openDatabaseWithRetry opens a real file with the default opener', async () => {
+    const db = await openDatabaseWithRetry(tmp.file('ok.db'), { clock: mockClock(T0) });
+    expect(db.tasks.create({ title: 'x', source: 'tool' }).title).toBe('x');
+    db.close();
+  });
+});
+
+describe('review fixes — repository helpers', () => {
+  let clock: MockClock;
+  let db: DataDatabase;
+  beforeEach(() => {
+    clock = mockClock(T0);
+    db = openDatabase(':memory:', { clock, idFactory: mockIdFactory() });
+  });
+  afterEach(() => db.close());
+
+  const addReminder = (text: string, dueAtUtc: string) =>
+    db.reminders.create({ text, dueAtUtc, timezone: 'Asia/Jerusalem', dueLocal_he: 'x' });
+
+  it('reminders.findScheduledExact matches normalized text + exact instant, scheduled only', () => {
+    const r = addReminder('לשתות מים', '2026-10-06T07:00:00.000Z');
+    expect(db.reminders.findScheduledExact('לשתות מים', '2026-10-06T07:00:00Z')?.id).toBe(r.id);
+    expect(db.reminders.findScheduledExact('לִשְׁתּוֹת  מים!', '2026-10-06T07:00:00.000Z')?.id).toBe(r.id);
+    expect(db.reminders.findScheduledExact('לשתות מים', '2026-10-06T07:01:00.000Z')).toBeNull();
+    expect(db.reminders.findScheduledExact('לשתות מיץ', '2026-10-06T07:00:00.000Z')).toBeNull();
+    expect(db.reminders.findScheduledExact('לשתות מים', 'garbage')).toBeNull();
+    db.reminders.cancel(r.id);
+    expect(db.reminders.findScheduledExact('לשתות מים', '2026-10-06T07:00:00.000Z')).toBeNull();
+    expect(db.reminders.findClosedExact('לשתות מים')?.id).toBe(r.id);
+    expect(db.reminders.findClosedExact('לשתות')).toBeNull();
+  });
+
+  it('reminders.findClosedExact ignores scheduled/missed and returns the most recently updated', () => {
+    const a = addReminder('פגישה', '2026-10-05T06:00:00.000Z');
+    const b = addReminder('פגישה', '2026-10-05T07:00:00.000Z');
+    db.reminders.markMissed(a.id);
+    expect(db.reminders.findClosedExact('פגישה')).toBeNull();
+    db.reminders.markFired(b.id, T0);
+    clock.advance(1000);
+    db.reminders.acknowledge([a.id]);
+    expect(db.reminders.findClosedExact('פגישה')?.id).toBe(a.id);
+  });
+
+  it('reminders.firedSince: status fired, fired_at >= since, chronological', () => {
+    const a = addReminder('א', '2026-10-05T09:00:00.000Z');
+    const b = addReminder('ב', '2026-10-05T09:30:00.000Z');
+    const c = addReminder('ג', '2026-10-05T08:00:00.000Z');
+    db.reminders.markFired(b.id, '2026-10-05T09:30:00.000Z');
+    db.reminders.markFired(a.id, '2026-10-05T09:00:00.000Z');
+    db.reminders.markMissed(c.id);
+    expect(db.reminders.firedSince('2026-10-05T09:00:00.000Z').map((r) => r.id)).toEqual([a.id, b.id]);
+    expect(db.reminders.firedSince('2026-10-05T09:00:00.001Z').map((r) => r.id)).toEqual([b.id]);
+    db.reminders.acknowledge([b.id]);
+    expect(db.reminders.firedSince('2026-10-05T00:00:00.000Z').map((r) => r.id)).toEqual([a.id]);
+    expect(db.reminders.firedSince('nope')).toEqual([]);
+  });
+
+  it('tasks.findOpenExact matches normalized title and the same due date (NULL = NULL), open only', () => {
+    const t = db.tasks.create({ title: 'לקנות חלב', dueDate: '2026-10-06', source: 'tool' });
+    const n = db.tasks.create({ title: 'לקנות לחם', source: 'tool' });
+    expect(db.tasks.findOpenExact('לקנות  חלב.', '2026-10-06')?.id).toBe(t.id);
+    expect(db.tasks.findOpenExact('לקנות חלב', null)).toBeNull();
+    expect(db.tasks.findOpenExact('לקנות חלב', '2026-10-07')).toBeNull();
+    expect(db.tasks.findOpenExact('לקנות לחם', null)?.id).toBe(n.id);
+    expect(db.tasks.findOpenExact('...', null)).toBeNull();
+    db.tasks.complete(t.id);
+    expect(db.tasks.findOpenExact('לקנות חלב', '2026-10-06')).toBeNull();
+    expect(db.tasks.findClosedExact('לקנות חלב')?.id).toBe(t.id);
+    expect(db.tasks.findClosedExact('לקנות לחם')).toBeNull();
+  });
+
+  it('history.appendTurn writes user + assistant atomically', () => {
+    db.history.appendTurn([
+      { turnId: 't1', role: 'user', text: 'שלום', mode: 'ai', createdAt: T0 },
+      { turnId: 't1', role: 'assistant', text: 'היי', mode: 'ai', createdAt: 'not iso' },
+    ]);
+    expect(db.history.recent(5).map((e) => `${e.role}:${e.text}:${e.createdAt}`)).toEqual([
+      `user:שלום:${T0}`,
+      `assistant:היי:${T0}`,
+    ]);
+    // הרשומה השנייה נדחית (CHECK על role) — גם הראשונה לא נשמרת
+    expect(() =>
+      db.history.appendTurn([
+        { turnId: 't2', role: 'user', text: 'שאלה', mode: 'ai', createdAt: T0 },
+        { turnId: 't2', role: 'robot' as 'assistant', text: 'תשובה', mode: 'ai', createdAt: T0 },
+      ]),
+    ).toThrow();
+    expect(db.history.recent(5).map((e) => e.turnId)).toEqual(['t1', 't1']);
+    db.history.appendTurn([]);
+    expect(db.history.recent(5)).toHaveLength(2);
+  });
+
+  it('actions.prune deletes entries older than the cutoff and keeps dedupe working', () => {
+    const rec = (id: string, createdAt: string) =>
+      db.actions.record({ id, turnId: 't', tool: 'create_task', paramsHash: 'h', status: 'succeeded', summary: '', createdAt });
+    rec('old', '2026-10-03T10:00:00.000Z');
+    rec('day', '2026-10-04T10:00:00.000Z');
+    rec('new', '2026-10-05T09:59:00.000Z');
+    expect(db.actions.prune('not a date')).toBe(0);
+    expect(db.actions.prune(new Date(Date.parse(T0) - ACTION_LOG_RETENTION_MS).toISOString())).toBe(1);
+    expect(db.actions.findRecentSuccess('create_task', 'h', '2026-10-05T09:58:00.000Z')?.id).toBe('new');
+    expect(db.actions.findRecentSuccess('create_task', 'h', '2026-10-01T00:00:00.000Z')?.id).toBe('new');
+    expect(db.actions.prune('2026-10-06T00:00:00.000Z')).toBe(2);
+    expect(db.actions.findRecentSuccess('create_task', 'h', '2026-10-01T00:00:00.000Z')).toBeNull();
   });
 });

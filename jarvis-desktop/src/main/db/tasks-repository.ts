@@ -31,6 +31,20 @@ function toTask(row: Row): TaskDTO {
   };
 }
 
+/**
+ * עזרים מעבר לחוזה TaskRepository (contracts.ts). הכלים משתמשים בהם כשהם קיימים,
+ * עם נפילה לשאילתות החוזה (כך שגם mock שמממש רק את החוזה עובד).
+ */
+export interface TaskRepositoryExtras {
+  /**
+   * משימה פתוחה עם אותה כותרת (אחרי normalizeForMatch — מנורמלת כאן שוב, אז אפשר להעביר גם כותרת גולמית)
+   * ואותו תאריך יעד (null = בלי תאריך). בסיס לאידמפוטנטיות של create_task לפי מצב.
+   */
+  findOpenExact(titleNorm: string, dueDate: string | null): TaskDTO | null;
+  /** המשימה האחרונה (לפי עדכון) עם אותה כותרת מנורמלת שכבר נסגרה: done / cancelled. */
+  findClosedExact(titleNorm: string): TaskDTO | null;
+}
+
 export class TaskValidationError extends Error {
   constructor(public readonly message_he: string) {
     super(message_he);
@@ -38,7 +52,10 @@ export class TaskValidationError extends Error {
   }
 }
 
-export function createTaskRepository(db: DatabaseSync, deps: { clock: Clock; idFactory: () => string }): TaskRepository {
+export function createTaskRepository(
+  db: DatabaseSync,
+  deps: { clock: Clock; idFactory: () => string },
+): TaskRepository & TaskRepositoryExtras {
   const insertStmt = db.prepare(
     `INSERT INTO tasks (id, title, title_norm, notes, due_date, status, source, created_at, updated_at, completed_at, deleted)
      VALUES (?, ?, ?, ?, ?, 'open', ?, ?, ?, NULL, 0)`,
@@ -69,6 +86,19 @@ export function createTaskRepository(db: DatabaseSync, deps: { clock: Clock; idF
     `SELECT ${COLUMNS}, title_norm FROM tasks
      WHERE deleted = 0 AND status = 'open'
      ORDER BY created_at DESC`,
+  );
+  // "due_date IS ?" — משווה גם NULL ל-NULL (משימה בלי תאריך)
+  const openExactStmt = db.prepare(
+    `SELECT ${COLUMNS} FROM tasks
+     WHERE deleted = 0 AND status = 'open' AND title_norm = ? AND due_date IS ?
+     ORDER BY created_at ASC
+     LIMIT 1`,
+  );
+  const closedExactStmt = db.prepare(
+    `SELECT ${COLUMNS} FROM tasks
+     WHERE deleted = 0 AND status IN ('done', 'cancelled') AND title_norm = ?
+     ORDER BY updated_at DESC, created_at DESC
+     LIMIT 1`,
   );
 
   const nowIso = (): string => deps.clock.now().toISOString();
@@ -123,6 +153,20 @@ export function createTaskRepository(db: DatabaseSync, deps: { clock: Clock; idF
       const rows = searchSourceStmt.all() as Row[];
       // הדירוג על העמודה המנורמלת שנשמרה בזמן היצירה
       return rankByText(query, rows, (r) => str(r, 'title_norm')).map((r) => toTask(r.item));
+    },
+
+    findOpenExact(titleNorm, dueDate) {
+      const norm = normalizeForMatch(titleNorm);
+      if (!norm) return null;
+      const row = openExactStmt.get(norm, dueDate ?? null) as Row | undefined;
+      return row ? toTask(row) : null;
+    },
+
+    findClosedExact(titleNorm) {
+      const norm = normalizeForMatch(titleNorm);
+      if (!norm) return null;
+      const row = closedExactStmt.get(norm) as Row | undefined;
+      return row ? toTask(row) : null;
     },
   };
 }

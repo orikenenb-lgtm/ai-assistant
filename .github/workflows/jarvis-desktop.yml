@@ -6,7 +6,9 @@
 name: JARVIS Desktop
 
 on:
+  # push רק ל-main; בענפים אחרים ה-CI רץ דרך ה-PR (כדי לא להריץ כל בדיקה פעמיים)
   push:
+    branches: [main]
     paths:
       - "jarvis-desktop/**"
       - ".github/workflows/jarvis-desktop.yml"
@@ -71,8 +73,6 @@ jobs:
       - run: npm run build
       - name: E2E on real Windows
         run: npx playwright test
-        env:
-          JARVIS_E2E_WINDOWS: "1"
       - name: Build Windows installer (NSIS + ZIP)
         run: npx electron-builder --config electron-builder.config.cjs --win --x64 --publish never
       - name: Upload installer

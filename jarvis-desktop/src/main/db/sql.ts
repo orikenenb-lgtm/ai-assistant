@@ -76,8 +76,16 @@ export function sqliteErrcode(err: unknown): number | null {
   return null;
 }
 
+const SQLITE_BUSY = 5;
+const SQLITE_LOCKED = 6;
 const SQLITE_CORRUPT = 11;
 const SQLITE_NOTADB = 26;
+
+/** האם השגיאה היא נעילה זמנית (חיבור/תהליך אחר מחזיק את הקובץ) — שווה לנסות שוב. */
+export function isBusyError(err: unknown): boolean {
+  const code = sqliteErrcode(err);
+  return code === SQLITE_BUSY || code === SQLITE_LOCKED;
+}
 
 /** האם השגיאה מעידה שהקובץ פגום או שאינו מסד נתונים. */
 export function isCorruptionError(err: unknown): boolean {

@@ -78,6 +78,13 @@ export interface TaskRepository {
   complete(id: string): TaskDTO | null;
   /** חיפוש משימות פתוחות לפי טקסט (התאמה מנורמלת, עברית/אנגלית). */
   search(query: string): TaskDTO[];
+  /**
+   * משימה פתוחה עם אותה כותרת (מנורמלת) ואותו תאריך יעד — למניעת כפילות לפי המצב בפועל, לא לפי יומן פעולות.
+   * אופציונלי: מימושי mock יכולים לוותר, והכלים חוזרים ל-list().
+   */
+  findOpenExact?(titleNorm: string, dueDate: string | null): TaskDTO | null;
+  /** משימה סגורה (done/cancelled) עם בדיוק אותה כותרת — כדי לענות "כבר בוצעה" במקום לנחש משימה דומה. */
+  findClosedExact?(titleNorm: string): TaskDTO | null;
 }
 
 export interface ReminderRepository {
@@ -95,6 +102,12 @@ export interface ReminderRepository {
   /** missed/fired -> acknowledged. */
   acknowledge(ids: string[]): number;
   listMissedUnacknowledged(): ReminderDTO[];
+  /** תזכורת מתוזמנת עם אותו טקסט ואותו מועד (מניעת כפילות לפי המצב בפועל). אופציונלי כמו ב-TaskRepository. */
+  findScheduledExact?(textNorm: string, dueAtUtc: string): ReminderDTO | null;
+  /** תזכורת שכבר הופעלה/סומנה/בוטלה עם בדיוק אותו טקסט. */
+  findClosedExact?(textNorm: string): ReminderDTO | null;
+  /** תזכורות בסטטוס fired שהופעלו מ-sinceIso והלאה (להצגה מחדש כשהממשק נטען אחרי שהן הופעלו). */
+  firedSince?(sinceIso: string): ReminderDTO[];
 }
 
 export interface HistoryEntry {
@@ -107,6 +120,8 @@ export interface HistoryEntry {
 
 export interface HistoryRepository {
   append(entry: HistoryEntry): void;
+  /** כל רשומות התור (שאלה + תשובה) בטרנזקציה אחת — בלי תור "חצי שמור" אם התהליך נופל באמצע. */
+  appendTurn?(entries: readonly HistoryEntry[]): void;
   recent(limitTurns: number): HistoryEntry[];
   prune(retentionDays: number, now: Date): number;
   clear(): void;
@@ -126,6 +141,8 @@ export interface ActionLogRepository {
   record(entry: ActionLogEntry): void;
   /** הפעולה המוצלחת האחרונה עם אותו כלי ואותו hash של פרמטרים מאז sinceIso. */
   findRecentSuccess(tool: string, paramsHash: string, sinceIso: string): ActionLogEntry | null;
+  /** מחיקת רשומות ישנות מ-olderThanIso (היומן משמש רק למניעת כפילות קצרת טווח). */
+  prune?(olderThanIso: string): number;
   clear(): void;
 }
 

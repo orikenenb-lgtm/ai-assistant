@@ -36,6 +36,9 @@ export const AnalyzeScreenRequestSchema = z
   })
   .strict();
 
+/** מזהה קצר שה-renderer נותן לבקשת קול, כדי שאפשר יהיה לבטל אותה (voice:cancel). */
+export const VoiceRequestIdSchema = z.string().min(1).max(64).regex(/^[A-Za-z0-9_-]+$/);
+
 export const TranscribeRequestSchema = z
   .object({
     audio: z.instanceof(Uint8Array).refine((a) => a.byteLength > 44 && a.byteLength <= MAX_AUDIO_BYTES, {
@@ -43,6 +46,7 @@ export const TranscribeRequestSchema = z
     }),
     mimeType: z.literal('audio/wav'),
     durationMs: z.number().int().min(100).max(65_000),
+    requestId: VoiceRequestIdSchema.optional(),
   })
   .strict();
 
@@ -50,11 +54,18 @@ export const SynthesizeRequestSchema = z
   .object({
     // ניתוח מסך יכול להגיע ל-~1800 תווים; ספקי ה-TTS מקבלים יותר (OpenAI עד 4096)
     text: z.string().trim().min(1).max(2500),
+    requestId: VoiceRequestIdSchema.optional(),
   })
   .strict();
 
+export const VoiceCancelSchema = z.object({ requestId: VoiceRequestIdSchema }).strict();
+
 export const AudioPhaseReportSchema = z
-  .object({ phase: z.enum(['IDLE', 'LISTENING', 'TRANSCRIBING', 'SPEAKING']) })
+  .object({
+    phase: z.enum(['IDLE', 'LISTENING', 'TRANSCRIBING', 'SPEAKING']),
+    /** האם מילת ההפעלה מאזינה כרגע (המיקרופון פתוח מקומית) — לחיווי במגש המערכת. */
+    wakeWordListening: z.boolean().optional(),
+  })
   .strict();
 
 /** עדכון הגדרות: main ממזג ומאמת מול SettingsSchema המלא. כאן רק בדיקת מבנה בסיסית. */
@@ -112,6 +123,9 @@ export const AlwaysOnTopSchema = z.object({ value: z.boolean() }).strict();
 export const EmptySchema = z.union([z.undefined(), z.object({}).strict()]);
 
 export const WakewordStartSchema = z.object({ sensitivity: z.number().min(0.1).max(0.95) }).strict();
+/** מזהה הסשן ש-main יצר ב-wakeword:start (UUID). מזהה ישן — main מתעלם. */
+export const WakewordSessionIdSchema = z.string().uuid();
+export const WakewordSessionSchema = z.object({ sessionId: WakewordSessionIdSchema }).strict();
 export const WakewordFramesSchema = z
   .instanceof(Int16Array)
   .refine((a) => a.length > 0 && a.length <= MAX_WAKEWORD_FRAME_SAMPLES, { message: 'frame size out of range' });
@@ -126,6 +140,7 @@ export const IPC_REQUEST_SCHEMAS = {
   [IPC.voiceTranscribe]: TranscribeRequestSchema,
   [IPC.voiceSynthesize]: SynthesizeRequestSchema,
   [IPC.voiceReportAudioPhase]: AudioPhaseReportSchema,
+  [IPC.voiceCancel]: VoiceCancelSchema,
   [IPC.settingsGet]: EmptySchema,
   [IPC.settingsUpdate]: SettingsUpdateSchema,
   [IPC.settingsValidatePath]: ValidatePathSchema,
@@ -152,10 +167,14 @@ export const IPC_REQUEST_SCHEMAS = {
   [IPC.windowClose]: EmptySchema,
   [IPC.appQuit]: EmptySchema,
   [IPC.wakewordStart]: WakewordStartSchema,
-  [IPC.wakewordStop]: EmptySchema,
+  [IPC.wakewordStop]: WakewordSessionSchema,
+  [IPC.wakewordStatus]: WakewordSessionSchema,
 } as const;
 
-/** סכמות לערוצי send (ipcMain.on). */
+/**
+ * סכמות לערוצי send (ipcMain.on). ב-wakeword:frames הארגומנט הראשון הוא הפריימים (נבדקים כאן)
+ * והשני מזהה הסשן (WakewordSessionIdSchema).
+ */
 export const IPC_SEND_SCHEMAS = {
   [IPC.wakewordFrames]: WakewordFramesSchema,
 } as const;

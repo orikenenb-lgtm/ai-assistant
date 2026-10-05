@@ -61,6 +61,8 @@ export const SettingsSchema = z
         reducedMotion: z.enum(['system', 'on', 'off']).default('system'),
         closeToTray: z.boolean().default(true),
         startHidden: z.boolean().default(false),
+        /** הפעלה אוטומטית בכניסה ל-Windows (כדי שתזכורות יפעלו גם אחרי הפעלה מחדש) */
+        openAtLogin: z.boolean().default(false),
         trayHintShown: z.boolean().default(false),
       })
       .strict()

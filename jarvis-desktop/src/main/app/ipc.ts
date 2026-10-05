@@ -1,7 +1,7 @@
 import { ipcMain, type WebContents } from 'electron';
 import type { z } from 'zod';
 import { IPC } from '../../shared/ipc-channels';
-import { IPC_REQUEST_SCHEMAS, IPC_SEND_SCHEMAS } from '../../shared/ipc-schemas';
+import { IPC_REQUEST_SCHEMAS, IPC_SEND_SCHEMAS, WakewordSessionIdSchema } from '../../shared/ipc-schemas';
 import type { AudioPhase, ServiceStatus } from '../../shared/types';
 import type { SettingsPatch } from '../../shared/settings-schema';
 import type {
@@ -49,10 +49,12 @@ export interface IpcDeps {
   trustPath(path: string): void;
   todayLocal(): string;
   clearAllLogs(): void;
-  onAudioPhase(phase: AudioPhase): void;
+  onAudioPhase(phase: AudioPhase, wakeWordListening?: boolean): void;
   onSecretsChanged(): void;
   onRemindersChanged(): void;
   onTasksChanged(): void;
+  onHistoryCleared(scope: 'conversation' | 'all'): void;
+  missedReminders(): import('../../shared/types').ReminderDTO[];
   wakeword: PorcupineService;
   onWakeDetected(): void;
   window: {
@@ -103,13 +105,15 @@ export function registerIpc(deps: IpcDeps): () => void {
       : { ok: false, code: res.code ?? 'APPROVAL_MISMATCH', message_he: res.message_he ?? 'האישור לא תקף.' };
   });
   handle(IPC.assistantAnalyzeScreen, (input) => deps.engine.analyzeScreen(input));
-  handle(IPC.assistantSnapshot, () => deps.engine.snapshot());
+  // המנוע לא מכיר את המתזמן — משלימים את רשימת התזכורות שהוחמצו מכאן
+  handle(IPC.assistantSnapshot, () => ({ ...deps.engine.snapshot(), missedReminders: deps.missedReminders() }));
 
   // ---------- קול ----------
   handle(IPC.voiceTranscribe, (input) => deps.voice.transcribe(input));
   handle(IPC.voiceSynthesize, (input) => deps.voice.synthesize(input));
+  handle(IPC.voiceCancel, (input) => ({ cancelled: deps.voice.cancel(input.requestId) }));
   handle(IPC.voiceReportAudioPhase, (input) => {
-    deps.onAudioPhase(input.phase);
+    deps.onAudioPhase(input.phase, input.wakeWordListening);
   });
 
   // ---------- הגדרות ----------
@@ -170,6 +174,9 @@ export function registerIpc(deps: IpcDeps): () => void {
   // ---------- נתונים ----------
   handle(IPC.dataListTasks, (input) => deps.db.tasks.list(input.filter, deps.todayLocal()));
   handle(IPC.dataCompleteTask, (input) => {
+    const before = deps.db.tasks.get(input.id);
+    if (!before) return { ok: false, code: 'NOT_FOUND', message_he: 'המשימה לא נמצאה.' };
+    if (before.status !== 'open') return { ok: false, code: 'INVALID_PARAMS', message_he: 'המשימה כבר לא פתוחה.' };
     const task = deps.db.tasks.complete(input.id);
     if (!task) return { ok: false, code: 'NOT_FOUND', message_he: 'המשימה לא נמצאה.' };
     deps.onTasksChanged();
@@ -181,12 +188,16 @@ export function registerIpc(deps: IpcDeps): () => void {
     if (!reminder) return { ok: false, code: 'NOT_FOUND', message_he: 'התזכורת לא נמצאה.' };
     // cancel() מחזיר את התזכורת גם אם לא בוטלה (למשל כבר הופעלה) — מדווחים הצלחה רק על ביטול בפועל
     if (reminder.status !== 'cancelled') {
-      return { ok: false, code: 'INVALID_PARAMS', message_he: 'אי אפשר לבטל תזכורת שכבר הופעלה או הוחמצה.' };
+      return { ok: false, code: 'INVALID_PARAMS', message_he: 'התזכורת כבר הופעלה, ולכן אין מה לבטל.' };
     }
     deps.onRemindersChanged();
     return { ok: true, reminder };
   });
-  handle(IPC.dataAcknowledgeReminders, (input) => ({ acknowledged: deps.db.reminders.acknowledge(input.ids) }));
+  handle(IPC.dataAcknowledgeReminders, (input) => {
+    const acknowledged = deps.db.reminders.acknowledge(input.ids);
+    if (acknowledged) deps.onRemindersChanged();
+    return { acknowledged };
+  });
   handle(IPC.dataUsageSummary, () => deps.db.usage.summary(deps.clock.now()));
   handle(IPC.dataClearHistory, (input) => {
     const cleared: string[] = [];
@@ -198,6 +209,7 @@ export function registerIpc(deps: IpcDeps): () => void {
       deps.clearAllLogs();
       cleared.push('actions', 'usage', 'logs');
     }
+    deps.onHistoryCleared(input.scope);
     logger.info('privacy.history_cleared', { scope: input.scope });
     return { cleared };
   });
@@ -218,25 +230,29 @@ export function registerIpc(deps: IpcDeps): () => void {
   handle(IPC.appQuit, () => deps.window.quit());
 
   // ---------- מילת הפעלה (Porcupine ב-main) ----------
+  // כל הפעלה מקבלת sessionId חדש; stop/status/frames עם מזהה ישן לא משפיעים על הסשן הנוכחי
   handle(IPC.wakewordStart, (input) => deps.wakeword.start({ sensitivity: input.sensitivity }));
-  handle(IPC.wakewordStop, () => {
-    deps.wakeword.stop();
+  handle(IPC.wakewordStop, (input) => {
+    deps.wakeword.stop(input.sessionId);
   });
+  handle(IPC.wakewordStatus, (input) => deps.wakeword.status(input.sessionId));
 
-  // הזרמת אודיו: ערוץ send (בלי תשובה). מאומת לפי שולח וגודל; מוגבל בקצב כדי שלא יציף את main.
+  // הזרמת אודיו: ערוץ send (בלי תשובה). מאומת לפי שולח, גודל ומזהה סשן; מוגבל בקצב כדי שלא יציף את main.
+  // כשל של המנוע באמצע לא נעלם: הסשן מסומן "נפל" וה-renderer רואה זאת ב-wakeword:status.
   let windowStart = 0;
   let framesInWindow = 0;
-  const onFrames = (event: Electron.IpcMainEvent, payload: unknown): void => {
+  const onFrames = (event: Electron.IpcMainEvent, payload: unknown, sessionId: unknown): void => {
     if (!isTrustedSender(event as unknown as Electron.IpcMainInvokeEvent, deps.devOrigin, deps.getWebContents)) return;
     const parsed = IPC_SEND_SCHEMAS[IPC.wakewordFrames].safeParse(payload);
-    if (!parsed.success || !deps.wakeword.running) return;
+    const session = WakewordSessionIdSchema.safeParse(sessionId);
+    if (!parsed.success || !session.success || !deps.wakeword.running) return;
     const now = Date.now();
     if (now - windowStart > 1000) {
       windowStart = now;
       framesInWindow = 0;
     }
     if (++framesInWindow > 100) return;
-    if (deps.wakeword.process(parsed.data)) deps.onWakeDetected();
+    if (deps.wakeword.process(session.data, parsed.data)) deps.onWakeDetected();
   };
   ipcMain.on(IPC.wakewordFrames, onFrames);
 

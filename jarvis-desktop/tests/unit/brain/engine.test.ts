@@ -269,7 +269,7 @@ describe('conversation engine — AI turns (MOCK LLM)', () => {
     expect(t.engine.snapshot().phase).toBe('IDLE');
   });
 
-  it('a hanging tool times out (TIMEOUT), and its late real result is still recorded (mock)', async () => {
+  it('a hanging tool times out (TIMEOUT) but stays "running" (phase EXECUTING) until its late real result arrives (mock)', async () => {
     let finish: ((r: ToolResult) => void) | null = null;
     const t = setup({
       steps: [
@@ -284,17 +284,20 @@ describe('conversation engine — AI turns (MOCK LLM)', () => {
     await t.waitEnd(turnId);
     const [result] = parseToolResult(t.llm.requests[1]!.messages[2]!);
     expect(result!.body).toMatchObject({ ok: false, error_code: 'TIMEOUT' });
-    // לא ידוע אם קרה — לא מסומן כמאומת
-    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'failed', errorCode: 'TIMEOUT', verified: false });
+    // לא ידוע אם קרה — לא מסומן כמאומת, והכלי עדיין רץ: ה-HUD לא אומר "פנוי"
+    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'running', verified: false });
+    expect(t.responseOf(turnId)!.actions[0]).toMatchObject({ status: 'running' });
+    expect(t.engine.snapshot().phase).toBe('EXECUTING');
 
     finish!({ ok: true, status: 'success', summary_he: 'פתחתי את EPLAN.' });
     await vi.waitFor(() => expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'succeeded', verified: true }));
+    expect(t.engine.snapshot().phase).toBe('IDLE');
     expect(t.db.actionEntries.map((e) => e.status)).toEqual(['failed', 'succeeded']);
     // מזהה שונה לרשומה המאוחרת (מפתח ראשי ייחודי ביומן הפעולות)
     expect(new Set(t.db.actionEntries.map((e) => e.id)).size).toBe(2);
   });
 
-  it('cancel while a tool is running: marked cancelled (unverified), then the real late result is reflected and recorded once (mock)', async () => {
+  it('cancel while a tool is running: stays "running" (phase EXECUTING), then the real late result is reflected and recorded once (mock)', async () => {
     let finish: ((r: ToolResult) => void) | null = null;
     const t = setup({
       steps: [mockMessage([toolUseBlock('tu_1', 'open_application', { app_id: 'eplan' })], 'tool_use')],
@@ -306,11 +309,14 @@ describe('conversation engine — AI turns (MOCK LLM)', () => {
     t.engine.cancel(turnId);
     expect((await t.waitEnd(turnId)).outcome).toBe('cancelled');
     expect(t.tools.execs.open_application.mock.calls[0]![1].signal.aborted).toBe(true);
-    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'cancelled', verified: false });
+    // ייתכן שהפעולה כבר קורית — לא מסמנים "בוטל" עד שהתוצאה האמיתית מגיעה
+    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'running', verified: false });
+    expect(t.engine.snapshot()).toMatchObject({ phase: 'EXECUTING', activeTurnId: null });
     expect(t.db.actionEntries).toHaveLength(0);
 
     finish!({ ok: true, status: 'success', summary_he: 'פתחתי את EPLAN.' });
     await vi.waitFor(() => expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'succeeded', verified: true }));
+    expect(t.engine.snapshot().phase).toBe('IDLE');
     expect(t.db.actionEntries).toHaveLength(1);
     expect(t.db.actionEntries[0]).toMatchObject({ status: 'succeeded', tool: 'open_application' });
     expect(t.responseOf(turnId)).toBeUndefined();

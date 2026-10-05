@@ -20,9 +20,9 @@
     "test:watch": "vitest",
     "test:e2e": "npm run build && playwright test",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "dist:win": "npm run build && electron-builder --config electron-builder.config.cjs --win --x64 --publish never",
-    "dist:win:zip": "npm run build && electron-builder --config electron-builder.config.cjs --win zip --x64 --publish never",
-    "dist:dir": "npm run build && electron-builder --config electron-builder.config.cjs --dir --publish never",
+    "dist:win": "node scripts/fetch-models.mjs --check && npm run build && electron-builder --config electron-builder.config.cjs --win --x64 --publish never",
+    "dist:win:zip": "node scripts/fetch-models.mjs --check && npm run build && electron-builder --config electron-builder.config.cjs --win zip --x64 --publish never",
+    "dist:dir": "node scripts/fetch-models.mjs --check && npm run build && electron-builder --config electron-builder.config.cjs --dir --publish never",
     "fetch-models": "node scripts/fetch-models.mjs"
   },
   "devDependencies": {

@@ -10,6 +10,7 @@ import type { EnginePhase } from '../../shared/types';
 export interface TrayActions {
   show(): void;
   toggleListen(): void;
+  stop(): void;
   setMode(mode: 'full' | 'compact'): void;
   setAlwaysOnTop(value: boolean): void;
   openSettings(): void;
@@ -22,6 +23,8 @@ export interface TrayState {
   hotkey: string;
   phase: EnginePhase;
   micActive: boolean;
+  /** מילת ההפעלה מאזינה (מיקרופון פתוח מקומית, בלי הקלטה) */
+  wakeListening: boolean;
 }
 
 const PHASE_LABEL: Record<EnginePhase, string> = {
@@ -44,15 +47,19 @@ export function createJarvisTray(iconPath: string, actions: TrayActions, initial
     logger.warn('tray.icon_missing');
     icon = nativeImage.createEmpty();
   }
-  const tray = new Tray(icon.resize({ width: 16, height: 16 }));
+  // ICO (ב-Windows) נטען בגודל המדויק לפי קנה המידה של המסך; PNG מוקטן ל-16px
+  const tray = new Tray(iconPath.toLowerCase().endsWith('.ico') ? icon : icon.resize({ width: 16, height: 16 }));
 
   const render = (): void => {
-    const hotkeyLabel = state.hotkey.replace('CommandOrControl', 'Ctrl');
-    tray.setToolTip(`JARVIS — ${state.micActive ? 'מיקרופון פעיל' : PHASE_LABEL[state.phase]}`);
+    // ריק = קיצור המקשים לא נרשם (תפוס או לא תקין)
+    const hotkeyLabel = state.hotkey ? state.hotkey.replace('CommandOrControl', 'Ctrl') : 'קיצור מקשים לא פעיל';
+    const mic = state.micActive ? 'מיקרופון פעיל — מקליט' : state.wakeListening ? 'מאזין למילת הפעלה (מקומית)' : PHASE_LABEL[state.phase];
+    tray.setToolTip(`JARVIS — ${mic}`);
     tray.setContextMenu(
       Menu.buildFromTemplate([
         { label: 'הצג את JARVIS', click: () => actions.show() },
         { label: `התחל/סיים האזנה (${hotkeyLabel})`, click: () => actions.toggleListen() },
+        { label: 'עצור (הקראה / בקשה)', click: () => actions.stop() },
         { type: 'separator' },
         {
           label: state.mode === 'full' ? 'מעבר ל-HUD קומפקטי' : 'מעבר לחלון מלא',

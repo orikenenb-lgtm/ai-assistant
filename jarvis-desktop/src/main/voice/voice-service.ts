@@ -20,8 +20,10 @@ import { createAzureTts, createOpenAiTts } from './tts-providers';
  */
 
 export interface VoiceService {
-  transcribe(input: { audio: Uint8Array; mimeType: 'audio/wav'; durationMs: number }): Promise<TranscribeResult>;
-  synthesize(input: { text: string }): Promise<SynthesizeResult>;
+  transcribe(input: { audio: Uint8Array; mimeType: 'audio/wav'; durationMs: number; requestId?: string }): Promise<TranscribeResult>;
+  synthesize(input: { text: string; requestId?: string }): Promise<SynthesizeResult>;
+  /** מבטל בקשה שבדרך (AbortController שלה). true אם הייתה בקשה פעילה עם המזהה הזה. */
+  cancel(requestId: string): boolean;
   test(service: 'stt' | 'tts'): Promise<ServiceStatus>;
   configuredStatuses(): ServiceStatus[];
 }
@@ -36,6 +38,20 @@ export interface VoiceServiceDeps {
 }
 
 const OPENAI_BASE = 'https://api.openai.com/v1';
+
+/** שם הספק בהודעות למשתמש — לא המזהה הטכני (למשל local-openai-compatible). */
+export const PROVIDER_LABELS: Record<string, string> = {
+  openai: 'OpenAI',
+  azure: 'Azure Speech',
+  'local-openai-compatible': 'שרת התמלול המקומי',
+};
+
+export function providerLabel(id: string): string {
+  return PROVIDER_LABELS[id] ?? id;
+}
+
+/** כמה ביטולים "מוקדמים" (ביטול שהגיע לפני הבקשה עצמה) זוכרים. */
+const EARLY_CANCEL_MAX = 32;
 
 /** שמות תוכנות ופרויקטים בכתב לטיני — עוזר לתמלול "תפתח EPLAN" נכון. */
 export function vocabularyFrom(settings: Settings): string[] {
@@ -60,6 +76,22 @@ export function createVoiceService(deps: VoiceServiceDeps): VoiceService {
   const fetchImpl: FetchLike = deps.fetchImpl ?? ((input, init) => fetch(input, init));
   const { logger, secrets } = deps;
   const lastStatus = new Map<'stt' | 'tts', ServiceStatus>();
+  const inflight = new Map<string, AbortController>();
+  const earlyCancels = new Set<string>();
+
+  /** AbortController לבקשה. עם requestId — רשום לביטול; ביטול שהקדים את הבקשה מבטל אותה מיד. */
+  function track(requestId: string | undefined): { controller: AbortController; done: () => void } {
+    const controller = new AbortController();
+    if (!requestId) return { controller, done: () => undefined };
+    if (earlyCancels.delete(requestId)) controller.abort();
+    inflight.set(requestId, controller);
+    return {
+      controller,
+      done: () => {
+        if (inflight.get(requestId) === controller) inflight.delete(requestId);
+      },
+    };
+  }
 
   function sttProvider(s: Settings): SttProvider | null {
     switch (s.stt.provider) {
@@ -131,14 +163,30 @@ export function createVoiceService(deps: VoiceServiceDeps): VoiceService {
   }
 
   return {
-    async transcribe({ audio, durationMs }) {
+    cancel(requestId) {
+      const controller = inflight.get(requestId);
+      if (controller) {
+        controller.abort();
+        inflight.delete(requestId);
+        return true;
+      }
+      // הביטול הגיע לפני הבקשה (סדר IPC לא מובטח בין ערוצים) — זוכרים אותו לזמן קצר
+      earlyCancels.add(requestId);
+      if (earlyCancels.size > EARLY_CANCEL_MAX) {
+        const oldest = earlyCancels.values().next().value;
+        if (oldest !== undefined) earlyCancels.delete(oldest);
+      }
+      return false;
+    },
+
+    async transcribe({ audio, durationMs, requestId }) {
       const s = deps.getSettings();
       const provider = sttProvider(s);
       if (!provider) {
         return { ok: false, code: 'NOT_CONFIGURED', message_he: 'תמלול לא מוגדר. בחר ספק תמלול בהגדרות ← קול.' };
       }
       if (!looksLikeWav(audio)) return { ok: false, code: 'AUDIO_INVALID', message_he: 'ההקלטה לא תקינה.' };
-      const controller = new AbortController();
+      const { controller, done } = track(requestId);
       try {
         const text = await provider.transcribe({
           wav: audio,
@@ -159,13 +207,20 @@ export function createVoiceService(deps: VoiceServiceDeps): VoiceService {
         return { ok: true, text, provider: provider.id, durationMs };
       } catch (err) {
         const pe = err instanceof ProviderError ? err : new ProviderError('INTERNAL', 'התמלול נכשל.', false, { cause: err });
+        if (controller.signal.aborted && pe.code !== 'TIMEOUT') {
+          // ביטול מכוון (המשתמש עצר) — לא תקלה בשירות
+          logger.info('stt.cancelled', { provider: provider.id });
+          return { ok: false, code: 'CANCELLED', message_he: 'הבקשה בוטלה.' };
+        }
         remember('stt', provider.id, pe.code === 'MISSING_API_KEY' ? 'not_configured' : 'error', pe.message_he);
         logger.warn('stt.failed', { provider: provider.id, code: pe.code });
         return { ok: false, code: pe.code, message_he: pe.message_he };
+      } finally {
+        done();
       }
     },
 
-    async synthesize({ text }) {
+    async synthesize({ text, requestId }) {
       const s = deps.getSettings();
       const provider = ttsProvider(s);
       if (!provider) {
@@ -175,7 +230,7 @@ export function createVoiceService(deps: VoiceServiceDeps): VoiceService {
           message_he: s.tts.provider === 'system' ? 'קול המערכת מופעל ישירות בממשק.' : 'הקראה כבויה בהגדרות.',
         };
       }
-      const controller = new AbortController();
+      const { controller, done } = track(requestId);
       try {
         const { audio, mimeType } = await provider.synthesize({ text, signal: controller.signal });
         deps.usage.record({
@@ -189,9 +244,15 @@ export function createVoiceService(deps: VoiceServiceDeps): VoiceService {
         return { ok: true, audio, mimeType, provider: provider.id };
       } catch (err) {
         const pe = err instanceof ProviderError ? err : new ProviderError('INTERNAL', 'ההקראה נכשלה.', false, { cause: err });
+        if (controller.signal.aborted && pe.code !== 'TIMEOUT') {
+          logger.info('tts.cancelled', { provider: provider.id });
+          return { ok: false, code: 'CANCELLED', message_he: 'הבקשה בוטלה.' };
+        }
         remember('tts', provider.id, pe.code === 'MISSING_API_KEY' ? 'not_configured' : 'error', pe.message_he);
         logger.warn('tts.failed', { provider: provider.id, code: pe.code });
         return { ok: false, code: pe.code, message_he: pe.message_he };
+      } finally {
+        done();
       }
     },
 
@@ -238,7 +299,7 @@ export function createVoiceService(deps: VoiceServiceDeps): VoiceService {
         lastStatus.set(service, status);
         return status;
       } catch (err) {
-        const pe = mapFetchError(err, timedOut(), providerId);
+        const pe = mapFetchError(err, timedOut(), providerLabel(providerId));
         const status: ServiceStatus = { service, provider: providerId, configured: true, state: 'error', lastCheckedAt: now, lastError_he: pe.message_he };
         lastStatus.set(service, status);
         return status;

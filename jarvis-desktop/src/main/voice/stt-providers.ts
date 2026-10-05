@@ -14,6 +14,8 @@ import { combineSignals, mapFetchError, mapHttpStatus, safeErrorSnippet, type Fe
 
 const STT_TIMEOUT_MS = 30_000;
 const AZURE_MAX_MS = 60_000;
+/** סטטוסים של Azure שמשמעותם "לא נשמע דיבור" (תיעוד ה-REST לקטעים קצרים). */
+const AZURE_EMPTY_STATUSES = new Set(['NoMatch', 'InitialSilenceTimeout', 'BabbleTimeout']);
 
 /** ניקוי מילות מפתח לפי כללי OpenAI: שורה אחת, בלי < > ובלי ירידת שורה. */
 export function sanitizeKeywords(words: string[], max = 30): string[] {
@@ -28,6 +30,16 @@ export function sanitizeKeywords(words: string[], max = 30): string[] {
     if (out.length >= max) break;
   }
   return out;
+}
+
+/**
+ * האם שגיאת 400 במצב hints נובעת מהפרמטרים languages/keywords (שרת/מודל שלא מכיר אותם).
+ * רק אז שווה לנסות שוב במצב רגיל — 400 מסיבה אחרת (למשל קובץ פגום) ייכשל שוב ויחויב פעמיים.
+ */
+export function isHintsRejection(body: string): boolean {
+  return /\blanguages?\b|\bkeywords?\b|\bhints?\b|unknown[\s_-]*(parameter|param|field|argument)|unrecognized[\s_-]*(request[\s_-]*)?(parameter|param|field|argument)|extra[\s_-]*(fields?|inputs?)[\s_-]*not[\s_-]*permitted/i.test(
+    body,
+  );
 }
 
 export function supportsLanguageHints(model: string): boolean {
@@ -83,8 +95,8 @@ export function createOpenAiCompatibleStt(options: OpenAiSttOptions): SttProvide
       const snippet = await safeErrorSnippet(res);
       options.logger.warn('stt.http_error', { provider: options.id, status: res.status, mode, snippet });
       const mapped = mapHttpStatus(res.status, options.label);
-      // 400 במצב hints: ייתכן שהשרת/המודל לא תומך ב-languages/keywords — ננסה פעם אחת במצב רגיל
-      if (res.status === 400 && mode === 'hints') throw Object.assign(mapped, { retryPlain: true });
+      // 400 במצב hints שמזכיר את languages/keywords (או פרמטר לא מוכר) — ננסה פעם אחת במצב רגיל
+      if (res.status === 400 && mode === 'hints' && isHintsRejection(snippet)) throw Object.assign(mapped, { retryPlain: true });
       throw mapped;
     }
     const json = (await res.json().catch(() => null)) as { text?: unknown } | null;
@@ -150,8 +162,11 @@ export function createAzureStt(options: AzureSttOptions): SttProvider {
       const json = (await res.json().catch(() => null)) as { RecognitionStatus?: string; DisplayText?: string } | null;
       if (!json) throw new ProviderError('PROVIDER_ERROR', 'Azure Speech החזיר תשובה לא צפויה.', false);
       if (json.RecognitionStatus === 'Success') return (json.DisplayText ?? '').trim();
-      if (json.RecognitionStatus === 'NoMatch' || json.RecognitionStatus === 'InitialSilenceTimeout') return '';
-      throw new ProviderError('PROVIDER_ERROR', `Azure Speech: ${json.RecognitionStatus ?? 'שגיאה לא ידועה'}`, false);
+      // אין דיבור מזוהה (שקט / רעש רקע / דיבור לא ברור) — תמלול ריק, לא תקלה: הממשק מציג "לא זוהה דיבור"
+      if (json.RecognitionStatus && AZURE_EMPTY_STATUSES.has(json.RecognitionStatus)) return '';
+      // הסטטוס הטכני נשמר ביומן בלבד — ההודעה למשתמש בעברית
+      options.logger.warn('stt.azure_status', { status: String(json.RecognitionStatus ?? 'missing').slice(0, 40) });
+      throw new ProviderError('PROVIDER_ERROR', 'Azure Speech לא הצליח לתמלל את ההקלטה. נסה שוב.', false);
     },
   };
 }

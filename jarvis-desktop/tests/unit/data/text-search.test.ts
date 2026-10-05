@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MIN_SEARCH_SCORE, STRONG_MATCH_SCORE, pickSingle, rankByText, scoreText } from '../../../src/main/db/text-search';
+import { FUZZY_CAP, MIN_SEARCH_SCORE, STRONG_MATCH_SCORE, pickSingle, rankByText, scoreText } from '../../../src/main/db/text-search';
 import { clip, joinHebrew, joinHebrewCapped, stripTrailingPunctuation } from '../../../src/main/time/hebrew-text';
 
 describe('scoreText / rankByText / pickSingle', () => {
@@ -21,8 +21,9 @@ describe('scoreText / rankByText / pickSingle', () => {
     // הבדל של אות אחת שמשנה משמעות — לעולם לא התאמה חזקה
     expect(scoreText('להתקשר לאמא', 'להתקשר לאבא')).toBeLessThan(STRONG_MATCH_SCORE);
     expect(scoreText('להתקשר לאמא', 'להתקשר לאבא')).toBeGreaterThanOrEqual(MIN_SEARCH_SCORE);
-    // שגיאת תמלול במילה ארוכה עדיין נמצאת
-    expect(scoreText('לסיים את השירטוט', 'לסיים את השרטוט')).toBeGreaterThanOrEqual(STRONG_MATCH_SCORE);
+    // שגיאת תמלול במילה ארוכה עדיין נמצאת — אבל רק כהצעה ("התכוונת ל...?"), לא לביצוע אוטומטי
+    expect(scoreText('לסיים את השירטוט', 'לסיים את השרטוט')).toBeGreaterThanOrEqual(MIN_SEARCH_SCORE);
+    expect(scoreText('לסיים את השירטוט', 'לסיים את השרטוט')).toBeLessThan(STRONG_MATCH_SCORE);
     expect(scoreText('פיצה', 'לשלוח דוח')).toBe(0);
     expect(scoreText('', 'x')).toBe(0);
   });
@@ -36,6 +37,42 @@ describe('scoreText / rankByText / pickSingle', () => {
     expect(pickSingle(rankByText('פיצה', items, text))).toEqual({ kind: 'none' });
     // שתי משימות זהות — לא בוחרים לבד
     expect(pickSingle(rankByText('לקנות חלב', ['לקנות חלב', 'לקנות חלב'], text)).kind).toBe('many');
+  });
+});
+
+describe('wrong-target regressions: one-letter siblings never auto-select', () => {
+  const text = (s: string) => s;
+  // זוגות שבהם אות אחת משנה את האדם/הפריט — נמצאים כהצעה בלבד
+  const siblings: Array<[string, string]> = [
+    ['לשלוח לאורי', 'לשלוח לאורית'],
+    ['להתקשר לדניאל', 'להתקשר לדניאלה'],
+    ['לקנות מתנה לנועה', 'לקנות מתנה לנועם'],
+    ['פגישה עם יוסי', 'פגישה עם יוסף'],
+    ['להתקשר לאמא', 'להתקשר לאבא'],
+  ];
+
+  it.each(siblings)('"%s" vs "%s" is capped at FUZZY_CAP and only suggested', (query, candidate) => {
+    const score = scoreText(query, candidate);
+    expect(score).toBeLessThanOrEqual(FUZZY_CAP);
+    expect(score).toBeGreaterThanOrEqual(MIN_SEARCH_SCORE);
+    expect(pickSingle(rankByText(query, [candidate], text))).toEqual({ kind: 'weak', items: [candidate] });
+    // וגם בכיוון ההפוך
+    expect(scoreText(candidate, query)).toBeLessThanOrEqual(FUZZY_CAP);
+  });
+
+  it('whole-word containment and clitic-stripped words are still strong', () => {
+    expect(pickSingle(rankByText('לשלוח לאורי', ['לשלוח לאורי מחר בבוקר'], text)).kind).toBe('one');
+    expect(pickSingle(rankByText('הדוח', ['לשלוח דוח חודשי'], text)).kind).toBe('one');
+    expect(pickSingle(rankByText('מים', ['לשלם חשבון מים'], text)).kind).toBe('one');
+  });
+
+  it('with both siblings present the exact one is picked', () => {
+    const items = ['לקנות מתנה לנועם', 'לקנות מתנה לנועה'];
+    expect(pickSingle(rankByText('לקנות מתנה לנועה', items, text))).toEqual({ kind: 'one', item: 'לקנות מתנה לנועה' });
+    expect(pickSingle(rankByText('לשלוח לאורי', ['לשלוח לאורית', 'לשלוח לאורי'], text))).toEqual({
+      kind: 'one',
+      item: 'לשלוח לאורי',
+    });
   });
 });
 

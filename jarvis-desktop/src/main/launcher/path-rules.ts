@@ -85,12 +85,16 @@ export function isDevicePath(p: string): boolean {
   return /^[\\/]{2}[.?](?:[\\/]|$)/.test(p);
 }
 
+/** סימני כיווניות בלתי נראים (LRM/RLM/LRE/RLE/PDF/LRO/RLO/LRI/RLI/FSI/PDI, ALM, BOM) */
+const BIDI_MARKS = /[\u200E\u200F\u202A-\u202E\u2066-\u2069\u061C\uFEFF]/g;
+
 /**
- * מסיר רווחים ומרכאות עוטפות. "העתק כנתיב" בסייר הקבצים מעתיק עם מרכאות,
- * והמשתמש מדביק את זה כמו שזה בהגדרות.
+ * מסיר רווחים, מרכאות עוטפות וסימני כיווניות בלתי נראים.
+ * "העתק כנתיב" בסייר הקבצים מעתיק עם מרכאות, וחלונות כמו "מאפיינים ← אבטחה" מוסיפים סימני כיווניות
+ * לנתיב בעברית — המשתמש מדביק את זה כמו שזה בהגדרות.
  */
 export function unquoteWindowsPath(raw: string): string {
-  const trimmed = raw.trim();
+  const trimmed = raw.replace(BIDI_MARKS, '').trim();
   if (trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"')) {
     return trimmed.slice(1, -1).trim();
   }

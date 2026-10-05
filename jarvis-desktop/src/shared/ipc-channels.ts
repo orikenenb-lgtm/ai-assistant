@@ -14,6 +14,8 @@ export const IPC = {
   voiceTranscribe: 'voice:transcribe',
   voiceSynthesize: 'voice:synthesize',
   voiceReportAudioPhase: 'voice:report-audio-phase',
+  /** ביטול בקשת תמלול/הקראה שבדרך (לפי requestId) — כדי שעצירה תעצור גם את העבודה בענן. */
+  voiceCancel: 'voice:cancel',
   // הגדרות
   settingsGet: 'settings:get',
   settingsUpdate: 'settings:update',
@@ -47,6 +49,8 @@ export const IPC = {
   // מילת הפעלה (Porcupine רץ ב-main; ה-renderer מזרים פריימים של אודיו מקומית)
   wakewordStart: 'wakeword:start',
   wakewordStop: 'wakeword:stop',
+  /** מצב הסשן ב-main (פועל / נפל / נעצר) — כך ה-renderer רואה כשל של המנוע אחרי הפעלה מוצלחת. */
+  wakewordStatus: 'wakeword:status',
   wakewordFrames: 'wakeword:frames',
   // אירועים main -> renderer
   evtAssistant: 'evt:assistant',

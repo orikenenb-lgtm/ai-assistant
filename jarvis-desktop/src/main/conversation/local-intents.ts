@@ -29,6 +29,8 @@ export interface ReminderDraft {
   period: DayPeriod | null;
   /** מועד שכבר חושב במלואו (למשל "בעוד 10 דקות"). */
   absolute: { date: string; time: string } | null;
+  /** התאריך הגיע מ"היום"/"הערב"/"הלילה" (משפיע על שעות הלילה אחרי חצות). */
+  todayWord?: boolean;
 }
 
 export type PendingClarification =
@@ -124,6 +126,29 @@ function isCancelLow(low: string): boolean {
 export function isCancelCommand(text: string): boolean {
   const { low } = prepare(text);
   return low !== '' && isCancelLow(low);
+}
+
+const foldPhrase = (p: string): string => p.split(' ').map(foldToken).join(' ');
+const APPROVE_PHRASES = new Set(
+  ['כן', 'כן כן', 'אשר', 'תאשר', 'תאשרי', 'מאשר', 'מאשרת', 'אישור', 'בטח', 'כן תאשר', 'כן אשר', 'כן בטח', 'כן מאשר', 'yes', 'approve', 'approved', 'confirm'].map(
+    foldPhrase,
+  ),
+);
+const DENY_PHRASES = new Set(
+  ['לא', 'לא לא', 'בטל', 'תבטל', 'בטלי', 'תבטלי', 'דחה', 'תדחה', 'דחי', 'תדחי', 'לא מאשר', 'לא מאשרת', 'לא תודה', 'no', 'reject', 'deny'].map(foldPhrase),
+);
+
+/**
+ * תשובה קולית ברורה לבקשת אישור פתוחה: "כן"/"אשר" => yes, "לא"/"בטל"/"דחה" => no. כל דבר אחר => null.
+ * (המנוע בודק את זה רק כשיש אישור פתוח; אחרת "בטל" נשאר פקודת ביטול רגילה.)
+ */
+export function approvalAnswer(text: string): 'yes' | 'no' | null {
+  const { low } = prepare(text);
+  if (!low) return null;
+  const folded = foldPhrase(low);
+  if (APPROVE_PHRASES.has(folded)) return 'yes';
+  if (DENY_PHRASES.has(folded)) return 'no';
+  return null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -302,31 +327,84 @@ interface WhenParts {
   is24h: boolean;
   period: DayPeriod | null;
   absolute: { date: string; time: string } | null;
+  /** התאריך שנבחר הגיע מ"היום"/"הערב"/"הלילה". */
+  todayWord: boolean;
+  /** כמה ביטויי יום שונים במשפט ולא ברור איזה מהם המועד — התוויות לשאלת הבהרה. */
+  dayConflict: string[] | null;
   /** הטקסט שנשאר אחרי הסרת ביטויי הזמן (בכתיב המקורי). */
   rest: string;
   found: boolean;
 }
 
+/** ביטוי יום שנמצא במשפט ("מחר", "ביום חמישי", "ב-12/10"), עם מיקומו. */
+interface DayCandidate {
+  start: number;
+  end: number;
+  date: string;
+  dayHint: DayPeriod | null;
+  todayWord: boolean;
+  /** dd/mm בלי "ב" לפניו — נחשב תאריך רק כשהוא צמוד לשעה (אחרת זה כנראה חלק מהטקסט, למשל "הזמנה 12/10"). */
+  weak: boolean;
+}
+
+/**
+ * חילוץ מועד מתוך משפט.
+ * ביטויי יום נאספים כולם (לא רק הראשון), ונבחר זה שצמוד לשעה או שבא מיד אחרי "תזכיר לי";
+ * השאר נשארים בטקסט התזכורת ("לשלוח את הדוח של היום"). שני ימים שונים בלי העדפה ברורה => dayConflict.
+ */
 function extractWhen(p: Prepared, now: Date): WhenParts {
   let work = p.low;
   let orig = p.body;
   const nowL = localNow(now);
-  const out: WhenParts = { date: null, dayHint: null, hour: null, minute: 0, is24h: false, period: null, absolute: null, rest: '', found: false };
+  const out: WhenParts = {
+    date: null,
+    dayHint: null,
+    hour: null,
+    minute: 0,
+    is24h: false,
+    period: null,
+    absolute: null,
+    todayWord: false,
+    dayConflict: null,
+    rest: '',
+    found: false,
+  };
 
+  const blank = (start: number, end: number): void => {
+    const pad = ' '.repeat(end - start);
+    work = work.slice(0, start) + pad + work.slice(end);
+    orig = orig.slice(0, start) + pad + orig.slice(end);
+  };
+  const restore = (start: number, end: number): void => {
+    orig = orig.slice(0, start) + p.body.slice(start, end) + orig.slice(end);
+  };
   const take = (re: RegExp): RegExpMatchArray | null => {
     const m = work.match(re);
     if (!m) return null;
     const at = m.index ?? 0;
-    const blank = ' '.repeat(m[0].length);
-    work = work.slice(0, at) + blank + work.slice(at + m[0].length);
-    orig = orig.slice(0, at) + blank + orig.slice(at + m[0].length);
+    blank(at, at + m[0].length);
     out.found = true;
     return m;
+  };
+
+  const candidates: DayCandidate[] = [];
+  /** אוסף את כל המופעים של ביטוי יום (ומסתיר אותם מהמשך הפענוח, כדי ש"ב-20 בנובמבר" לא ייקרא כשעה). */
+  const collect = (re: RegExp, make: (m: RegExpMatchArray) => Omit<DayCandidate, 'start' | 'end'> | null): void => {
+    const found: DayCandidate[] = [];
+    for (const m of work.matchAll(re)) {
+      const c = make(m);
+      if (!c) continue;
+      const start = m.index ?? 0;
+      found.push({ ...c, start, end: start + m[0].length });
+    }
+    for (const c of found) blank(c.start, c.end);
+    candidates.push(...found);
   };
 
   // 1) זמן יחסי: "בעוד 10 דקות", "בעוד חצי שעה", "בעוד שעתיים", "in 10 minutes"
   let offsetMinutes: number | null = null;
   let offsetDays: number | null = null;
+  let offsetDaysSpan: [number, number] | null = null;
   let m: RegExpMatchArray | null;
   if ((m = take(new RegExp(`${B}(?:ב)?עוד\\s+(חצי|רבע)\\s+שעה${E}`)))) {
     offsetMinutes = m[1] === 'חצי' ? 30 : 15;
@@ -354,6 +432,7 @@ function extractWhen(p: Prepared, now: Date): WhenParts {
     else if (unit.startsWith('hour')) offsetMinutes = n * 60;
     else offsetDays = n;
   }
+  if (offsetDays !== null && m) offsetDaysSpan = [m.index ?? 0, (m.index ?? 0) + m[0].length];
 
   if (offsetMinutes !== null && offsetMinutes > 0) {
     let target = nowL.plus({ minutes: offsetMinutes });
@@ -361,66 +440,66 @@ function extractWhen(p: Prepared, now: Date): WhenParts {
     if (target.second > 0 || target.millisecond > 0) target = target.startOf('minute').plus({ minutes: 1 });
     out.absolute = { date: toDateString(target), time: `${pad2(target.hour)}:${pad2(target.minute)}` };
   }
-  if (offsetDays !== null && offsetDays > 0) out.date = toDateString(nowL.plus({ days: offsetDays }));
-
-  // 2) יום: מחרתיים / מחר / היום / הערב / הלילה
-  if ((m = take(new RegExp(`${B}(?:ל|ב)?(מחרתיים|מחר|היום|הערב|הלילה)${E}|${B}(tomorrow|today|tonight)${E}`)))) {
-    const w = m[1] ?? m[2] ?? '';
-    if (w === 'מחרתיים') out.date = toDateString(nowL.plus({ days: 2 }));
-    else if (w === 'מחר' || w === 'tomorrow') out.date = toDateString(nowL.plus({ days: 1 }));
-    else {
-      out.date = toDateString(nowL);
-      if (w === 'הערב') out.dayHint = 'evening';
-      if (w === 'הלילה' || w === 'tonight') out.dayHint = 'night';
-    }
+  if (offsetDays !== null && offsetDays > 0 && offsetDaysSpan) {
+    candidates.push({
+      start: offsetDaysSpan[0],
+      end: offsetDaysSpan[1],
+      date: toDateString(nowL.plus({ days: offsetDays })),
+      dayHint: null,
+      todayWord: false,
+      weak: false,
+    });
   }
 
-  // ימי שבוע: "ביום חמישי", "בחמישי", "יום שני הבא"
+  // 2) ביטויי יום (כל המופעים — הבחירה ביניהם אחרי שנמצאת השעה)
+  // מחרתיים / מחר / היום / הערב / הלילה
+  collect(new RegExp(`${B}(?:ל|ב)?(מחרתיים|מחר|היום|הערב|הלילה)${E}|${B}(tomorrow|today|tonight)${E}`, 'g'), (mm) => {
+    const w = mm[1] ?? mm[2] ?? '';
+    if (w === 'מחרתיים') return { date: toDateString(nowL.plus({ days: 2 })), dayHint: null, todayWord: false, weak: false };
+    if (w === 'מחר' || w === 'tomorrow') return { date: toDateString(nowL.plus({ days: 1 })), dayHint: null, todayWord: false, weak: false };
+    const dayHint: DayPeriod | null = w === 'הערב' ? 'evening' : w === 'הלילה' || w === 'tonight' ? 'night' : null;
+    return { date: toDateString(nowL), dayHint, todayWord: true, weak: false };
+  });
+
+  // ימי שבוע: "ביום חמישי", "יום שני הבא", "בחמישי". "ל"+יום בלי המילה "יום" ("להתקשר לשני", "לשבת עם אבא") אינו תאריך.
   const weekdayAlt = Object.keys(HEBREW_WEEKDAYS).join('|');
-  if (
-    (m = take(
-      new RegExp(
-        `${B}(?:(?:ב|ל)?יום\\s+(${weekdayAlt})|(?:ב|ל)(${weekdayAlt})|(?:on\\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday))(?:\\s+(?:הבא|הקרוב|next))?${E}`,
-      ),
-    ))
-  ) {
-    const name = m[1] ?? m[2];
-    const target = name ? HEBREW_WEEKDAYS[name] : ENGLISH_WEEKDAYS[m[3] ?? ''];
-    if (target) {
-      let diff = (target - nowL.weekday + 7) % 7;
-      // אותו יום בשבוע = השבוע הבא (כך נוהגים לומר "ביום שני" כשהיום כבר שני)
-      if (diff === 0) diff = 7;
-      out.date = toDateString(nowL.plus({ days: diff }));
-    }
-  }
+  const weekdayDate = (target: number | undefined): Omit<DayCandidate, 'start' | 'end'> | null => {
+    if (!target) return null;
+    let diff = (target - nowL.weekday + 7) % 7;
+    // אותו יום בשבוע = השבוע הבא (כך נוהגים לומר "ביום שני" כשהיום כבר שני)
+    if (diff === 0) diff = 7;
+    return { date: toDateString(nowL.plus({ days: diff })), dayHint: null, todayWord: false, weak: false };
+  };
+  const NEXT = '(?:\\s+(?:הבא|הקרוב|next))?';
+  collect(new RegExp(`${B}(?:ב|ל)?יום\\s+(${weekdayAlt})${NEXT}${E}`, 'g'), (mm) => weekdayDate(HEBREW_WEEKDAYS[mm[1] ?? '']));
+  collect(new RegExp(`${B}ב(${weekdayAlt})${NEXT}${E}`, 'g'), (mm) => weekdayDate(HEBREW_WEEKDAYS[mm[1] ?? '']));
+  collect(new RegExp(`${B}(?:on\\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)${NEXT}${E}`, 'g'), (mm) =>
+    weekdayDate(ENGLISH_WEEKDAYS[mm[1] ?? '']),
+  );
 
-  // תאריך יום/חודש (סדר ישראלי): "ב-12/10", "12.10.2026"
-  const dm = work.match(new RegExp(`${B}(?:ב|ל)?\\s?(\\d{1,2})[/.](\\d{1,2})(?:[/.](\\d{2,4}))?${E}`));
-  if (dm) {
-    const resolved = resolveDayMonth(Number(dm[1]), Number(dm[2]), dm[3], nowL);
-    if (resolved) {
-      take(new RegExp(`${B}(?:ב|ל)?\\s?${dm[1]}[/.]${dm[2]}(?:[/.]${dm[3] ?? ''})?${E}`));
-      out.date = resolved;
-    }
-  }
   // "ב-12 באוקטובר"
   const monthAlt = Object.keys(HEBREW_MONTHS).join('|');
-  const dmonth = work.match(new RegExp(`${B}(?:ב|ל)?\\s?(\\d{1,2})\\s+(?:ב|ל)?(${monthAlt})(?:\\s+(\\d{4}))?${E}`));
-  if (dmonth) {
-    const resolved = resolveDayMonth(Number(dmonth[1]), HEBREW_MONTHS[dmonth[2] ?? ''] ?? 0, dmonth[3], nowL);
-    if (resolved) {
-      take(new RegExp(`${B}(?:ב|ל)?\\s?${dmonth[1]}\\s+(?:ב|ל)?${dmonth[2]}(?:\\s+${dmonth[3] ?? ''})?${E}`));
-      out.date = resolved;
-    }
-  }
+  collect(new RegExp(`${B}(?:(?:ב|ל)\\s?)?(\\d{1,2})\\s+(?:ב|ל)?(${monthAlt})(?:\\s+(\\d{4}))?${E}`, 'g'), (mm) => {
+    const resolved = resolveDayMonth(Number(mm[1]), HEBREW_MONTHS[mm[2] ?? ''] ?? 0, mm[3], nowL);
+    return resolved ? { date: resolved, dayHint: null, todayWord: false, weak: false } : null;
+  });
+  // תאריך יום/חודש (סדר ישראלי): "ב-12/10", "12.10.2026". בלי "ב" לפניו — רק אם צמוד לשעה (נבדק בבחירה).
+  collect(new RegExp(`${B}(?:(ב|ל)\\s?)?(\\d{1,2})[/.](\\d{1,2})(?:[/.](\\d{2,4}))?${E}`, 'g'), (mm) => {
+    const resolved = resolveDayMonth(Number(mm[2]), Number(mm[3]), mm[4], nowL);
+    return resolved ? { date: resolved, dayHint: null, todayWord: false, weak: mm[1] !== 'ב' } : null;
+  });
 
   // 3) שעה
+  let hourSpan: [number, number] | null = null;
+  const spanOf = (mm: RegExpMatchArray): [number, number] => [mm.index ?? 0, (mm.index ?? 0) + mm[0].length];
   if ((m = take(new RegExp(`${B}(?:(?:בשעה|at)\\s+|ב\\s?)?(\\d{1,2}):(\\d{2})(?:\\s*(am|pm))?${E}`)))) {
+    hourSpan = spanOf(m);
     out.hour = Number(m[1]);
     out.minute = Number(m[2]);
     out.is24h = true;
     if (m[3]) out.period = m[3] === 'am' ? 'morning' : 'evening';
   } else if ((m = take(new RegExp(`${B}(?:בשעה\\s+)?(?:ב)?רבע\\s+ל\\s?(\\d{1,2}|${HOUR_WORD_ALT})${E}`)))) {
+    hourSpan = spanOf(m);
     const h = parseNumber(m[1] ?? '', HOUR_WORDS);
     if (h !== null) {
       out.hour = h === 1 ? 12 : h === 0 ? 23 : h - 1;
@@ -432,18 +511,61 @@ function extractWhen(p: Prepared, now: Date): WhenParts {
       new RegExp(`${B}(?:(?:בשעה|at)\\s+|ב\\s?)(\\d{1,2}|${HOUR_WORD_ALT})(?:\\s+(${MINUTE_SUFFIX_ALT}))?(?:\\s*(am|pm))?${E}`),
     ))
   ) {
+    hourSpan = spanOf(m);
     applyHour(out, m[1] ?? '', m[2], m[3]);
   } else if (
     (m = take(
       new RegExp(`${B}(\\d{1,2}|${HOUR_WORD_ALT})(?:\\s+(${MINUTE_SUFFIX_ALT}))?(?:\\s*(am|pm)|(?=\\s+(?:${PERIOD_ALT})${E}))`),
     ))
   ) {
+    hourSpan = spanOf(m);
     applyHour(out, m[1] ?? '', m[2], m[3]);
   }
 
   // חלק היום: בבוקר / בצהריים / אחר הצהריים / בערב / בלילה
+  let periodSpan: [number, number] | null = null;
   if ((m = take(new RegExp(`${B}(${PERIOD_ALT})${E}`)))) {
+    periodSpan = spanOf(m);
     out.period = periodOf(m[1] ?? '') ?? out.period;
+  }
+
+  // 4) בחירת היום מבין המועמדים
+  const anchors = [hourSpan, periodSpan].filter((s): s is [number, number] => s !== null);
+  const onlySpaces = (from: number, to: number): boolean => from <= to && p.low.slice(from, to).trim() === '';
+  const adjacent = (c: DayCandidate): boolean => anchors.some(([s, e]) => onlySpaces(c.end, s) || onlySpaces(e, c.start));
+  const atStart = (c: DayCandidate): boolean => onlySpaces(0, c.start);
+  const accepted = out.absolute ? [] : candidates.filter((c) => !c.weak || adjacent(c));
+  const distinct = (list: DayCandidate[]): number => new Set(list.map((c) => c.date)).size;
+  const preferred = accepted.filter((c) => adjacent(c) || atStart(c));
+  let chosen: DayCandidate | null = null;
+  if (distinct(accepted) === 1) {
+    chosen = preferred[0] ?? accepted[0] ?? null;
+  } else if (accepted.length > 1 && distinct(preferred) === 1) {
+    chosen = preferred[0] ?? null;
+  } else if (accepted.length > 1) {
+    // שני ימים מפורשים ושונים ואין העדפה ברורה — לא מנחשים
+    const pool = preferred.length > 1 ? preferred : accepted;
+    const labels: string[] = [];
+    const seen = new Set<string>();
+    for (const c of [...pool].sort((a, b) => a.start - b.start)) {
+      if (seen.has(c.date)) continue;
+      seen.add(c.date);
+      labels.push(p.body.slice(c.start, c.end).trim().replace(/^([בל])\s+(?=\d)/, '$1-'));
+    }
+    out.dayConflict = labels;
+    out.found = true;
+  }
+  if (chosen) {
+    out.date = chosen.date;
+    out.dayHint = chosen.dayHint;
+    out.todayWord = chosen.todayWord;
+    out.found = true;
+  }
+  // מה שלא נבחר חוזר לטקסט התזכורת ("לשלוח את הדוח של היום"). בהתנגשות — ביטוי בתחילת המשפט הוא מועד, לא טקסט.
+  for (const c of candidates) {
+    if (c === chosen) continue;
+    if (out.dayConflict && atStart(c) && accepted.includes(c)) continue;
+    restore(c.start, c.end);
   }
 
   out.rest = orig.replace(/\s+/g, ' ').trim();
@@ -505,7 +627,10 @@ function emptyDraft(): ReminderDraft {
 function mergeWhen(draft: ReminderDraft, w: WhenParts): ReminderDraft {
   const next = { ...draft };
   if (w.absolute) next.absolute = w.absolute;
-  if (w.date) next.date = w.date;
+  if (w.date) {
+    next.date = w.date;
+    next.todayWord = w.todayWord;
+  }
   if (w.dayHint) next.dayHint = w.dayHint;
   if (w.hour !== null) {
     next.hour = w.hour;
@@ -583,7 +708,16 @@ function finalizeReminder(draft: ReminderDraft, now: Date): LocalIntent {
   let dateStr: string;
   if (draft.date) {
     let base = DateTime.fromISO(draft.date, { zone: ZONE });
-    if (plusDay) base = base.plus({ days: 1 });
+    if (plusDay) {
+      // "הלילה בשתיים" שנאמר אחרי חצות (לפני 06:00) — הלילה הנוכחי, לא זה של מחר: המופע הקרוב שעוד לא עבר
+      const tonightAfterMidnight = draft.todayWord === true && nowL.hour < 6 && draft.date === toDateString(nowL);
+      if (tonightAfterMidnight) {
+        const sameDay = base.set({ hour: hour24, minute, second: 0, millisecond: 0 });
+        if (sameDay <= nowL) base = base.plus({ days: 1 });
+      } else {
+        base = base.plus({ days: 1 });
+      }
+    }
     dateStr = toDateString(base);
   } else {
     // לא נאמר יום: היום, ואם השעה כבר עברה — המופע הבא (מחר)
@@ -607,6 +741,15 @@ function finalizeReminder(draft: ReminderDraft, now: Date): LocalIntent {
   return { kind: 'tool', tool: 'create_reminder', input: { text: draft.text, date: dateStr, time } };
 }
 
+/** שני ימים שונים במשפט (למשל "מחר ... של היום" כשאין העדפה ברורה) — שואלים במקום לנחש. */
+function askDayConflict(labels: string[], draft: ReminderDraft): LocalIntent {
+  return {
+    kind: 'clarify',
+    question_he: `לאיזה יום לקבוע את התזכורת — ${labels.join(' או ')}?`,
+    pending: { kind: 'reminder', awaiting: 'when', draft: { ...draft, date: null, todayWord: false } },
+  };
+}
+
 const REMINDER_CREATE_RES: RegExp[] = [
   /^(?:תזכיר|תזכירי|הזכר|הזכירי|להזכיר|תזכרי)\s+(?:לי\s+)?(.*)$/,
   /^(?:תקבע|קבע|תקבעי|קבעי|לקבוע|תיצור|צור|ליצור|תוסיף|הוסף|תוסיפי|להוסיף|תרשום|רשום|לרשום)\s+(?:לי\s+)?(?:(?:את\s+)?ה)?תזכורת\s*(.*)$/,
@@ -624,6 +767,7 @@ function parseReminderCreate(p: Prepared, now: Date): LocalIntent | null {
     const when = extractWhen(sub, now);
     const draft = mergeWhen({ ...emptyDraft(), text: cleanReminderText(when.rest) }, when);
     if (re.source.startsWith('^תזכורת') && !when.found) return null;
+    if (when.dayConflict) return askDayConflict(when.dayConflict, draft);
     return finalizeReminder(draft, now);
   }
   return null;
@@ -946,6 +1090,7 @@ export function resolveClarification(pending: PendingClarification, answer: stri
       const bare = BARE_PERIODS[p.low.replace(/\s+/g, ' ')];
       if (bare) return finalizeReminder({ ...draft, period: bare }, now);
       const w = extractWhen(p, now);
+      if (w.dayConflict) return askDayConflict(w.dayConflict, draft);
       if (w.period || w.is24h || (w.hour !== null && (w.hour >= 13 || w.hour === 0))) {
         return finalizeReminder(mergeWhen(draft, w), now);
       }
@@ -954,6 +1099,7 @@ export function resolveClarification(pending: PendingClarification, answer: stri
     case 'time':
     case 'when': {
       const w = extractWhen(p, now);
+      if (w.dayConflict) return askDayConflict(w.dayConflict, draft);
       if (!w.found) {
         const bare = BARE_PERIODS[p.low.replace(/\s+/g, ' ')];
         if (bare) return finalizeReminder({ ...draft, period: bare }, now);
@@ -969,6 +1115,20 @@ export function resolveClarification(pending: PendingClarification, answer: stri
   }
 }
 
+/**
+ * בודק אם בטקסט של המשתמש יש שעה עמומה (1-12 בלי בוקר/ערב/צהריים/לילה, בלי "הערב"/"הלילה" ובלי HH:MM).
+ * מחזיר את שאלת ההבהרה ("בשמונה בבוקר או בערב?") או null. משמש את המנוע כדי שגם במצב AI לא תיקבע תזכורת לפי ניחוש.
+ */
+export function ambiguousHourQuestion(text: string, now: Date): string | null {
+  const p = prepare(text);
+  if (!p.low) return null;
+  const w = extractWhen(p, now);
+  if (w.absolute || w.hour === null || w.is24h || w.period || w.dayHint) return null;
+  if (w.hour < 1 || w.hour > 12) return null;
+  const phrase = spokenTime(w.hour, w.minute);
+  return w.hour === 12 ? `${phrase} בצהריים או בלילה?` : `${phrase} בבוקר או בערב?`;
+}
+
 /** שדה המזהה לכל כלי שיכול להחזיר אפשרויות לבחירה. */
 const CHOICE_FIELDS: Partial<Record<ToolName, string>> = {
   open_project: 'project_id',
@@ -982,7 +1142,22 @@ const CHOICE_FIELDS: Partial<Record<ToolName, string>> = {
  * בתזכורת שנופלת על מעבר שעון: DST_AMBIGUOUS -> dst_choice, DST_GAP -> time (עם שאר הפרמטרים המקוריים).
  */
 export function pendingFromToolResult(tool: ToolName, result: ToolResult, input: Record<string, unknown> = {}): PendingClarification | null {
-  if (result.status !== 'needs_clarification' || !result.options?.length) return null;
+  if (result.status !== 'needs_clarification') return null;
+  if (tool === 'create_reminder' && result.error_code === 'PAST_TIME') {
+    // "המועד הזה כבר עבר. לאיזה מועד לקבוע?" — שומרים את הטקסט והשעה, כדי ש"מחר" או "מחר בשמונה בערב" ישלימו
+    const time = typeof input.time === 'string' ? /^(\d{2}):(\d{2})$/.exec(input.time) : null;
+    const text = typeof input.text === 'string' && input.text.trim() ? input.text.trim() : null;
+    return {
+      kind: 'reminder',
+      awaiting: 'when',
+      draft: {
+        ...emptyDraft(),
+        text,
+        ...(time ? { hour: Number(time[1]), minute: Number(time[2]), is24h: true } : {}),
+      },
+    };
+  }
+  if (!result.options?.length) return null;
   let field = CHOICE_FIELDS[tool];
   let baseInput: Record<string, unknown> | undefined;
   if (tool === 'create_reminder') {

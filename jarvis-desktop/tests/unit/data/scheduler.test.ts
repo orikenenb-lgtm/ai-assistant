@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Database } from '../../../src/main/core/contracts';
 import type { AssistantEvent, ReminderDTO } from '../../../src/shared/types';
 import { openDatabase } from '../../../src/main/db/database';
-import { createReminderScheduler, type ReminderScheduler } from '../../../src/main/reminders/scheduler';
+import { DEFAULT_INTERVAL_MS, createReminderScheduler, type ReminderScheduler } from '../../../src/main/reminders/scheduler';
 import { formatHebrewFull } from '../../../src/main/time/time';
 import {
   mockClock,
@@ -37,7 +37,11 @@ interface Harness {
   db: Database;
 }
 
-function harness(db: Database, clock: MockClock, opts?: { graceMinutes?: number; emit?: (e: AssistantEvent) => void }): Harness {
+function harness(
+  db: Database,
+  clock: MockClock,
+  opts?: { graceMinutes?: number; emit?: (e: AssistantEvent) => void; intervalMs?: number | 'default' },
+): Harness {
   const timers = mockTimers(clock);
   const notifier = mockNotifier(clock);
   const events: AssistantEvent[] = [];
@@ -52,7 +56,7 @@ function harness(db: Database, clock: MockClock, opts?: { graceMinutes?: number;
     },
     logger: mockLogger(),
     getSettings: () => settings,
-    intervalMs: 30_000,
+    ...(opts?.intervalMs === 'default' ? {} : { intervalMs: opts?.intervalMs ?? 30_000 }),
     setTimer: timers.setTimer,
     clearTimer: timers.clearTimer,
   });
@@ -329,5 +333,95 @@ describe('reminder scheduler across restarts and instances (file DB, mock)', () 
     b.scheduler.stop();
     dbA.close();
     dbB.close();
+  });
+});
+
+describe('reminder scheduler — review fixes', () => {
+  let clock: MockClock;
+  let db: Database;
+  beforeEach(() => {
+    clock = mockClock(T0);
+    db = openDatabase(':memory:', { clock });
+  });
+  afterEach(() => db.close());
+
+  it('the default periodic check interval is 10 seconds (as documented)', () => {
+    expect(DEFAULT_INTERVAL_MS).toBe(10_000);
+    const h = harness(db, clock, { intervalMs: 'default' });
+    h.scheduler.start();
+    expect(h.timers.pending().map((t) => t.at - clock.ms())).toEqual([10_000]);
+    h.scheduler.stop();
+  });
+
+  it('graceMinutes 0 means interval + 5 s at most, not a whole minute', () => {
+    const a = addReminder(db, '14 שניות', iso(T0, -14_000));
+    const b = addReminder(db, '16 שניות', iso(T0, -16_000));
+    const c = addReminder(db, '59 שניות', iso(T0, -59_000));
+    const h = harness(db, clock, { graceMinutes: 0, intervalMs: 'default' });
+    h.scheduler.checkNow('tick');
+    expect(db.reminders.get(a.id)?.status).toBe('fired');
+    expect(db.reminders.get(b.id)?.status).toBe('missed');
+    expect(db.reminders.get(c.id)?.status).toBe('missed');
+
+    // עם מרווח של 30 שניות — הסף הוא 35 שניות
+    const d = addReminder(db, '34 שניות', iso(T0, -34_000));
+    const e = addReminder(db, '36 שניות', iso(T0, -36_000));
+    harness(db, clock, { graceMinutes: 0, intervalMs: 30_000 }).scheduler.checkNow('tick');
+    expect(db.reminders.get(d.id)?.status).toBe('fired');
+    expect(db.reminders.get(e.id)?.status).toBe('missed');
+  });
+
+  it('emits data-changed "reminders" when it marks a reminder fired and when it marks one missed', () => {
+    const r = addReminder(db, 'בזמן', iso(T0, 5_000));
+    const h = harness(db, clock);
+    h.scheduler.start();
+    expect(ofType(h.events, 'data-changed')).toEqual([]);
+    h.timers.advance(5_100);
+    expect(db.reminders.get(r.id)?.status).toBe('fired');
+    expect(ofType(h.events, 'data-changed')).toEqual([{ type: 'data-changed', scope: 'reminders' }]);
+
+    h.events.length = 0;
+    addReminder(db, 'בשינה', iso(clock.now().toISOString(), MIN));
+    clock.advance(HOUR); // שינה
+    h.scheduler.checkNow('resume');
+    expect(ofType(h.events, 'missed-reminders')).toHaveLength(1);
+    expect(ofType(h.events, 'data-changed')).toEqual([{ type: 'data-changed', scope: 'reminders' }]);
+    h.scheduler.stop();
+  });
+
+  it('day rollover at local midnight emits data-changed for tasks and reminders once', () => {
+    clock.set('2026-10-05T20:59:45.000Z'); // 23:59:45 בישראל
+    const h = harness(db, clock, { intervalMs: 'default' });
+    h.scheduler.start();
+    h.timers.advance(10_000); // 23:59:55 — עוד אותו יום
+    expect(ofType(h.events, 'data-changed')).toEqual([]);
+    h.timers.advance(10_000); // 00:00:05 — יום חדש
+    expect(ofType(h.events, 'data-changed')).toEqual([
+      { type: 'data-changed', scope: 'tasks' },
+      { type: 'data-changed', scope: 'reminders' },
+    ]);
+    h.timers.advance(60_000); // באותו יום — אין שידור נוסף
+    expect(ofType(h.events, 'data-changed')).toHaveLength(2);
+
+    // חזרה משינה אחרי חצות נוספת
+    clock.advance(24 * HOUR);
+    h.scheduler.checkNow('resume');
+    expect(ofType(h.events, 'data-changed')).toHaveLength(4);
+    h.scheduler.stop();
+  });
+
+  it('firedSince returns reminders fired at/after the time and not yet acknowledged, oldest first', () => {
+    const a = addReminder(db, 'ראשונה', iso(T0, 5_000));
+    const b = addReminder(db, 'שנייה', iso(T0, 20_000));
+    const h = harness(db, clock);
+    h.scheduler.start();
+    h.timers.advance(30_000);
+    expect(h.scheduler.firedSince(T0).map((r) => r.id)).toEqual([a.id, b.id]);
+    expect(h.scheduler.firedSince(iso(T0, 10_000)).map((r) => r.id)).toEqual([b.id]);
+    expect(h.scheduler.firedSince(iso(T0, 10_000))[0]).toMatchObject({ status: 'fired', firedAt: iso(T0, 20_000 + 20) });
+    db.reminders.acknowledge([a.id]);
+    expect(h.scheduler.firedSince(T0).map((r) => r.id)).toEqual([b.id]);
+    expect(h.scheduler.firedSince('not a date')).toEqual([]);
+    h.scheduler.stop();
   });
 });

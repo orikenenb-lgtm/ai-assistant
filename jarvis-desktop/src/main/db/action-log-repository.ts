@@ -1,7 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { ActionLogEntry, ActionLogRepository, Clock } from '../core/contracts';
 import type { ActionStatus } from '../../shared/types';
-import { normalizeIso, str, type Row } from './sql';
+import { changes, normalizeIso, str, type Row } from './sql';
 
 /**
  * יומן פעולות — משמש למניעת כפילות: אותו כלי עם אותם פרמטרים בתוך חלון זמן לא יבוצע שוב.
@@ -9,6 +9,18 @@ import { normalizeIso, str, type Row } from './sql';
  */
 
 const MAX_SUMMARY = 2000;
+
+/**
+ * כמה זמן שומרים את יומן הפעולות. מניעת הכפילות בין תורות צריכה לכל היותר 2 דקות אחורה;
+ * יום אחד נותן מרווח נוח לאבחון. main קורא ל-prune(now - ACTION_LOG_RETENTION_MS) בהפעלה (ומדי פעם).
+ */
+export const ACTION_LOG_RETENTION_MS = 24 * 3600 * 1000;
+
+/** עזרים מעבר לחוזה ActionLogRepository (contracts.ts). */
+export interface ActionLogRepositoryExtras {
+  /** מוחק רשומות שנוצרו לפני olderThanIso. מחזיר כמה נמחקו. מועד לא תקין => לא מוחק כלום. */
+  prune(olderThanIso: string): number;
+}
 
 function toEntry(row: Row): ActionLogEntry {
   return {
@@ -22,7 +34,10 @@ function toEntry(row: Row): ActionLogEntry {
   };
 }
 
-export function createActionLogRepository(db: DatabaseSync, deps: { clock: Clock }): ActionLogRepository {
+export function createActionLogRepository(
+  db: DatabaseSync,
+  deps: { clock: Clock },
+): ActionLogRepository & ActionLogRepositoryExtras {
   const upsertStmt = db.prepare(
     `INSERT INTO action_log (id, turn_id, tool, params_hash, status, summary, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -41,6 +56,7 @@ export function createActionLogRepository(db: DatabaseSync, deps: { clock: Clock
      LIMIT 1`,
   );
   const clearStmt = db.prepare('DELETE FROM action_log');
+  const pruneStmt = db.prepare('DELETE FROM action_log WHERE created_at < ?');
 
   return {
     record(entry) {
@@ -66,6 +82,12 @@ export function createActionLogRepository(db: DatabaseSync, deps: { clock: Clock
 
     clear() {
       clearStmt.run();
+    },
+
+    prune(olderThanIso) {
+      const ms = Date.parse(olderThanIso);
+      if (!Number.isFinite(ms)) return 0;
+      return changes(pruneStmt.run(new Date(ms).toISOString()));
     },
   };
 }

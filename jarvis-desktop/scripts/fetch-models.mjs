@@ -25,14 +25,26 @@ const MODELS = [
     url: 'https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/hey_jarvis_v0.1.onnx',
     sha256: '94a13cfe60075b132f6a472e7e462e8123ee70861bc3fb58434a73712ee0d2cb',
   },
-  {
-    file: 'models/porcupine/porcupine_params.pv',
-    url: 'https://raw.githubusercontent.com/Picovoice/porcupine/v4.0/lib/common/porcupine_params.pv',
-    sha256: '0b0685f170c5e73259fb45c32f481b100cdffb8ef6a4d87be871519c8d17df36',
-  },
 ];
 
+// Porcupine לא צריך הורדה: הקבצים שלו (כולל porcupine_params.pv) מגיעים בחבילת @picovoice/porcupine-node.
+
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
+
+// --check: רק מוודא שהמודלים קיימים ותקינים (בלי רשת). משמש לפני אריזה, כדי שגרסה בלי מודלים לא תצא בטעות.
+if (process.argv.includes('--check')) {
+  const missing = MODELS.filter((m) => {
+    const target = join(publicDir, m.file);
+    return !existsSync(target) || sha256(readFileSync(target)) !== m.sha256;
+  });
+  if (missing.length) {
+    console.error(`חסרים מודלי מילת הפעלה: ${missing.map((m) => m.file).join(', ')}`);
+    console.error('הרץ קודם: npm run fetch-models');
+    process.exit(1);
+  }
+  console.log('✓ כל מודלי מילת ההפעלה קיימים ומאומתים');
+  process.exit(0);
+}
 
 async function fetchWithRetry(url, attempts = 4) {
   let lastErr;

@@ -465,10 +465,13 @@ describe('choice clarification from tool options', () => {
     expectTool(resolveClarification(pending, 'כן', settings, NOW), 'create_reminder', { text: 'x', date: '2027-03-26', time: '03:30' });
   });
 
-  it('a past-time clarification from create_reminder is not a choice', () => {
-    expect(
-      pendingFromToolResult('create_reminder', { ok: false, status: 'needs_clarification', error_code: 'PAST_TIME', summary_he: 'x', options: [{ id: 'a', label: 'a' }] }),
-    ).toBeNull();
+  it('a past-time clarification from create_reminder is not a choice — it keeps a reminder draft ("לאיזה מועד לקבוע?")', () => {
+    const pending = pendingFromToolResult(
+      'create_reminder',
+      { ok: false, status: 'needs_clarification', error_code: 'PAST_TIME', summary_he: 'x', options: [{ id: 'a', label: 'a' }] },
+      { text: 'לפתוח את הפרויקט', date: '2026-10-05', time: '08:00' },
+    );
+    expect(pending).toMatchObject({ kind: 'reminder', awaiting: 'when', draft: { text: 'לפתוח את הפרויקט', hour: 8, minute: 0, is24h: true, date: null } });
   });
 
   it('no options -> no pending', () => {

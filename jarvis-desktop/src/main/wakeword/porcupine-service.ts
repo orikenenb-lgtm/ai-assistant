@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import type { WakewordSessionStatus } from '../../shared/api-types';
 import type { ErrorCode } from '../../shared/types';
 import type { Logger } from '../core/contracts';
 
@@ -29,14 +31,31 @@ interface PorcupineModule {
 }
 
 export type WakewordStartResult =
-  | { ok: true; frameLength: number; sampleRate: number }
+  | { ok: true; frameLength: number; sampleRate: number; sessionId: string }
   | { ok: false; code: ErrorCode; message_he: string };
 
+/**
+ * מצב סשן של מילת ההפעלה, כפי שה-renderer שואל עליו (wakeword:status):
+ * - running: המנוע פעיל ומעבד את הפריימים של הסשן הזה.
+ * - failed: המנוע נפל באמצע (שגיאות עיבוד חוזרות) — ה-renderer מציג שגיאה ומנסה שוב בהשהיה.
+ * - stopped: הסשן הזה כבר לא פעיל (נעצר, או שסשן חדש החליף אותו).
+ */
+export type { WakewordSessionStatus };
+
+/**
+ * מנוע אחד לכל התהליך, עם "סשן" לכל הפעלה מה-renderer.
+ * למה סשנים: גלאי ישן ב-renderer (למשל אחרי שינוי הגדרות מהיר או "הפעל מחדש" כפול) עלול לקרוא ל-stop
+ * או לשלוח פריימים אחרי שגלאי חדש כבר התחיל. main מתעלם מכל מזהה סשן שאינו הנוכחי,
+ * כך שגלאי ישן לא יכול לכבות את המנוע של הגלאי החדש ולא להזרים אליו אודיו.
+ */
 export interface PorcupineService {
+  /** מתחיל סשן חדש (מחליף כל סשן קודם). */
   start(options: { sensitivity: number }): WakewordStartResult;
-  /** מעבד פריים אחד או יותר (באורך frameLength כל אחד). מחזיר true אם זוהתה מילת ההפעלה. */
-  process(samples: Int16Array): boolean;
-  stop(): void;
+  /** מעבד פריים אחד או יותר (באורך frameLength כל אחד) של הסשן. מחזיר true אם זוהתה מילת ההפעלה. */
+  process(sessionId: string, samples: Int16Array): boolean;
+  status(sessionId: string): WakewordSessionStatus;
+  /** עוצר את הסשן אם הוא הנוכחי (מזהה ישן — מתעלמים). בלי מזהה: עוצר הכול (יציאה מהאפליקציה). */
+  stop(sessionId?: string): void;
   readonly running: boolean;
 }
 
@@ -45,7 +64,22 @@ export function unpackedPath(p: string): string {
   return p.replace(/app\.asar([\\/])/, 'app.asar.unpacked$1');
 }
 
+export const VCREDIST_MESSAGE =
+  'מנוע Porcupine דורש את Microsoft Visual C++ Redistributable (2015–2022, x64). התקן אותו מאתר Microsoft והפעל מחדש את JARVIS. מילת ההפעלה "Hey Jarvis" (openWakeWord) עובדת גם בלעדיו.';
+
+/** טעינת ספרייה נייטיבית שנכשלה כי חסרה תלות (ב-Windows: בדרך כלל ה-VC++ Redistributable, שגיאה 126). */
+export function isMissingNativeDependency(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false;
+  const code = (err as { code?: unknown }).code;
+  const message = err instanceof Error ? err.message : String((err as { message?: unknown }).message ?? '');
+  if (code === 'MODULE_NOT_FOUND') return true;
+  if (/the specified module could not be found/i.test(message)) return true;
+  // dlopen ב-Windows: "error 126" / "Error: 126" — רק כשההקשר הוא טעינת ספרייה, לא כל מספר 126
+  return (code === 'ERR_DLOPEN_FAILED' || /\.node\b|dlopen|LoadLibrary/i.test(message)) && /\b126\b/.test(message);
+}
+
 export function mapPorcupineError(err: unknown): { code: ErrorCode; message_he: string } {
+  if (isMissingNativeDependency(err)) return { code: 'PROVIDER_UNAVAILABLE', message_he: VCREDIST_MESSAGE };
   const name = err instanceof Error ? err.constructor.name || err.name : '';
   switch (name) {
     case 'PorcupineInvalidArgumentError':
@@ -72,11 +106,22 @@ export interface PorcupineServiceDeps {
   logger: Logger;
   /** טעינת המודול הנייטיבי — מוזרק לבדיקות. */
   loadModule?: () => PorcupineModule;
+  /** מזהה סשן (ברירת מחדל: randomUUID). מוזרק לבדיקות. */
+  newSessionId?: () => string;
 }
+
+/** כמה שגיאות עיבוד ברצף מסמנות את הסשן כנפול (שגיאה בודדת עלולה להיות חולפת). */
+export const PROCESS_ERRORS_TO_FAIL = 3;
+export const SESSION_FAILED_MESSAGE = 'מנוע Porcupine הפסיק לעבוד באמצע ההאזנה.';
 
 export function createPorcupineService(deps: PorcupineServiceDeps): PorcupineService {
   let handle: PorcupineHandle | null = null;
+  let handleSensitivity: number | null = null;
   let buffer = new Int16Array(0);
+  let sessionId: string | null = null;
+  let failedMessage: string | null = null;
+  let consecutiveErrors = 0;
+  const newSessionId = deps.newSessionId ?? randomUUID;
 
   const load = deps.loadModule ?? (() => {
     // require דינמי: המודול נשאר חיצוני ל-bundle (esbuild external) ונטען רק כשהמשתמש מפעיל את Porcupine
@@ -84,12 +129,36 @@ export function createPorcupineService(deps: PorcupineServiceDeps): PorcupineSer
     return require('@picovoice/porcupine-node') as PorcupineModule;
   });
 
+  function release(): void {
+    if (handle) {
+      try {
+        handle.release();
+      } catch {
+        // כבר משוחרר
+      }
+    }
+    handle = null;
+    handleSensitivity = null;
+    buffer = new Int16Array(0);
+  }
+
   return {
     get running() {
       return handle !== null;
     },
     start({ sensitivity }) {
-      if (handle) return { ok: true, frameLength: handle.frameLength, sampleRate: handle.sampleRate };
+      const clamped = Math.min(0.95, Math.max(0.1, sensitivity));
+      // סשן חדש מבטל את הקודם תמיד — גם אם המנוע עצמו נשאר טעון
+      sessionId = null;
+      failedMessage = null;
+      consecutiveErrors = 0;
+      buffer = new Int16Array(0);
+      // אותה רגישות: משתמשים שוב במנוע הטעון (האתחול מאמת את המפתח מול Picovoice ולוקח זמן)
+      if (handle && handleSensitivity === clamped) {
+        sessionId = newSessionId();
+        return { ok: true, frameLength: handle.frameLength, sampleRate: handle.sampleRate, sessionId };
+      }
+      release();
       const key = deps.getAccessKey();
       if (!key) return { ok: false, code: 'MISSING_API_KEY', message_he: 'כדי להשתמש במילה "Jarvis" צריך AccessKey חינמי של Picovoice. הוסף אותו בהגדרות ← מילת הפעלה.' };
       try {
@@ -99,46 +168,62 @@ export function createPorcupineService(deps: PorcupineServiceDeps): PorcupineSer
         const pkgRoot = dirname(dirname(dirname(dirname(keywordPath))));
         const modelPath = unpackedPath(join(pkgRoot, 'lib', 'common', 'porcupine_params.pv'));
         const options = existsSync(modelPath) ? { modelPath } : {};
-        handle = new mod.Porcupine(key, [keywordPath], [Math.min(0.95, Math.max(0.1, sensitivity))], options);
-        buffer = new Int16Array(0);
+        handle = new mod.Porcupine(key, [keywordPath], [clamped], options);
+        handleSensitivity = clamped;
+        sessionId = newSessionId();
         deps.logger.info('wakeword.porcupine_started', { frameLength: handle.frameLength, sampleRate: handle.sampleRate });
-        return { ok: true, frameLength: handle.frameLength, sampleRate: handle.sampleRate };
+        return { ok: true, frameLength: handle.frameLength, sampleRate: handle.sampleRate, sessionId };
       } catch (err) {
         const mapped = mapPorcupineError(err);
         deps.logger.warn('wakeword.porcupine_failed', { code: mapped.code, error: err instanceof Error ? err.message : String(err) });
-        handle = null;
+        release();
         return { ok: false, ...mapped };
       }
     },
-    process(samples) {
-      if (!handle) return false;
+    process(id, samples) {
+      // פריימים מסשן ישן (גלאי שכבר הוחלף) — לא מגיעים למנוע
+      if (!handle || id !== sessionId) return false;
       const merged = new Int16Array(buffer.length + samples.length);
       merged.set(buffer, 0);
       merged.set(samples, buffer.length);
       const fl = handle.frameLength;
       let detected = false;
       let offset = 0;
-      while (merged.length - offset >= fl) {
+      while (handle && merged.length - offset >= fl) {
         try {
           if (handle.process(merged.subarray(offset, offset + fl)) >= 0) detected = true;
+          consecutiveErrors = 0;
         } catch (err) {
-          deps.logger.warn('wakeword.porcupine_process_error', { error: err instanceof Error ? err.message : String(err) });
+          consecutiveErrors++;
+          deps.logger.warn('wakeword.porcupine_process_error', { error: err instanceof Error ? err.message : String(err), consecutive: consecutiveErrors });
+          if (consecutiveErrors >= PROCESS_ERRORS_TO_FAIL) {
+            // המנוע במצב לא תקין: משחררים אותו ומסמנים את הסשן כנפול. ה-renderer רואה זאת ב-status.
+            failedMessage = SESSION_FAILED_MESSAGE;
+            release();
+            deps.logger.warn('wakeword.porcupine_session_failed', {});
+            return false;
+          }
         }
         offset += fl;
       }
       buffer = merged.slice(offset);
       return detected;
     },
-    stop() {
-      if (handle) {
-        try {
-          handle.release();
-        } catch {
-          // כבר משוחרר
-        }
+    status(id) {
+      if (id !== sessionId) return { state: 'stopped' };
+      if (failedMessage) return { state: 'failed', message_he: failedMessage };
+      return handle ? { state: 'running' } : { state: 'stopped' };
+    },
+    stop(id) {
+      // עצירה מגלאי ישן לא מכבה את המנוע של הגלאי הנוכחי
+      if (id !== undefined && id !== sessionId) {
+        deps.logger.debug('wakeword.porcupine_stale_stop', {});
+        return;
       }
-      handle = null;
-      buffer = new Int16Array(0);
+      release();
+      sessionId = null;
+      failedMessage = null;
+      consecutiveErrors = 0;
     },
   };
 }

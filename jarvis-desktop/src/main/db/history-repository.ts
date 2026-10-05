@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { Clock, HistoryEntry, HistoryRepository } from '../core/contracts';
-import { changes, normalizeIso, str, type Row } from './sql';
+import { changes, normalizeIso, str, withTransaction, type Row } from './sql';
 
 /**
  * היסטוריית שיחה (טקסט בלבד: מה המשתמש אמר ומה JARVIS ענה).
@@ -21,7 +21,19 @@ function toEntry(row: Row): HistoryEntry {
   };
 }
 
-export function createHistoryRepository(db: DatabaseSync, deps: { clock: Clock }): HistoryRepository {
+/** עזרים מעבר לחוזה HistoryRepository (contracts.ts). */
+export interface HistoryRepositoryExtras {
+  /**
+   * כתיבת כל הרשומות של תור אחד (בדרך כלל user + assistant) בטרנזקציה אחת:
+   * או שכולן נשמרות או שאף אחת — אין "שאלה בלי תשובה" בהיסטוריה אחרי קריסה או דיסק מלא.
+   */
+  appendTurn(entries: readonly HistoryEntry[]): void;
+}
+
+export function createHistoryRepository(
+  db: DatabaseSync,
+  deps: { clock: Clock },
+): HistoryRepository & HistoryRepositoryExtras {
   const insertStmt = db.prepare('INSERT INTO history (turn_id, role, text, mode, created_at) VALUES (?, ?, ?, ?, ?)');
   // N התורות האחרונים לפי הרשומה האחרונה של כל תור, ואז כל הרשומות שלהם בסדר כרונולוגי
   const recentStmt = db.prepare(
@@ -39,6 +51,14 @@ export function createHistoryRepository(db: DatabaseSync, deps: { clock: Clock }
     append(entry) {
       const createdAt = normalizeIso(entry.createdAt, deps.clock.now());
       insertStmt.run(entry.turnId, entry.role, entry.text, entry.mode, createdAt);
+    },
+
+    appendTurn(entries) {
+      if (entries.length === 0) return;
+      const fallback = deps.clock.now();
+      withTransaction(db, () => {
+        for (const e of entries) insertStmt.run(e.turnId, e.role, e.text, e.mode, normalizeIso(e.createdAt, fallback));
+      });
     },
 
     recent(limitTurns) {

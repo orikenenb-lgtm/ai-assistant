@@ -33,7 +33,9 @@ const api: JarvisApi = {
   voice: {
     transcribe: (input) => invoke(IPC.voiceTranscribe, input),
     synthesize: (input) => invoke(IPC.voiceSynthesize, input),
-    reportAudioPhase: (phase) => invoke(IPC.voiceReportAudioPhase, { phase }),
+    cancel: (requestId) => invoke(IPC.voiceCancel, { requestId }),
+    reportAudioPhase: (phase, wakeWordListening) =>
+      invoke(IPC.voiceReportAudioPhase, wakeWordListening === undefined ? { phase } : { phase, wakeWordListening }),
   },
   settings: {
     get: () => invoke(IPC.settingsGet),
@@ -72,9 +74,11 @@ const api: JarvisApi = {
   },
   wakeword: {
     startPorcupine: (sensitivity) => invoke(IPC.wakewordStart, { sensitivity }),
-    stopPorcupine: () => invoke(IPC.wakewordStop),
-    pushFrames: (samples) => {
-      ipcRenderer.send(IPC.wakewordFrames, samples);
+    stopPorcupine: (sessionId) => invoke(IPC.wakewordStop, { sessionId }),
+    statusPorcupine: (sessionId) => invoke(IPC.wakewordStatus, { sessionId }),
+    pushFrames: (sessionId, samples) => {
+      // הפריימים ראשונים (הסכמה של הערוץ), מזהה הסשן אחריהם
+      ipcRenderer.send(IPC.wakewordFrames, samples, sessionId);
     },
   },
   onCommand: (listener) => subscribe<UiCommand>(IPC.evtCommand, listener),

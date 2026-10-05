@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { Logger, SettingsService } from '../core/contracts';
-import { COMMAND_PROXY_EXECUTABLES } from '../launcher/path-rules';
+import { COMMAND_PROXY_EXECUTABLES, unquoteWindowsPath } from '../launcher/path-rules';
 import {
   defaultLauncher,
   defaultSettings,
@@ -81,7 +81,8 @@ export const FORBIDDEN_LAUNCH_TARGETS = new Set([
 ]);
 
 export function launchTargetBasename(target: string): string {
-  const parts = target.trim().split(/[\\/]/);
+  // אותו נרמול שהמפעיל עושה (מרכאות, סימני כיווניות), כדי שהבדיקה כאן תראה את אותו שם קובץ
+  const parts = unquoteWindowsPath(target).split(/[\\/]/);
   return (parts[parts.length - 1] ?? '').toLowerCase();
 }
 
@@ -144,10 +145,21 @@ export interface SettingsStoreOptions {
   now?: () => Date;
 }
 
-export function createSettingsStore(options: SettingsStoreOptions): SettingsService {
+/**
+ * בדיקה לפני שמירה, מחוץ לסכמה — למשל שקיצור המקשים באמת נרשם ב-Windows.
+ * מחזירה הודעת שגיאה בעברית כדי לחסום את השמירה, או null כדי לאשר.
+ */
+export type SettingsCommitGuard = (next: Settings, prev: Settings) => string | null;
+
+export interface SettingsStore extends SettingsService {
+  addCommitGuard(guard: SettingsCommitGuard): () => void;
+}
+
+export function createSettingsStore(options: SettingsStoreOptions): SettingsStore {
   const { file, logger } = options;
   const now = options.now ?? (() => new Date());
   const listeners = new Set<(s: Settings) => void>();
+  const guards = new Set<SettingsCommitGuard>();
   let current = load();
 
   function load(): Settings {
@@ -198,6 +210,10 @@ export function createSettingsStore(options: SettingsStoreOptions): SettingsServ
       if (consistency.length) {
         throw new SettingsValidationError(`ההגדרות לא נשמרו: ${consistency.join(' ')}`, consistency);
       }
+      for (const guard of guards) {
+        const problem = guard(parsed.data, current);
+        if (problem) throw new SettingsValidationError(problem, [problem]);
+      }
       current = parsed.data;
       persist(current);
       logger.info('settings.updated', { sections: Object.keys(patch as object) });
@@ -213,6 +229,10 @@ export function createSettingsStore(options: SettingsStoreOptions): SettingsServ
     onChange(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    addCommitGuard(guard) {
+      guards.add(guard);
+      return () => guards.delete(guard);
     },
   };
 }

@@ -46,6 +46,33 @@ describe('settings store', () => {
     expect(store.get().ai.effort).toBe('low');
   });
 
+  it('blocks command shells hidden behind quotes or invisible bidi marks', () => {
+    const dir = tempDir();
+    const store = createSettingsStore({ file: join(dir, 'settings.json'), logger: silentLogger });
+    for (const target of ['"C:\\Windows\\System32\\cmd.exe"', 'C:\\Windows\\System32\\cmd.exe\u200F', 'C:\\Windows\\System32\\cmd\u200E.exe']) {
+      const apps = [...store.get().launcher.apps, { id: 'x', name: 'x', aliases: [], kind: 'exe' as const, target, args: [], enabled: true, builtin: false }];
+      expect(() => store.update({ launcher: { ...store.get().launcher, apps } })).toThrow(/cmd\.exe/);
+    }
+  });
+
+  it('commit guards can block a save (e.g. a hotkey Windows refused) and keep the previous settings', () => {
+    const dir = tempDir();
+    const store = createSettingsStore({ file: join(dir, 'settings.json'), logger: silentLogger });
+    const seen: string[] = [];
+    store.onChange((s) => seen.push(s.voice.pushToTalkHotkey));
+    const remove = store.addCommitGuard((next, prev) =>
+      next.voice.pushToTalkHotkey !== prev.voice.pushToTalkHotkey && next.voice.pushToTalkHotkey === 'Ctrl+Alt+Delete' ? 'קיצור המקשים תפוס.' : null,
+    );
+    expect(() => store.update({ voice: { ...store.get().voice, pushToTalkHotkey: 'Ctrl+Alt+Delete' } })).toThrow('קיצור המקשים תפוס.');
+    expect(store.get().voice.pushToTalkHotkey).toBe('CommandOrControl+Alt+J');
+    expect(seen).toEqual([]);
+    store.update({ voice: { ...store.get().voice, pushToTalkHotkey: 'CommandOrControl+Shift+K' } });
+    expect(seen).toEqual(['CommandOrControl+Shift+K']);
+    remove();
+    store.update({ voice: { ...store.get().voice, pushToTalkHotkey: 'Ctrl+Alt+Delete' } });
+    expect(store.get().voice.pushToTalkHotkey).toBe('Ctrl+Alt+Delete');
+  });
+
   it('refuses to register command shells or scripts as approved applications', () => {
     const dir = tempDir();
     const store = createSettingsStore({ file: join(dir, 'settings.json'), logger: silentLogger });

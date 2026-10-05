@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Clock, Database, ToolDefinition } from '../core/contracts';
 import type { ReminderDTO } from '../../shared/types';
 import { normalizeForMatch } from '../../shared/text-normalize';
-import { ReminderValidationError } from '../db/reminders-repository';
+import { ReminderValidationError, type ReminderRepositoryExtras } from '../db/reminders-repository';
 import { pickSingle, rankByText } from '../db/text-search';
 import { ZONE, describeWhenHe, isFuture, resolveLocalDateTime } from '../time/time';
 import { clip, countFeminine, joinHebrew, joinHebrewCapped, stripTrailingPunctuation } from '../time/hebrew-text';
@@ -11,6 +11,7 @@ import {
   asTool,
   cancelledResult,
   clarifyResult,
+  dedupedResult,
   errorResult,
   okResult,
   storageErrorResult,
@@ -66,7 +67,50 @@ function safeWhen(r: ReminderDTO, now: Date): string {
 }
 
 function reminderData(r: ReminderDTO): Record<string, unknown> {
-  return { id: r.id, text: r.text, due_local: r.dueLocal_he, due_utc: r.dueAtUtc, status: r.status };
+  return { id: r.id, text: r.text, due_local: r.dueLocal_he, due_utc: r.dueAtUtc, status: r.status, fired_at: r.firedAt };
+}
+
+/**
+ * 'acknowledged' לבדו לא מספר מה קרה: גם תזכורת שהוחמצה וגם תזכורת שהופעלה עוברות אליו כשמסמנים "נקרא".
+ * ההבדל נשמר ב-fired_at: NULL = הוחמצה (מעולם לא הוצגה בזמן), אחרת = הופעלה.
+ */
+function wasMissed(r: ReminderDTO): boolean {
+  return r.status === 'missed' || (r.status === 'acknowledged' && r.firedAt === null);
+}
+
+function wasFired(r: ReminderDTO): boolean {
+  return r.status === 'fired' || (r.status === 'acknowledged' && r.firedAt !== null);
+}
+
+/** הסבר למה אי אפשר לבטל תזכורת שכבר עברה את מועדה (הופעלה, או הוחמצה וסומנה כנקראה). */
+function alreadyPastSummary(r: ReminderDTO): string {
+  return r.firedAt === null
+    ? `התזכורת ${quoted(r.text)} הוחמצה (${r.dueLocal_he}) וכבר סומנה כנקראה, אין מה לבטל.`
+    : `התזכורת ${quoted(r.text)} כבר הוצגה (${r.dueLocal_he}), אין מה לבטל.`;
+}
+
+type RemindersWithExtras = Database['reminders'] & Partial<ReminderRepositoryExtras>;
+
+/** תזכורת מתוזמנת עם אותו טקסט מנורמל ואותו מועד — דרך העזר של המאגר כשקיים, אחרת דרך החוזה. */
+function findScheduledReminderExact(db: Database, text: string, dueAtUtc: string): ReminderDTO | null {
+  const repo = db.reminders as RemindersWithExtras;
+  if (typeof repo.findScheduledExact === 'function') return repo.findScheduledExact(text, dueAtUtc);
+  const norm = normalizeForMatch(text);
+  const dueMs = Date.parse(dueAtUtc);
+  return repo.list('upcoming').find((r) => Date.parse(r.dueAtUtc) === dueMs && normalizeForMatch(r.text) === norm) ?? null;
+}
+
+/** תזכורת שכבר הופעלה/בוטלה/נקראה עם בדיוק אותו טקסט מנורמל (האחרונה). */
+function findClosedReminderExact(db: Database, text: string): ReminderDTO | null {
+  const repo = db.reminders as RemindersWithExtras;
+  if (typeof repo.findClosedExact === 'function') return repo.findClosedExact(text);
+  const norm = normalizeForMatch(text);
+  return (
+    repo
+      .list('all')
+      .find((r) => (r.status === 'fired' || r.status === 'acknowledged' || r.status === 'cancelled') && normalizeForMatch(r.text) === norm) ??
+    null
+  );
 }
 
 export function summarizeReminders(
@@ -94,8 +138,8 @@ export function summarizeReminders(
     .filter((r) => r.status === 'scheduled')
     .sort((a, b) => a.dueAtUtc.localeCompare(b.dueAtUtc));
   const count = (s: ReminderDTO['status'][]): number => reminders.filter((r) => s.includes(r.status)).length;
-  const missed = count(['missed']);
-  const done = count(['fired', 'acknowledged']);
+  const missed = reminders.filter(wasMissed).length;
+  const done = reminders.filter(wasFired).length;
   const cancelled = count(['cancelled']);
   const parts: string[] = [];
   if (upcoming.length > 0) parts.push(upcoming.length === 1 ? 'אחת קרובה' : `${upcoming.length} קרובות`);
@@ -128,7 +172,9 @@ export function createReminderTools(deps: ReminderToolsDeps): ToolDefinition[] {
     inputSchema: CreateReminderInputSchema,
     risk: 'low',
     sideEffect: true,
-    dedupeWindowMs: 120_000,
+    // בלי חלון כפילות של המנוע (שמבוסס על יומן הפעולות ועיוור למצב — "בטל" ואז "תזכיר שוב" נבלע):
+    // הכלי עצמו אידמפוטנטי לפי מצב — תזכורת מתוזמנת זהה (טקסט + מועד) לא נוצרת פעמיים.
+    dedupeWindowMs: 0,
     title: (input) => `תזכורת: ${clip(input.text, 40)}`,
     describeForApproval: (input) => ({
       action_he: 'קביעת תזכורת',
@@ -159,6 +205,13 @@ export function createReminderTools(deps: ReminderToolsDeps): ToolDefinition[] {
 
       let reminder: ReminderDTO;
       try {
+        const existing = findScheduledReminderExact(db, text, resolved.utcIso);
+        if (existing) {
+          return dedupedResult(
+            `התזכורת הזו כבר קיימת: ${plainText(existing.text)} — ${existing.dueLocal_he} — לא יצרתי כפילות.`,
+            { id: existing.id, due_local_full: existing.dueLocal_he, due_utc: existing.dueAtUtc },
+          );
+        }
         reminder = db.reminders.create({
           text,
           dueAtUtc: resolved.utcIso,
@@ -244,35 +297,43 @@ export function createReminderTools(deps: ReminderToolsDeps): ToolDefinition[] {
         if (!target && !query) return errorResult('NOT_FOUND', 'לא מצאתי את התזכורת הזו.');
         if (!target) {
           const ranked = rankByText(query, db.reminders.search(query), (r) => r.text);
-          const pick = pickSingle(ranked, MAX_OPTIONS);
-          if (pick.kind === 'none') {
-            return errorResult('NOT_FOUND', `לא מצאתי תזכורת פעילה שמתאימה ל${quoted(query)}.`);
+          // אין תזכורת פעילה בדיוק בטקסט הזה, אבל יש כזו שכבר בוטלה/הופעלה — עונים עליה ("כבר בוטלה"),
+          // ולא מבטלים תזכורת דומה אחרת ("לדניאל" -> "לדניאלה").
+          const closed = ranked.some((r) => r.score >= 1) ? null : findClosedReminderExact(db, query);
+          if (closed) {
+            target = closed;
+          } else {
+            const pick = pickSingle(ranked, MAX_OPTIONS);
+            if (pick.kind === 'none') {
+              return errorResult('NOT_FOUND', `לא מצאתי תזכורת פעילה שמתאימה ל${quoted(query)}.`);
+            }
+            // רק התאמה מדויקת או של מילים שלמות נבחרת לבד; כל השאר — שאלת הבהרה עם אפשרויות
+            if (pick.kind === 'many' || pick.kind === 'weak') {
+              const options = pick.items.map((r) => ({ id: r.id, label: `${plainText(r.text)} — ${r.dueLocal_he}` }));
+              const names = joinHebrew(
+                pick.items.map((r) => `${quoted(r.text)} (${safeWhen(r, clock.now())})`),
+              );
+              const summary =
+                pick.kind === 'many'
+                  ? `מצאתי כמה תזכורות שמתאימות ל${quoted(query)}: ${names}. איזו מהן לבטל?`
+                  : `לא מצאתי תזכורת שמתאימה בדיוק ל${quoted(query)}. התכוונת ל${names}?`;
+              return clarifyResult('AMBIGUOUS', summary, options);
+            }
+            target = pick.item;
           }
-          if (pick.kind === 'many' || pick.kind === 'weak') {
-            const options = pick.items.map((r) => ({ id: r.id, label: `${plainText(r.text)} — ${r.dueLocal_he}` }));
-            const names = joinHebrew(
-              pick.items.map((r) => `${quoted(r.text)} (${safeWhen(r, clock.now())})`),
-            );
-            const summary =
-              pick.kind === 'many'
-                ? `מצאתי כמה תזכורות שמתאימות ל${quoted(query)}: ${names}. איזו מהן לבטל?`
-                : `לא מצאתי תזכורת שמתאימה בדיוק ל${quoted(query)}. התכוונת ל${names}?`;
-            return clarifyResult('AMBIGUOUS', summary, options);
-          }
-          target = pick.item;
         }
 
         if (target.status === 'cancelled') {
           return okResult(`התזכורת ${quoted(target.text)} כבר בוטלה.`, { id: target.id, status: 'cancelled' });
         }
         if (target.status === 'fired' || target.status === 'acknowledged') {
-          return errorResult('INVALID_PARAMS', `התזכורת ${quoted(target.text)} כבר הוצגה (${target.dueLocal_he}), אין מה לבטל.`);
+          return errorResult('INVALID_PARAMS', alreadyPastSummary(target));
         }
         const updated = db.reminders.cancel(target.id);
         if (!updated) return errorResult('NOT_FOUND', 'לא מצאתי את התזכורת הזו.');
         if (updated.status !== 'cancelled') {
           // בין הקריאה לביטול התזכורת הספיקה להופיע — מדווחים את המצב האמיתי
-          return errorResult('INVALID_PARAMS', `התזכורת ${quoted(updated.text)} כבר הוצגה, אין מה לבטל.`);
+          return errorResult('INVALID_PARAMS', alreadyPastSummary(updated));
         }
         ctx.emit({ type: 'data-changed', scope: 'reminders' });
         return okResult(`ביטלתי את התזכורת: ${plainText(updated.text)} (${updated.dueLocal_he}).`, {

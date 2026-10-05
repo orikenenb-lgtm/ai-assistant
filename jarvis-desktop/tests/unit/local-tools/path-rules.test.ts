@@ -40,6 +40,13 @@ describe('path-rules: absolute Windows paths (path.win32 on Linux)', () => {
     expect(unquoteWindowsPath('  "C:\\a b\\c.elk"  ')).toBe('C:\\a b\\c.elk');
   });
 
+  it('strips invisible bidi marks that Windows dialogs add to pasted Hebrew paths', () => {
+    // "מאפיינים ← אבטחה ← שם אובייקט" מוסיף U+202A בהתחלה; העתקה מטקסט עברי מוסיפה RLM בסוף
+    const res = checkWindowsPath('\u202AC:\\Users\\אורי\\מסמכים\\פרויקט גמר\\final.elk\u200F');
+    expect(res).toEqual({ ok: true, normalized: 'C:\\Users\\אורי\\מסמכים\\פרויקט גמר\\final.elk' });
+    expect(unquoteWindowsPath('"\u2067C:\\a\\b.exe\u2069"')).toBe('C:\\a\\b.exe');
+  });
+
   it('keeps drive and UNC share roots but strips other trailing separators', () => {
     expect(checkWindowsPath('C:\\')).toEqual({ ok: true, normalized: 'C:\\' });
     expect(checkWindowsPath('C:\\Projects\\')).toEqual({ ok: true, normalized: 'C:\\Projects' });
