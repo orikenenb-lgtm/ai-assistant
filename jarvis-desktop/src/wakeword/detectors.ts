@@ -14,6 +14,12 @@ import { OpenWakeWordPipeline, WakeDecider, adaptOrtSession, floatToInt16Range, 
 
 type DetectorState = WakeWordDetector['state'];
 
+export const NO_MIC_ENV_MESSAGE = 'אין גישה למיקרופון בסביבה הזו.';
+
+function hasMicrophoneApi(): boolean {
+  return typeof navigator !== 'undefined' && typeof navigator.mediaDevices?.getUserMedia === 'function';
+}
+
 function describeMicError(err: unknown): string {
   const name = err instanceof DOMException ? err.name : '';
   if (name === 'NotAllowedError') return 'אין הרשאה למיקרופון.';
@@ -70,6 +76,11 @@ export function createOpenWakeWordDetector(): WakeWordDetector {
     },
     async start(options) {
       if (state === 'listening' || state === 'loading' || state === 'paused') return;
+      if (!hasMicrophoneApi()) {
+        state = 'error';
+        lastError = NO_MIC_ENV_MESSAGE;
+        throw new Error(NO_MIC_ENV_MESSAGE);
+      }
       state = 'loading';
       lastError = null;
       onDetected = options.onDetected;
@@ -150,6 +161,11 @@ export function createPorcupineBridgeDetector(): WakeWordDetector {
     },
     async start(options) {
       if (state === 'listening' || state === 'loading' || state === 'paused') return;
+      if (!hasMicrophoneApi() || typeof window === 'undefined' || !window.jarvis) {
+        state = 'error';
+        lastError = NO_MIC_ENV_MESSAGE;
+        throw new Error(NO_MIC_ENV_MESSAGE);
+      }
       state = 'loading';
       lastError = null;
       const res = await window.jarvis.wakeword.startPorcupine(options.sensitivity);
@@ -197,7 +213,7 @@ export function createPorcupineBridgeDetector(): WakeWordDetector {
       mic = null;
       pending = new Int16Array(0);
       paused = false;
-      await window.jarvis.wakeword.stopPorcupine().catch(() => undefined);
+      if (typeof window !== 'undefined' && window.jarvis) await window.jarvis.wakeword.stopPorcupine().catch(() => undefined);
       state = 'stopped';
     },
   };

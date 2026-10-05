@@ -17,7 +17,7 @@ export function GeneralSection({ settings, saver }: SectionProps) {
         label={t.userName}
         value={profile.userName}
         maxLength={40}
-        validate={(v) => (v.trim().length === 0 ? he.settings.saveFailed : null)}
+        validate={(v) => (v.trim().length === 0 ? t.userNameEmpty : null)}
         onCommit={(v) => void saver.save('userName', { profile: { userName: v.trim() } })}
         status={saver.status.userName}
       />

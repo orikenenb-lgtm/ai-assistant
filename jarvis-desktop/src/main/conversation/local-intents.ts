@@ -306,12 +306,13 @@ function extractWhen(p: Prepared, now: Date): WhenParts {
   const nowL = localNow(now);
   const out: WhenParts = { date: null, dayHint: null, hour: null, minute: 0, is24h: false, period: null, absolute: null, rest: '', found: false };
 
-  const take = (re: RegExp): RegExpExecArray | null => {
-    const m = re.exec(work);
+  const take = (re: RegExp): RegExpMatchArray | null => {
+    const m = work.match(re);
     if (!m) return null;
+    const at = m.index ?? 0;
     const blank = ' '.repeat(m[0].length);
-    work = work.slice(0, m.index) + blank + work.slice(m.index + m[0].length);
-    orig = orig.slice(0, m.index) + blank + orig.slice(m.index + m[0].length);
+    work = work.slice(0, at) + blank + work.slice(at + m[0].length);
+    orig = orig.slice(0, at) + blank + orig.slice(at + m[0].length);
     out.found = true;
     return m;
   };
@@ -319,7 +320,7 @@ function extractWhen(p: Prepared, now: Date): WhenParts {
   // 1) זמן יחסי: "בעוד 10 דקות", "בעוד חצי שעה", "בעוד שעתיים", "in 10 minutes"
   let offsetMinutes: number | null = null;
   let offsetDays: number | null = null;
-  let m: RegExpExecArray | null;
+  let m: RegExpMatchArray | null;
   if ((m = take(new RegExp(`${B}(?:ב)?עוד\\s+(חצי|רבע)\\s+שעה${E}`)))) {
     offsetMinutes = m[1] === 'חצי' ? 30 : 15;
   } else if ((m = take(new RegExp(`${B}(?:ב)?עוד\\s+(שעה|שעתיים)(?:\\s+ו(חצי|רבע))?${E}`)))) {
@@ -387,7 +388,7 @@ function extractWhen(p: Prepared, now: Date): WhenParts {
   }
 
   // תאריך יום/חודש (סדר ישראלי): "ב-12/10", "12.10.2026"
-  const dm = new RegExp(`${B}(?:ב|ל)?\\s?(\\d{1,2})[/.](\\d{1,2})(?:[/.](\\d{2,4}))?${E}`).exec(work);
+  const dm = work.match(new RegExp(`${B}(?:ב|ל)?\\s?(\\d{1,2})[/.](\\d{1,2})(?:[/.](\\d{2,4}))?${E}`));
   if (dm) {
     const resolved = resolveDayMonth(Number(dm[1]), Number(dm[2]), dm[3], nowL);
     if (resolved) {
@@ -397,7 +398,7 @@ function extractWhen(p: Prepared, now: Date): WhenParts {
   }
   // "ב-12 באוקטובר"
   const monthAlt = Object.keys(HEBREW_MONTHS).join('|');
-  const dmonth = new RegExp(`${B}(?:ב|ל)?\\s?(\\d{1,2})\\s+(?:ב|ל)?(${monthAlt})(?:\\s+(\\d{4}))?${E}`).exec(work);
+  const dmonth = work.match(new RegExp(`${B}(?:ב|ל)?\\s?(\\d{1,2})\\s+(?:ב|ל)?(${monthAlt})(?:\\s+(\\d{4}))?${E}`));
   if (dmonth) {
     const resolved = resolveDayMonth(Number(dmonth[1]), HEBREW_MONTHS[dmonth[2] ?? ''] ?? 0, dmonth[3], nowL);
     if (resolved) {
@@ -609,7 +610,7 @@ const REMINDER_CREATE_RES: RegExp[] = [
 
 function parseReminderCreate(p: Prepared, now: Date): LocalIntent | null {
   for (const re of REMINDER_CREATE_RES) {
-    const m = re.exec(p.low);
+    const m = p.low.match(re);
     if (!m) continue;
     const start = p.low.length - (m[1] ?? '').length;
     const sub: Prepared = { body: p.body.slice(start).trim(), low: p.low.slice(start).trim() };
@@ -622,9 +623,7 @@ function parseReminderCreate(p: Prepared, now: Date): LocalIntent | null {
 }
 
 function parseReminderCancel(p: Prepared): LocalIntent | null {
-  const m = /^(?:בטל|תבטל|בטלי|תבטלי|לבטל|מחק|תמחק|תמחקי|למחוק|הסר|תסיר|להסיר|cancel|delete|remove)\s+(?:לי\s+)?(?:את\s+)?(?:ה)?(?:תזכורת|reminder|the\s+reminder)(?:\s+(.*))?$/.exec(
-    p.low,
-  );
+  const m = p.low.match(/^(?:בטל|תבטל|בטלי|תבטלי|לבטל|מחק|תמחק|תמחקי|למחוק|הסר|תסיר|להסיר|cancel|delete|remove)\s+(?:לי\s+)?(?:את\s+)?(?:ה)?(?:תזכורת|reminder|the\s+reminder)(?:\s+(.*))?$/);
   if (!m) return null;
   const queryLow = (m[1] ?? '').trim();
   const query = queryLow ? p.body.slice(p.low.length - queryLow.length).trim() : '';
@@ -658,11 +657,11 @@ function sliceTail(p: Prepared, tailLow: string): string {
 }
 
 function parseTaskComplete(p: Prepared): LocalIntent | null {
-  let m = /^(?:סיימתי|גמרתי|ביצעתי|השלמתי|עשיתי)(?:\s+(?:את\s+)?(?:(?:ה)?(?:משימה|מטלה)\s+)?(?:של\s+)?(.+))?$/.exec(p.low);
+  let m = p.low.match(/^(?:סיימתי|גמרתי|ביצעתי|השלמתי|עשיתי)(?:\s+(?:את\s+)?(?:(?:ה)?(?:משימה|מטלה)\s+)?(?:של\s+)?(.+))?$/);
   if (!m) {
-    m = /^(?:סמן|תסמן|תסמני|סמני|לסמן)\s+(?:את\s+)?(?:(?:ה)?(?:משימה|מטלה)\s+)?(.+?)\s+(?:כבוצעה|כבוצע|כגמורה|כהושלמה|כסגורה|שבוצעה|שהסתיימה)$/.exec(p.low);
+    m = p.low.match(/^(?:סמן|תסמן|תסמני|סמני|לסמן)\s+(?:את\s+)?(?:(?:ה)?(?:משימה|מטלה)\s+)?(.+?)\s+(?:כבוצעה|כבוצע|כגמורה|כהושלמה|כסגורה|שבוצעה|שהסתיימה)$/);
   }
-  if (!m) m = /^(?:mark|complete)\s+(?:the\s+)?(?:task\s+)?(.+?)(?:\s+as\s+done)?$/.exec(p.low);
+  if (!m) m = p.low.match(/^(?:mark|complete)\s+(?:the\s+)?(?:task\s+)?(.+?)(?:\s+as\s+done)?$/);
   if (!m) return null;
   const tailLow = (m[1] ?? '').trim();
   if (!tailLow) return { kind: 'reply', reply_he: 'איזו משימה סיימת? אפשר להגיד למשל "סיימתי את המשימה לסיים את השרטוט".' };
@@ -674,20 +673,20 @@ function parseTaskComplete(p: Prepared): LocalIntent | null {
 
 function parseTaskCreate(p: Prepared, now: Date): LocalIntent | null {
   const m =
-    /^(?:תוסיף|הוסף|תוסיפי|הוסיפי|להוסיף|תרשום|רשום|תרשמי|רשמי|לרשום|צור|תיצור|תיצרי|ליצור|add|create)\s+(?:לי\s+)?(?:(?:a\s+)?(?:new\s+)?)(?:משימה|מטלה|task|todo)(?:\s+(?:חדשה|new))?(?:\s+(.+))?$/.exec(p.low) ??
-    /^(?:משימה|מטלה)\s+חדשה(?:\s+(.+))?$/.exec(p.low);
+    p.low.match(/^(?:תוסיף|הוסף|תוסיפי|הוסיפי|להוסיף|תרשום|רשום|תרשמי|רשמי|לרשום|צור|תיצור|תיצרי|ליצור|add|create)\s+(?:לי\s+)?(?:(?:a\s+)?(?:new\s+)?)(?:משימה|מטלה|task|todo)(?:\s+(?:חדשה|new))?(?:\s+(.+))?$/) ??
+    p.low.match(/^(?:משימה|מטלה)\s+חדשה(?:\s+(.+))?$/);
   if (!m) return null;
   const tailLow = (m[1] ?? '').trim();
   if (!tailLow) return { kind: 'reply', reply_he: 'מה לרשום במשימה? אפשר להגיד למשל "תוסיף משימה לסיים את השרטוט".' };
   let title = sliceTail(p, tailLow);
   let dueDate: string | null = null;
   // תאריך יעד פשוט בסוף: "עד מחר", "למחר", "להיום"
-  const due = /\s+(?:עד\s+|ל)(היום|מחר|מחרתיים)$/.exec(title);
+  const due = title.match(/\s+(?:עד\s+|ל)(היום|מחר|מחרתיים)$/);
   if (due) {
     const nowL = localNow(now);
     const days = due[1] === 'היום' ? 0 : due[1] === 'מחר' ? 1 : 2;
     dueDate = toDateString(nowL.plus({ days }));
-    title = title.slice(0, due.index).trim();
+    title = title.slice(0, due.index ?? title.length).trim();
   }
   title = title.replace(/^(?:ש)\s+/, '').trim().slice(0, 200);
   if (!title) return { kind: 'reply', reply_he: 'מה לרשום במשימה?' };
@@ -800,22 +799,19 @@ const OPEN_RE =
   /^(?:תפתח|פתח|תפתחי|פתחי|לפתוח|תפעיל|הפעל|תפעילי|הפעילי|להפעיל|תריץ|הרץ|תריצי|להריץ|תעלה|open|launch|start|run)(?:\s+(.*))?$/;
 
 function parseOpen(p: Prepared, settings: Settings): LocalIntent | null {
-  const m = OPEN_RE.exec(p.low);
+  const m = p.low.match(OPEN_RE);
   if (!m) return null;
   let restLow = (m[1] ?? '').trim();
   let rest = restLow ? sliceTail(p, restLow) : '';
   // הסרת מילות קישור: "לי", "את", "the", "my", ומילים בסוף כמו "עכשיו"
   const leading = /^(?:לי\s+|את\s+|the\s+|my\s+)+/;
-  const lm = leading.exec(restLow);
+  const lm = restLow.match(leading);
   if (lm) {
     restLow = restLow.slice(lm[0].length);
     rest = rest.slice(lm[0].length);
   }
-  const trailing = /\s+(?:עכשיו|now|לי)$/.exec(restLow);
-  if (trailing) {
-    restLow = restLow.slice(0, trailing.index);
-    rest = rest.slice(0, trailing.index);
-  }
+  const trailing = restLow.match(/\s+(?:עכשיו|now|לי)$/);
+  if (trailing) rest = rest.slice(0, trailing.index ?? rest.length);
   rest = rest.trim();
   if (!rest) return { kind: 'reply', reply_he: 'מה לפתוח? אפשר להגיד למשל "תפתח את EPLAN" או "תפתח את הפרויקט".' };
 

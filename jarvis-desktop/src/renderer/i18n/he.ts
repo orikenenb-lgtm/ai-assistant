@@ -293,6 +293,7 @@ export const he = {
 
     general: {
       userName: 'איך לקרוא לך',
+      userNameEmpty: 'השם לא יכול להיות ריק.',
       mode: 'תצוגה',
       modeFull: 'מלאה',
       modeCompact: 'קומפקטית',
@@ -405,6 +406,7 @@ export const he = {
       micMeterStart: 'הפעל מד עוצמה',
       micMeterStop: 'עצור מד עוצמה',
       micMeterLabel: 'עוצמת המיקרופון',
+      micMeterHint: 'המד נעצר אוטומטית אחרי כמה שניות של שקט. שום אודיו לא נשלח.',
       sampleButton: 'השמע דוגמה',
       sampleText: (name: string) => `שלום ${name}, אני JARVIS. המערכת מוכנה.`,
       transcribeTest: 'בדיקת תמלול',

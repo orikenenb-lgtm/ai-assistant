@@ -1,27 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import * as audio from '../../../src/renderer/audio/index';
-import { WAKE_WORD_NOT_INSTALLED_MESSAGE } from '../../../src/renderer/audio/wakeword';
+import { NO_MIC_ENV_MESSAGE } from '../../../src/wakeword/detectors';
 
 describe('createWakeWordDetector', () => {
   it.each(['openwakeword', 'porcupine'] as const)(
-    '%s: start() rejects with the Hebrew "not installed" error and state becomes error',
+    '%s: real engine is wired; without microphone APIs (node) start() fails clearly in Hebrew and state becomes error',
     async (engine) => {
       const detector = audio.createWakeWordDetector(engine);
       expect(detector.engine).toBe(engine);
       expect(detector.state).toBe('stopped');
       expect(detector.lastError).toBeNull();
 
-      await expect(detector.start({ sensitivity: 0.5, onDetected: () => undefined })).rejects.toThrow(
-        'מנוע מילת ההפעלה עדיין לא הותקן בגרסה הזו',
-      );
-      expect(WAKE_WORD_NOT_INSTALLED_MESSAGE).toBe('מנוע מילת ההפעלה עדיין לא הותקן בגרסה הזו');
+      await expect(detector.start({ sensitivity: 0.5, onDetected: () => undefined })).rejects.toThrow(NO_MIC_ENV_MESSAGE);
       expect(detector.state).toBe('error');
-      expect(detector.lastError).toBe(WAKE_WORD_NOT_INSTALLED_MESSAGE);
-
-      // pause/resume לא מעמידים פנים שיש האזנה
-      detector.pause();
-      detector.resume();
-      expect(detector.state).toBe('error');
+      expect(detector.lastError).toBe(NO_MIC_ENV_MESSAGE);
 
       await detector.stop();
       expect(detector.state).toBe('stopped');

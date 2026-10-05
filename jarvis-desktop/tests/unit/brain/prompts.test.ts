@@ -1,14 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildTurnContext, formatHebrewNow, SYSTEM_PROMPT } from '../../../src/main/conversation/prompts';
 import { defaultSettings } from '../../../src/shared/settings-schema';
 
 const NOW = new Date('2026-10-05T17:15:00Z');
 
 describe('system prompt', () => {
-  it('is stable (no dates, times or ids) so the prefix stays cacheable', () => {
+  it('is stable (no current date/time or ids) so the prefix stays cacheable', async () => {
     expect(SYSTEM_PROMPT).not.toMatch(/20\d\d-\d\d-\d\d/);
-    expect(SYSTEM_PROMPT).not.toMatch(/\d{1,2}:\d{2}/);
     expect(SYSTEM_PROMPT).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-/);
+    // טעינה מחדש בזמן אחר נותנת בדיוק אותו טקסט
+    vi.useFakeTimers({ now: new Date('2031-01-01T00:00:00Z') });
+    try {
+      vi.resetModules();
+      const again = await import('../../../src/main/conversation/prompts');
+      expect(again.SYSTEM_PROMPT).toBe(SYSTEM_PROMPT);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('contains the core rules', () => {

@@ -112,7 +112,7 @@ describe('toModelJsonSchema (strict tool-use sanitizer)', () => {
     const schema = z.object({ due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional() }).strict();
     const out = toModelJsonSchema(schema) as { properties: Record<string, { anyOf: unknown[] }>; required?: string[] };
     expect(out.required ?? []).toEqual([]);
-    expect(out.properties.due_date.anyOf).toEqual([{ type: 'string', description: '(format YYYY-MM-DD)' }, { type: 'null' }]);
+    expect(out.properties.due_date!.anyOf).toEqual([{ type: 'string', description: '(format YYYY-MM-DD)' }, { type: 'null' }]);
   });
 
   it('an empty strict object is still a valid object schema', () => {

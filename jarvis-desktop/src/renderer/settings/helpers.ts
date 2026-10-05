@@ -145,3 +145,17 @@ export function parseIntInRange(raw: string, min: number, max: number): number |
 export function rangeError(min: number, max: number): string {
   return `ערך לא תקין — מספר שלם בין ${min} ל-${max}.`;
 }
+
+/** סוג התוכנה לפי סיומת הקובץ שנבחר (Windows: ‎.exe / ‎.lnk / ‎.url). null אם לא ברור. */
+export function appKindFromPath(path: string): AppEntry['kind'] | null {
+  const lower = path.trim().toLowerCase();
+  if (lower.endsWith('.exe')) return 'exe';
+  if (lower.endsWith('.lnk') || lower.endsWith('.url')) return 'shortcut';
+  return null;
+}
+
+/** האם מועמד מזיהוי אוטומטי מתאים לתוכנה קיימת (לפי מזהה או שם). */
+export function findMatchingApp(apps: readonly AppEntry[], candidate: { name: string; suggestedId: string }): AppEntry | undefined {
+  const name = candidate.name.trim().toLocaleLowerCase('he');
+  return apps.find((a) => a.id === candidate.suggestedId || a.name.trim().toLocaleLowerCase('he') === name);
+}
