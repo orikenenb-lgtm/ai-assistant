@@ -153,3 +153,24 @@ export function fixture(...parts: string[]): string {
 export function fixtureBase64(...parts: string[]): string {
   return readFileSync(fixture(...parts)).toString('base64');
 }
+
+/**
+ * מדמה את תשובת המשתמש בדיאלוג הנייטיבי של main (dialog.showMessageBox) ורושם את ההודעות.
+ * response 0 = "אשר", 1 = "בטל". ה-renderer עצמו לא יכול ללחוץ על הדיאלוג הזה.
+ */
+export async function answerNativeDialogs(app: ElectronApplication, response: 0 | 1): Promise<void> {
+  await app.evaluate(({ dialog }, resp) => {
+    const g = globalThis as unknown as { __dialogCalls: string[] };
+    g.__dialogCalls = [];
+    const fake = async (...args: unknown[]) => {
+      const opts = (args.length > 1 ? args[1] : args[0]) as { message?: string; detail?: string };
+      g.__dialogCalls.push(`${opts.message ?? ''}\n${opts.detail ?? ''}`);
+      return { response: resp, checkboxChecked: false };
+    };
+    (dialog as unknown as { showMessageBox: typeof fake }).showMessageBox = fake;
+  }, response);
+}
+
+export async function nativeDialogCalls(app: ElectronApplication): Promise<string[]> {
+  return app.evaluate(() => (globalThis as unknown as { __dialogCalls?: string[] }).__dialogCalls ?? []);
+}

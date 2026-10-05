@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { installMockFetch, isWindows, launchJarvis, mockCalls, mockClaudeMessage, newUserDataDir } from './helpers';
+import { answerNativeDialogs, installMockFetch, isWindows, launchJarvis, mockCalls, mockClaudeMessage, nativeDialogCalls, newUserDataDir } from './helpers';
 
 /**
  * בדיקות קבלה מקצה לקצה על JARVIS האמיתי.
@@ -169,7 +169,9 @@ test.describe('local mode (no API key, no network)', () => {
     const before = notepadPids();
     const { app, page } = await launchJarvis();
     try {
-      // MOCK קל בלבד: EPLAN לא מותקן ב-runner, לכן מגדירים את נתיב "EPLAN" ל-notepad.exe האמיתי
+      // MOCK קל בלבד: EPLAN לא מותקן ב-runner, לכן מגדירים את נתיב "EPLAN" ל-notepad.exe האמיתי.
+      // שינוי נתיב של תוכנה מאושרת מבקש אישור נייטיבי — מדמים שהמשתמש אישר.
+      await answerNativeDialogs(app, 0);
       const res = await page.evaluate(async () => {
         const s = await window.jarvis.settings.get();
         const apps = s.launcher.apps.map((a) => (a.id === 'eplan' ? { ...a, target: 'C:\\Windows\\System32\\notepad.exe' } : a));
@@ -189,6 +191,40 @@ test.describe('local mode (no API key, no network)', () => {
       await expect.poll(() => [...notepadPids()].filter((p) => !before.has(p)).length, { timeout: 10_000 }).toBeGreaterThan(0);
     } finally {
       for (const pid of [...notepadPids()].filter((p) => !before.has(p))) spawnSync('taskkill', ['/PID', pid, '/F']);
+      await app.close();
+    }
+  });
+
+  test('the renderer cannot register a program with arguments unless the user confirms in a native dialog', async () => {
+    const { app, page } = await launchJarvis();
+    try {
+      await answerNativeDialogs(app, 1); // המשתמש לוחץ "בטל"
+      const attempt = () =>
+        page.evaluate(async () => {
+          const s = await window.jarvis.settings.get();
+          const evil = {
+            id: 'evil',
+            name: 'Evil',
+            aliases: ['evil'],
+            kind: 'exe' as const,
+            target: 'C:\\Tools\\evil.exe',
+            args: ['/c', 'payload'],
+            enabled: true,
+            builtin: false,
+          };
+          return window.jarvis.settings.update({ launcher: { ...s.launcher, apps: [...s.launcher.apps, evil] } });
+        });
+      const res = await attempt();
+      expect(res).toMatchObject({ ok: false, code: 'PERMISSION_DENIED' });
+      const calls = await nativeDialogCalls(app);
+      expect(calls).toHaveLength(1);
+      expect(calls[0]).toContain('C:\\Tools\\evil.exe');
+      expect(calls[0]).toContain('/c payload');
+      const apps = await page.evaluate(async () => (await window.jarvis.settings.get()).launcher.apps.map((a) => a.id));
+      expect(apps).not.toContain('evil');
+      const test = await page.evaluate(() => window.jarvis.settings.testOpen({ kind: 'app', id: 'evil' }));
+      expect(test.ok).toBe(false);
+    } finally {
       await app.close();
     }
   });

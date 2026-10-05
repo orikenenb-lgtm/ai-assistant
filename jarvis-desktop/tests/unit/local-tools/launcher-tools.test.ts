@@ -94,17 +94,17 @@ describe('launcher tools: execute', () => {
     expect(launcher.openApplication).not.toHaveBeenCalled();
   });
 
-  it('forwards only trimmed app_id/app_name and the current settings (mock)', async () => {
+  it('forwards only trimmed app_id/app_name and the settings snapshot shown at approval time (ctx.settings) (mock)', async () => {
     const launcher = mockLauncher();
     const { openApp, settings } = tools(launcher);
-    await openApp.execute({ app_id: ' eplan ' }, mockToolContext());
+    await openApp.execute({ app_id: ' eplan ' }, mockToolContext({ settings }));
     expect(launcher.openApplication).toHaveBeenCalledWith({ app_id: 'eplan' }, settings);
   });
 
   it('open_project with no arguments asks the service for the default project (mock)', async () => {
     const launcher = mockLauncher();
     const { openProject, settings } = tools(launcher);
-    await openProject.execute({}, mockToolContext());
+    await openProject.execute({}, mockToolContext({ settings }));
     expect(launcher.openProject).toHaveBeenCalledWith({}, settings);
   });
 
@@ -127,10 +127,10 @@ describe('launcher tools: execute', () => {
       realpath: async (p) => p,
       logger: mockLogger(),
     });
-    const { openApp, openProject } = tools(launcher);
-    const a = await openApp.execute({ app_name: 'איפלאן' }, mockToolContext());
+    const { openApp, openProject, settings } = tools(launcher);
+    const a = await openApp.execute({ app_name: 'איפלאן' }, mockToolContext({ settings }));
     expect(a.ok).toBe(true);
-    const p = await openProject.execute({ project_name: 'הפרויקט שלי' }, mockToolContext());
+    const p = await openProject.execute({ project_name: 'הפרויקט שלי' }, mockToolContext({ settings }));
     expect(p.ok).toBe(true);
     expect(adapter.calls.spawn.map((c) => c.file)).toEqual([EPLAN_EXE]);
     expect(adapter.calls.openPath).toEqual([FINAL_ELK]);
@@ -139,8 +139,8 @@ describe('launcher tools: execute', () => {
   it('end-to-end: an unconfigured EPLAN yields the NOT_CONFIGURED guidance (mock)', async () => {
     const adapter = mockAdapter();
     const launcher = createLauncherService({ adapter, stat: mockStat({}), logger: mockLogger() });
-    const { openApp } = tools(launcher, settingsWith());
-    const res = await openApp.execute({ app_id: 'eplan' }, mockToolContext());
+    const { openApp, settings } = tools(launcher, settingsWith());
+    const res = await openApp.execute({ app_id: 'eplan' }, mockToolContext({ settings }));
     expect(res.error_code).toBe('NOT_CONFIGURED');
     expect(adapter.totalCalls()).toBe(0);
   });

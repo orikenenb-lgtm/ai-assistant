@@ -66,7 +66,8 @@ function trimmed(value: string | undefined): string | undefined {
   return t ? t : undefined;
 }
 
-export function createLauncherTools(launcher: LauncherService, getSettings: () => Settings): ToolDefinition[] {
+// _getSettings נשאר בחתימה לתאימות; הביצוע משתמש ב-ctx.settings (תמונת ההגדרות שהוצגה באישור)
+export function createLauncherTools(launcher: LauncherService, _getSettings: () => Settings): ToolDefinition[] {
   const openApplication: ToolDefinition<OpenApplicationInput> = {
     name: 'open_application',
     description: OPEN_APPLICATION_DESCRIPTION,
@@ -118,10 +119,10 @@ export function createLauncherTools(launcher: LauncherService, getSettings: () =
       if (!app_id && !app_name) {
         return invalidParams('לא צוין איזו תוכנה לפתוח (app_id או app_name), ולכן לא נפתח דבר.');
       }
-      // ההגדרות העדכניות ביותר — למשל אם המשתמש הרגע תיקן את הנתיב ל-EPLAN
+      // אותה תמונת הגדרות שהוצגה באישור (ctx.settings) — כך מה שאושר הוא מה שרץ
       return launcher.openApplication(
         { ...(app_id ? { app_id } : {}), ...(app_name ? { app_name } : {}) },
-        getSettings(),
+        ctx.settings,
       );
     },
   };
@@ -179,7 +180,7 @@ export function createLauncherTools(launcher: LauncherService, getSettings: () =
       // בלי מזהה ובלי שם → פרויקט ברירת המחדל (השירות מטפל בזה)
       return launcher.openProject(
         { ...(project_id ? { project_id } : {}), ...(project_name ? { project_name } : {}) },
-        getSettings(),
+        ctx.settings,
       );
     },
   };

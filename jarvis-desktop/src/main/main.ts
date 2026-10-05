@@ -30,6 +30,7 @@ import { createJarvisTray, type JarvisTray } from './app/tray';
 import { registerIpc } from './app/ipc';
 import { createSettingsStore } from './settings/settings-store';
 import { createSecretStore } from './secrets/secret-store';
+import { describeChangesForDialog, launcherChangesRequiringConfirmation, pathKey } from './settings/launcher-guard';
 import { createVoiceService } from './voice/voice-service';
 import { openDatabase } from './db/database';
 import { todayLocal } from './time/time';
@@ -50,7 +51,8 @@ import { createAnthropicLlmClient, createAnthropicVisionAnalyzer } from './ai/ll
 import { createConversationEngine } from './conversation/engine';
 import { createPorcupineService } from './wakeword/porcupine-service';
 
-const devServerUrl = process.env.JARVIS_DEV_SERVER_URL ?? null;
+// שרת פיתוח רק כשהאפליקציה לא ארוזה — בגרסה המותקנת משתנה סביבה לא יכול להחליף את הממשק
+const devServerUrl = !app.isPackaged ? (process.env.JARVIS_DEV_SERVER_URL ?? null) : null;
 const devOrigin = devServerUrl ? new URL(devServerUrl).origin : null;
 const isDev = Boolean(devServerUrl) || process.env.JARVIS_BUILD_MODE === 'development';
 
@@ -208,6 +210,9 @@ async function bootstrap(): Promise<void> {
     logger,
     clock,
   });
+
+  /** נתיבים שהמשתמש בחר בבורר הקבצים / ש-main זיהה בסשן הזה (לא דורשים אישור נוסף). */
+  const trustedPaths = new Set<string>();
 
   const porcupine = createPorcupineService({ getAccessKey: () => secrets.get('picovoiceAccessKey'), logger });
 
@@ -403,6 +408,24 @@ async function bootstrap(): Promise<void> {
       const st = await voice.test(service);
       system.setServiceStatus(st);
       return st;
+    },
+    trustPath: (p) => trustedPaths.add(pathKey(p)),
+    async confirmSettingsPatch(patch) {
+      const changes = launcherChangesRequiringConfirmation(settings.get(), patch, trustedPaths);
+      if (changes.length === 0) return true;
+      const options: Electron.MessageBoxOptions = {
+        type: 'warning',
+        title: 'JARVIS — אישור תוכנה מאושרת',
+        message: 'לאשר ל-JARVIS להפעיל את התוכנות הבאות לפי בקשה?',
+        detail: `${describeChangesForDialog(changes)}\n\nאשר רק אם אתה הוספת את זה עכשיו בהגדרות.`,
+        buttons: ['אשר', 'בטל'],
+        defaultId: 1,
+        cancelId: 1,
+        noLink: true,
+      };
+      const { response } = mainWindow ? await dialog.showMessageBox(mainWindow, options) : await dialog.showMessageBox(options);
+      logger.info('settings.launcher_change_confirmation', { count: changes.length, approved: response === 0 });
+      return response === 0;
     },
     async pickPath(purpose) {
       if (!mainWindow) return null;

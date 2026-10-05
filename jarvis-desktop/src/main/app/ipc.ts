@@ -44,6 +44,9 @@ export interface IpcDeps {
   screen: ScreenCaptureService;
   testService(service: 'llm' | 'stt' | 'tts'): Promise<ServiceStatus>;
   pickPath(purpose: 'app-exe' | 'project-file' | 'project-folder'): Promise<string | null>;
+  /** מחזיר false אם המשתמש דחה בדיאלוג נייטיבי שינוי בתוכנות המאושרות. */
+  confirmSettingsPatch(patch: SettingsPatch): Promise<boolean>;
+  trustPath(path: string): void;
   todayLocal(): string;
   clearAllLogs(): void;
   onAudioPhase(phase: AudioPhase): void;
@@ -111,7 +114,11 @@ export function registerIpc(deps: IpcDeps): () => void {
 
   // ---------- הגדרות ----------
   handle(IPC.settingsGet, () => deps.settings.get());
-  handle(IPC.settingsUpdate, (input) => {
+  handle(IPC.settingsUpdate, async (input) => {
+    // שינוי של נתיב/ארגומנטים של תוכנה מאושרת דורש אישור נייטיבי (ראה launcher-guard.ts)
+    if (!(await deps.confirmSettingsPatch(input as SettingsPatch))) {
+      return { ok: false, code: 'PERMISSION_DENIED', message_he: 'השינוי בתוכנות המאושרות לא אושר, ולכן לא נשמר.' };
+    }
     try {
       return { ok: true, settings: deps.settings.update(input as SettingsPatch) };
     } catch (err) {
@@ -120,8 +127,17 @@ export function registerIpc(deps: IpcDeps): () => void {
     }
   });
   handle(IPC.settingsValidatePath, (input) => deps.launcher.validatePath(input.path, input.expected));
-  handle(IPC.settingsPickPath, (input) => deps.pickPath(input.purpose));
-  handle(IPC.settingsDetectApps, () => deps.launcher.detectApps());
+  handle(IPC.settingsPickPath, async (input) => {
+    const picked = await deps.pickPath(input.purpose);
+    // נתיב שנבחר בבורר הקבצים של המערכת הוא בחירה מפורשת של המשתמש
+    if (picked) deps.trustPath(picked);
+    return picked;
+  });
+  handle(IPC.settingsDetectApps, async () => {
+    const found = await deps.launcher.detectApps();
+    for (const c of found) if (c.kind !== 'uri') deps.trustPath(c.path);
+    return found;
+  });
   handle(IPC.settingsTestOpen, async (input) => {
     // בדיקת פתיחה מתוך מסך ההגדרות היא פעולה ישירה של המשתמש (לחיצה), לא של המודל
     const s = deps.settings.get();

@@ -85,6 +85,16 @@ export function launchTargetBasename(target: string): string {
   return (parts[parts.length - 1] ?? '').toLowerCase();
 }
 
+/** localhost, כתובות loopback וטווחי רשת פרטית (RFC 1918) בלבד. */
+export function isLocalNetworkHost(hostname: string): boolean {
+  const h = hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  if (h === 'localhost' || h === '::1') return true;
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  return a === 127 || a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31);
+}
+
 /** בדיקות עקביות שהסכמה לבדה לא מכסה. */
 export function checkConsistency(s: Settings): string[] {
   const issues: string[] = [];
@@ -93,6 +103,9 @@ export function checkConsistency(s: Settings): string[] {
     if (appIds.has(a.id)) issues.push(`מזהה תוכנה כפול: ${a.id}`);
     appIds.add(a.id);
     const base = launchTargetBasename(a.target);
+    if ((a.kind === 'exe' || a.kind === 'shortcut') && /^\s*"?(\\\\|\/\/)/.test(a.target)) {
+      issues.push(`"${a.name}": תוכנה מאושרת חייבת להיות בכונן מקומי, לא בתיקיית רשת.`);
+    }
     const forbidden = FORBIDDEN_LAUNCH_TARGETS.has(base) || COMMAND_PROXY_EXECUTABLES.includes(base);
     if (a.kind !== 'uri' && (forbidden || /\.(bat|cmd|ps1|vbs|vbe|js|jse|wsf|wsh|hta|scr|msi|reg)$/i.test(base))) {
       issues.push(`לא ניתן להגדיר את "${base}" כתוכנה מאושרת — מעטפות פקודה וסקריפטים חסומים בגרסה הזו.`);
@@ -110,6 +123,10 @@ export function checkConsistency(s: Settings): string[] {
     try {
       const u = new URL(s.stt.localBaseUrl);
       if (u.protocol !== 'http:' && u.protocol !== 'https:') issues.push('כתובת שרת התמלול המקומי חייבת להתחיל ב-http או https.');
+      else if (!isLocalNetworkHost(u.hostname)) {
+        // אודיו נשלח לשרת הזה — מגבילים למחשב הזה או לרשת הביתית, כדי שלא ישמש ערוץ להוצאת מידע
+        issues.push('שרת התמלול המקומי חייב להיות במחשב הזה או ברשת המקומית (localhost / 127.0.0.1 / 192.168.x.x / 10.x.x.x).');
+      }
     } catch {
       issues.push('כתובת שרת התמלול המקומי לא תקינה.');
     }
