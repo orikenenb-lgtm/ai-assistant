@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { Logger, SettingsService } from '../core/contracts';
+import { COMMAND_PROXY_EXECUTABLES } from '../launcher/path-rules';
 import {
   defaultLauncher,
   defaultSettings,
@@ -92,7 +93,8 @@ export function checkConsistency(s: Settings): string[] {
     if (appIds.has(a.id)) issues.push(`מזהה תוכנה כפול: ${a.id}`);
     appIds.add(a.id);
     const base = launchTargetBasename(a.target);
-    if (a.kind !== 'uri' && (FORBIDDEN_LAUNCH_TARGETS.has(base) || /\.(bat|cmd|ps1|vbs|vbe|js|jse|wsf|wsh|hta|scr|msi|reg)$/i.test(base))) {
+    const forbidden = FORBIDDEN_LAUNCH_TARGETS.has(base) || COMMAND_PROXY_EXECUTABLES.includes(base);
+    if (a.kind !== 'uri' && (forbidden || /\.(bat|cmd|ps1|vbs|vbe|js|jse|wsf|wsh|hta|scr|msi|reg)$/i.test(base))) {
       issues.push(`לא ניתן להגדיר את "${base}" כתוכנה מאושרת — מעטפות פקודה וסקריפטים חסומים בגרסה הזו.`);
     }
   }

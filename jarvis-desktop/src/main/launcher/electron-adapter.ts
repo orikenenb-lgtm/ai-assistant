@@ -133,7 +133,7 @@ export function createElectronLauncherAdapter(options: ElectronLauncherAdapterOp
     let path = rawPath;
     if (platform === 'win32') {
       const checked = checkWindowsPath(rawPath);
-      if (!checked.ok) return 'invalid path';
+      if (!checked.ok) return 'הנתיב לא תקין.';
       path = checked.normalized;
     }
     try {

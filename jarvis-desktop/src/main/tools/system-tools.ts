@@ -111,5 +111,5 @@ export function createSystemTool(status: SystemStatusService): ToolDefinition {
       }
     },
   };
-  return tool as ToolDefinition;
+  return tool;
 }

@@ -188,11 +188,13 @@ describe('createMicCaptureWith (mock)', () => {
     ['AbortError', 'device-busy'],
     ['WeirdError', 'unknown'],
   ] as const)('maps getUserMedia %s to MicError %s (mock)', async (name, kind) => {
-    const { mic, deps, graphs } = setup();
-    deps.getUserMedia = async () => {
-      throw new DOMException('denied', name);
-    };
-    const fresh = createMicCaptureWith(deps);
+    const { deps, graphs } = setup();
+    const fresh = createMicCaptureWith({
+      ...deps,
+      getUserMedia: async () => {
+        throw new DOMException('denied', name);
+      },
+    });
     const error = await fresh.start(OPTIONS).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(MicError);
     expect((error as MicError).kind).toBe(kind);
@@ -200,15 +202,16 @@ describe('createMicCaptureWith (mock)', () => {
     expect(fresh.active).toBe(false);
     expect(fresh.done).toBeNull();
     expect(graphs.calls).toBe(0);
-    void mic;
   });
 
   it('explains that the selected device is missing when an exact deviceId fails (mock)', async () => {
     const { deps } = setup();
-    deps.getUserMedia = async () => {
-      throw new DOMException('no such device', 'OverconstrainedError');
-    };
-    const error = await createMicCaptureWith(deps)
+    const error = await createMicCaptureWith({
+      ...deps,
+      getUserMedia: async () => {
+        throw new DOMException('no such device', 'OverconstrainedError');
+      },
+    })
       .start({ ...OPTIONS, deviceId: 'usb-mic-1' })
       .catch((e: unknown) => e);
     expect((error as MicError).kind).toBe('no-device');
@@ -225,9 +228,9 @@ describe('createMicCaptureWith (mock)', () => {
 
   it('fails with no-device and releases the stream when it has no audio tracks (mock)', async () => {
     const { deps, graphs } = setup();
-    const { stream, tracks } = mockStream(1);
+    const { tracks } = mockStream(1);
+    // זרם בלי ערוצי אודיו (רק ערוץ אחר) — חייב להיעצר
     const empty = { getTracks: () => tracks, getAudioTracks: () => [] } as unknown as MediaStream;
-    void stream;
     const error = await createMicCaptureWith({ ...deps, getUserMedia: async () => empty })
       .start(OPTIONS)
       .catch((e: unknown) => e);
@@ -255,7 +258,7 @@ describe('createMicCaptureWith (mock)', () => {
 
   it('cancel() while the mic is still opening releases it as soon as it opens (mock)', async () => {
     const { deps, tracks, graphs, timers } = setup();
-    const { stream } = { stream: (await deps.getUserMedia!({})) as MediaStream };
+    const stream = await deps.getUserMedia!({});
     const pending = deferred<MediaStream>();
     const mic = createMicCaptureWith({ ...deps, getUserMedia: () => pending.promise });
     const starting = mic.start(OPTIONS);
@@ -357,8 +360,7 @@ describe('createMicCaptureWith (mock)', () => {
     timers.advance(OPEN_TIMEOUT_MS + 1);
     const error = await starting;
     expect((error as MicError).kind).toBe('device-busy');
-    const { stream } = { stream: (await deps.getUserMedia!({})) as MediaStream };
-    pending.resolve(stream);
+    pending.resolve(await deps.getUserMedia!({}));
     await flush();
     expect(tracks[0]!.stopCalls).toBe(1);
     expect(mic.active).toBe(false);

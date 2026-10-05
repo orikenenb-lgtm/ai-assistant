@@ -27,6 +27,7 @@ export const EXECUTABLE_EXTENSIONS: readonly string[] = [
   '.application', '.xbap', '.lnk', '.url', '.appref-ms', '.website', '.scf', '.shb', '.shs', '.sct',
   '.dll', '.ocx', '.sys', '.drv', '.chm', '.gadget', '.settingcontent-ms', '.library-ms',
   '.search-ms', '.searchconnector-ms', '.diagcab', '.py', '.pyw', '.pyc', '.pyz', '.mshxml', '.msh',
+  '.jnlp', '.xll', '.wsc', '.ins', '.isp', '.mde', '.ade', '.adp',
 ];
 
 /**

@@ -92,12 +92,15 @@ export const ReminderIdSchema = z.object({ id }).strict();
 export const AcknowledgeSchema = z.object({ ids: z.array(id).max(200) }).strict();
 export const ClearHistorySchema = z.object({ scope: z.enum(['conversation', 'all']) }).strict();
 
+/** Chromium מדווח Infinity כשאין הערכת זמן — ממירים ל-null (zod דוחה מספרים אינסופיים). */
+const finiteOrNull = z.preprocess((v) => (typeof v === 'number' && !Number.isFinite(v) ? null : v), z.number().nullable());
+
 export const BatteryReportSchema = z
   .object({
     level: z.number().min(0).max(1),
     charging: z.boolean(),
-    chargingTime: z.number().nullable(),
-    dischargingTime: z.number().nullable(),
+    chargingTime: finiteOrNull,
+    dischargingTime: finiteOrNull,
   })
   .strict();
 

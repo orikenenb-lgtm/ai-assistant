@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createSpeechPlaybackWith,
+  DECODE_TIMEOUT_MS,
   PLAYBACK_IDLE_SUSPEND_MS,
   PLAYBACK_MESSAGES,
   PLAYBACK_WATCHDOG_EXTRA_MS,
@@ -117,6 +118,16 @@ describe('createSpeechPlaybackWith (mock)', () => {
     await flush();
     contexts[0]!.sources[0]!.finish();
     await expect(ok).resolves.toBe('ended');
+  });
+
+  it('rejects instead of hanging when decoding never finishes (mock)', async () => {
+    const { playback, timers } = setup(() => new Promise(() => undefined));
+    const playing = playback.play(MP3, 'audio/mpeg');
+    await flush();
+    expect(playback.playing).toBe(true);
+    timers.advance(DECODE_TIMEOUT_MS + 1);
+    await expect(playing).rejects.toThrow(PLAYBACK_MESSAGES.decode('audio/mpeg'));
+    expect(playback.playing).toBe(false);
   });
 
   it('rejects empty audio (mock)', async () => {

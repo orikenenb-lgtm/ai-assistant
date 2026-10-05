@@ -106,6 +106,12 @@ describe('IPC contract', () => {
     expect(IPC_REQUEST_SCHEMAS[IPC.secretsSet].safeParse({ name: 'evilKey', value: 'abcdefghijk' }).success).toBe(false);
   });
 
+  it('battery reports with Infinity (as Chromium sends them) become null instead of being rejected', () => {
+    const parsed = IPC_REQUEST_SCHEMAS[IPC.systemReportBattery].safeParse({ level: 1, charging: true, chargingTime: 0, dischargingTime: Infinity });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data).toMatchObject({ dischargingTime: null, chargingTime: 0 });
+  });
+
   it('exposes no channel that could run commands or read files', () => {
     const joined = INVOKE_CHANNELS.join(' ');
     expect(joined).not.toMatch(/exec|shell|spawn|readFile|writeFile|eval|powershell|cmd/i);

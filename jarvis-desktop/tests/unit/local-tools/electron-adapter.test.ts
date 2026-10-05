@@ -151,6 +151,18 @@ describe('electron launcher adapter: spawnDetached against a real node process',
     expect((await win.spawnDetached('C:\\x\\a.exe', [], 'relative')).ok).toBe(false);
     expect(spawnImpl).not.toHaveBeenCalled();
   });
+
+  it('on win32 spawns exactly the validated, normalized path (quotes and slashes removed) (mock spawn)', async () => {
+    const child = new FakeChild();
+    const spawnImpl = vi.fn<SpawnFn>(() => child as unknown as ChildProcess);
+    const win = createElectronLauncherAdapter({ platform: 'win32', spawnImpl });
+    const pending = win.spawnDetached('"C:/Program Files/EPLAN/Bin/EPLAN.exe"', ['/x'], 'C:/Program Files/EPLAN/Bin/');
+    child.emit('spawn');
+    expect((await pending).ok).toBe(true);
+    expect(spawnImpl.mock.calls[0]?.[0]).toBe('C:\\Program Files\\EPLAN\\Bin\\EPLAN.exe');
+    expect(spawnImpl.mock.calls[0]?.[1]).toEqual(['/x']);
+    expect(spawnImpl.mock.calls[0]?.[2].cwd).toBe('C:\\Program Files\\EPLAN\\Bin');
+  });
 });
 
 describe('electron launcher adapter: shell (mock)', () => {

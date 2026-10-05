@@ -30,13 +30,14 @@ export const PLAYBACK_IDLE_SUSPEND_MS = 15_000;
 /** מרווח ביטחון מעבר לאורך הקטע: אם onended לא הגיע עד אז (התקן פלט נעלם) — מסיימים בכוח. */
 export const PLAYBACK_WATCHDOG_EXTRA_MS = 3_000;
 const RESUME_TIMEOUT_MS = 3_000;
+/** פענוח של כמה שניות דיבור לוקח מילישניות; אם הוא תקוע — לא משאירים את play תלוי. */
+export const DECODE_TIMEOUT_MS = 10_000;
 const ANALYSER_FFT_SIZE = 2048;
 
 interface Playback {
   settled: boolean;
   source: AudioBufferSourceNode | null;
   watchdog: TimerHandle | null;
-  promise: Promise<'ended' | 'stopped'>;
   resolve: (outcome: 'ended' | 'stopped') => void;
   reject: (error: Error) => void;
 }
@@ -56,13 +57,19 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
   function ensureContext(): { context: AudioContext; output: AnalyserNode } {
     if (!ctx || !analyser || stateOf(ctx) === 'closed') {
       const context = deps.createContext();
-      const output = context.createAnalyser();
-      output.fftSize = ANALYSER_FFT_SIZE;
-      output.smoothingTimeConstant = 0;
-      output.connect(context.destination);
-      ctx = context;
-      analyser = output;
-      level = analyserLevelSource(output);
+      try {
+        const output = context.createAnalyser();
+        output.fftSize = ANALYSER_FFT_SIZE;
+        output.smoothingTimeConstant = 0;
+        output.connect(context.destination);
+        ctx = context;
+        analyser = output;
+        level = analyserLevelSource(output);
+      } catch (error) {
+        // לא משאירים AudioContext יתום
+        context.close().catch(() => undefined);
+        throw error;
+      }
     }
     return { context: ctx, output: analyser };
   }
@@ -85,7 +92,7 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
 
   /**
    * מסיים השמעה פעם אחת בלבד: מנקה טיימר ו-source, ופותר/דוחה את ההבטחה שהוחזרה מ-play.
-   * play מחזיר את p.promise ישירות (לא async), כך ש-stop() פותר אותה מיד — גם באמצע פענוח.
+   * play מחזיר את ההבטחה ישירות (לא async), כך ש-stop() פותר אותה מיד — גם באמצע פענוח.
    */
   function settle(p: Playback, outcome: 'ended' | 'stopped' | Error, stopSource: boolean): void {
     if (p.settled) return;
@@ -119,7 +126,7 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
     else p.resolve(outcome);
   }
 
-  /** שלבי ההשמעה. כל כישלון נהפך לדחייה של p.promise; אם p כבר נעצר — לא עושים כלום. */
+  /** שלבי ההשמעה. כל כישלון נהפך לדחיית ההבטחה של play; אם p כבר נעצר — לא עושים כלום. */
   async function run(p: Playback, audio: Uint8Array, mimeType: string): Promise<void> {
     let context: AudioContext;
     let output: AnalyserNode;
@@ -130,16 +137,21 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
       return;
     }
 
-    let buffer: AudioBuffer;
+    let decoding: Promise<AudioBuffer>;
     try {
       // decodeAudioData מנתק (detach) את ה-ArrayBuffer שהוא מקבל, ו-audio עשוי להיות view
       // על buffer גדול יותר (IPC) — לכן מפענחים עותק צמוד.
-      buffer = await context.decodeAudioData(audio.slice().buffer);
-    } catch {
+      decoding = context.decodeAudioData(audio.slice().buffer);
+    } catch (error) {
+      decoding = Promise.reject(error);
+    }
+    const decoded = await settleWithin(decoding, DECODE_TIMEOUT_MS, timers);
+    if (p.settled) return; // נעצר בזמן הפענוח
+    if (decoded.status !== 'ok') {
       settle(p, new Error(PLAYBACK_MESSAGES.decode(mimeType)), false);
       return;
     }
-    if (p.settled) return; // נעצר בזמן הפענוח
+    const buffer = decoded.value;
 
     if (stateOf(context) !== 'running') {
       const resumed = await settleWithin(context.resume(), RESUME_TIMEOUT_MS, timers);
@@ -180,7 +192,7 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
       resolve = res;
       reject = rej;
     });
-    const p: Playback = { settled: false, source: null, watchdog: null, promise, resolve, reject };
+    const p: Playback = { settled: false, source: null, watchdog: null, resolve, reject };
     current = p;
     run(p, audio, mimeType).catch(() => settle(p, new Error(PLAYBACK_MESSAGES.output), false));
     return promise;

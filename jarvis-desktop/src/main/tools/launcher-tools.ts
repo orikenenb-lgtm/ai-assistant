@@ -184,5 +184,5 @@ export function createLauncherTools(launcher: LauncherService, getSettings: () =
     },
   };
 
-  return [openApplication, openProject] as ToolDefinition[];
+  return [openApplication, openProject];
 }

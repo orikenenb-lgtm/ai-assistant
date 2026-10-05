@@ -174,5 +174,5 @@ export function createScreenTool(deps: ScreenToolDeps): ToolDefinition {
       }
     },
   };
-  return tool as ToolDefinition;
+  return tool;
 }

@@ -233,6 +233,14 @@ describe('launcher.openApplication (mock adapter + mock fs)', () => {
     }
   });
 
+  it('command-proxy system tools (LOLBins) are refused as well (mock)', async () => {
+    const { launcher, adapter } = setup({ stat: mockStat({ 'C:\\Windows\\System32\\forfiles.exe': 'file' }) });
+    const s = settingsWith({ apps: [app({ id: 'ff', name: 'FF', kind: 'exe', target: 'C:\\Windows\\System32\\forfiles.exe' })] });
+    const res = await launcher.openApplication({ app_id: 'ff' }, s);
+    expect(res.error_code).toBe('NOT_ALLOWLISTED');
+    expect(adapter.totalCalls()).toBe(0);
+  });
+
   it('OS spawn failure → LAUNCH_FAILED with a Hebrew reason (mock)', async () => {
     const { launcher } = setup({ adapter: mockAdapter({ spawn: { ok: false, error: 'EACCES: spawn EACCES' } }) });
     const res = await launcher.openApplication({ app_id: 'eplan' }, configuredSettings());
@@ -399,6 +407,15 @@ describe('launcher.openProject (mock adapter + mock fs)', () => {
     expect(res.summary_he).toContain('"תמיד"');
   });
 
+  it('a drive-root folder project still gets a readable summary (mock)', async () => {
+    const { launcher, adapter } = setup({ stat: mockStat({ 'E:\\': 'dir' }) });
+    const s = settingsWith({ projects: [project({ id: 'usb', name: 'הדיסק החיצוני', kind: 'folder', path: 'E:\\' })], defaultProjectId: 'usb' });
+    const res = await launcher.openProject({}, s);
+    expect(res.ok).toBe(true);
+    expect(adapter.calls.openPath).toEqual(['E:\\']);
+    expect(res.summary_he).toBe('פתחתי את הדיסק החיצוני (E:\\) בסייר הקבצים.');
+  });
+
   it('folder projects open in Explorer (mock)', async () => {
     const { launcher, adapter } = setup();
     const s = settingsWith({ projects: [project({ id: 'dir', name: 'תיקיית הפרויקטים', kind: 'folder', path: 'D:\\Projects\\' })], defaultProjectId: 'dir' });
@@ -428,6 +445,17 @@ describe('launcher.validatePath (mock fs)', () => {
     expect(edb.message_he).toContain('.elk');
     expect((await launcher.validatePath('C:\\Windows\\System32\\cmd.exe', 'exe')).ok).toBe(false);
     expect((await launcher.validatePath('relative\\x.exe', 'exe')).message_he).toContain('אות כונן');
+  });
+
+  it('access denied does not claim the path exists (mock)', async () => {
+    const { launcher } = setup({
+      stat: async () => {
+        throw Object.assign(new Error('EACCES'), { code: 'EACCES' });
+      },
+    });
+    const res = await launcher.validatePath('D:\\Secret\\x.elk', 'eplan');
+    expect(res).toMatchObject({ ok: false, exists: false, detectedKind: 'unknown' });
+    expect(res.message_he).toContain('אין הרשאת גישה');
   });
 });
 

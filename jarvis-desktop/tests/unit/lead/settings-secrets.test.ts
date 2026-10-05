@@ -65,6 +65,11 @@ describe('settings store', () => {
       { id: 'bat', name: 'bat', aliases: [], kind: 'shortcut' as const, target: 'C:\\tools\\run.bat', args: [], enabled: true, builtin: false },
     ];
     expect(() => store.update({ launcher: { ...store.get().launcher, apps: script } })).toThrow(SettingsValidationError);
+    const proxy = [
+      ...apps,
+      { id: 'wm', name: 'wm', aliases: [], kind: 'exe' as const, target: 'C:\\Windows\\System32\\wbem\\WMIC.exe', args: [], enabled: true, builtin: false },
+    ];
+    expect(() => store.update({ launcher: { ...store.get().launcher, apps: proxy } })).toThrow(/wmic\.exe/);
   });
 
   it('flags duplicate ids and a missing default project', () => {

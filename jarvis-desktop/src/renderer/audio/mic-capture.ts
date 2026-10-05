@@ -51,7 +51,7 @@ export const MIC_FRAME_MS = 20;
 /** כמה שקט משאירים אחרי סוף הדיבור (שקט ארוך בסוף גורם למודלי תמלול "להמציא" מילים). */
 export const TRAILING_SILENCE_KEEP_MS = 400;
 /** אם לא הגיעו דגימות זמן כזה — המיקרופון או מנוע האודיו נתקעו. */
-export const STALL_TIMEOUT_MS = 3_000;
+export const STALL_TIMEOUT_MS = 4_000;
 /** הגבלה עליונה: תמלול מקבל עד 65 שניות, ו-60 שניות WAV ≈ 1.9MB (מתחת ל-MAX_AUDIO_BYTES). */
 export const MAX_UTTERANCE_SEC_CAP = 60;
 /** פתיחת המיקרופון / גרף האודיו לא אמורה לקחת יותר מזה (גם בהתקני Bluetooth). */
