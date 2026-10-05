@@ -127,7 +127,13 @@ async function bootstrap(): Promise<void> {
 
   // ---------- שירותים ----------
   const voice = createVoiceService({ getSettings: () => settings.get(), secrets, usage: db.usage, logger, clock });
-  const llm = createAnthropicLlmClient({ getApiKey: () => secrets.get('anthropicApiKey'), logger, usage: db.usage, clock });
+  const llm = createAnthropicLlmClient({
+    getApiKey: () => secrets.get('anthropicApiKey'),
+    getModel: () => settings.get().ai.model,
+    logger,
+    usage: db.usage,
+    clock,
+  });
   const vision = createAnthropicVisionAnalyzer({
     getApiKey: () => secrets.get('anthropicApiKey'),
     getModel: () => settings.get().ai.model,
@@ -382,7 +388,7 @@ async function bootstrap(): Promise<void> {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 15_000);
         try {
-          await llm.ping(controller.signal);
+          await llm.ping(controller.signal, model);
           llmStatus.value = { service: 'llm', provider: model, configured: true, state: 'ok', lastCheckedAt: now };
         } catch (err) {
           const message = err && typeof err === 'object' && 'message_he' in err ? String((err as { message_he: unknown }).message_he) : 'החיבור ל-Claude נכשל.';
@@ -449,7 +455,8 @@ async function bootstrap(): Promise<void> {
     clearInterval(pruneTimer);
     scheduler.stop();
     system.stop();
-    engine.cancel();
+    engine.dispose();
+    approvals.dispose();
     porcupine.stop();
     tray?.destroy();
     try {

@@ -48,7 +48,8 @@ export const TranscribeRequestSchema = z
 
 export const SynthesizeRequestSchema = z
   .object({
-    text: z.string().trim().min(1).max(1500),
+    // ניתוח מסך יכול להגיע ל-~1800 תווים; ספקי ה-TTS מקבלים יותר (OpenAI עד 4096)
+    text: z.string().trim().min(1).max(2500),
   })
   .strict();
 

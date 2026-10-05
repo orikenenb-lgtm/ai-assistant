@@ -33,13 +33,16 @@ const ARC_CIRC = 2 * Math.PI * 78;
 export function ArcCore({ state, reducedMotion, size }: { state: AssistantState; reducedMotion: boolean; size: 'full' | 'compact' }) {
   const controller = useController();
   const gradId = `core-grad-${useId().replace(/:/g, '')}`;
-  const ringRefs = useRef<Array<SVGGElement | null>>([null, null, null, null]);
+  const ticksRef = useRef<SVGGElement | null>(null);
+  const arcsRef = useRef<SVGGElement | null>(null);
+  const dotsRef = useRef<SVGGElement | null>(null);
+  const coilsRef = useRef<SVGGElement | null>(null);
   const coreRef = useRef<SVGGElement | null>(null);
   const haloRef = useRef<SVGCircleElement | null>(null);
   const anglesRef = useRef<[number, number, number, number]>([0, 0, 0, 0]);
 
   useEffect(() => {
-    const rings = ringRefs.current;
+    const rings = [ticksRef.current, arcsRef.current, dotsRef.current, coilsRef.current];
     const core = coreRef.current;
     const halo = haloRef.current;
     if (reducedMotion) {
@@ -87,10 +90,6 @@ export function ArcCore({ state, reducedMotion, size }: { state: AssistantState;
     return () => cancelAnimationFrame(raf);
   }, [state, reducedMotion, controller]);
 
-  const setRing = (i: number) => (el: SVGGElement | null) => {
-    ringRefs.current[i] = el;
-  };
-
   return (
     <div className="core" data-state={state} data-size={size} aria-hidden="true">
       <svg viewBox="-100 -100 200 200" className="core-svg">
@@ -104,7 +103,7 @@ export function ArcCore({ state, reducedMotion, size }: { state: AssistantState;
         </defs>
 
         <circle r="97" className="core-hair" />
-        <g ref={setRing(0)}>
+        <g ref={ticksRef}>
           {TICKS.map((i) => {
             const major = i % 6 === 0;
             const a = (i * 5 * Math.PI) / 180;
@@ -122,14 +121,14 @@ export function ArcCore({ state, reducedMotion, size }: { state: AssistantState;
             );
           })}
         </g>
-        <g ref={setRing(1)}>
+        <g ref={arcsRef}>
           <circle r="78" className="core-arc" strokeDasharray={`${(ARC_CIRC / 3 - 22).toFixed(2)} 22`} />
         </g>
-        <g ref={setRing(2)}>
+        <g ref={dotsRef}>
           <circle r="66" className="core-dots" strokeDasharray="1.4 5.2" />
         </g>
         <circle r="58" className="core-hair" />
-        <g ref={setRing(3)}>
+        <g ref={coilsRef}>
           <circle r="50" className="core-coils" strokeDasharray={`${(COIL_CIRC / 10 - 4.5).toFixed(2)} 4.5`} />
         </g>
         <circle r="40" className="core-inner-ring" />

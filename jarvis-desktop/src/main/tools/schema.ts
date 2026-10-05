@@ -99,7 +99,7 @@ function collectRemovedConstraints(node: JsonObject, keptFormat: boolean): strin
 
   if (typeof node.format === 'string' && !keptFormat) notes.push(`format ${node.format}`);
 
-  if ('default' in node) notes.push(formatDefault(node.default));
+  if ('default' in node && node.default !== undefined) notes.push(formatDefault(node.default));
   return notes;
 }
 
@@ -143,7 +143,10 @@ function sanitizeNode(input: unknown, depth: number): unknown {
   const description = appendNotes(node.description, collectRemovedConstraints(node, keptFormat));
   if (description) out.description = description;
 
-  const looksLikeObject = node.type === 'object' || (node.type === undefined && isObject(node.properties));
+  const looksLikeObject =
+    node.type === 'object' ||
+    (Array.isArray(node.type) && node.type.includes('object')) ||
+    (node.type === undefined && isObject(node.properties));
   if (looksLikeObject) {
     if (!isObject(out.properties)) out.properties = {};
     out.additionalProperties = false;

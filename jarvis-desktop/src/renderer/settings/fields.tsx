@@ -229,7 +229,7 @@ export function TextInput({
         id={id}
         className="input"
         type="text"
-        dir={ltr ? 'ltr' : 'auto'}
+        dir={ltr ? 'ltr' : draft ? 'auto' : 'rtl'}
         value={draft}
         maxLength={maxLength}
         placeholder={placeholder}

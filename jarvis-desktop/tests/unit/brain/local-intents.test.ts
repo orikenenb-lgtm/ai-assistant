@@ -427,8 +427,48 @@ describe('choice clarification from tool options', () => {
     expect(pending).not.toBeNull();
     if (!pending) return;
     expectTool(resolveClarification(pending, 'השני', settings, NOW), 'open_project', { project_id: 'lab' });
+    expectTool(resolveClarification(pending, 'הראשון', settings, NOW), 'open_project', { project_id: 'final-project' });
+    expectTool(resolveClarification(pending, 'האחרון', settings, NOW), 'open_project', { project_id: 'lab' });
     expectTool(resolveClarification(pending, 'פרויקט המעבדה', settings, NOW), 'open_project', { project_id: 'lab' });
     expect(resolveClarification(pending, 'משהו אחר לגמרי', settings, NOW).kind).toBe('none');
+  });
+
+  it('DST ambiguity from create_reminder resumes with dst_choice and the original text/date/time', () => {
+    const input = { text: 'לבדוק את הגיבוי', date: '2026-10-25', time: '01:30' };
+    const pending = pendingFromToolResult(
+      'create_reminder',
+      {
+        ok: false,
+        status: 'needs_clarification',
+        error_code: 'DST_AMBIGUOUS',
+        summary_he: 'השעה 01:30 מופיעה פעמיים בלילה של מעבר השעון. לפני או אחרי ההזזה?',
+        options: [
+          { id: 'earlier', label: '01:30 לפני הזזת השעון' },
+          { id: 'later', label: '01:30 אחרי הזזת השעון' },
+        ],
+      },
+      input,
+    );
+    expect(pending).not.toBeNull();
+    if (!pending) return;
+    expectTool(resolveClarification(pending, 'השני', settings, NOW), 'create_reminder', { ...input, dst_choice: 'later' });
+  });
+
+  it('DST gap resumes with the shifted time', () => {
+    const pending = pendingFromToolResult(
+      'create_reminder',
+      { ok: false, status: 'needs_clarification', error_code: 'DST_GAP', summary_he: 'השעה הזו לא קיימת.', options: [{ id: '03:30', label: '03:30 (אחרי הזזת השעון)' }] },
+      { text: 'x', date: '2027-03-26', time: '02:30' },
+    );
+    if (!pending) throw new Error('expected pending');
+    expectTool(resolveClarification(pending, 'כן, הראשון', settings, NOW), 'create_reminder', { text: 'x', date: '2027-03-26', time: '03:30' });
+    expectTool(resolveClarification(pending, 'כן', settings, NOW), 'create_reminder', { text: 'x', date: '2027-03-26', time: '03:30' });
+  });
+
+  it('a past-time clarification from create_reminder is not a choice', () => {
+    expect(
+      pendingFromToolResult('create_reminder', { ok: false, status: 'needs_clarification', error_code: 'PAST_TIME', summary_he: 'x', options: [{ id: 'a', label: 'a' }] }),
+    ).toBeNull();
   });
 
   it('no options -> no pending', () => {

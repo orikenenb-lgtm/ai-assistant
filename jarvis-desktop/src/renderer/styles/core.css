@@ -1,0 +1,181 @@
+/* ליבת "כור הקשת". הצבע מגיע מ---core-color לפי המצב; הסיבוב והפעימה מ-requestAnimationFrame. */
+.core {
+  position: relative;
+  aspect-ratio: 1;
+  color: var(--core-color);
+}
+.core[data-size='full'] {
+  inline-size: clamp(140px, 33vh, 262px);
+}
+.core[data-size='compact'] {
+  inline-size: 104px;
+}
+.core::before {
+  /* זוהר רך מאחורי הליבה — מדוד, לא "ניאון" */
+  content: '';
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--core-color) 26%, transparent) 0%, transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+.core-svg {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+}
+.core-hair {
+  fill: none;
+  stroke: var(--core-color);
+  stroke-opacity: 0.22;
+  stroke-width: 1;
+}
+.core-tick {
+  stroke: var(--core-color);
+  stroke-opacity: 0.38;
+  stroke-width: 1;
+}
+.core-tick-major {
+  stroke-opacity: 0.85;
+  stroke-width: 1.6;
+}
+.core-arc {
+  fill: none;
+  stroke: var(--core-color);
+  stroke-width: 2.6;
+  stroke-opacity: 0.8;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--core-color) 60%, transparent));
+}
+.core-dots {
+  fill: none;
+  stroke: var(--core-color);
+  stroke-width: 2.2;
+  stroke-opacity: 0.6;
+  stroke-linecap: round;
+}
+.core-coils {
+  fill: none;
+  stroke: var(--core-color);
+  stroke-width: 7;
+  stroke-opacity: 0.42;
+}
+.core-inner-ring {
+  fill: rgba(2, 10, 18, 0.55);
+  stroke: var(--core-color);
+  stroke-width: 1.4;
+  stroke-opacity: 0.75;
+}
+.core-halo {
+  mix-blend-mode: screen;
+}
+.core-heart {
+  fill: #f4fdff;
+  fill-opacity: 0.9;
+  filter: drop-shadow(0 0 6px var(--core-color));
+}
+.core-tri {
+  fill: none;
+  stroke: var(--core-color);
+  stroke-width: 1.2;
+  stroke-opacity: 0.55;
+}
+.core[data-size='compact'] .core-tick {
+  stroke-opacity: 0.28;
+}
+
+/* ---------- כפתור המיקרופון ---------- */
+.mic-btn {
+  position: relative;
+  flex: none;
+  inline-size: 58px;
+  block-size: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+  color: var(--cyan);
+  background: radial-gradient(circle at 50% 40%, rgba(0, 229, 255, 0.16), rgba(2, 10, 18, 0.9) 70%);
+  box-shadow: var(--glow-soft);
+  transition: transform 0.12s var(--ease), border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  -webkit-app-region: no-drag;
+}
+.mic-btn[data-size='small'] {
+  inline-size: 38px;
+  block-size: 38px;
+}
+.mic-btn:hover {
+  border-color: var(--cyan);
+  box-shadow: var(--glow);
+}
+.mic-btn:active {
+  transform: scale(0.96);
+}
+.mic-btn:focus-visible {
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+.mic-ring {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  pointer-events: none;
+}
+/* מאזין בפועל: טבעת פועמת + נקודה אדומה (המיקרופון פתוח) */
+.mic-btn[data-listening='on'] {
+  color: #fff;
+  border-color: var(--cyan);
+  background: radial-gradient(circle at 50% 40%, rgba(0, 229, 255, 0.45), rgba(2, 30, 44, 0.95) 72%);
+  box-shadow: var(--glow);
+}
+.mic-btn[data-listening='on'] .mic-ring {
+  border-color: var(--cyan);
+  animation: mic-ring 1.4s ease-out infinite;
+}
+.mic-btn[data-listening='on']::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 3px;
+  inset-inline-end: 3px;
+  inline-size: 9px;
+  block-size: 9px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+}
+.mic-btn[data-size='small'][data-listening='on']::after {
+  inline-size: 7px;
+  block-size: 7px;
+  inset-block-start: 1px;
+  inset-inline-end: 1px;
+}
+.mic-btn[data-busy='on'] {
+  opacity: 0.7;
+}
+.mic-btn[data-busy='on'] .mic-ring {
+  border-color: var(--line-strong);
+  border-top-color: var(--cyan);
+  animation: spin 0.9s linear infinite;
+}
+:root[data-reduced-motion='on'] .mic-btn[data-listening='on'] .mic-ring {
+  border-width: 2px;
+  opacity: 0.8;
+}
+@keyframes mic-ring {
+  from {
+    transform: scale(0.94);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

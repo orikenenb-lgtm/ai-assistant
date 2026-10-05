@@ -65,6 +65,15 @@ export function createApprovalService(deps: ApprovalServiceDeps): ApprovalServic
   const clearTimer = deps.clearTimer ?? ((h: TimerHandle) => clearTimeout(h));
   const entries = new Map<string, Entry>();
 
+  /** שליחת אירוע שלא יכולה להפיל את מנגנון האישורים (חלון סגור וכו'). */
+  function emitSafe(event: Parameters<EventSink>[0]): void {
+    try {
+      deps.emit(event);
+    } catch {
+      // ה-HUD לא זמין — הבקשה עדיין תפוג בזמן ותיחשב כלא מאושרת
+    }
+  }
+
   function pruneSettled(): void {
     const settled = [...entries.values()].filter((e) => e.status !== 'pending');
     if (settled.length <= MAX_SETTLED_KEPT) return;
@@ -83,7 +92,7 @@ export function createApprovalService(deps: ApprovalServiceDeps): ApprovalServic
     }
     entry.detachAbort?.();
     entry.detachAbort = null;
-    deps.emit({ type: 'approval-resolved', approvalId: entry.request.approvalId, outcome });
+    emitSafe({ type: 'approval-resolved', approvalId: entry.request.approvalId, outcome });
     entry.resolve({
       approved: outcome === 'approved',
       outcome,
@@ -149,7 +158,7 @@ export function createApprovalService(deps: ApprovalServiceDeps): ApprovalServic
         input.signal.addEventListener('abort', onAbort, { once: true });
         entry.detachAbort = () => input.signal.removeEventListener('abort', onAbort);
 
-        deps.emit({ type: 'approval-required', request });
+        emitSafe({ type: 'approval-required', request });
       });
     },
 

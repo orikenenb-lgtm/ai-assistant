@@ -581,7 +581,7 @@ export class JarvisController {
       return;
     }
     const msSince = this.speechEndedAt === null ? Number.POSITIVE_INFINITY : Math.max(0, this.deps.now() - this.speechEndedAt);
-    let echo = false;
+    let echo: boolean;
     try {
       echo = this.deps.audio.isLikelyEcho(text, this.lastSpokenText, msSince);
     } catch {

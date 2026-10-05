@@ -29,7 +29,9 @@ export function Transcript() {
   if (!lastUser && !lastReply) {
     return (
       <section className="transcript frame" aria-label={he.transcript.regionLabel}>
-        <p className="transcript-empty">{he.transcript.empty}</p>
+        <div className="transcript-scroll">
+          <p className="transcript-empty">{he.transcript.empty}</p>
+        </div>
       </section>
     );
   }
@@ -37,6 +39,7 @@ export function Transcript() {
 
   return (
     <section className="transcript frame" aria-label={he.transcript.regionLabel} aria-live="polite">
+      <div className="transcript-scroll">
       {lastUser && meta && (
         <div className="line line-user">
           <span className="line-who">
@@ -62,6 +65,7 @@ export function Transcript() {
       ) : (
         awaitingReply && <p className="line-waiting">{he.transcript.waitingReply}</p>
       )}
+      </div>
     </section>
   );
 }

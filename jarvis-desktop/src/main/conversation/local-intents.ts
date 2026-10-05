@@ -33,7 +33,14 @@ export interface ReminderDraft {
 
 export type PendingClarification =
   | { kind: 'reminder'; awaiting: 'ampm' | 'time' | 'when' | 'text'; draft: ReminderDraft }
-  | { kind: 'choose-option'; tool: ToolName; field: string; options: Array<{ id: string; label: string }> };
+  | {
+      kind: 'choose-option';
+      tool: ToolName;
+      field: string;
+      options: Array<{ id: string; label: string }>;
+      /** פרמטרים מהבקשה המקורית שנשלחים שוב יחד עם הבחירה (למשל טקסט/תאריך של תזכורת בבחירת שעון קיץ/חורף). */
+      baseInput?: Record<string, unknown>;
+    };
 
 export type LocalIntent =
   | { kind: 'tool'; tool: ToolName; input: Record<string, unknown>; ack_he?: string }
@@ -896,12 +903,22 @@ const ORDINALS: Array<[RegExp, number]> = [
   [/^(?:ה)?(?:רביעי|רביעית)$|^(?:4|ארבע|fourth|four)$/, 3],
 ];
 
+const AFFIRMATIVE = /^(?:כן|yes|אוקיי|אוקי|ok|okay|בסדר|נכון)$/;
+
 function resolveChoice(pending: Extract<PendingClarification, { kind: 'choose-option' }>, p: Prepared): LocalIntent {
-  const answer = p.low.replace(/^(?:את\s+)?/, '').replace(/^(?:ה)?(?:פרויקט|משימה|תזכורת|תוכנה)\s+/, '');
-  const folded = answer.split(' ').map(foldToken).join(' ');
+  // "כן" כשיש אפשרות אחת בלבד (למשל הזזת שעה במעבר שעון) = בחירה בה
+  if (AFFIRMATIVE.test(p.low) && pending.options.length === 1) {
+    const only = pending.options[0]!;
+    return { kind: 'tool', tool: pending.tool, input: { ...(pending.baseInput ?? {}), [pending.field]: only.id } };
+  }
+  const answer = p.low
+    .replace(/^(?:כן|yes|אוקיי|אוקי|ok|okay|בסדר)\s+/, '')
+    .replace(/^(?:את\s+)?/, '')
+    .replace(/^(?:ה)?(?:פרויקט|משימה|תזכורת|תוכנה)\s+/, '');
+  // מילות הסדר כתובות עם אותיות סופיות — משווים לטקסט הלא-מקופל
   let index: number | null = null;
-  for (const [re, i] of ORDINALS) if (re.test(folded)) index = i;
-  if (/^(?:ה)?אחרון$|^(?:ה)?אחרונה$|^last$/.test(folded)) index = pending.options.length - 1;
+  for (const [re, i] of ORDINALS) if (re.test(answer)) index = i;
+  if (/^(?:ה)?אחרון$|^(?:ה)?אחרונה$|^last$/.test(answer)) index = pending.options.length - 1;
   let option = index !== null ? pending.options[index] : undefined;
   if (!option) {
     const ranked = pending.options
@@ -912,7 +929,7 @@ function resolveChoice(pending: Extract<PendingClarification, { kind: 'choose-op
     if (top && top.score >= 0.6 && !(second && second.score >= top.score - 0.05)) option = top.o;
   }
   if (!option) return { kind: 'none' };
-  return { kind: 'tool', tool: pending.tool, input: { [pending.field]: option.id } };
+  return { kind: 'tool', tool: pending.tool, input: { ...(pending.baseInput ?? {}), [pending.field]: option.id } };
 }
 
 export function resolveClarification(pending: PendingClarification, answer: string, settings: Settings, now: Date): LocalIntent {
@@ -960,9 +977,27 @@ const CHOICE_FIELDS: Partial<Record<ToolName, string>> = {
   cancel_reminder: 'reminder_id',
 };
 
-/** כשכלי ביקש הבהרה עם אפשרויות — שומרים אותן כדי שהתשובה הבאה ("הראשון" / שם) תמשיך את הפעולה. */
-export function pendingFromToolResult(tool: ToolName, result: ToolResult): PendingClarification | null {
-  const field = CHOICE_FIELDS[tool];
-  if (!field || result.status !== 'needs_clarification' || !result.options?.length) return null;
-  return { kind: 'choose-option', tool, field, options: result.options.slice(0, 10).map((o) => ({ id: o.id, label: o.label })) };
+/**
+ * כשכלי ביקש הבהרה עם אפשרויות — שומרים אותן כדי שהתשובה הבאה ("הראשון" / שם) תמשיך את הפעולה.
+ * בתזכורת שנופלת על מעבר שעון: DST_AMBIGUOUS -> dst_choice, DST_GAP -> time (עם שאר הפרמטרים המקוריים).
+ */
+export function pendingFromToolResult(tool: ToolName, result: ToolResult, input: Record<string, unknown> = {}): PendingClarification | null {
+  if (result.status !== 'needs_clarification' || !result.options?.length) return null;
+  let field = CHOICE_FIELDS[tool];
+  let baseInput: Record<string, unknown> | undefined;
+  if (tool === 'create_reminder') {
+    if (result.error_code === 'DST_AMBIGUOUS') field = 'dst_choice';
+    else if (result.error_code === 'DST_GAP') field = 'time';
+    else return null;
+    baseInput = { ...input };
+    delete baseInput[field];
+  }
+  if (!field) return null;
+  return {
+    kind: 'choose-option',
+    tool,
+    field,
+    options: result.options.slice(0, 10).map((o) => ({ id: o.id, label: o.label })),
+    ...(baseInput ? { baseInput } : {}),
+  };
 }

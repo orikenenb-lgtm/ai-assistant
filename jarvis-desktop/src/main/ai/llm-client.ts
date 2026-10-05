@@ -142,8 +142,10 @@ function createClientCache(getApiKey: () => string | null, createClient: (apiKey
 }
 
 function defaultCreateClient(apiKey: string): Anthropic {
-  // retries/timeout נקבעים לכל בקשה בנפרד
-  return new Anthropic({ apiKey });
+  // retries/timeout נקבעים לכל בקשה בנפרד.
+  // authToken/baseURL מפורשים: משתני סביבה (ANTHROPIC_AUTH_TOKEN / ANTHROPIC_BASE_URL) לא יכולים להוסיף אישורים
+  // או להפנות את המפתח לשרת אחר. logLevel 'off': ה-SDK לא מדפיס בקשות (טקסט/צילומי מסך) גם אם ANTHROPIC_LOG מוגדר.
+  return new Anthropic({ apiKey, authToken: null, baseURL: 'https://api.anthropic.com', logLevel: 'off' });
 }
 
 function recordUsage(

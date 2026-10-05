@@ -294,6 +294,8 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
     };
     active = turn;
     safeEmit({ type: 'turn-started', turnId: turn.id, text, source, mode });
+    // תור מקומי לא עובר דרך THINKING — לא משאירים מצב קודם (ERROR / ממתין לאישור) על המסך
+    if (mode === 'local' && phase !== 'IDLE') setPhaseRaw('IDLE', turn.id);
     logger.info('engine.turn_started', { turnId: turn.id, mode, source });
     return turn;
   }
@@ -649,14 +651,15 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
     // ביצוע
     action = upsertAction(turn, { ...action, status: 'running' });
     setPhase(turn, 'EXECUTING', action.title);
-    const result = await executeWithTimeout(turn, def, data, {
+    let timeoutRecorded = false;
+    const exec = await executeWithTimeout(turn, def, data, {
       actionId,
       settings,
       userInitiated: call.userInitiated,
       approvedDisplayId,
       onLate: (late) => {
         // הכלי הסתיים אחרי timeout/ביטול: רושמים את התוצאה האמיתית ומעדכנים את ה-HUD
-        recordAction(turn, actionId, tool, hash, late);
+        recordAction(turn, timeoutRecorded ? `${actionId}-late` : actionId, tool, hash, late);
         upsertAction(
           turn,
           {
@@ -671,7 +674,46 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
         );
       },
     });
+    const result = exec.result;
     if (result.untrusted) turn.tainted = true;
+
+    if (exec.kind === 'cancelled') {
+      // עדיין רץ בזמן הביטול: הפעולה כבר סומנה "בוטל (לא מאומת)"; התוצאה האמיתית תגיע דרך onLate
+      return result;
+    }
+    if (turn.cancelled) {
+      // התוצאה האמיתית הגיעה יחד עם הביטול — משקפים אותה כמו שהיא
+      recordAction(turn, actionId, tool, hash, result);
+      upsertAction(
+        turn,
+        {
+          ...action,
+          status: actionStatusFor(result),
+          verified: true,
+          detail: truncate(result.summary_he, 2000),
+          ...(result.error_code ? { errorCode: result.error_code } : {}),
+          finishedAt: nowIso(),
+        },
+        true,
+      );
+      return result;
+    }
+    if (exec.kind === 'timeout') {
+      // לא ידוע אם הפעולה קרתה — לא מסמנים כמאומת
+      timeoutRecorded = true;
+      recordAction(turn, actionId, tool, hash, result);
+      turn.byToolUseId.set(call.toolUseId, result);
+      turn.byHash.set(hash, result);
+      upsertAction(turn, {
+        ...action,
+        status: 'failed',
+        verified: false,
+        detail: result.summary_he,
+        errorCode: 'TIMEOUT',
+        finishedAt: nowIso(),
+      });
+      return result;
+    }
     return done(result, hash);
   }
 
@@ -694,7 +736,7 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
       approvedDisplayId?: string;
       onLate: (result: ToolResult) => void;
     },
-  ): Promise<ToolResult> {
+  ): Promise<{ kind: 'done' | 'timeout' | 'cancelled'; result: ToolResult }> {
     turn.toolExecuted = true;
     const timeoutController = new AbortController();
     const signal = AbortSignal.any([turn.controller.signal, timeoutController.signal]);
@@ -742,25 +784,24 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
       if (onAbort) turn.controller.signal.removeEventListener('abort', onAbort);
     }
 
-    if (outcome.kind === 'done') {
-      if (turn.cancelled) {
-        // התוצאה הגיעה בדיוק עם הביטול — עדיין משקפים אותה (היא אמיתית)
-        opts.onLate(outcome.result);
-        return { ...outcome.result };
-      }
-      return outcome.result;
-    }
-    void toolPromise.then(opts.onLate);
+    if (outcome.kind === 'done') return { kind: 'done', result: outcome.result };
+    // הכלי עדיין רץ: כשיסתיים — נרשום ונציג את התוצאה האמיתית שלו
+    void toolPromise.then(opts.onLate).catch((err: unknown) => {
+      logger.warn('engine.late_result_failed', { tool: def.name, error: err instanceof Error ? err.name : typeof err });
+    });
     if (outcome.kind === 'timeout') {
       logger.warn('engine.tool_timeout', { tool: def.name });
       return {
-        ok: false,
-        status: 'error',
-        error_code: 'TIMEOUT',
-        summary_he: 'הפעולה לא הסתיימה בזמן, ולכן אני לא יכול לאשר שהיא בוצעה.',
+        kind: 'timeout',
+        result: {
+          ok: false,
+          status: 'error',
+          error_code: 'TIMEOUT',
+          summary_he: 'הפעולה לא הסתיימה בזמן, ולכן אני לא יכול לאשר שהיא בוצעה.',
+        },
       };
     }
-    return { ok: false, status: 'cancelled', error_code: 'CANCELLED', summary_he: 'הפעולה בוטלה.' };
+    return { kind: 'cancelled', result: { ok: false, status: 'cancelled', error_code: 'CANCELLED', summary_he: 'הפעולה בוטלה.' } };
   }
 
   function errorToResult(tool: string, err: unknown): ToolResult {
@@ -888,7 +929,7 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
           userInitiated: false,
         });
         if (turn.cancelled) return;
-        const choice = pendingFromToolResult(intent.tool, result);
+        const choice = pendingFromToolResult(intent.tool, result, intent.input);
         if (choice) pending = { value: choice, expiresAt: clock.now().getTime() + PENDING_CLARIFICATION_TTL_MS };
         // ack_he הוא הערה נוספת — לא מחליף את הסיכום המאומת של הכלי
         body = intent.ack_he ? `${result.summary_he} ${intent.ack_he}` : result.summary_he;
@@ -919,19 +960,26 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
     failTurn(turn, err);
   }
 
+  /**
+   * מריץ את גוף התור אחרי שה-submit כבר החזיר את turnId (setImmediate),
+   * כך שה-renderer מקבל: turn-started -> תשובת ה-IPC -> שאר האירועים.
+   */
   function launch(turn: Turn, body: () => Promise<void>, settings: Settings): void {
-    void (async () => {
-      try {
-        await body();
-      } catch (err) {
+    setImmediate(() => {
+      void (async () => {
+        if (turn.cancelled) return;
         try {
-          await handleTurnError(turn, settings, err);
-        } catch (inner) {
-          logger.error('engine.error_handler_failed', { error: inner instanceof Error ? inner.name : typeof inner });
-          failTurn(turn, new ProviderError('INTERNAL', 'משהו השתבש בעיבוד הבקשה. נסה שוב.', true));
+          await body();
+        } catch (err) {
+          try {
+            await handleTurnError(turn, settings, err);
+          } catch (inner) {
+            logger.error('engine.error_handler_failed', { error: inner instanceof Error ? inner.name : typeof inner });
+            failTurn(turn, new ProviderError('INTERNAL', 'משהו השתבש בעיבוד הבקשה. נסה שוב.', true));
+          }
         }
-      }
-    })();
+      })();
+    });
   }
 
   /* ---------------- API ---------------- */
@@ -947,9 +995,10 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
         const hadActive = active !== null;
         const hadPending = pending !== null;
         pending = null;
+        // הביטול עצמו מיידי (startTurn מבטל את התור הפעיל); רק התשובה נשלחת אחרי החזרת ה-turnId
         const turn = startTurn(text, input.source, 'local');
         const reply = hadActive ? 'עצרתי.' : hadPending ? 'בסדר, ביטלתי.' : 'אין כרגע פעולה פעילה לעצור.';
-        finishTurn(turn, reply, 'local', { speak: false, saveHistory: false });
+        launch(turn, async () => finishTurn(turn, reply, 'local', { speak: false, saveHistory: false }), deps.settings.get());
         return { ok: true, turnId: turn.id, mode: 'local' };
       }
 

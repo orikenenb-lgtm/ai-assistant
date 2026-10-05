@@ -301,7 +301,7 @@ export interface ApprovalService {
     displays?: DisplayInfo[];
     defaultDisplayId?: string;
     signal: AbortSignal;
-  }): Promise<{ approved: boolean; outcome: 'approved' | 'rejected' | 'expired' | 'cancelled'; displayId?: string }>;
+  }): Promise<{ approvalId: string; approved: boolean; outcome: 'approved' | 'rejected' | 'expired' | 'cancelled'; displayId?: string }>;
   /** החלטת המשתמש מה-renderer. מאמת: קיים, לא נוצל, לא פג, ו-displayId (אם יש) מתוך הרשימה. */
   decide(decision: ApprovalDecision): { ok: boolean; code?: ErrorCode; message_he?: string };
   /** בודק שהאישור שנוצל שייך בדיוק לאותו כלי ולאותם פרמטרים. */

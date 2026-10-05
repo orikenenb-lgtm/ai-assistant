@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defaultSettings, type Settings } from '../../../src/shared/settings-schema';
-import type { ApprovalRequest, ReminderDTO } from '../../../src/shared/types';
+import type { ApprovalRequest, AssistantEvent, ReminderDTO } from '../../../src/shared/types';
 import { JarvisController, WAKE_TAIL_MS, type BatteryLike } from '../../../src/renderer/state/controller';
 import { deriveDisplayState } from '../../../src/renderer/state/derive';
 import { he } from '../../../src/renderer/i18n/he';
@@ -45,8 +45,7 @@ function toastTexts(c: JarvisController): string[] {
   return c.state.toasts.map((t) => t.text);
 }
 
-const response = (text: string, speak = true) =>
-  ({ type: 'response', turnId: 'turn-9', text, speak, mode: 'ai', actions: [] }) as const;
+const response = (text: string, speak = true): AssistantEvent => ({ type: 'response', turnId: 'turn-9', text, speak, mode: 'ai', actions: [] });
 
 describe('JarvisController — voice flow (mock)', () => {
   it('mic -> transcribe -> submit (mock)', async () => {

@@ -108,7 +108,8 @@ export function BottomBar() {
           id={inputId}
           className="ask-input"
           type="text"
-          dir="auto"
+          // dir=auto על שדה ריק נופל ל-LTR ומערבב את ה-placeholder העברי — RTL עד שמקלידים
+          dir={text ? 'auto' : 'rtl'}
           autoComplete="off"
           spellCheck={false}
           maxLength={MAX_TEXT_INPUT}

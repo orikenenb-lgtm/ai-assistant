@@ -284,11 +284,59 @@ describe('conversation engine — AI turns (MOCK LLM)', () => {
     await t.waitEnd(turnId);
     const [result] = parseToolResult(t.llm.requests[1]!.messages[2]!);
     expect(result!.body).toMatchObject({ ok: false, error_code: 'TIMEOUT' });
-    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'failed', errorCode: 'TIMEOUT' });
+    // לא ידוע אם קרה — לא מסומן כמאומת
+    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'failed', errorCode: 'TIMEOUT', verified: false });
 
     finish!({ ok: true, status: 'success', summary_he: 'פתחתי את EPLAN.' });
     await vi.waitFor(() => expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'succeeded', verified: true }));
     expect(t.db.actionEntries.map((e) => e.status)).toEqual(['failed', 'succeeded']);
+    // מזהה שונה לרשומה המאוחרת (מפתח ראשי ייחודי ביומן הפעולות)
+    expect(new Set(t.db.actionEntries.map((e) => e.id)).size).toBe(2);
+  });
+
+  it('cancel while a tool is running: marked cancelled (unverified), then the real late result is reflected and recorded once (mock)', async () => {
+    let finish: ((r: ToolResult) => void) | null = null;
+    const t = setup({
+      steps: [mockMessage([toolUseBlock('tu_1', 'open_application', { app_id: 'eplan' })], 'tool_use')],
+      toolOverrides: { open_application: () => new Promise<ToolResult>((resolve) => (finish = resolve)) },
+    });
+    const { turnId } = await t.submit('תפתח EPLAN');
+    await vi.waitFor(() => expect(t.tools.execs.open_application).toHaveBeenCalled());
+    expect(t.tools.execs.open_application.mock.calls[0]![1].signal.aborted).toBe(false);
+    t.engine.cancel(turnId);
+    expect((await t.waitEnd(turnId)).outcome).toBe('cancelled');
+    expect(t.tools.execs.open_application.mock.calls[0]![1].signal.aborted).toBe(true);
+    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'cancelled', verified: false });
+    expect(t.db.actionEntries).toHaveLength(0);
+
+    finish!({ ok: true, status: 'success', summary_he: 'פתחתי את EPLAN.' });
+    await vi.waitFor(() => expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'succeeded', verified: true }));
+    expect(t.db.actionEntries).toHaveLength(1);
+    expect(t.db.actionEntries[0]).toMatchObject({ status: 'succeeded', tool: 'open_application' });
+    expect(t.responseOf(turnId)).toBeUndefined();
+  });
+
+  it('submit returns the turnId before any phase/response event (only turn-started precedes it) (mock)', async () => {
+    const t = setup({ configured: false });
+    const res = await t.submit('מצב מערכת');
+    expect(t.events.map((e) => e.type)).toEqual(['turn-started']);
+    await t.waitEnd(res.turnId);
+    expect(t.responseOf(res.turnId)).toBeDefined();
+  });
+
+  it('a local turn after an error resets the phase to IDLE right away (mock)', async () => {
+    const t = setup({ steps: [new ProviderError('REFUSAL', 'Claude סירב לבקשה הזו.', false)] });
+    const a = await t.submit('משהו');
+    await t.waitEnd(a.turnId);
+    expect(t.engine.snapshot().phase).toBe('ERROR');
+    const s = defaultSettings();
+    s.ai.brainMode = 'local-only';
+    t.settings.set(s);
+    const b = await t.submit('מצב מערכת');
+    expect(t.engine.snapshot().phase).toBe('IDLE');
+    await t.waitEnd(b.turnId);
+    // טיימר ה-ERROR בוטל — לא יחזיר IDLE כפול מאוחר יותר
+    expect(t.timers.pending()).not.toContain(4_000);
   });
 
   it('(8) NETWORK error before any tool -> local fallback runs "מצב מערכת" (mock)', async () => {
@@ -458,7 +506,9 @@ describe('conversation engine — AI turns (MOCK LLM)', () => {
     await vi.waitFor(() => expect(t.llm.requests).toHaveLength(1));
     const stop = await t.submit('עצור');
     expect(stop.mode).toBe('local');
-    expect((await t.waitEnd(first.turnId)).outcome).toBe('cancelled');
+    // הביטול מיידי — כבר לפני שהתשובה נשלחת
+    expect(t.events.some((e) => e.type === 'turn-ended' && e.turnId === first.turnId && e.outcome === 'cancelled')).toBe(true);
+    await t.waitEnd(stop.turnId);
     const response = t.responseOf(stop.turnId)!;
     expect(response).toMatchObject({ text: 'עצרתי.', speak: false });
     expect(t.llm.requests).toHaveLength(1);
