@@ -50,9 +50,14 @@ export class MicError extends Error {
   }
 }
 
+export interface PlayOptions {
+  /** נקרא ברגע שהאודיו באמת מתחיל להישמע (source.start), אחרי פענוח והפעלת התקן הפלט. */
+  onStarted?: () => void;
+}
+
 export interface SpeechPlayback extends LevelSource {
   /** משמיע אודיו מקודד (mp3/wav/ogg). נפתר כשההשמעה הסתיימה או נעצרה. */
-  play(audio: Uint8Array, mimeType: string): Promise<'ended' | 'stopped'>;
+  play(audio: Uint8Array, mimeType: string, options?: PlayOptions): Promise<'ended' | 'stopped'>;
   stop(): void;
   readonly playing: boolean;
 }
@@ -66,22 +71,39 @@ export interface SystemVoiceInfo {
 export interface SystemSpeaker {
   /** קולות מערכת זמינים (Windows SAPI/OneCore דרך speechSynthesis). */
   listVoices(): Promise<SystemVoiceInfo[]>;
-  /** מקריא בקול מערכת. אין גישה לאות האודיו עצמו, לכן אין waveform אמיתי במצב הזה. */
-  speak(text: string, options: { voiceName?: string; rate: number }): Promise<'ended' | 'stopped' | 'no-voice'>;
+  /**
+   * מקריא בקול מערכת. אין גישה לאות האודיו עצמו, לכן אין waveform אמיתי במצב הזה.
+   * onStarted נקרא כשההקראה באמת התחילה (utterance.onstart) — לא נקרא אם אין קול מתאים.
+   */
+  speak(text: string, options: { voiceName?: string; rate: number; onStarted?: () => void }): Promise<'ended' | 'stopped' | 'no-voice'>;
   stop(): void;
   readonly speaking: boolean;
 }
 
+export type WakeWordDetectorState = 'stopped' | 'loading' | 'listening' | 'paused' | 'error';
+
 export interface WakeWordDetector {
   readonly engine: 'openwakeword' | 'porcupine';
-  /** טוען מודלים ומתחיל האזנה מקומית רציפה. שום אודיו לא יוצא מהמחשב. */
-  start(options: { deviceId?: string; sensitivity: number; onDetected: () => void }): Promise<void>;
+  /**
+   * טוען מודלים ומתחיל האזנה מקומית רציפה. שום אודיו לא יוצא מהמחשב.
+   * stop() בזמן ההפעלה: start נדחה עם AbortError ומשחרר את מה שכבר נפתח (לא נשאר מיקרופון פתוח).
+   * onStateChange: כל שינוי מצב — כולל מעבר ל-'error' אחרי הפעלה מוצלחת (מיקרופון נותק, אין אודיו וכו').
+   */
+  start(options: {
+    deviceId?: string;
+    sensitivity: number;
+    onDetected: () => void;
+    onStateChange?: (state: WakeWordDetectorState) => void;
+  }): Promise<void>;
   /** השהיה זמנית (למשל בזמן ש-JARVIS מדבר) — מונע הפעלה עצמית. */
   pause(): void;
   resume(): void;
   stop(): Promise<void>;
-  readonly state: 'stopped' | 'loading' | 'listening' | 'paused' | 'error';
+  readonly state: WakeWordDetectorState;
+  /** הודעה קצרה (בעברית כשאפשר) על התקלה האחרונה. */
   readonly lastError: string | null;
+  /** פירוט טכני של התקלה (לא בעברית) — למסך ההגדרות בלבד. */
+  readonly lastErrorDetail?: string | null;
 }
 
 /**

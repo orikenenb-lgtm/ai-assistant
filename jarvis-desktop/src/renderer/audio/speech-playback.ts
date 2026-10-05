@@ -1,6 +1,6 @@
 import { analyserLevelSource, SILENT_LEVEL_SOURCE } from './level';
 import { browserTimers, settleWithin, type AudioTimers, type TimerHandle } from './timers';
-import type { LevelSource, SpeechPlayback } from './types';
+import type { LevelSource, PlayOptions, SpeechPlayback } from './types';
 
 /**
  * השמעת דיבור מוקלט (TTS מהענן: mp3/wav/ogg):
@@ -127,7 +127,7 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
   }
 
   /** שלבי ההשמעה. כל כישלון נהפך לדחיית ההבטחה של play; אם p כבר נעצר — לא עושים כלום. */
-  async function run(p: Playback, audio: Uint8Array, mimeType: string): Promise<void> {
+  async function run(p: Playback, audio: Uint8Array, mimeType: string, onStarted?: () => void): Promise<void> {
     let context: AudioContext;
     let output: AnalyserNode;
     try {
@@ -175,10 +175,17 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
       source.start();
     } catch {
       settle(p, new Error(PLAYBACK_MESSAGES.output), false);
+      return;
+    }
+    // מכאן האודיו באמת מושמע — הממשק מציג "מדבר" רק עכשיו
+    try {
+      onStarted?.();
+    } catch {
+      // מאזין שנכשל לא עוצר את ההשמעה
     }
   }
 
-  function play(audio: Uint8Array, mimeType: string): Promise<'ended' | 'stopped'> {
+  function play(audio: Uint8Array, mimeType: string, options?: PlayOptions): Promise<'ended' | 'stopped'> {
     if (!(audio instanceof Uint8Array) || audio.byteLength === 0) {
       return Promise.reject(new Error(PLAYBACK_MESSAGES.empty));
     }
@@ -194,7 +201,7 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
     });
     const p: Playback = { settled: false, source: null, watchdog: null, resolve, reject };
     current = p;
-    run(p, audio, mimeType).catch(() => settle(p, new Error(PLAYBACK_MESSAGES.output), false));
+    run(p, audio, mimeType, options?.onStarted).catch(() => settle(p, new Error(PLAYBACK_MESSAGES.output), false));
     return promise;
   }
 

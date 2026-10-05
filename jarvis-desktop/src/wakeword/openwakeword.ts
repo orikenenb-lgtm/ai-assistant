@@ -72,6 +72,8 @@ export class OpenWakeWordPipeline {
   private pending = new Float32Array(0);
   private predictions = 0;
   private readonly wakewordFrames: number;
+  /** תכונות הרעש הדטרמיניסטיות לאתחול — מחושבות פעם אחת (≈200ms של ONNX) ומועתקות בכל reset. */
+  private seedFeatures: Float32Array[] | null = null;
 
   constructor(
     private readonly sessions: OpenWakeWordSessions,
@@ -82,16 +84,23 @@ export class OpenWakeWordPipeline {
     this.wakewordFrames = 16;
   }
 
-  /** איפוס מלא (כמו Model.reset): חיצים, מונה חיזויים ואתחול ברעש. */
+  /**
+   * איפוס מלא (כמו Model.reset): חיצים, מונה חיזויים ואתחול ברעש.
+   * הרעש דטרמיניסטי (seed קבוע), ולכן גם התכונות שלו — הן מחושבות רק באיפוס הראשון.
+   * האיפוס נקרא בכל חזרה מהשהיה (פעמיים בכל תור קולי), ובלי המטמון הוא חוסם את ה-thread הראשי.
+   */
   async reset(): Promise<void> {
     this.melBuffer = Array.from({ length: MEL_WINDOW }, () => new Float32Array(MEL_BINS).fill(1));
     this.rawTail = new Float32Array(0);
     this.pending = new Float32Array(0);
     this.predictions = 0;
-    const rand = lcg(this.seed);
-    const noise = new Float32Array(SAMPLE_RATE * 4);
-    for (let i = 0; i < noise.length; i++) noise[i] = Math.floor(rand() * 2000) - 1000;
-    this.featureBuffer = await this.embeddingsForAudio(noise);
+    if (!this.seedFeatures) {
+      const rand = lcg(this.seed);
+      const noise = new Float32Array(SAMPLE_RATE * 4);
+      for (let i = 0; i < noise.length; i++) noise[i] = Math.floor(rand() * 2000) - 1000;
+      this.seedFeatures = await this.embeddingsForAudio(noise);
+    }
+    this.featureBuffer = this.seedFeatures.map((f) => f.slice());
   }
 
   /**

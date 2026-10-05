@@ -5,7 +5,9 @@ import {
   createConversationEngine,
   MISSING_KEY_NOTICE_HE,
   NETWORK_FALLBACK_PREFIX_HE,
+  REFUSAL_AFTER_TOOLS_NOTE_HE,
   TAINT_WARNING_HE,
+  UNTRUSTED_ACTION_SUMMARY_HE,
   UNTRUSTED_HISTORY_MARKER,
   UNTRUSTED_NOTICE,
   type ConversationEngineImpl,
@@ -13,7 +15,7 @@ import {
 import { SYSTEM_PROMPT } from '../../../src/main/conversation/prompts';
 import { createApprovalService } from '../../../src/main/permissions/approvals';
 import { createToolRegistry } from '../../../src/main/tools/registry';
-import { ProviderError, type ToolContext } from '../../../src/main/core/contracts';
+import { ProviderError, type HistoryEntry, type ToolContext } from '../../../src/main/core/contracts';
 import { defaultSettings, type Settings } from '../../../src/shared/settings-schema';
 import { TOOL_NAMES, type ActionRecord, type AssistantEvent, type DisplayInfo, type ToolName, type ToolResult } from '../../../src/shared/types';
 import { createMockDatabase } from './helpers/db.mock';
@@ -838,5 +840,404 @@ describe('conversation engine — local mode', () => {
     const a = await t.submit('מה מזג האוויר');
     await t.waitEnd(a.turnId);
     expect(t.responseOf(a.turnId)!.text).toContain('לא הבנתי');
+  });
+});
+
+describe('conversation engine — review fixes (regressions)', () => {
+  const net = (): ProviderError => new ProviderError('NETWORK', 'אין חיבור ל-Claude.', true);
+  const toolResultsOf = (msg: Anthropic.Beta.BetaMessageParam) => parseToolResult(msg);
+
+  it('[1] screen taint is marked only on the producing turn and stops once that entry leaves the context window (mock)', async () => {
+    const s = defaultSettings();
+    s.screen.requireConfirmation = false; // מסך אחד => הצילום רץ בלי אישור
+    s.ai.maxContextTurns = 2;
+    const t = setup({
+      settings: s,
+      steps: [
+        mockMessage([toolUseBlock('tu_c', 'capture_screen_for_analysis', { question: 'מה רואים?' })], 'tool_use'),
+        mockMessage([textBlock('רואים חלון EPLAN.')], 'end_turn'),
+        mockMessage([textBlock('תשובה 1')], 'end_turn'),
+        mockMessage([textBlock('תשובה 2')], 'end_turn'),
+        mockMessage([toolUseBlock('tu_o', 'open_application', { app_id: 'eplan' })], 'tool_use'),
+        mockMessage([textBlock('פתחתי.')], 'end_turn'),
+      ],
+    });
+    const a = await t.submit('תסתכל על המסך');
+    await t.waitEnd(a.turnId);
+    expect(t.db.historyEntries.at(-1)!.text.startsWith(UNTRUSTED_HISTORY_MARKER)).toBe(true);
+    // תור שרק ירש את ה"נגיעות" לא מסמן את עצמו
+    const b = await t.submit('שאלה כללית 1');
+    await t.waitEnd(b.turnId);
+    expect(t.db.historyEntries.at(-1)!.text).toBe('תשובה 1');
+    const c = await t.submit('שאלה כללית 2');
+    await t.waitEnd(c.turnId);
+    expect(t.db.historyEntries.at(-1)!.text).toBe('תשובה 2');
+    // הרשומה המסומנת כבר מחוץ לחלון (2 תורות) => אין דרישת אישור "נגוע"
+    const d = await t.submit('תפתח EPLAN');
+    await t.waitEnd(d.turnId);
+    expect(t.events.some((e) => e.type === 'approval-required')).toBe(false);
+    expect(t.tools.execs.open_application).toHaveBeenCalledTimes(1);
+  });
+
+  it('[2] cross-turn dedupe is skipped when another state change happened in between (create -> cancel -> create) (mock)', async () => {
+    const s = defaultSettings();
+    s.ai.brainMode = 'local-only';
+    const t = setup({ settings: s });
+    const text = 'תזכיר לי מחר בשמונה בבוקר לפתוח את הפרויקט';
+    const a = await t.submit(text);
+    await t.waitEnd(a.turnId);
+    t.clock.advance(20_000);
+    const b = await t.submit('בטל את התזכורת לפתוח את הפרויקט');
+    await t.waitEnd(b.turnId);
+    t.clock.advance(20_000);
+    const c = await t.submit(text);
+    await t.waitEnd(c.turnId);
+    expect(t.tools.execs.create_reminder).toHaveBeenCalledTimes(2);
+    expect(t.finalActions(c.turnId)[0]).toMatchObject({ status: 'succeeded' });
+    expect(t.responseOf(c.turnId)!.text).not.toContain('כבר בוצעה');
+
+    // אותו דבר במשימות: create -> complete -> create
+    const d = await t.submit('תוסיף משימה לסיים את השרטוט');
+    await t.waitEnd(d.turnId);
+    const e = await t.submit('סיימתי את המשימה לסיים את השרטוט');
+    await t.waitEnd(e.turnId);
+    const f = await t.submit('תוסיף משימה לסיים את השרטוט');
+    await t.waitEnd(f.turnId);
+    expect(t.tools.execs.create_task).toHaveBeenCalledTimes(2);
+  });
+
+  it('[2] a quick retry of open_application is still deduplicated when nothing else changed (mock)', async () => {
+    const s = defaultSettings();
+    s.ai.brainMode = 'local-only';
+    const t = setup({ settings: s });
+    const a = await t.submit('תפתח EPLAN');
+    await t.waitEnd(a.turnId);
+    t.clock.advance(3_000);
+    const b = await t.submit('תפתח EPLAN');
+    await t.waitEnd(b.turnId);
+    expect(t.tools.execs.open_application).toHaveBeenCalledTimes(1);
+    expect(t.finalActions(b.turnId)[0]).toMatchObject({ status: 'deduplicated' });
+  });
+
+  it('[3] a failed call retried in the same turn returns the same failure, never "deduplicated" (mock)', async () => {
+    const t = setup({
+      toolOverrides: {
+        open_application: async () => ({ ok: false, status: 'error', error_code: 'PATH_NOT_FOUND', summary_he: 'הנתיב ל-EPLAN עוד לא הוגדר.' }),
+      },
+      steps: [
+        mockMessage([toolUseBlock('tu_1', 'open_application', { app_id: 'eplan' })], 'tool_use'),
+        mockMessage([toolUseBlock('tu_2', 'open_application', { app_id: 'eplan' })], 'tool_use'),
+        mockMessage([textBlock('לא הצלחתי לפתוח את EPLAN.')], 'end_turn'),
+      ],
+    });
+    const { turnId } = await t.submit('תפתח EPLAN');
+    await t.waitEnd(turnId);
+    expect(t.tools.execs.open_application).toHaveBeenCalledTimes(1);
+    expect(t.finalActions(turnId).map((a) => [a.status, a.errorCode])).toEqual([
+      ['failed', 'PATH_NOT_FOUND'],
+      ['failed', 'PATH_NOT_FOUND'],
+    ]);
+    const [second] = toolResultsOf(t.llm.requests[2]!.messages[4]!);
+    expect(second!.body).toMatchObject({ ok: false, status: 'error', error_code: 'PATH_NOT_FOUND' });
+  });
+
+  it('[4] read-only tools are re-run after a change in the same turn; side-effect calls are not hash-deduped across a change (mock)', async () => {
+    let open = ['לסיים את השרטוט', 'לקנות חלב'];
+    const t = setup({
+      toolOverrides: {
+        list_tasks: async () => ({ ok: true, status: 'success', summary_he: `יש לך ${open.length} משימות.`, data: open }),
+        complete_task: async () => {
+          open = open.slice(1);
+          return { ok: true, status: 'success', summary_he: 'סימנתי כבוצעה.' };
+        },
+      },
+      steps: [
+        mockMessage([toolUseBlock('tu_1', 'list_tasks', { filter: 'today' })], 'tool_use'),
+        mockMessage([toolUseBlock('tu_2', 'complete_task', { title_query: 'שרטוט' })], 'tool_use'),
+        mockMessage([toolUseBlock('tu_3', 'list_tasks', { filter: 'today' })], 'tool_use'),
+        mockMessage([textBlock('נשארה לך משימה אחת.')], 'end_turn'),
+      ],
+    });
+    const { turnId } = await t.submit('סמן את השרטוט כבוצע ותגיד מה נשאר');
+    await t.waitEnd(turnId);
+    expect(t.tools.execs.list_tasks).toHaveBeenCalledTimes(2);
+    const [third] = toolResultsOf(t.llm.requests[3]!.messages[6]!);
+    expect(third!.body).toMatchObject({ status: 'success', summary_he: 'יש לך 1 משימות.' });
+  });
+
+  it('[4] same-turn create_task -> complete_task -> create_task runs create again (mock)', async () => {
+    const t = setup({
+      steps: [
+        mockMessage([toolUseBlock('tu_1', 'create_task', { title: 'לקנות חלב' })], 'tool_use'),
+        mockMessage([toolUseBlock('tu_2', 'complete_task', { title_query: 'לקנות חלב' })], 'tool_use'),
+        mockMessage([toolUseBlock('tu_3', 'create_task', { title: 'לקנות חלב' })], 'tool_use'),
+        mockMessage([textBlock('בסדר.')], 'end_turn'),
+      ],
+    });
+    const { turnId } = await t.submit('תוסיף, תסמן ותוסיף שוב');
+    await t.waitEnd(turnId);
+    expect(t.tools.execs.create_task).toHaveBeenCalledTimes(2);
+  });
+
+  it('[5] offline (key set, no network): the local clarification answer completes the reminder (mock)', async () => {
+    const t = setup({ steps: [net(), net()] });
+    const a = await t.submit('תזכיר לי מחר בשמונה לפתוח את הפרויקט');
+    await t.waitEnd(a.turnId);
+    expect(t.responseOf(a.turnId)!.text).toContain('בשמונה בבוקר או בערב?');
+    const b = await t.submit('בערב');
+    expect((await t.waitEnd(b.turnId)).outcome).toBe('completed');
+    expect(t.tools.execs.create_reminder).toHaveBeenCalledWith({ text: 'לפתוח את הפרויקט', date: '2026-10-06', time: '20:00' }, expect.anything());
+    expect(t.responseOf(b.turnId)!.text.startsWith(NETWORK_FALLBACK_PREFIX_HE)).toBe(true);
+  });
+
+  it('[5] a successful model call clears a stale local clarification (mock)', async () => {
+    const t = setup({ steps: [net(), mockMessage([textBlock('בערב מה?')], 'end_turn'), net()] });
+    const a = await t.submit('תזכיר לי מחר בשמונה לפתוח את הפרויקט');
+    await t.waitEnd(a.turnId);
+    const b = await t.submit('בערב');
+    await t.waitEnd(b.turnId);
+    // Claude ענה — ההבהרה המקומית כבר לא פתוחה, אז "בערב" שוב לא יוצר תזכורת מקומית
+    const c = await t.submit('בערב');
+    await t.waitEnd(c.turnId);
+    expect(t.tools.execs.create_reminder).not.toHaveBeenCalled();
+  });
+
+  it('[7] a spoken "כן" while an approval is pending approves it (default display) instead of cancelling the turn (mock)', async () => {
+    const t = setup({
+      steps: [
+        mockMessage([toolUseBlock('tu_c', 'capture_screen_for_analysis', { question: 'מה לא בסדר?' })], 'tool_use'),
+        mockMessage([textBlock('רואים את EPLAN.')], 'end_turn'),
+      ],
+    });
+    const a = await t.submit('תסתכל על המסך ותגיד לי מה לא בסדר');
+    const req = await t.waitApproval(1);
+    const turnsBefore = t.events.filter((e) => e.type === 'turn-started').length;
+    const yes = await t.engine.submit({ text: "ג'רוויס, כן", source: 'voice', clientRequestId: randomUUID() });
+    expect(yes).toEqual({ ok: true, turnId: a.turnId, mode: 'ai' });
+    expect(t.events.filter((e) => e.type === 'turn-started')).toHaveLength(turnsBefore);
+    expect(t.events).toContainEqual({ type: 'approval-resolved', approvalId: req.approvalId, outcome: 'approved' });
+    expect((await t.waitEnd(a.turnId)).outcome).toBe('completed');
+    expect(t.tools.execs.capture_screen_for_analysis).toHaveBeenCalledTimes(1);
+    expect(t.tools.execs.capture_screen_for_analysis.mock.calls[0]![1].approvedDisplayId).toBe('1');
+  });
+
+  it('[7] a spoken "לא" rejects the pending approval; the turn continues without executing (mock)', async () => {
+    const t = setup({
+      steps: [
+        mockMessage([toolUseBlock('tu_c', 'capture_screen_for_analysis', { question: 'מה?' })], 'tool_use'),
+        mockMessage([textBlock('בסדר, לא צילמתי.')], 'end_turn'),
+      ],
+    });
+    const a = await t.submit('תסתכל על המסך');
+    await t.waitApproval(1);
+    const no = await t.engine.submit({ text: 'לא', source: 'voice', clientRequestId: randomUUID() });
+    expect(no).toMatchObject({ ok: true, turnId: a.turnId });
+    expect((await t.waitEnd(a.turnId)).outcome).toBe('completed');
+    expect(t.tools.execs.capture_screen_for_analysis).not.toHaveBeenCalled();
+    expect(t.finalActions(a.turnId)[0]).toMatchObject({ status: 'rejected' });
+  });
+
+  it('[7] any other text supersedes the turn, and the superseded request is kept in history for context (mock)', async () => {
+    const t = setup({
+      steps: [
+        mockMessage([toolUseBlock('tu_c', 'capture_screen_for_analysis', { question: 'מה?' })], 'tool_use'),
+        mockMessage([textBlock('בסדר.')], 'end_turn'),
+      ],
+    });
+    const a = await t.submit('תסתכל על המסך');
+    await t.waitApproval(1);
+    const b = await t.submit('רגע, קודם תגיד מה השעה');
+    expect((await t.waitEnd(a.turnId)).outcome).toBe('cancelled');
+    await t.waitEnd(b.turnId);
+    expect(t.db.historyEntries[0]).toMatchObject({ turnId: a.turnId, role: 'user', text: 'תסתכל על המסך' });
+    const content = t.llm.requests[1]!.messages[0]!.content as Anthropic.Beta.BetaTextBlockParam[];
+    expect(content[0]!.text).toBe('תסתכל על המסך');
+    expect(content.at(-1)!.text).toBe('רגע, קודם תגיד מה השעה');
+  });
+
+  it('[8c] local PAST_TIME clarification keeps a draft: "מחר" completes it with the original time (mock)', async () => {
+    let calls = 0;
+    const s = defaultSettings();
+    s.ai.brainMode = 'local-only';
+    const t = setup({
+      settings: s,
+      toolOverrides: {
+        create_reminder: async (input) => {
+          calls++;
+          if (input.date === '2026-10-05') {
+            return { ok: false, status: 'needs_clarification', error_code: 'PAST_TIME', summary_he: 'המועד הזה כבר עבר. לאיזה מועד לקבוע?' };
+          }
+          return { ok: true, status: 'success', summary_he: `קבעתי תזכורת ל-${String(input.date)} ${String(input.time)}.` };
+        },
+      },
+    });
+    const a = await t.submit('תזכיר לי היום בשמונה בבוקר לפתוח את הפרויקט');
+    await t.waitEnd(a.turnId);
+    expect(t.responseOf(a.turnId)!.text).toContain('לאיזה מועד לקבוע');
+    const b = await t.submit('מחר');
+    await t.waitEnd(b.turnId);
+    expect(calls).toBe(2);
+    expect(t.tools.execs.create_reminder.mock.calls[1]![0]).toEqual({ text: 'לפתוח את הפרויקט', date: '2026-10-06', time: '08:00' });
+  });
+
+  it('[9] when the 6-call cap is hit, the verified result of the last batch is spoken, not just the preamble (mock)', async () => {
+    const steps: MockStep[] = [];
+    const filters = ['upcoming', 'missed', 'all', 'upcoming', 'missed'] as const;
+    for (let i = 0; i < 5; i++) steps.push(mockMessage([toolUseBlock(`tu_${i}`, 'list_reminders', { filter: filters[i] })], 'tool_use'));
+    steps.push(mockMessage([textBlock('עכשיו אני פותח את EPLAN.'), toolUseBlock('tu_6', 'open_application', { app_id: 'eplan' })], 'tool_use'));
+    const t = setup({
+      steps,
+      toolOverrides: { open_application: async () => ({ ok: false, status: 'error', error_code: 'PATH_NOT_FOUND', summary_he: 'הנתיב ל-EPLAN עוד לא הוגדר.' }) },
+    });
+    const { turnId } = await t.submit('תבדוק תזכורות ותפתח EPLAN');
+    await t.waitEnd(turnId);
+    expect(t.llm.requests).toHaveLength(6);
+    expect(t.responseOf(turnId)!.text).toContain('הנתיב ל-EPLAN עוד לא הוגדר.');
+  });
+
+  it('[10] a refusal after a tool already ran ends the turn with the verified summaries and writes history (mock)', async () => {
+    const t = setup({
+      steps: [
+        mockMessage([toolUseBlock('tu_1', 'open_application', { app_id: 'eplan' })], 'tool_use'),
+        mockMessage([], 'refusal', { stop_details: { type: 'refusal', category: 'cyber', explanation: null } }),
+      ],
+    });
+    const { turnId } = await t.submit('תפתח EPLAN ותעשה עוד משהו');
+    expect((await t.waitEnd(turnId)).outcome).toBe('completed');
+    expect(t.errorOf(turnId)).toBeUndefined();
+    const text = t.responseOf(turnId)!.text;
+    expect(text).toContain('פתחתי את EPLAN.');
+    expect(text).toContain(REFUSAL_AFTER_TOOLS_NOTE_HE);
+    expect(t.db.historyEntries.map((e) => e.role)).toEqual(['user', 'assistant']);
+  });
+
+  it('[11a] AI turn: an ambiguous hour in the user text blocks create_reminder with a clarification (mock)', async () => {
+    const t = setup({
+      steps: [
+        mockMessage([toolUseBlock('tu_1', 'create_reminder', { text: 'לפתוח את הפרויקט', date: '2026-10-06', time: '08:00' })], 'tool_use'),
+        mockMessage([textBlock('בשמונה בבוקר או בערב?')], 'end_turn'),
+        mockMessage([toolUseBlock('tu_2', 'create_reminder', { text: 'לפתוח את הפרויקט', date: '2026-10-06', time: '20:00' })], 'tool_use'),
+        mockMessage([textBlock('קבעתי.')], 'end_turn'),
+      ],
+    });
+    const a = await t.submit('תזכיר לי מחר בשמונה לפתוח את הפרויקט');
+    await t.waitEnd(a.turnId);
+    expect(t.tools.execs.create_reminder).not.toHaveBeenCalled();
+    const [r] = toolResultsOf(t.llm.requests[1]!.messages[2]!);
+    expect(r!.body).toMatchObject({ ok: false, status: 'needs_clarification', summary_he: 'בשמונה בבוקר או בערב?' });
+    expect(t.finalActions(a.turnId)[0]).toMatchObject({ status: 'needs_clarification' });
+    // התשובה "בערב" כבר לא עמומה — התזכורת נקבעת
+    const b = await t.submit('בערב');
+    await t.waitEnd(b.turnId);
+    expect(t.tools.execs.create_reminder).toHaveBeenCalledTimes(1);
+  });
+
+  it('[11b] after create_reminder, the full date and time are always spoken (mock)', async () => {
+    const due = 'יום שלישי, 6 באוקטובר 2026 בשעה 08:00';
+    const t = setup({
+      toolOverrides: {
+        create_reminder: async () => ({ ok: true, status: 'success', summary_he: `קבעתי תזכורת: לפתוח את הפרויקט — ${due}.`, data: { id: 'r1', due_local_full: due } }),
+      },
+      steps: [
+        mockMessage([toolUseBlock('tu_1', 'create_reminder', { text: 'לפתוח את הפרויקט', date: '2026-10-06', time: '08:00' })], 'tool_use'),
+        mockMessage([textBlock('סגור, קבעתי.')], 'end_turn'),
+      ],
+    });
+    const { turnId } = await t.submit('תזכיר לי מחר בשמונה בבוקר לפתוח את הפרויקט');
+    await t.waitEnd(turnId);
+    const text = t.responseOf(turnId)!.text;
+    expect(text.startsWith('סגור, קבעתי.')).toBe(true);
+    expect(text).toContain(due);
+  });
+
+  it('[12] the action log never stores screen analysis text (mock)', async () => {
+    const t = setup({
+      toolOverrides: {
+        capture_screen_for_analysis: async () => ({ ok: true, status: 'success', untrusted: true, summary_he: 'סיסמה סודית מופיעה במסך' }),
+      },
+    });
+    const res = await t.engine.analyzeScreen({ clientRequestId: randomUUID() });
+    if (!res.ok) throw new Error('expected ok');
+    await t.waitEnd(res.turnId);
+    expect(t.db.actionEntries).toHaveLength(1);
+    expect(t.db.actionEntries[0]!.summary).toBe(UNTRUSTED_ACTION_SUMMARY_HE);
+    expect(JSON.stringify(t.db.actionEntries)).not.toContain('סיסמה');
+  });
+
+  it('[14] clearHistory() clears in-memory history and the pending clarification, but not the request-id LRU (mock)', async () => {
+    const s = defaultSettings();
+    s.privacy.saveConversationHistory = false;
+    const t = setup({ settings: s, steps: [mockMessage([textBlock('איזה פרויקט?')], 'end_turn'), mockMessage([textBlock('בסדר.')], 'end_turn')] });
+    const a = await t.submit('תפתח פרויקט');
+    await t.waitEnd(a.turnId);
+    t.engine.clearHistory();
+    const b = await t.submit('פרויקט הגמר');
+    await t.waitEnd(b.turnId);
+    expect(t.llm.requests[1]!.messages).toHaveLength(1);
+
+    // הבהרה מקומית פתוחה נמחקת
+    t.llm.setConfigured(false);
+    const c = await t.submit('תזכיר לי מחר בשמונה לפתוח את הפרויקט');
+    await t.waitEnd(c.turnId);
+    t.engine.clearHistory();
+    const d = await t.submit('בערב');
+    await t.waitEnd(d.turnId);
+    expect(t.tools.execs.create_reminder).not.toHaveBeenCalled();
+
+    // מזהה בקשה שכבר התקבל עדיין נחסם
+    const id = randomUUID();
+    const e = await t.engine.submit({ text: 'מצב מערכת', source: 'text', clientRequestId: id });
+    if (e.ok) await t.waitEnd(e.turnId);
+    t.engine.clearHistory();
+    expect(await t.engine.submit({ text: 'מצב מערכת', source: 'text', clientRequestId: id })).toMatchObject({ ok: false, code: 'DUPLICATE' });
+  });
+
+  it('[15] a tool that never settles after cancel stays "running" for a grace period, then is marked cancelled/unverified and the phase returns to IDLE (mock)', async () => {
+    const t = setup({
+      steps: [mockMessage([toolUseBlock('tu_1', 'open_application', { app_id: 'eplan' })], 'tool_use')],
+      toolOverrides: { open_application: () => new Promise<ToolResult>(() => undefined) },
+    });
+    const { turnId } = await t.submit('תפתח EPLAN');
+    await vi.waitFor(() => expect(t.tools.execs.open_application).toHaveBeenCalled());
+    t.engine.cancel(turnId);
+    await t.waitEnd(turnId);
+    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'running' });
+    expect(t.engine.snapshot().phase).toBe('EXECUTING');
+    expect(t.timers.fire(30_000)).toBe(1);
+    expect(t.finalActions(turnId)[0]).toMatchObject({ status: 'cancelled', verified: false, errorCode: 'CANCELLED' });
+    expect(t.engine.snapshot().phase).toBe('IDLE');
+  });
+
+  it('[15] while a timed-out tool is still in flight the next model call reports EXECUTING, not THINKING (mock)', async () => {
+    let finish: ((r: ToolResult) => void) | null = null;
+    const t = setup({
+      steps: [mockMessage([toolUseBlock('tu_1', 'open_application', { app_id: 'eplan' })], 'tool_use'), 'hang'],
+      toolOverrides: { open_application: () => new Promise<ToolResult>((resolve) => (finish = resolve)) },
+    });
+    const { turnId } = await t.submit('תפתח EPLAN');
+    await vi.waitFor(() => expect(t.tools.execs.open_application).toHaveBeenCalled());
+    t.timers.fire(15_000);
+    await vi.waitFor(() => expect(t.llm.requests).toHaveLength(2));
+    expect(t.engine.snapshot().phase).toBe('EXECUTING');
+    finish!({ ok: true, status: 'success', summary_he: 'פתחתי את EPLAN.' });
+    await vi.waitFor(() => expect(t.engine.snapshot().phase).toBe('THINKING'));
+    t.engine.cancel(turnId);
+  });
+
+  it('[16] history is written with appendTurn (one transaction per turn) when the repository supports it (mock)', async () => {
+    const t = setup({ steps: [mockMessage([textBlock('שלום')], 'end_turn')] });
+    const batches: HistoryEntry[][] = [];
+    const append = vi.spyOn(t.db.history, 'append');
+    t.db.history.appendTurn = (entries) => {
+      batches.push([...entries]);
+    };
+    const { turnId } = await t.submit('היי');
+    await t.waitEnd(turnId);
+    expect(batches).toHaveLength(1);
+    expect(batches[0]!.map((e) => [e.role, e.text])).toEqual([
+      ['user', 'היי'],
+      ['assistant', 'שלום'],
+    ]);
+    expect(append).not.toHaveBeenCalled();
   });
 });

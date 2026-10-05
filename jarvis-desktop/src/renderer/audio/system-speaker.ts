@@ -107,7 +107,7 @@ export function createSystemSpeakerWith(deps: SystemSpeakerDeps): SystemSpeaker 
     }
   }
 
-  function startUtterance(job: SpeakJob, content: string, voice: SpeechSynthesisVoice, rate: number): void {
+  function startUtterance(job: SpeakJob, content: string, voice: SpeechSynthesisVoice, rate: number, onStarted?: () => void): void {
     if (!synth || !createUtterance) {
       job.settle('no-voice');
       return;
@@ -124,7 +124,22 @@ export function createSystemSpeakerWith(deps: SystemSpeakerDeps): SystemSpeaker 
     utterance.rate = rate;
     utterance.pitch = 1;
     utterance.volume = 1;
-    utterance.onend = () => job.settle('ended');
+    let started = false;
+    const markStarted = () => {
+      if (started || current !== job) return;
+      started = true;
+      try {
+        onStarted?.();
+      } catch {
+        // מאזין שנכשל לא עוצר את ההקראה
+      }
+    };
+    // onstart = הקול באמת התחיל להישמע. מנועים שלא יורים onstart — מסמנים לכל המאוחר בסיום.
+    utterance.onstart = markStarted;
+    utterance.onend = () => {
+      markStarted();
+      job.settle('ended');
+    };
     utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
       switch (event.error) {
         case 'voice-unavailable':
@@ -154,7 +169,7 @@ export function createSystemSpeakerWith(deps: SystemSpeakerDeps): SystemSpeaker 
    * לא async בכוונה: ההבטחה נוצרת מיד ונרשמת כ-current, כך ש-stop() (או speak חדש)
    * פותרים אותה מיד ב-'stopped' — גם אם עוד מחכים לרשימת הקולות.
    */
-  function speak(text: string, options: { voiceName?: string; rate: number }): Promise<SpeakOutcome> {
+  function speak(text: string, options: { voiceName?: string; rate: number; onStarted?: () => void }): Promise<SpeakOutcome> {
     if (!synth || !createUtterance) return Promise.resolve('no-voice');
     current?.settle('stopped');
     cancelSynth();
@@ -171,6 +186,7 @@ export function createSystemSpeakerWith(deps: SystemSpeakerDeps): SystemSpeaker 
           current = null;
           if (job.watchdog !== null) timers.clearTimeout(job.watchdog);
           if (job.utterance) {
+            job.utterance.onstart = null;
             job.utterance.onend = null;
             job.utterance.onerror = null;
           }
@@ -182,7 +198,7 @@ export function createSystemSpeakerWith(deps: SystemSpeakerDeps): SystemSpeaker 
         if (current !== job) return; // נעצר או הוחלף בזמן ההמתנה לקולות
         const voice = pickVoice(voices, options.voiceName, content);
         if (!voice) job.settle('no-voice');
-        else startUtterance(job, content, voice, rate);
+        else startUtterance(job, content, voice, rate, options.onStarted);
       });
     });
   }
