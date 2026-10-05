@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+out/
+test-results/
+playwright-report/
+*.log
+.env
+.env.*
+!.env.example
+src/renderer/public/models/
+src/renderer/public/ort/
+
+# משאבי האריזה (אייקונים) — חריגה מה-.gitignore שבשורש הריפו
+!build/

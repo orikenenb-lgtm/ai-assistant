@@ -1,0 +1,86 @@
+# CI של JARVIS Desktop — רץ רק כשמשתנה jarvis-desktop/ או הקובץ הזה.
+# שני מסלולים:
+#   1) Linux: typecheck, lint, בדיקות יחידה, build, ובדיקות E2E של Electron תחת Xvfb.
+#   2) Windows: בדיקות יחידה ו-E2E על Windows אמיתי (כולל פתיחת notepad.exe דרך המסלול האמיתי),
+#      ובניית מתקין NSIS + ZIP שמועלים כ-artifact להורדה.
+name: JARVIS Desktop
+
+on:
+  push:
+    paths:
+      - "jarvis-desktop/**"
+      - ".github/workflows/jarvis-desktop.yml"
+  pull_request:
+    paths:
+      - "jarvis-desktop/**"
+      - ".github/workflows/jarvis-desktop.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jarvis-desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: JARVIS · Linux (בדיקות + E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: jarvis-desktop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: jarvis-desktop/package-lock.json
+      - run: npm ci
+      - run: npm run fetch-models
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: E2E (Electron + Xvfb)
+        run: xvfb-run -a npx playwright test
+
+  windows:
+    name: JARVIS · Windows (בדיקות + E2E + מתקין)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: jarvis-desktop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: jarvis-desktop/package-lock.json
+      - run: npm ci
+      - run: npm run fetch-models
+      - run: npm test
+      - run: npm run build
+      - name: E2E on real Windows
+        run: npx playwright test
+        env:
+          JARVIS_E2E_WINDOWS: "1"
+      - name: Build Windows installer (NSIS + ZIP)
+        run: npx electron-builder --config electron-builder.config.cjs --win --x64 --publish never
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: JARVIS-windows-x64
+          path: |
+            jarvis-desktop/release/*.exe
+            jarvis-desktop/release/*.zip
+          if-no-files-found: error
+          retention-days: 14
