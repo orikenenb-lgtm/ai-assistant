@@ -5,7 +5,8 @@
   color: var(--core-color);
 }
 .core[data-size='full'] {
-  inline-size: clamp(140px, 33vh, 262px);
+  /* לפי גודל האזור הפנוי (container query units), בלי לחרוג ממנו */
+  inline-size: max(64px, min(100cqi, calc(100cqb - 50px), 262px));
 }
 .core[data-size='compact'] {
   inline-size: 104px;

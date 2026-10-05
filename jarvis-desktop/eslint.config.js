@@ -39,9 +39,15 @@ export default tseslint.config(
     rules: {
       'no-restricted-syntax': ['error',
         { selector: "Property[key.name='shell'][value.value=true]", message: 'אסור shell:true. השתמש ב-spawn עם מערך ארגומנטים.' },
-        { selector: "CallExpression[callee.property.name=/^(exec|execSync)$/]", message: 'אסור exec/execSync — סכנת הזרקת פקודות.' },
+        { selector: "CallExpression[callee.object.name=/^(child_process|childProcess|cp)$/][callee.property.name=/^(exec|execSync|execFile|execFileSync)$/]", message: 'אסור exec — סכנת הזרקת פקודות.' },
         { selector: "CallExpression[callee.name=/^(exec|execSync)$/]", message: 'אסור exec/execSync — סכנת הזרקת פקודות.' },
       ],
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'child_process', importNames: ['exec', 'execSync', 'execFile', 'execFileSync'], message: 'רק spawn בלי shell.' },
+          { name: 'node:child_process', importNames: ['exec', 'execSync', 'execFile', 'execFileSync'], message: 'רק spawn בלי shell.' },
+        ],
+      }],
     },
   },
   {

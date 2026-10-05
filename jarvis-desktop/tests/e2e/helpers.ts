@@ -1,7 +1,8 @@
 import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * עזרי E2E: מריצים את JARVIS האמיתי (dist/ אחרי build) עם תיקיית נתונים זמנית.
@@ -11,7 +12,7 @@ import { join, resolve } from 'node:path';
  * אבל לא מוכיח שהשירות החי עובד. בדיקות כאלה מסומנות "(mock)" בשם.
  */
 
-export const projectRoot = resolve(__dirname, '..', '..');
+export const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const isWindows = process.platform === 'win32';
 
 export interface LaunchOptions {

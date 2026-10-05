@@ -115,6 +115,8 @@ export interface WakeView {
   status: WakeStatus;
   /** הודעה מלאה בעברית כשהסטטוס error. */
   error: string | null;
+  /** פירוט טכני (לא בעברית) לאבחון — מוצג רק במסך ההגדרות. */
+  detail?: string | null;
   engine: 'openwakeword' | 'porcupine' | null;
 }
 
@@ -128,6 +130,8 @@ export interface UiState {
   /** המיקרופון בתהליך פתיחה (עוד לא מקליט). */
   micStarting: boolean;
   micTest: MicTestState;
+  /** יש הקראה בתהליך (כולל המתנה לסינתזה, לפני שהשמע התחיל) — אפשר לעצור אותה. */
+  speechActive: boolean;
   speechOutput: SpeechOutput;
   activeTurnId: string | null;
   pendingApprovals: ApprovalRequest[];
@@ -174,6 +178,7 @@ export const SERVICES_POLL_MS = 30_000;
 export const WAKE_POLL_MS = 1000;
 const SCREEN_STAGE_LINGER_MS = 3500;
 const MIC_RELEASE_TIMEOUT_MS = 1500;
+const SETTINGS_RETRY_MS = 5000;
 
 export function initialUiState(): UiState {
   return {
@@ -185,6 +190,7 @@ export function initialUiState(): UiState {
     audioPhase: 'IDLE',
     micStarting: false,
     micTest: 'off',
+    speechActive: false,
     speechOutput: 'none',
     activeTurnId: null,
     pendingApprovals: [],
@@ -293,6 +299,7 @@ export class JarvisController {
   // --- בדיקות קול (מסך ההגדרות) ---
   private meterSeq = 0;
   private voiceTestBusy = false;
+  private voiceTestCancelled = false;
 
   // --- שונות ---
   private errorTimer: unknown = null;
@@ -300,9 +307,10 @@ export class JarvisController {
   private toastSeq = 0;
   private servicesTimer: unknown = null;
   private screenStageTimer: unknown = null;
+  private settingsRetryTimer: unknown = null;
   private sawPhaseEvent = false;
   private readonly resolvedApprovals = new Set<string>();
-  private expandedForApproval = false;
+  private expandedTemporarily = false;
 
   constructor(deps: ControllerDeps) {
     this.deps = deps;
@@ -331,6 +339,7 @@ export class JarvisController {
       if (this.disposed) return;
       this.store.setState({ initError: he.toasts.initFailed });
       this.notify('error', he.toasts.initFailed, { sticky: true });
+      this.scheduleSettingsRetry();
     }
 
     try {
@@ -361,6 +370,7 @@ export class JarvisController {
     t.clearTimeout(this.errorTimer);
     t.clearTimeout(this.wakeTailTimer);
     t.clearTimeout(this.screenStageTimer);
+    t.clearTimeout(this.settingsRetryTimer);
     t.clearInterval(this.wakePollTimer);
     t.clearInterval(this.servicesTimer);
     for (const handle of this.toastTimers.values()) t.clearTimeout(handle);
@@ -413,7 +423,7 @@ export class JarvisController {
     this.clearError();
     this.stopSpeech();
     this.cancelListening();
-    if (this.state.micTest === 'meter') void this.stopMicMeter();
+    this.cancelVoiceTests();
     const { activeTurnId, enginePhase } = this.state;
     if (activeTurnId || enginePhase === 'THINKING' || enginePhase === 'EXECUTING' || enginePhase === 'AWAITING_APPROVAL') {
       this.api.assistant.cancel(activeTurnId ?? undefined).catch(() => {
@@ -427,7 +437,8 @@ export class JarvisController {
     return (
       state.audioPhase !== 'IDLE' ||
       state.micStarting ||
-      state.speechOutput !== 'none' ||
+      state.speechActive ||
+      state.micTest !== 'off' ||
       state.activeTurnId !== null ||
       state.enginePhase === 'THINKING' ||
       state.enginePhase === 'EXECUTING'
@@ -437,7 +448,7 @@ export class JarvisController {
   private async startListening(_source: ListenSource): Promise<void> {
     const settings = this.state.settings;
     if (!settings) {
-      this.notify('info', he.toasts.settingsLoading);
+      this.notify(this.state.initError ? 'error' : 'info', this.state.initError ?? he.toasts.settingsLoading);
       return;
     }
     if (settings.stt.provider === 'none') {
@@ -657,6 +668,7 @@ export class JarvisController {
     const seq = ++this.speakSeq;
     this.speakActive = true;
     this.speechStarted = false;
+    this.store.setState({ speechActive: true });
     this.syncWakePause();
 
     let outcome: SpeakOutcome;
@@ -671,7 +683,13 @@ export class JarvisController {
     this.finishSpeaking();
 
     const latest = this.state.settings;
-    if (outcome === 'ended' && opts.followUp && latest?.voice.followUpListening && this.listenPhase === 'idle') {
+    if (
+      outcome === 'ended' &&
+      opts.followUp &&
+      latest?.voice.followUpListening &&
+      latest.stt.provider !== 'none' &&
+      this.listenPhase === 'idle'
+    ) {
       await this.startListening('followup');
     }
   }
@@ -689,6 +707,8 @@ export class JarvisController {
     const result = await speaker.speak(text, { voiceName: s.tts.systemVoiceName || undefined, rate: s.tts.rate });
     if (seq !== this.speakSeq) return 'stopped';
     if (result === 'no-voice') {
+      // לא הושמע כלום בפועל — לא נרשם כהקראה (הגנת ההד וזנב מילת ההפעלה לא רלוונטיים)
+      this.speechStarted = false;
       this.notify('warning', he.toasts.noSystemVoice, { ttlMs: 14_000 });
       return 'failed';
     }
@@ -750,7 +770,7 @@ export class JarvisController {
       this.scheduleWakeTail();
     }
     this.speechStarted = false;
-    this.store.setState({ speechOutput: 'none' });
+    this.store.setState({ speechOutput: 'none', speechActive: false });
     if (this.state.audioPhase === 'SPEAKING') this.setAudioPhase('IDLE');
     this.syncWakePause();
   }
@@ -833,8 +853,11 @@ export class JarvisController {
   }
 
   private failWake(reason: string, engine: 'openwakeword' | 'porcupine'): void {
-    const message = he.wake.unavailable(reason || he.wake.unknownReason);
-    this.setWake({ status: 'error', error: message, engine });
+    // סיבה טכנית באנגלית לא נכנסת להודעה העברית — היא נשמרת כפירוט למסך ההגדרות
+    const hebrewReason = /[\u0590-\u05FF]/.test(reason) ? reason.trim().replace(/[.。]+$/u, '') : null;
+    const message = he.wake.unavailable(hebrewReason || (reason ? he.wake.technicalReason : he.wake.unknownReason));
+    const detail = !hebrewReason && reason ? reason.slice(0, 300) : null;
+    this.setWake({ status: 'error', error: message, detail, engine });
     if (this.wakeErrorNotified !== message) {
       this.wakeErrorNotified = message;
       this.notify('warning', message, { ttlMs: 12_000 });
@@ -905,7 +928,9 @@ export class JarvisController {
 
   private setWake(next: WakeView): void {
     const cur = this.state.wake;
-    if (cur.status === next.status && cur.error === next.error && cur.engine === next.engine) return;
+    if (cur.status === next.status && cur.error === next.error && (cur.detail ?? null) === (next.detail ?? null) && cur.engine === next.engine) {
+      return;
+    }
     this.store.setState({ wake: next });
   }
 
@@ -959,6 +984,18 @@ export class JarvisController {
     this.syncWakePause();
   }
 
+  /**
+   * עוצר בדיקות קול פעילות (מד עוצמה / הקלטת בדיקת תמלול) — בעצירה כללית ובסגירת ההגדרות.
+   * כך הקלטת בדיקה לא ממשיכה ונשלחת לתמלול אחרי שהמשתמש כבר סגר את המסך.
+   */
+  cancelVoiceTests(): void {
+    if (this.state.micTest === 'meter') void this.stopMicMeter();
+    if (this.voiceTestBusy) {
+      this.voiceTestCancelled = true;
+      if (this.state.micTest === 'recording') this.safely(() => this.mic?.cancel());
+    }
+  }
+
   /** עוצמת המיקרופון הנוכחית למד (0..1), רק כשהמד פעיל. */
   getMicMeterLevel(): number {
     if (this.state.micTest !== 'meter' || !this.mic) return 0;
@@ -976,6 +1013,7 @@ export class JarvisController {
     if (this.state.micTest === 'meter') await this.stopMicMeter();
 
     this.voiceTestBusy = true;
+    this.voiceTestCancelled = false;
     this.store.setState({ micTest: 'recording' });
     this.syncWakePause();
     try {
@@ -985,7 +1023,8 @@ export class JarvisController {
       if (!done) return { ok: false, message: he.toasts.captureFailed };
       const result = await done;
       if (this.disposed) return { ok: false, message: he.errors.unknown };
-      if (result.reason === 'cancelled' || result.reason === 'error') return { ok: false, message: he.toasts.captureFailed };
+      if (result.reason === 'cancelled' || this.voiceTestCancelled) return { ok: false, message: he.settings.voice.testCancelled };
+      if (result.reason === 'error') return { ok: false, message: he.toasts.captureFailed };
       if (!result.speechDetected || result.wav.byteLength <= 44) {
         return { ok: false, message: he.settings.voice.transcribeNoSpeech };
       }
@@ -995,6 +1034,7 @@ export class JarvisController {
         mimeType: 'audio/wav',
         durationMs: clampDurationMs(result.durationMs),
       });
+      if (this.voiceTestCancelled) return { ok: false, message: he.settings.voice.testCancelled };
       if (!res.ok) return { ok: false, message: res.message_he };
       const text = res.text.trim();
       return text ? { ok: true, text } : { ok: false, message: he.toasts.emptyTranscript };
@@ -1032,7 +1072,9 @@ export class JarvisController {
       case 'phase': {
         this.sawPhaseEvent = true;
         const patch: Partial<UiState> = { enginePhase: event.phase, engineLabel: event.label_he ?? null };
-        if (event.turnId) patch.activeTurnId = event.turnId;
+        // IDLE = אין תור פעיל (גם אם turn-ended הגיע לפני ה-phase האחרון)
+        if (event.phase === 'IDLE') patch.activeTurnId = null;
+        else if (event.turnId) patch.activeTurnId = event.turnId;
         this.store.setState(patch);
         break;
       }
@@ -1178,19 +1220,37 @@ export class JarvisController {
   private applySettings(next: Settings): void {
     const prev = this.state.settings;
     const patch: Partial<UiState> = { settings: next, initError: null };
+    if (!prev && this.state.initError) {
+      // ההגדרות נטענו אחרי כישלון — מסירים את הודעת השגיאה הקבועה
+      for (const t of this.state.toasts) if (t.text === he.toasts.initFailed) this.dismissToast(t.id);
+    }
     if (!prev) patch.viewMode = next.ui.mode;
-    else if (prev.ui.mode !== next.ui.mode && !this.expandedForApproval) patch.viewMode = next.ui.mode;
+    else if (prev.ui.mode !== next.ui.mode && !this.expandedTemporarily) patch.viewMode = next.ui.mode;
     this.store.setState(patch);
     if (!prev || wakeSettingsChanged(prev, next)) void this.configureWakeWord();
   }
 
-  private async reloadSettings(): Promise<void> {
+  private async reloadSettings(): Promise<boolean> {
     try {
       const settings = await this.api.settings.get();
       if (!this.disposed) this.applySettings(settings);
+      return true;
     } catch {
       // נשארים עם ההגדרות הקודמות
+      return false;
     }
+  }
+
+  /** טעינת ההגדרות נכשלה בהפעלה — מנסים שוב ברקע עד שמצליח (main אולי עוד עולה). */
+  private scheduleSettingsRetry(): void {
+    this.deps.timers.clearTimeout(this.settingsRetryTimer);
+    this.settingsRetryTimer = this.deps.timers.setTimeout(() => {
+      this.settingsRetryTimer = null;
+      void this.reloadSettings().then((ok) => {
+        if (this.disposed) return;
+        if (!ok && !this.state.settings) this.scheduleSettingsRetry();
+      });
+    }, SETTINGS_RETRY_MS);
   }
 
   /** עדכון הגדרות דרך main (שמאמת מול הסכמה). מחזיר את ה-Result להצגת שגיאה במקום. */
@@ -1207,7 +1267,7 @@ export class JarvisController {
 
   async setViewMode(mode: ViewMode, opts: { persist?: boolean } = {}): Promise<void> {
     const persist = opts.persist ?? true;
-    if (persist) this.expandedForApproval = false;
+    if (persist) this.expandedTemporarily = false;
     const prev = this.state.viewMode;
     this.store.setState(mode === 'compact' ? { viewMode: mode, settingsOpen: false } : { viewMode: mode });
     try {
@@ -1243,13 +1303,17 @@ export class JarvisController {
   }
 
   openSettings(section?: SettingsSectionId): void {
-    if (this.state.viewMode === 'compact') void this.setViewMode('full');
+    // מהתצוגה הקומפקטית: מרחיבים זמנית (בלי לשמור), ובסגירה חוזרים לקומפקטי
+    if (this.state.viewMode === 'compact') {
+      this.expandedTemporarily = true;
+      void this.setViewMode('full', { persist: false });
+    }
     this.store.setState(section ? { settingsOpen: true, settingsSection: section } : { settingsOpen: true });
   }
 
   closeSettings(): void {
     this.store.setState({ settingsOpen: false });
-    if (this.state.micTest === 'meter') void this.stopMicMeter();
+    this.cancelVoiceTests();
     this.maybeRestoreCompact();
   }
 
@@ -1260,14 +1324,14 @@ export class JarvisController {
   /** בקשת אישור בתצוגה קומפקטית: מרחיבים זמנית (בלי לשמור), כדי שהדיאלוג יהיה קריא. */
   private maybeExpandForApproval(): void {
     if (this.state.viewMode !== 'compact' || this.state.pendingApprovals.length === 0) return;
-    this.expandedForApproval = true;
+    this.expandedTemporarily = true;
     void this.setViewMode('full', { persist: false });
   }
 
   private maybeRestoreCompact(): void {
-    if (!this.expandedForApproval) return;
+    if (!this.expandedTemporarily) return;
     if (this.state.pendingApprovals.length > 0 || this.state.settingsOpen) return;
-    this.expandedForApproval = false;
+    this.expandedTemporarily = false;
     if (this.state.settings?.ui.mode === 'compact') void this.setViewMode('compact', { persist: false });
   }
 

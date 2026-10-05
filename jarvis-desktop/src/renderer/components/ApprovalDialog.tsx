@@ -19,7 +19,10 @@ function ApprovalBody({ request, index, total }: { request: ApprovalRequest; ind
   const now = useNowMs();
   const displays = request.displays ?? [];
   const [displayId, setDisplayId] = useState<string>(
-    request.defaultDisplayId ?? displays.find((d) => d.primary)?.id ?? displays[0]?.id ?? '',
+    (request.defaultDisplayId && displays.some((d) => d.id === request.defaultDisplayId) ? request.defaultDisplayId : undefined) ??
+      displays.find((d) => d.primary)?.id ??
+      displays[0]?.id ??
+      '',
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

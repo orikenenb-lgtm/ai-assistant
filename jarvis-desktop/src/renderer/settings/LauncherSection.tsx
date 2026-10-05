@@ -2,12 +2,12 @@
  * מקטע "תוכנות ופרויקטים": עריכת רשימת התוכנות והפרויקטים שמותר ל-JARVIS לפתוח.
  * כל שינוי נשמר מיד דרך main (שמאמת את כל הרשימה). אימות נתיב ובדיקת פתיחה מתבצעים ב-main.
  */
-import { useId, useState } from 'react';
-import type { AppEntry, ProjectEntry } from '../../shared/settings-schema';
+import { useCallback, useId, useRef, useState } from 'react';
+import type { AppEntry, ProjectEntry, Settings } from '../../shared/settings-schema';
 import type { AppCandidate, PathValidation } from '../../shared/types';
 import { he } from '../i18n/he';
 import { useController } from '../state/controller';
-import { ActionButton, ConfirmButton, SaveStatus, Select, TextInput, Toggle, type SaveState, type SectionProps } from './fields';
+import { ActionButton, ConfirmButton, SaveStatus, Select, TextInput, Toggle, type SaveState, type Saver, type SectionProps } from './fields';
 import {
   addAlias,
   appKindFromPath,
@@ -20,6 +20,7 @@ import {
 } from './helpers';
 
 const t = he.settings.launcher;
+type Launcher = Settings['launcher'];
 type CheckResult = { ok: boolean; text: string } | null;
 
 function CheckLine({ result }: { result: CheckResult }) {
@@ -356,30 +357,49 @@ function DetectApps({ apps, onAdd, onAssign }: { apps: AppEntry[]; onAdd: (c: Ap
 
 /* ---------------- המקטע ---------------- */
 
+/**
+ * עדכונים לרשימות התוכנות/הפרויקטים. המערכים נשמרים בשלמותם, ולכן כל שינוי מחושב
+ * מההגדרות העדכניות ביותר ורק אחרי שהשמירה הקודמת הסתיימה — שני שינויים מהירים לא ידרסו זה את זה.
+ */
+function useLauncherMutations(saver: Saver) {
+  const controller = useController();
+  const { save } = saver;
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  return useCallback(
+    (field: string, mutate: (launcher: Launcher) => Partial<Launcher> | null): Promise<boolean> => {
+      const run = queue.current.then(async () => {
+        const current = controller.state.settings?.launcher;
+        if (!current) return false;
+        const patch = mutate(current);
+        return patch ? save(field, { launcher: patch }) : false;
+      });
+      queue.current = run.catch(() => undefined);
+      return run;
+    },
+    [controller, save],
+  );
+}
+
 export function LauncherSection({ settings, saver }: SectionProps) {
   const { apps, projects, defaultProjectId } = settings.launcher;
+  const mutate = useLauncherMutations(saver);
 
-  const saveApps = (next: AppEntry[], field = 'apps') => saver.save(field, { launcher: { apps: next } });
   const updateApp = (id: string, patch: Partial<AppEntry>) =>
-    void saveApps(
-      apps.map((a) => (a.id === id ? { ...a, ...patch } : a)),
-      `app:${id}`,
-    );
-  const saveProjects = (next: ProjectEntry[], field = 'projects', extra: { defaultProjectId?: string } = {}) =>
-    saver.save(field, { launcher: { projects: next, ...extra } });
-  const updateProject = (id: string, patch: Partial<ProjectEntry>) =>
-    void saveProjects(
-      projects.map((p) => (p.id === id ? { ...p, ...patch } : p)),
-      `project:${id}`,
-    );
-
-  const addFromCandidate = (c: AppCandidate) => {
-    if (apps.length >= 50) {
-      saver.setError('apps', t.limitApps);
-      return;
-    }
-    const app: AppEntry = {
-      id: makeUniqueId(c.suggestedId || c.name, apps.map((a) => a.id), 'app'),
+    void mutate(`app:${id}`, (l) => ({ apps: l.apps.map((a) => (a.id === id ? { ...a, ...patch } : a)) }));
+  const removeApp = async (id: string) => {
+    await mutate('apps', (l) => ({ apps: l.apps.filter((a) => a.id !== id) }));
+  };
+  const addApp = (make: (apps: AppEntry[]) => AppEntry) =>
+    void mutate('apps', (l) => {
+      if (l.apps.length >= 50) {
+        saver.setError('apps', t.limitApps);
+        return null;
+      }
+      return { apps: [...l.apps, make(l.apps)] };
+    });
+  const addFromCandidate = (c: AppCandidate) =>
+    addApp((list) => ({
+      id: makeUniqueId(c.suggestedId || c.name, list.map((a) => a.id), 'app'),
       name: c.name.slice(0, 60),
       aliases: [],
       kind: c.kind,
@@ -387,9 +407,24 @@ export function LauncherSection({ settings, saver }: SectionProps) {
       args: [],
       enabled: true,
       builtin: false,
-    };
-    void saveApps([...apps, app]);
+    }));
+
+  const updateProject = (id: string, patch: Partial<ProjectEntry>) =>
+    void mutate(`project:${id}`, (l) => ({ projects: l.projects.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
+  const removeProject = async (id: string) => {
+    await mutate('projects', (l) => ({
+      projects: l.projects.filter((p) => p.id !== id),
+      ...(l.defaultProjectId === id ? { defaultProjectId: '' } : {}),
+    }));
   };
+  const addProject = () =>
+    void mutate('projects', (l) => {
+      if (l.projects.length >= 30) {
+        saver.setError('projects', t.limitProjects);
+        return null;
+      }
+      return { projects: [...l.projects, newProject(l.projects)] };
+    });
 
   return (
     <div className="section">
@@ -401,9 +436,7 @@ export function LauncherSection({ settings, saver }: SectionProps) {
             app={app}
             status={saver.status[`app:${app.id}`]}
             onChange={(patch) => updateApp(app.id, patch)}
-            onRemove={async () => {
-              await saveApps(apps.filter((a) => a.id !== app.id));
-            }}
+            onRemove={() => removeApp(app.id)}
           />
         ))}
       </ul>
@@ -411,10 +444,7 @@ export function LauncherSection({ settings, saver }: SectionProps) {
         <button
           type="button"
           className="btn"
-          onClick={() => {
-            if (apps.length >= 50) saver.setError('apps', t.limitApps);
-            else void saveApps([...apps, newCustomApp(apps)]);
-          }}
+          onClick={() => addApp(newCustomApp)}
         >
           {t.addApp}
         </button>
@@ -434,11 +464,8 @@ export function LauncherSection({ settings, saver }: SectionProps) {
             isDefault={project.id === defaultProjectId}
             status={saver.status[`project:${project.id}`]}
             onChange={(patch) => updateProject(project.id, patch)}
-            onMakeDefault={() => void saver.save(`project:${project.id}`, { launcher: { defaultProjectId: project.id } })}
-            onRemove={async () => {
-              const next = projects.filter((p) => p.id !== project.id);
-              await saveProjects(next, 'projects', project.id === defaultProjectId ? { defaultProjectId: '' } : {});
-            }}
+            onMakeDefault={() => void mutate(`project:${project.id}`, () => ({ defaultProjectId: project.id }))}
+            onRemove={() => removeProject(project.id)}
           />
         ))}
       </ul>
@@ -446,10 +473,7 @@ export function LauncherSection({ settings, saver }: SectionProps) {
         <button
           type="button"
           className="btn"
-          onClick={() => {
-            if (projects.length >= 30) saver.setError('projects', t.limitProjects);
-            else void saveProjects([...projects, newProject(projects)]);
-          }}
+          onClick={addProject}
         >
           {t.addProject}
         </button>

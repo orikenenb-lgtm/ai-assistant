@@ -692,3 +692,125 @@ describe('JarvisController — lifecycle (mock)', () => {
     expect(toastTexts(controller)).toEqual(['ב']);
   });
 });
+
+describe('JarvisController — self-review regressions (mock)', () => {
+  it('a final phase IDLE clears a stale active turn even if turn-ended came first (mock)', async () => {
+    const { jarvis, controller } = await setup();
+    jarvis.emit({ type: 'phase', phase: 'THINKING', turnId: 't1' });
+    jarvis.emit({ type: 'turn-ended', turnId: 't1', outcome: 'completed' });
+    jarvis.emit({ type: 'phase', phase: 'IDLE', turnId: 't1' });
+    expect(controller.state.activeTurnId).toBeNull();
+    expect(controller.canStop()).toBe(false);
+  });
+
+  it('stop is available while a reply is still being synthesized, and prevents playback (mock)', async () => {
+    const { audio, controller, jarvis } = await setup({ settings: settingsWith((s) => (s.tts.provider = 'azure')) });
+    let release!: (v: Awaited<ReturnType<typeof jarvis.api.voice.synthesize>>) => void;
+    vi.mocked(jarvis.api.voice.synthesize).mockImplementationOnce(() => new Promise((r) => (release = r)));
+    jarvis.emit(response('טקסט ארוך'));
+    await flush();
+    expect(controller.state.audioPhase).toBe('IDLE');
+    expect(controller.canStop()).toBe(true);
+    controller.stop();
+    release({ ok: true, audio: new Uint8Array(4), mimeType: 'audio/mpeg', provider: 'azure' });
+    await flush();
+    expect(audio.playback.played).toHaveLength(0);
+    expect(controller.state.speechActive).toBe(false);
+  });
+
+  it('follow-up listening is skipped silently when transcription is not configured (mock)', async () => {
+    const { audio, controller, jarvis } = await setup({
+      settings: settingsWith((s) => {
+        s.voice.followUpListening = true;
+        s.stt.provider = 'none';
+      }),
+    });
+    jarvis.emit(response('תשובה'));
+    await flush();
+    audio.speaker.end();
+    await flush();
+    expect(audio.mic.startCalls).toHaveLength(0);
+    expect(toastTexts(controller)).not.toContain(he.toasts.sttNotConfigured);
+  });
+
+  it('closing settings cancels a running transcription test — nothing is sent (mock)', async () => {
+    const { jarvis, audio, controller } = await setup();
+    controller.openSettings('voice');
+    const test = controller.runTranscriptionTest();
+    await flush();
+    expect(controller.state.micTest).toBe('recording');
+    controller.closeSettings();
+    const res = await test;
+    expect(res.ok).toBe(false);
+    expect(audio.mic.cancelCalls).toBe(1);
+    expect(jarvis.api.voice.transcribe).not.toHaveBeenCalled();
+    expect(controller.state.micTest).toBe('off');
+  });
+
+  it('transcription test returns the transcript without submitting it to JARVIS (mock)', async () => {
+    const { jarvis, audio, controller } = await setup();
+    const test = controller.runTranscriptionTest();
+    await flush();
+    expect(audio.mic.startCalls[0]?.maxUtteranceSec).toBe(3);
+    audio.mic.finish(speechCapture({ reason: 'max-duration' }));
+    expect(await test).toEqual({ ok: true, text: 'תפתח את EPLAN' });
+    expect(jarvis.api.assistant.submit).not.toHaveBeenCalled();
+  });
+
+  it('mic meter is stopped before push-to-talk opens the mic (mock)', async () => {
+    const { audio, controller } = await setup();
+    expect(await controller.startMicMeter()).toBeNull();
+    expect(controller.state.micTest).toBe('meter');
+    expect(controller.getMicMeterLevel()).toBeCloseTo(0.4);
+    await controller.toggleListen('ui');
+    expect(audio.log.filter((x) => x.startsWith('mic.'))).toEqual(['mic.start', 'mic.cancel', 'mic.start']);
+    expect(controller.state.micTest).toBe('off');
+    expect(controller.state.audioPhase).toBe('LISTENING');
+  });
+
+  it('settings opened from compact mode expand temporarily and restore compact on close (mock)', async () => {
+    const { jarvis, controller } = await setup({ settings: settingsWith((s) => (s.ui.mode = 'compact')) });
+    controller.openSettings();
+    await flush();
+    expect(controller.state.viewMode).toBe('full');
+    expect(jarvis.api.settings.update).not.toHaveBeenCalled();
+    controller.closeSettings();
+    await flush();
+    expect(controller.state.viewMode).toBe('compact');
+    expect(vi.mocked(jarvis.api.window.setMode).mock.calls.map((c) => c[0])).toEqual(['full', 'compact']);
+  });
+
+  it('settings load failure: truthful message on mic press, then a background retry recovers (mock)', async () => {
+    const jarvis = mockJarvisApi();
+    vi.mocked(jarvis.api.settings.get).mockRejectedValueOnce(new Error('not ready'));
+    const audio = mockAudio();
+    const clock = mockClock();
+    const controller = new JarvisController({ api: jarvis.api, audio: audio.factories, now: clock.now, timers: clock.timers, randomId: () => 'x' });
+    await controller.init();
+    expect(controller.state.settings).toBeNull();
+    await controller.toggleListen('ui');
+    expect(audio.mic.startCalls).toHaveLength(0);
+    expect(toastTexts(controller)).toContain(he.toasts.initFailed);
+    clock.advance(5000);
+    await flush();
+    expect(controller.state.settings).not.toBeNull();
+    expect(toastTexts(controller)).not.toContain(he.toasts.initFailed);
+    await controller.toggleListen('ui');
+    expect(controller.state.audioPhase).toBe('LISTENING');
+  });
+});
+
+describe('JarvisController — wake word error text (mock)', () => {
+  it('keeps technical English errors out of the Hebrew status and exposes them as detail (mock)', async () => {
+    const s = settingsWith((x) => (x.wakeWord.enabled = true));
+    const jarvis = mockJarvisApi({ settings: s });
+    const audio = mockAudio();
+    audio.wakeFailReason = 'no available backend found. ERR: [wasm] TypeError';
+    const clock = mockClock();
+    const controller = new JarvisController({ api: jarvis.api, audio: audio.factories, now: clock.now, timers: clock.timers, randomId: () => 'x' });
+    await controller.init();
+    await flush();
+    expect(controller.state.wake.error).toBe('מילת ההפעלה לא זמינה: טעינת מנוע הזיהוי נכשלה. לחיצה לדיבור ממשיכה לעבוד.');
+    expect(controller.state.wake.detail).toContain('no available backend');
+  });
+});

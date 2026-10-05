@@ -19,6 +19,7 @@ import {
 } from './audio';
 import { he } from './i18n/he';
 import { ControllerContext, JarvisController, type BatteryLike, type ControllerDeps } from './state/controller';
+import { uuidV4 } from './state/ids';
 
 function FatalScreen({ message, canReload }: { message: string; canReload: boolean }) {
   return (
@@ -64,7 +65,7 @@ function browserDeps(): ControllerDeps {
       setInterval: (fn, ms) => window.setInterval(fn, ms),
       clearInterval: (h) => window.clearInterval(h as number | undefined),
     },
-    randomId: () => crypto.randomUUID(),
+    randomId: () => uuidV4(),
     getBattery: typeof nav.getBattery === 'function' ? () => nav.getBattery?.() : undefined,
   };
 }

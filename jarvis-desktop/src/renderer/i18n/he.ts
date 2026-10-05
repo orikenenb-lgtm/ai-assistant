@@ -48,7 +48,7 @@ export const he = {
     clockLabel: 'שעה נוכחית בישראל',
     micActive: 'מיקרופון פעיל',
     micStarting: 'מפעיל מיקרופון…',
-    micOff: 'מיקרופון כבוי',
+    micOff: 'מיקרופון לא מקליט',
     micTest: 'בדיקת מיקרופון פעילה',
     wakeListening: 'האזנה למילת הפעלה (מקומית)',
     wakePaused: 'מילת הפעלה מושהית',
@@ -249,6 +249,8 @@ export const he = {
   wake: {
     unavailable: (reason: string) => `מילת ההפעלה לא זמינה: ${reason}. לחיצה לדיבור ממשיכה לעבוד.`,
     unknownReason: 'שגיאה לא ידועה',
+    technicalReason: 'טעינת מנוע הזיהוי נכשלה',
+    technicalDetail: 'פרטים טכניים:',
   },
 
   errors: {
@@ -416,6 +418,7 @@ export const he = {
       transcribeResult: 'תמלול:',
       transcribeNoSpeech: 'לא זוהה דיבור בהקלטה.',
       busy: 'JARVIS מאזין או מדבר כרגע — נסה שוב בעוד רגע.',
+      testCancelled: 'הבדיקה בוטלה.',
     },
 
     wake: {
@@ -538,6 +541,23 @@ export const he = {
     },
   },
 } as const;
+
+/** מילים לפורמטים של זמן (שניות/דקות/שעות/ימים). */
+export const UNITS = {
+  secondOne: 'שנייה אחת',
+  seconds: (n: number) => `${n} שניות`,
+  minuteOne: 'דקה אחת',
+  minutes: (n: number) => `${n} דקות`,
+  hourOne: 'שעה אחת',
+  hours: (n: number) => `${n} שעות`,
+  dayOne: 'יום אחד',
+  days: (n: number) => `${n} ימים`,
+} as const;
+
+/** הודעת טווח לשדות מספריים. */
+export function rangeErrorText(min: number, max: number): string {
+  return `ערך לא תקין — מספר שלם בין ${min} ל-${max}.`;
+}
 
 /** תיאור של תזכורת שהוחמצה — לשימוש ב-aria. */
 export function reminderAria(r: ReminderDTO): string {

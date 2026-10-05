@@ -134,7 +134,7 @@ function VoiceTests({ settings }: { settings: Settings }) {
   return (
     <>
       <MicMeter />
-      <Field label={t.sampleButton}>
+      <div className="field">
         <ActionButton
           label={t.sampleButton}
           disabled={settings.tts.provider === 'none'}
@@ -147,7 +147,7 @@ function VoiceTests({ settings }: { settings: Settings }) {
             {sampleError}
           </p>
         )}
-      </Field>
+      </div>
       <Field label={t.transcribeTest} hint={t.transcribeTestHint}>
         <ActionButton
           label={t.transcribeTest}
@@ -255,7 +255,8 @@ export function VoiceSection({
     }
   };
 
-  const sttModelOptions = STT_OPENAI_MODELS.map((m) => ({ value: m.id, label: `${m.id} — ${m.note}` }));
+  // תווית שמתחילה בעברית — כדי שהטקסט ב-select יוצג מימין לשמאל
+  const sttModelOptions = STT_OPENAI_MODELS.map((m) => ({ value: m.id, label: `${m.note} — ${m.id}` }));
   if (!STT_OPENAI_MODELS.some((m) => m.id === stt.openaiModel)) sttModelOptions.push({ value: stt.openaiModel, label: stt.openaiModel });
 
   const openAiVoiceOptions = OPENAI_TTS_VOICES.map((v) => ({ value: v as string, label: v as string }));
@@ -313,10 +314,10 @@ export function VoiceSection({
         </>
       )}
       {stt.provider !== 'none' && (
-        <Field label={t.testStt}>
+        <div className="field">
           <ActionButton label={t.testStt} onRun={() => runTest('stt', setSttTest)} />
           <ServiceTestResult result={sttTest} />
-        </Field>
+        </div>
       )}
 
       {/* ---------- מפתחות משותפים ---------- */}
@@ -401,10 +402,10 @@ export function VoiceSection({
             status={saver.status.autoSpeak}
           />
           {tts.provider !== 'system' && (
-            <Field label={t.testTts}>
+            <div className="field">
               <ActionButton label={t.testTts} onRun={() => runTest('tts', setTtsTest)} />
               <ServiceTestResult result={ttsTest} />
-            </Field>
+            </div>
           )}
         </>
       )}

@@ -40,31 +40,31 @@ export function Transcript() {
   return (
     <section className="transcript frame" aria-label={he.transcript.regionLabel} aria-live="polite">
       <div className="transcript-scroll">
-      {lastUser && meta && (
-        <div className="line line-user">
-          <span className="line-who">
-            {meta.icon}
-            <span>{he.transcript.you}</span>
-            <span className="line-via">· {meta.label}</span>
-          </span>
-          <p className="line-text" dir="auto">
-            {lastUser.text}
-          </p>
-        </div>
-      )}
-      {lastReply ? (
-        <div className="line line-jarvis">
-          <span className="line-who">
-            <span className="line-name" dir="ltr">
-              {he.transcript.jarvis}
+        {lastUser && meta && (
+          <div className="line line-user">
+            <span className="line-who">
+              {meta.icon}
+              <span>{he.transcript.you}</span>
+              <span className="line-via">· {meta.label}</span>
             </span>
-            {lastReply.mode === 'local' && <span className="line-via">· {he.transcript.localMode}</span>}
-          </span>
-          <p className="line-text">{lastReply.text}</p>
-        </div>
-      ) : (
-        awaitingReply && <p className="line-waiting">{he.transcript.waitingReply}</p>
-      )}
+            <p className="line-text" dir="auto">
+              {lastUser.text}
+            </p>
+          </div>
+        )}
+        {lastReply ? (
+          <div className="line line-jarvis">
+            <span className="line-who">
+              <span className="line-name" dir="ltr">
+                {he.transcript.jarvis}
+              </span>
+              {lastReply.mode === 'local' && <span className="line-via">· {he.transcript.localMode}</span>}
+            </span>
+            <p className="line-text">{lastReply.text}</p>
+          </div>
+        ) : (
+          awaitingReply && <p className="line-waiting">{he.transcript.waitingReply}</p>
+        )}
       </div>
     </section>
   );

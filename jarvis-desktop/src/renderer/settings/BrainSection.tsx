@@ -6,7 +6,7 @@ import type { SecretsStatus } from '../../shared/settings-schema';
 import type { ServiceStatus } from '../../shared/types';
 import { he } from '../i18n/he';
 import { useController } from '../state/controller';
-import { ActionButton, Field, RadioGroup, Select, TextInput, type SectionProps } from './fields';
+import { ActionButton, RadioGroup, Select, TextInput, type SectionProps } from './fields';
 import { CLAUDE_MODELS, MODEL_ID_RE, isKnownModel, parseIntInRange, rangeError } from './helpers';
 import { SecretField } from './SecretField';
 
@@ -44,7 +44,7 @@ export function BrainSection({
   const selectValue = customOpen || !known ? CUSTOM : ai.model;
 
   const modelOptions = [
-    ...CLAUDE_MODELS.map((m) => ({ value: m.id, label: m.isDefault ? `${m.id} (${t.modelDefault})` : m.id })),
+    ...CLAUDE_MODELS.map((m) => ({ value: m.id, label: m.isDefault ? `${t.modelDefault}: ${m.id}` : m.id })),
     { value: CUSTOM, label: t.modelCustom },
   ];
 
@@ -115,7 +115,7 @@ export function BrainSection({
         status={saver.status.brainMode}
       />
 
-      <Field label={t.testConnection}>
+      <div className="field">
         <ActionButton
           label={t.testConnection}
           onRun={async () => {
@@ -130,7 +130,7 @@ export function BrainSection({
           }}
         />
         <ServiceTestResult result={test} />
-      </Field>
+      </div>
     </div>
   );
 }

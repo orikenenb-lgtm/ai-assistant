@@ -10,7 +10,7 @@ import { TodayTab } from './TodayTab';
 
 type SideTab = 'today' | 'system' | 'actions';
 
-export function SidePanel({ includeActions }: { includeActions: boolean }) {
+export function SidePanel({ includeActions, paused }: { includeActions: boolean; paused: boolean }) {
   const [tab, setTab] = useState<SideTab>('today');
   const items: Array<TabItem<SideTab>> = [
     { id: 'today', label: he.side.today },
@@ -32,7 +32,7 @@ export function SidePanel({ includeActions }: { includeActions: boolean }) {
       >
         {current === 'today' && <TodayTab />}
         {/* SystemTab מושך נתונים רק כשהוא מוצג — כשעוברים לשונית, הרכיב מתפרק והמשיכה נעצרת */}
-        {current === 'system' && <SystemTab />}
+        {current === 'system' && <SystemTab paused={paused} />}
         {current === 'actions' && (
           <>
             <p className="panel-sub">{he.actions.subtitle}</p>

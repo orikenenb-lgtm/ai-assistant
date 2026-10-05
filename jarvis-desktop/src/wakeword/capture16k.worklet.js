@@ -1,3 +1,4 @@
+/* global AudioWorkletProcessor, registerProcessor */
 // AudioWorklet: מעביר בלוקים של אודיו (ערוץ ראשון) ל-thread הראשי. רץ ב-AudioContext של 16kHz.
 // אין כאן עיבוד או שליחה לרשת — רק העתקה של הדגימות.
 class Capture16k extends AudioWorkletProcessor {

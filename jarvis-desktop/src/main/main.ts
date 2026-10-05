@@ -5,7 +5,7 @@
  */
 import {
   app,
-  BrowserWindow,
+  type BrowserWindow,
   desktopCapturer,
   dialog,
   globalShortcut,
@@ -166,7 +166,7 @@ async function bootstrap(): Promise<void> {
       // כוננים של הפרויקטים המוגדרים (למשל D:\) בנוסף לכונן המערכת
       const roots = new Set<string>();
       for (const p of settings.get().launcher.projects) {
-        const m = /^([A-Za-z]:)[\\/]/.exec(p.path);
+        const m = p.path.match(/^([A-Za-z]:)[\\/]/);
         if (m) roots.add(`${m[1]!.toUpperCase()}\\`);
       }
       return [...roots];
@@ -279,16 +279,12 @@ async function bootstrap(): Promise<void> {
   });
 
   const windowControl = {
+    // נקרא מה-renderer (IPC): רק משנה את גודל החלון. השמירה להגדרות באחריות ה-renderer,
+    // כי הרחבה זמנית (אישור/הגדרות במצב קומפקטי) לא אמורה להישמר. לא שולחים פקודה חזרה — זה היה יוצר לולאה.
     setMode(mode: 'full' | 'compact') {
       if (!mainWindow) return;
       applyWindowMode(mainWindow, mode);
-      try {
-        settings.update({ ui: { mode } });
-      } catch {
-        // לא קריטי
-      }
       tray?.update({ mode });
-      sendCommand({ type: 'view-mode', mode });
     },
     setAlwaysOnTop(value: boolean) {
       mainWindow?.setAlwaysOnTop(value, 'floating');
@@ -319,7 +315,11 @@ async function bootstrap(): Promise<void> {
         showWindow();
         sendCommand({ type: 'toggle-listen', source: 'tray' });
       },
-      setMode: (mode) => windowControl.setMode(mode),
+      // מהמגש: מבקשים מה-renderer להחליף מצב (הוא ישנה את החלון וישמור את ההעדפה)
+      setMode: (mode) => {
+        showWindow();
+        sendCommand({ type: 'view-mode', mode });
+      },
       setAlwaysOnTop: (value) => windowControl.setAlwaysOnTop(value),
       openSettings: () => {
         showWindow();
@@ -371,6 +371,7 @@ async function bootstrap(): Promise<void> {
       emit({ type: 'data-changed', scope: 'secrets' });
     },
     onRemindersChanged: () => scheduler.checkNow('created'),
+    onTasksChanged: () => emit({ type: 'data-changed', scope: 'tasks' }),
     wakeword: porcupine,
     onWakeDetected: () => {
       logger.info('wakeword.detected', { engine: 'porcupine' });

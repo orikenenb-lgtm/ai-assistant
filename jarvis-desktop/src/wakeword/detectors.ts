@@ -49,7 +49,7 @@ export function createOpenWakeWordDetector(): WakeWordDetector {
     const ort = await import('onnxruntime-web/wasm');
     ort.env.wasm.numThreads = 1;
     ort.env.wasm.proxy = false;
-    ort.env.wasm.wasmPaths = new URL('ort/', document.baseURI).href;
+    // קובץ ה-WebAssembly נארז ע"י Vite לצד הקוד (assets/) ונטען מאותו מקור — מותר ב-CSP
     const load = async (name: string) => {
       const res = await fetch(new URL(MODEL_BASE + name, document.baseURI));
       if (!res.ok) throw new Error(`המודל ${name} חסר (הרץ npm run fetch-models בבנייה).`);

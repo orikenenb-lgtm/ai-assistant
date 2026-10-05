@@ -2,6 +2,7 @@
  * פונקציות עיצוב טהורות לתצוגה: גדלים, אחוזים, שעה ותאריך עברי לפי Asia/Jerusalem.
  * בלי תלות בשעון — הזמן תמיד מגיע כפרמטר, כדי שהבדיקות יהיו דטרמיניסטיות.
  */
+import { UNITS } from '../i18n/he';
 
 export const APP_TIME_ZONE = 'Asia/Jerusalem';
 
@@ -111,7 +112,7 @@ export function formatDueDate(localDate: string): string {
 /** ספירה לאחור: "1:05" לדקות, "42 שניות" מתחת לדקה, "0 שניות" כשנגמר. */
 export function formatCountdown(msLeft: number): string {
   const total = Math.max(0, Math.ceil(msLeft / 1000));
-  if (total < 60) return total === 1 ? 'שנייה אחת' : `${total} שניות`;
+  if (total < 60) return total === 1 ? UNITS.secondOne : UNITS.seconds(total);
   const minutes = Math.floor(total / 60);
   const seconds = total % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
@@ -123,10 +124,12 @@ export function formatUptime(totalSec: number): string {
   const days = Math.floor(totalSec / 86_400);
   const hours = Math.floor((totalSec % 86_400) / 3600);
   const minutes = Math.floor((totalSec % 3600) / 60);
-  const plural = (n: number, one: string, many: string) => (n === 1 ? one : `${n} ${many}`);
-  if (days > 0) return `${plural(days, 'יום אחד', 'ימים')}, ${plural(hours, 'שעה אחת', 'שעות')}`;
-  if (hours > 0) return `${plural(hours, 'שעה אחת', 'שעות')}, ${plural(minutes, 'דקה אחת', 'דקות')}`;
-  return plural(minutes, 'דקה אחת', 'דקות');
+  const d = days === 1 ? UNITS.dayOne : UNITS.days(days);
+  const h = hours === 1 ? UNITS.hourOne : UNITS.hours(hours);
+  const m = minutes === 1 ? UNITS.minuteOne : UNITS.minutes(minutes);
+  if (days > 0) return `${d}, ${h}`;
+  if (hours > 0) return `${h}, ${m}`;
+  return m;
 }
 
 /** שניות אודיו לתצוגה בטבלת השימוש (ספרה עשרונית אחת). */

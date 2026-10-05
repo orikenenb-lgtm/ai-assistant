@@ -36,24 +36,25 @@ export function FullHud({
     <div className="hud" data-state={state}>
       <TitleBar />
       <div className="hud-body" inert={obscured || undefined}>
-      <HeaderBar />
-      <MissedRemindersBanner />
-      <main className="hud-main" data-narrow={narrow ? 'on' : undefined}>
-        <SidePanel includeActions={narrow} />
-        <section className="hud-center" aria-label={he.core.regionLabel}>
-          <div className="core-stage">
-            <ArcCore state={state} reducedMotion={reducedMotion} size="full" />
-            <div className="state-readout" role="status" aria-live="polite">
-              <span className="state-label">{label}</span>
-              {showEngineLabel && <span className="state-sub">{engineLabel}</span>}
+        <HeaderBar />
+        <MissedRemindersBanner />
+        <main className="hud-main" data-narrow={narrow ? 'on' : undefined}>
+          <SidePanel includeActions={narrow} paused={obscured} />
+          <section className="hud-center" aria-label={he.core.regionLabel}>
+            <div className="core-stage">
+              {/* מתחת לשכבת-על (הגדרות/אישור) הליבה סטטית — אין טעם להנפיש מה שלא רואים */}
+              <ArcCore state={state} reducedMotion={reducedMotion || obscured} size="full" />
+              <div className="state-readout" role="status" aria-live="polite">
+                <span className="state-label">{label}</span>
+                {showEngineLabel && <span className="state-sub">{engineLabel}</span>}
+              </div>
             </div>
-          </div>
-          <Waveform reducedMotion={reducedMotion} />
-          <Transcript />
-        </section>
-        {!narrow && <ActionsTimeline />}
-      </main>
-      <BottomBar />
+            <Waveform reducedMotion={reducedMotion} />
+            <Transcript />
+          </section>
+          {!narrow && <ActionsTimeline />}
+        </main>
+        <BottomBar />
       </div>
     </div>
   );

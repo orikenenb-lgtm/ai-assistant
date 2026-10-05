@@ -6,6 +6,7 @@
 import type { z } from 'zod';
 import type {
   ActionRecord,
+  AppCandidate,
   ApprovalDecision,
   ApprovalRequest,
   AssistantEvent,
@@ -14,6 +15,7 @@ import type {
   DisplayInfo,
   ErrorCode,
   InputSource,
+  PathValidation,
   ReminderDTO,
   ServiceStatus,
   SystemStatus,
@@ -224,8 +226,8 @@ export interface OsLauncherAdapter {
 export interface LauncherService {
   openApplication(query: { app_id?: string; app_name?: string }, settings: Settings): Promise<ToolResult>;
   openProject(query: { project_id?: string; project_name?: string }, settings: Settings): Promise<ToolResult>;
-  validatePath(path: string, expected: 'exe' | 'shortcut' | 'uri' | 'eplan' | 'file' | 'folder'): Promise<import('../../shared/types').PathValidation>;
-  detectApps(): Promise<import('../../shared/types').AppCandidate[]>;
+  validatePath(path: string, expected: 'exe' | 'shortcut' | 'uri' | 'eplan' | 'file' | 'folder'): Promise<PathValidation>;
+  detectApps(): Promise<AppCandidate[]>;
 }
 
 export interface SystemStatusService {

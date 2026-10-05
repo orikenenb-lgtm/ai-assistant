@@ -368,7 +368,6 @@ export function ConfirmButton({
         type="button"
         className="btn btn-danger"
         disabled={busy}
-        autoFocus
         onClick={async () => {
           setBusy(true);
           try {
@@ -381,7 +380,8 @@ export function ConfirmButton({
       >
         {he.settings.confirm}
       </button>
-      <button type="button" className="btn" disabled={busy} onClick={() => setAsking(false)}>
+      {/* המיקוד עובר ל"ביטול" — לחיצת Enter כפולה לא תמחק בטעות */}
+      <button type="button" className="btn" disabled={busy} autoFocus onClick={() => setAsking(false)}>
         {he.settings.cancel}
       </button>
     </span>

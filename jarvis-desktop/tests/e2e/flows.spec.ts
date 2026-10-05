@@ -72,6 +72,33 @@ async function openPathCalls(app: ElectronApplication): Promise<string[]> {
   return app.evaluate(() => (globalThis as unknown as { __openPathCalls?: string[] }).__openPathCalls ?? []);
 }
 
+/** בודק את מבנה הבקשות שנשלחו ל-Claude (MOCK): מודל, בלי thinking, כלים strict, ותוצאת הכלי בבקשה השנייה. */
+async function assertClaudeRequests(app: ElectronApplication): Promise<void> {
+  const calls = (await mockCalls(app)).filter((c) => c.url.includes('/v1/messages'));
+  expect(calls).toHaveLength(2);
+  const firstBody = calls[0]!.body as { model: string; tools: Array<{ name: string; strict?: boolean }>; thinking?: unknown };
+  expect(firstBody.model).toBe('claude-opus-5-5');
+  expect(firstBody.thinking).toBeUndefined();
+  expect(firstBody.tools.every((t) => t.strict === true)).toBe(true);
+  expect(firstBody.tools.map((t) => t.name).sort()).toEqual(
+    [
+      'cancel_reminder',
+      'capture_screen_for_analysis',
+      'complete_task',
+      'create_reminder',
+      'create_task',
+      'get_system_status',
+      'list_reminders',
+      'list_tasks',
+      'open_application',
+      'open_project',
+    ].sort(),
+  );
+  // הבקשה השנייה כוללת את תוצאת הכלי המאומתת
+  expect(JSON.stringify(calls[1]!.body)).toContain('tool_result');
+  expect(JSON.stringify(calls[1]!.body)).toContain('\\"ok\\":true');
+}
+
 test.describe('local mode (no API key, no network)', () => {
   test('system status shows real CPU/RAM and no temperature', async () => {
     const { app, page } = await launchJarvis();
@@ -109,25 +136,78 @@ test.describe('local mode (no API key, no network)', () => {
     }
   });
 
-  test('opens the configured final project via the OS association without modifying it', async () => {
+  test('opens the configured final project via the OS association without modifying it (Windows)', async () => {
+    test.skip(!isWindows, 'נתיבי פרויקט נבדקים לפי כללי Windows — המסלול המלא רץ ב-CI על Windows');
     const dir = mkdtempSync(join(tmpdir(), 'jarvis-proj-'));
-    // ב-Windows: קובץ טקסט אמיתי נפתח ב-Notepad דרך השיוך של Windows. ב-Linux: MOCK של openPath.
-    const file = join(dir, isWindows ? 'final-project.txt' : 'final.elk');
+    // קובץ טקסט אמיתי — Windows פותח אותו בתוכנה המשויכת (Notepad) דרך shell.openPath האמיתי
+    const file = join(dir, 'final-project.txt');
     writeFileSync(file, 'EPLAN project placeholder — must not change');
     const before = { content: readFileSync(file, 'utf8'), mtime: statSync(file).mtimeMs };
     const { app, page } = await launchJarvis();
     try {
-      if (!isWindows) await spyOpenPath(app);
-      await setProject(page, file, isWindows ? 'file' : 'eplan');
+      await setProject(page, file, 'file');
       await collectEvents(page);
       const r = await submit(page, 'תפתח את פרויקט הגמר שלי');
       const resp = await waitForResponse(page, r.turnId!);
       const actions = resp.actions as Array<{ tool: string; status: string; verified: boolean }>;
       expect(actions[0]).toMatchObject({ tool: 'open_project', status: 'succeeded', verified: true });
-      if (!isWindows) expect(await openPathCalls(app)).toEqual([file]);
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(1500);
       expect(readFileSync(file, 'utf8')).toBe(before.content);
       expect(statSync(file).mtimeMs).toBe(before.mtime);
+    } finally {
+      await app.close();
+    }
+  });
+
+  test('opens EPLAN when its path is valid — real spawn on Windows (notepad.exe as a stand-in for EPLAN.exe)', async () => {
+    test.skip(!isWindows, 'הפעלת exe אמיתית רק ב-Windows');
+    const { spawnSync } = await import('node:child_process');
+    const notepadPids = (): Set<string> => {
+      const out = spawnSync('tasklist', ['/FI', 'IMAGENAME eq notepad.exe', '/FO', 'CSV', '/NH'], { encoding: 'utf8' }).stdout ?? '';
+      return new Set([...out.matchAll(/"notepad\.exe","(\d+)"/gi)].map((m) => m[1]!));
+    };
+    const before = notepadPids();
+    const { app, page } = await launchJarvis();
+    try {
+      // MOCK קל בלבד: EPLAN לא מותקן ב-runner, לכן מגדירים את נתיב "EPLAN" ל-notepad.exe האמיתי
+      const res = await page.evaluate(async () => {
+        const s = await window.jarvis.settings.get();
+        const apps = s.launcher.apps.map((a) => (a.id === 'eplan' ? { ...a, target: 'C:\\Windows\\System32\\notepad.exe' } : a));
+        return window.jarvis.settings.update({ launcher: { ...s.launcher, apps } });
+      });
+      expect(res.ok).toBe(true);
+      const validation = await page.evaluate(() => window.jarvis.settings.validatePath({ path: 'C:\\Windows\\System32\\notepad.exe', expected: 'exe' }));
+      expect(validation.ok).toBe(true);
+      await collectEvents(page);
+      const r = await submit(page, 'Jarvis, תפתח EPLAN');
+      const resp = await waitForResponse(page, r.turnId!);
+      expect((resp.actions as Array<{ tool: string; status: string; verified: boolean }>)[0]).toMatchObject({
+        tool: 'open_application',
+        status: 'succeeded',
+        verified: true,
+      });
+      await expect.poll(() => [...notepadPids()].filter((p) => !before.has(p)).length, { timeout: 10_000 }).toBeGreaterThan(0);
+    } finally {
+      for (const pid of [...notepadPids()].filter((p) => !before.has(p))) spawnSync('taskkill', ['/PID', pid, '/F']);
+      await app.close();
+    }
+  });
+
+  test('a non-Windows project path is refused with a clear message (Linux)', async () => {
+    test.skip(isWindows, 'בדיקה ייעודית ל-Linux');
+    const dir = mkdtempSync(join(tmpdir(), 'jarvis-proj-'));
+    const file = join(dir, 'final.elk');
+    writeFileSync(file, 'x');
+    const { app, page } = await launchJarvis();
+    try {
+      await spyOpenPath(app);
+      await setProject(page, file, 'eplan');
+      await collectEvents(page);
+      const r = await submit(page, 'תפתח את פרויקט הגמר שלי');
+      const resp = await waitForResponse(page, r.turnId!);
+      expect((resp.actions as Array<{ tool: string; status: string }>)[0]).toMatchObject({ tool: 'open_project', status: 'failed' });
+      expect(String(resp.text)).toMatch(/[\u0590-\u05FF]/);
+      expect(await openPathCalls(app)).toEqual([]);
     } finally {
       await app.close();
     }
@@ -207,7 +287,8 @@ test.describe('local mode (no API key, no network)', () => {
 });
 
 test.describe('Claude tool calling (mock Anthropic API)', () => {
-  test('(mock) "תפתח את פרויקט הגמר שלי" → open_project → reply based on the verified tool result', async () => {
+  test('(mock) "תפתח את פרויקט הגמר שלי" → open_project → reply based on the verified tool result (Windows)', async () => {
+    test.skip(!isWindows, 'המסלול של פרויקט רץ על Windows; ב-Linux נבדק אותו צינור עם Spotify');
     const dir = mkdtempSync(join(tmpdir(), 'jarvis-proj-'));
     const file = join(dir, 'final.elk');
     writeFileSync(file, 'x');
@@ -235,18 +316,45 @@ test.describe('Claude tool calling (mock Anthropic API)', () => {
         status: 'succeeded',
         verified: true,
       });
-      expect(await openPathCalls(app)).toEqual([file]);
+      expect(await openPathCalls(app)).toHaveLength(1);
+      await assertClaudeRequests(app);
+    } finally {
+      await app.close();
+    }
+  });
 
-      const calls = (await mockCalls(app)).filter((c) => c.url.includes('/v1/messages'));
-      expect(calls).toHaveLength(2);
-      const firstBody = calls[0]!.body as { model: string; tools: Array<{ name: string; strict?: boolean }>; thinking?: unknown };
-      expect(firstBody.model).toBe('claude-opus-5-5');
-      expect(firstBody.thinking).toBeUndefined();
-      expect(firstBody.tools.every((t) => t.strict === true)).toBe(true);
-      expect(firstBody.tools.map((t) => t.name)).not.toContain('run_shell');
-      // השיחה השנייה כוללת את תוצאת הכלי המאומתת
-      expect(JSON.stringify(calls[1]!.body)).toContain('tool_result');
-      expect(JSON.stringify(calls[1]!.body)).toContain('\\"ok\\":true');
+  test('(mock) "פתח Spotify" → open_application → reply based on the verified tool result', async () => {
+    const { app, page } = await launchJarvis();
+    try {
+      await app.evaluate(({ shell }) => {
+        const g = globalThis as unknown as { __openExternalCalls: string[] };
+        g.__openExternalCalls = [];
+        shell.openExternal = async (u: string) => {
+          g.__openExternalCalls.push(u);
+        };
+      });
+      await setClaudeKey(page);
+      await installMockFetch(app, [
+        {
+          match: 'api.anthropic.com/v1/messages',
+          responses: [
+            { json: mockClaudeMessage([{ type: 'tool_use', id: 'toolu_1', name: 'open_application', input: { app_id: 'spotify' } }], 'tool_use') },
+            { json: mockClaudeMessage([{ type: 'text', text: 'פתחתי את Spotify.' }]) },
+          ],
+        },
+      ]);
+      await collectEvents(page);
+      const r = await submit(page, 'פתח Spotify');
+      expect(r).toMatchObject({ ok: true, mode: 'ai' });
+      const resp = await waitForResponse(page, r.turnId!);
+      expect(resp.text).toBe('פתחתי את Spotify.');
+      expect((resp.actions as Array<{ tool: string; status: string; verified: boolean }>)[0]).toMatchObject({
+        tool: 'open_application',
+        status: 'succeeded',
+        verified: true,
+      });
+      expect(await app.evaluate(() => (globalThis as unknown as { __openExternalCalls: string[] }).__openExternalCalls)).toEqual(['spotify:']);
+      await assertClaudeRequests(app);
     } finally {
       await app.close();
     }

@@ -58,14 +58,15 @@ function ServiceRow({ service }: { service: ServiceStatus }) {
   );
 }
 
-export function SystemTab() {
+export function SystemTab({ paused }: { paused: boolean }) {
   const controller = useController();
   const visible = useDocumentVisible();
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [failed, setFailed] = useState(false);
 
+  const active = visible && !paused;
   useEffect(() => {
-    if (!visible) return;
+    if (!active) return;
     let alive = true;
     let timer: number | undefined;
     // שרשרת setTimeout (לא setInterval): בקשה איטית לא תיערם על הבאה
@@ -86,7 +87,7 @@ export function SystemTab() {
       alive = false;
       window.clearTimeout(timer);
     };
-  }, [visible, controller]);
+  }, [active, controller]);
 
   if (!status) {
     return <p className={failed ? 'inline-error' : 'empty-note'}>{failed ? he.system.loadFailed : he.system.loading}</p>;

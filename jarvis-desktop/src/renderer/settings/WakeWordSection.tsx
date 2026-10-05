@@ -65,6 +65,14 @@ export function WakeWordSection({
             {wake.error}
           </p>
         )}
+        {wake.detail && (
+          <p className="field-hint">
+            {he.wake.technicalDetail}{' '}
+            <span className="mono" dir="ltr">
+              {wake.detail}
+            </span>
+          </p>
+        )}
         {wakeWord.enabled && (
           <button type="button" className="btn" onClick={() => controller.restartWakeWord()}>
             {t.restart}

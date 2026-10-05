@@ -3,7 +3,7 @@
  * main מאמת כל שינוי מול הסכמה — כאן רק מונעים שליחה של ערך שברור שייפסל.
  */
 import type { AppEntry, ProjectEntry, SecretStatusEntry } from '../../shared/settings-schema';
-import { he } from '../i18n/he';
+import { he, rangeErrorText } from '../i18n/he';
 
 /** אותה תבנית כמו ב-SettingsSchema (ID_RE). */
 export const ID_RE = /^[a-z0-9][a-z0-9_-]{0,39}$/;
@@ -143,7 +143,7 @@ export function parseIntInRange(raw: string, min: number, max: number): number |
 }
 
 export function rangeError(min: number, max: number): string {
-  return `ערך לא תקין — מספר שלם בין ${min} ל-${max}.`;
+  return rangeErrorText(min, max);
 }
 
 /** סוג התוכנה לפי סיומת הקובץ שנבחר (Windows: ‎.exe / ‎.lnk / ‎.url). null אם לא ברור. */

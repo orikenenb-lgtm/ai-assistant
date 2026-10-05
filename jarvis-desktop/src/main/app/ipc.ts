@@ -49,6 +49,7 @@ export interface IpcDeps {
   onAudioPhase(phase: AudioPhase): void;
   onSecretsChanged(): void;
   onRemindersChanged(): void;
+  onTasksChanged(): void;
   wakeword: PorcupineService;
   onWakeDetected(): void;
   window: {
@@ -154,7 +155,9 @@ export function registerIpc(deps: IpcDeps): () => void {
   handle(IPC.dataListTasks, (input) => deps.db.tasks.list(input.filter, deps.todayLocal()));
   handle(IPC.dataCompleteTask, (input) => {
     const task = deps.db.tasks.complete(input.id);
-    return task ? { ok: true, task } : { ok: false, code: 'NOT_FOUND', message_he: 'המשימה לא נמצאה.' };
+    if (!task) return { ok: false, code: 'NOT_FOUND', message_he: 'המשימה לא נמצאה.' };
+    deps.onTasksChanged();
+    return { ok: true, task };
   });
   handle(IPC.dataListReminders, (input) => deps.db.reminders.list(input.filter));
   handle(IPC.dataCancelReminder, (input) => {

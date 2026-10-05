@@ -1,5 +1,6 @@
 /* מסך ההגדרות: שכבת-על מתחת לשורת הכותרת, ניווט מקטעים אנכי ותוכן נגלל. */
 .settings-overlay {
+  -webkit-app-region: no-drag;
   position: absolute;
   z-index: 20;
   inset: var(--titlebar-h) 0 0 0;
@@ -120,6 +121,11 @@
 .field-hint {
   font-size: 11.5px;
   color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+.field > .btn,
+.field > .wake-status {
+  justify-self: start;
 }
 .field-error {
   font-size: 12px;

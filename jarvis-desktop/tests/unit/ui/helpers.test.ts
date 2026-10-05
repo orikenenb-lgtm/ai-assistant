@@ -1,4 +1,7 @@
+import { webcrypto } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+import { uuidV4 } from '../../../src/renderer/state/ids';
 import { AppEntrySchema, defaultLauncher, ProjectEntrySchema } from '../../../src/shared/settings-schema';
 import { aiChip, micChip, wakeChip } from '../../../src/renderer/state/chips';
 import { isMicErrorLike, micErrorMessage } from '../../../src/renderer/state/messages';
@@ -174,5 +177,20 @@ describe('store', () => {
     unsub();
     store.setState({ b: 'y' });
     expect(calls).toBe(1);
+  });
+});
+
+describe('uuidV4', () => {
+  it('uses crypto.randomUUID when available', () => {
+    expect(uuidV4({ randomUUID: () => 'x', getRandomValues: (a) => a })).toBe('x');
+  });
+  it('falls back to getRandomValues and passes the IPC uuid schema (mock)', () => {
+    // MOCK של crypto בלי randomUUID (כמו הקשר לא מאובטח)
+    const fallback = { getRandomValues: <T extends ArrayBufferView | null>(a: T): T => webcrypto.getRandomValues(a as unknown as Uint8Array) as unknown as T };
+    for (let i = 0; i < 50; i++) {
+      const id = uuidV4(fallback);
+      expect(z.string().uuid().safeParse(id).success).toBe(true);
+      expect(id[14]).toBe('4');
+    }
   });
 });

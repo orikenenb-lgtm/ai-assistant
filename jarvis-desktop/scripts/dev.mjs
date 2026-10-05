@@ -25,7 +25,9 @@ async function waitForVite() {
     try {
       const res = await fetch(DEV_URL);
       if (res.ok) return;
-    } catch {}
+    } catch {
+      // השרת עוד לא עלה — מנסים שוב
+    }
     await new Promise((r) => setTimeout(r, 300));
   }
   throw new Error('Vite dev server did not start');

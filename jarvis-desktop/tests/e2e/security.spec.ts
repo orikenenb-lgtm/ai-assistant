@@ -37,27 +37,32 @@ test('renderer has no Node.js, no require, no ipcRenderer — only the frozen wi
   }
 });
 
-test('CSP blocks eval and remote network access from the renderer', async () => {
+test('CSP blocks injected inline scripts and remote network access from the renderer', async () => {
   const { app, page } = await launchJarvis();
   try {
+    // הערה: evaluate של Playwright רץ דרך DevTools ועוקף CSP, לכן בודקים הזרקת <script> אמיתית
     const result = await page.evaluate(async () => {
-      let evalBlocked = false;
-      try {
-        // eslint-disable-next-line no-eval
-        eval('1 + 1');
-      } catch {
-        evalBlocked = true;
-      }
+      const violations: string[] = [];
+      document.addEventListener('securitypolicyviolation', (e) => violations.push(e.violatedDirective));
+      const s = document.createElement('script');
+      s.textContent = 'window.__inlineRan = true';
+      document.body.appendChild(s);
+      const img = document.createElement('img');
+      img.src = 'https://example.com/pixel.png';
+      document.body.appendChild(img);
       let fetchBlocked = false;
       try {
         await fetch('https://example.com/');
       } catch {
         fetchBlocked = true;
       }
-      return { evalBlocked, fetchBlocked };
+      await new Promise((r) => setTimeout(r, 300));
+      return { inlineRan: (window as unknown as { __inlineRan?: boolean }).__inlineRan === true, fetchBlocked, violations };
     });
-    expect(result.evalBlocked).toBe(true);
+    expect(result.inlineRan).toBe(false);
     expect(result.fetchBlocked).toBe(true);
+    expect(result.violations.join(' ')).toMatch(/script-src/);
+    expect(result.violations.join(' ')).toMatch(/connect-src|img-src/);
   } finally {
     await app.close();
   }

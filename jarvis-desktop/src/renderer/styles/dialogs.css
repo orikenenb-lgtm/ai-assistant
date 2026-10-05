@@ -1,5 +1,6 @@
 /* דיאלוגים: אישור פעולה (ענבר) ובחירת מסך. */
 .modal-backdrop {
+  -webkit-app-region: no-drag;
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -109,6 +110,7 @@
 
 /* ---------- בחירת מסך (חלונית קופצת מעל כפתור המצלמה) ---------- */
 .popover {
+  -webkit-app-region: no-drag;
   position: absolute;
   z-index: 30;
   inset-block-end: calc(100% + 10px);

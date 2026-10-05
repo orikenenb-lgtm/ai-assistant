@@ -2,7 +2,7 @@
 // המודלים לא נשמרים ב-Git (קבצים בינאריים של צד שלישי עם רישיון משלהם — ראה THIRD_PARTY_NOTICES.md).
 // הקבצים נכנסים לתיקיית public של ה-renderer ומוגשים מקומית דרך app:// — בלי רשת בזמן ריצה.
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -67,17 +67,6 @@ for (const m of MODELS) {
     failed = true;
     console.error(`✗ ${m.file}: ${err instanceof Error ? err.message : err}`);
   }
-}
-
-// קבצי WebAssembly של onnxruntime-web — מוגשים מקומית (CSP: script-src 'self' 'wasm-unsafe-eval')
-const ortDist = join(root, 'node_modules', 'onnxruntime-web', 'dist');
-if (existsSync(ortDist)) {
-  const outDir = join(publicDir, 'ort');
-  mkdirSync(outDir, { recursive: true });
-  for (const f of readdirSync(ortDist)) {
-    if (/^ort-wasm-simd-threaded(\.jsep)?\.(wasm|mjs)$/.test(f)) cpSync(join(ortDist, f), join(outDir, f));
-  }
-  console.log('✓ onnxruntime-web wasm assets');
 }
 
 if (failed) {
