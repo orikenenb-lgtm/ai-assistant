@@ -29,6 +29,17 @@ export const EXECUTABLE_EXTENSIONS: readonly string[] = [
   '.search-ms', '.searchconnector-ms', '.diagcab', '.py', '.pyw', '.pyc', '.pyz', '.mshxml', '.msh',
 ];
 
+/**
+ * תוכנות מערכת שמריצות פקודה או קוד אחר דרך הארגומנטים שלהן ("LOLBins").
+ * משלים את FORBIDDEN_LAUNCH_TARGETS שבהגדרות — הגנה כפולה בזמן הפעלה, גם אם ההגדרות נערכו ידנית.
+ */
+export const COMMAND_PROXY_EXECUTABLES: readonly string[] = [
+  'forfiles.exe', 'pcalua.exe', 'scriptrunner.exe', 'cmstp.exe', 'msdt.exe', 'hh.exe', 'runas.exe',
+  'wmic.exe', 'msxsl.exe', 'odbcconf.exe', 'mavinject.exe', 'ieexec.exe', 'regasm.exe', 'regsvcs.exe',
+  'presentationhost.exe', 'infdefaultinstall.exe', 'syncappvpublishingserver.exe', 'at.exe', 'sc.exe',
+  'winrs.exe', 'finger.exe', 'bash.exe', 'wsl.exe', 'wslhost.exe', 'ubuntu.exe',
+];
+
 export type WindowsPathIssue =
   | 'empty'
   | 'too_long'

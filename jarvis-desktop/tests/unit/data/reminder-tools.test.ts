@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type { Database, ToolDefinition } from '../../../src/main/core/contracts';
 import type { ToolName } from '../../../src/shared/types';
 import { openDatabase } from '../../../src/main/db/database';
@@ -11,7 +11,7 @@ const T0 = '2026-10-05T10:00:00.000Z'; // יום שני 5.10.2026, 13:00 ביש�
 describe('reminder tools', () => {
   let clock: MockClock;
   let db: Database;
-  let onCreated: ReturnType<typeof vi.fn>;
+  let onCreated: Mock<() => void>;
   let tools: Map<ToolName, ToolDefinition>;
   const run = async (name: ToolName, input: unknown, ctx = mockToolContext(clock.now())) => {
     const tool = tools.get(name)!;
@@ -24,7 +24,7 @@ describe('reminder tools', () => {
   beforeEach(() => {
     clock = mockClock(T0);
     db = openDatabase(':memory:', { clock, idFactory: mockIdFactory('rem') });
-    onCreated = vi.fn();
+    onCreated = vi.fn<() => void>();
     tools = new Map(createReminderTools({ db, clock, onCreated }).map((t) => [t.name, t]));
   });
   afterEach(() => db.close());
@@ -106,6 +106,9 @@ describe('reminder tools', () => {
     expect(result.summary_he).toMatch(/[א-ת]/);
     const badHour = await run('create_reminder', { text: 'x', date: '2026-10-06', time: '25:00' });
     expect(badHour.result.error_code).toBe('INVALID_PARAMS');
+    const noText = await run('create_reminder', { text: '?!', date: '2026-10-06', time: '08:00' });
+    expect(noText.result).toMatchObject({ status: 'needs_clarification', summary_he: 'על מה להזכיר לך?' });
+    expect(db.reminders.list('all')).toEqual([]);
   });
 
   it('list_reminders summaries (upcoming with today/tomorrow wording, missed, all)', async () => {

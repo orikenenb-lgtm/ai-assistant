@@ -59,12 +59,19 @@ export function createElectronLauncherAdapter(options: ElectronLauncherAdapterOp
   const platform = options.platform ?? process.platform;
   const logger = options.logger;
 
-  function spawnDetached(file: string, args: string[], cwd: string): Promise<{ ok: boolean; pid?: number; error?: string }> {
+  function spawnDetached(rawFile: string, args: string[], rawCwd: string): Promise<{ ok: boolean; pid?: number; error?: string }> {
+    let file = rawFile;
+    let cwd = rawCwd;
     if (platform === 'win32') {
-      if (!checkWindowsPath(file).ok || windowsExtension(file) !== '.exe') {
+      const checkedFile = checkWindowsPath(rawFile);
+      if (!checkedFile.ok || windowsExtension(checkedFile.normalized) !== '.exe') {
         return Promise.resolve({ ok: false, error: 'EINVAL: target is not an absolute .exe path' });
       }
-      if (!checkWindowsPath(cwd).ok) return Promise.resolve({ ok: false, error: 'EINVAL: invalid working directory' });
+      const checkedCwd = checkWindowsPath(rawCwd);
+      if (!checkedCwd.ok) return Promise.resolve({ ok: false, error: 'EINVAL: invalid working directory' });
+      // מפעילים בדיוק את מה שנבדק (מנורמל, בלי מרכאות)
+      file = checkedFile.normalized;
+      cwd = checkedCwd.normalized;
     }
     if (!Array.isArray(args) || args.some((a) => typeof a !== 'string' || a.includes('\0'))) {
       return Promise.resolve({ ok: false, error: 'EINVAL: invalid arguments' });
@@ -122,8 +129,13 @@ export function createElectronLauncherAdapter(options: ElectronLauncherAdapterOp
     });
   }
 
-  async function openPath(path: string): Promise<string> {
-    if (platform === 'win32' && !checkWindowsPath(path).ok) return 'invalid path';
+  async function openPath(rawPath: string): Promise<string> {
+    let path = rawPath;
+    if (platform === 'win32') {
+      const checked = checkWindowsPath(rawPath);
+      if (!checked.ok) return 'invalid path';
+      path = checked.normalized;
+    }
     try {
       return await shellImpl.openPath(path);
     } catch (err) {

@@ -41,10 +41,11 @@ function isInMemory(filePath: string): boolean {
 }
 
 function applyPragmas(db: DatabaseSync, inMemory: boolean): void {
+  // busy_timeout ראשון — כדי שגם המעבר ל-WAL ימתין לנעילה של חיבור אחר במקום להיכשל מיד
+  runSql(db, 'PRAGMA busy_timeout = 3000');
   // WAL לא רלוונטי לזיכרון; בקובץ — כתיבה עמידה ומהירה, וקוראים לא חוסמים כותבים
   if (!inMemory) runSql(db, 'PRAGMA journal_mode = WAL');
   runSql(db, 'PRAGMA foreign_keys = ON');
-  runSql(db, 'PRAGMA busy_timeout = 3000');
   runSql(db, 'PRAGMA synchronous = NORMAL');
 }
 

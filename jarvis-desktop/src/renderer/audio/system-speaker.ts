@@ -22,12 +22,13 @@ export interface SystemSpeakerDeps {
 
 export const VOICES_TIMEOUT_MS = 2_000;
 const HEBREW_LANG = /^(he|iw)([-_]|$)/i;
-const HEBREW_TEXT = /[֐-׿]/;
+const HEBREW_TEXT = /[\u0590-\u05FF]/;
 
 type SpeakOutcome = 'ended' | 'stopped' | 'no-voice';
 
 interface SpeakJob {
-  utterance: SpeechSynthesisUtterance;
+  /** null בזמן שמחכים לרשימת הקולות. */
+  utterance: SpeechSynthesisUtterance | null;
   watchdog: TimerHandle | null;
   settle: (outcome: SpeakOutcome) => void;
 }
@@ -65,8 +66,6 @@ export function createSystemSpeakerWith(deps: SystemSpeakerDeps): SystemSpeaker 
   const { synth, createUtterance, timers } = deps;
   const voicesTimeoutMs = deps.voicesTimeoutMs ?? VOICES_TIMEOUT_MS;
   let current: SpeakJob | null = null;
-  /** עולה בכל speak/stop — speak שחיכה לרשימת הקולות יודע שבוטל בינתיים. */
-  let generation = 0;
 
   function readVoices(): SpeechSynthesisVoice[] {
     if (!synth) return [];
@@ -98,79 +97,93 @@ export function createSystemSpeakerWith(deps: SystemSpeakerDeps): SystemSpeaker 
     });
   }
 
-  function stopCurrent(): void {
-    const job = current;
-    if (job) job.settle('stopped');
-  }
-
-  async function speak(text: string, options: { voiceName?: string; rate: number }): Promise<SpeakOutcome> {
-    if (!synth || !createUtterance) return 'no-voice';
-    stopCurrent();
-    // מבטלים רק כשיש מה לבטל: ב-Chromium, speak מיד אחרי cancel נבלע לפעמים
+  /** מבטל רק כשיש מה לבטל: ב-Chromium, speak מיד אחרי cancel נבלע לפעמים. */
+  function cancelSynth(): void {
+    if (!synth) return;
     try {
       if (synth.speaking || synth.pending) synth.cancel();
     } catch {
       // אין מה לבטל
     }
-    const token = ++generation;
+  }
+
+  function startUtterance(job: SpeakJob, content: string, voice: SpeechSynthesisVoice, rate: number): void {
+    if (!synth || !createUtterance) {
+      job.settle('no-voice');
+      return;
+    }
+    let utterance: SpeechSynthesisUtterance;
+    try {
+      utterance = createUtterance(content);
+    } catch {
+      job.settle('no-voice');
+      return;
+    }
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+    utterance.rate = rate;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    utterance.onend = () => job.settle('ended');
+    utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+      switch (event.error) {
+        case 'voice-unavailable':
+        case 'language-unavailable':
+          job.settle('no-voice');
+          break;
+        default:
+          // canceled / interrupted / synthesis-failed / audio-busy ... — ההקראה לא הושלמה
+          job.settle('stopped');
+      }
+    };
+    // שומרים הפניה ל-utterance עד הסוף: ב-Chromium, utterance שנאסף ע"י ה-GC לא יורה onend
+    job.utterance = utterance;
+    job.watchdog = timers.setTimeout(() => {
+      if (current !== job) return;
+      cancelSynth();
+      job.settle('stopped');
+    }, speakWatchdogMs(content, rate));
+    try {
+      synth.speak(utterance);
+    } catch {
+      job.settle('stopped');
+    }
+  }
+
+  /**
+   * לא async בכוונה: ההבטחה נוצרת מיד ונרשמת כ-current, כך ש-stop() (או speak חדש)
+   * פותרים אותה מיד ב-'stopped' — גם אם עוד מחכים לרשימת הקולות.
+   */
+  function speak(text: string, options: { voiceName?: string; rate: number }): Promise<SpeakOutcome> {
+    if (!synth || !createUtterance) return Promise.resolve('no-voice');
+    current?.settle('stopped');
+    cancelSynth();
     const content = text.trim();
-    if (!content) return 'ended';
-
-    const voices = await loadVoices();
-    if (token !== generation) return 'stopped'; // stop() או speak חדש בזמן ההמתנה
-    const voice = pickVoice(voices, options.voiceName, content);
-    if (!voice) return 'no-voice';
-
+    if (!content) return Promise.resolve('ended');
     const rate = clampRate(options.rate);
-    return new Promise<SpeakOutcome>((resolve) => {
-      const utterance = createUtterance(content);
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-      utterance.rate = rate;
-      utterance.pitch = 1;
-      utterance.volume = 1;
 
-      // שומרים הפניה ל-utterance עד הסוף: ב-Chromium, utterance שנאסף ע"י ה-GC לא יורה onend
+    return new Promise<SpeakOutcome>((resolve) => {
       const job: SpeakJob = {
-        utterance,
+        utterance: null,
         watchdog: null,
         settle: (outcome) => {
           if (current !== job) return;
           current = null;
           if (job.watchdog !== null) timers.clearTimeout(job.watchdog);
-          job.utterance.onend = null;
-          job.utterance.onerror = null;
+          if (job.utterance) {
+            job.utterance.onend = null;
+            job.utterance.onerror = null;
+          }
           resolve(outcome);
         },
       };
-      utterance.onend = () => job.settle('ended');
-      utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
-        switch (event.error) {
-          case 'voice-unavailable':
-          case 'language-unavailable':
-            job.settle('no-voice');
-            break;
-          default:
-            // canceled / interrupted / synthesis-failed / audio-busy ... — ההקראה לא הושלמה
-            job.settle('stopped');
-        }
-      };
       current = job;
-      job.watchdog = timers.setTimeout(() => {
-        if (current !== job) return;
-        try {
-          synth.cancel();
-        } catch {
-          // ממשיכים לסיים בכל מקרה
-        }
-        job.settle('stopped');
-      }, speakWatchdogMs(content, rate));
-
-      try {
-        synth.speak(utterance);
-      } catch {
-        job.settle('stopped');
-      }
+      void loadVoices().then((voices) => {
+        if (current !== job) return; // נעצר או הוחלף בזמן ההמתנה לקולות
+        const voice = pickVoice(voices, options.voiceName, content);
+        if (!voice) job.settle('no-voice');
+        else startUtterance(job, content, voice, rate);
+      });
     });
   }
 
@@ -181,13 +194,8 @@ export function createSystemSpeakerWith(deps: SystemSpeakerDeps): SystemSpeaker 
     },
     speak,
     stop() {
-      generation++;
-      stopCurrent();
-      try {
-        synth?.cancel();
-      } catch {
-        // אין מה לבטל
-      }
+      current?.settle('stopped');
+      cancelSynth();
     },
     get speaking() {
       return current !== null;

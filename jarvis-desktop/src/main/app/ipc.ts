@@ -159,8 +159,13 @@ export function registerIpc(deps: IpcDeps): () => void {
   handle(IPC.dataListReminders, (input) => deps.db.reminders.list(input.filter));
   handle(IPC.dataCancelReminder, (input) => {
     const reminder = deps.db.reminders.cancel(input.id);
-    if (reminder) deps.onRemindersChanged();
-    return reminder ? { ok: true, reminder } : { ok: false, code: 'NOT_FOUND', message_he: 'התזכורת לא נמצאה.' };
+    if (!reminder) return { ok: false, code: 'NOT_FOUND', message_he: 'התזכורת לא נמצאה.' };
+    // cancel() מחזיר את התזכורת גם אם לא בוטלה (למשל כבר הופעלה) — מדווחים הצלחה רק על ביטול בפועל
+    if (reminder.status !== 'cancelled') {
+      return { ok: false, code: 'INVALID_PARAMS', message_he: 'אי אפשר לבטל תזכורת שכבר הופעלה או הוחמצה.' };
+    }
+    deps.onRemindersChanged();
+    return { ok: true, reminder };
   });
   handle(IPC.dataAcknowledgeReminders, (input) => ({ acknowledged: deps.db.reminders.acknowledge(input.ids) }));
   handle(IPC.dataUsageSummary, () => deps.db.usage.summary(deps.clock.now()));

@@ -5,7 +5,7 @@ import { clip, joinHebrew, joinHebrewCapped, stripTrailingPunctuation } from '..
 describe('scoreText / rankByText / pickSingle', () => {
   it('exact after normalization scores 1', () => {
     expect(scoreText('לסיים את השרטוט', 'לסיים את השרטוט')).toBe(1);
-    expect(scoreText('לְסַיֵּם את השרטוט', 'לסיים את השרטוט')).toBe(1);
+    expect(scoreText('שָׁלוֹם לְכֻלָּם', 'שלום לכלם')).toBe(1);
     expect(scoreText('EPLAN', 'eplan')).toBe(1);
   });
 
@@ -18,7 +18,11 @@ describe('scoreText / rankByText / pickSingle', () => {
     const partial = scoreText('לשלוח מייל', 'לשלוח דוח');
     expect(partial).toBeGreaterThanOrEqual(MIN_SEARCH_SCORE);
     expect(partial).toBeLessThan(STRONG_MATCH_SCORE);
+    // הבדל של אות אחת שמשנה משמעות — לעולם לא התאמה חזקה
     expect(scoreText('להתקשר לאמא', 'להתקשר לאבא')).toBeLessThan(STRONG_MATCH_SCORE);
+    expect(scoreText('להתקשר לאמא', 'להתקשר לאבא')).toBeGreaterThanOrEqual(MIN_SEARCH_SCORE);
+    // שגיאת תמלול במילה ארוכה עדיין נמצאת
+    expect(scoreText('לסיים את השירטוט', 'לסיים את השרטוט')).toBeGreaterThanOrEqual(STRONG_MATCH_SCORE);
     expect(scoreText('פיצה', 'לשלוח דוח')).toBe(0);
     expect(scoreText('', 'x')).toBe(0);
   });

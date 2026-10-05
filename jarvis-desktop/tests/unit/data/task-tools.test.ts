@@ -77,6 +77,7 @@ describe('task tools', () => {
     const bad = await run('create_task', { title: 'x', due_date: '2026-02-30' });
     expect(bad.result).toMatchObject({ ok: false, status: 'error', error_code: 'INVALID_PARAMS' });
     expect(bad.result.summary_he).toContain('2026-02-30');
+    expect((await run('create_task', { title: '...' })).result.status).toBe('needs_clarification');
     const blank = await run('create_task', { title: '   ' });
     expect(blank.result).toMatchObject({ ok: false, status: 'needs_clarification', error_code: 'INVALID_PARAMS' });
     expect(blank.ctx.events).toEqual([]);

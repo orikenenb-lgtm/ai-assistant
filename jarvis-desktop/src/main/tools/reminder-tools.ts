@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import type { Clock, Database, ToolDefinition } from '../core/contracts';
 import type { ReminderDTO } from '../../shared/types';
+import { normalizeForMatch } from '../../shared/text-normalize';
+import { ReminderValidationError } from '../db/reminders-repository';
 import { pickSingle, rankByText } from '../db/text-search';
 import { ZONE, describeWhenHe, isFuture, resolveLocalDateTime } from '../time/time';
 import { clip, countFeminine, joinHebrew, joinHebrewCapped, stripTrailingPunctuation } from '../time/hebrew-text';
@@ -136,7 +138,7 @@ export function createReminderTools(deps: ReminderToolsDeps): ToolDefinition[] {
     async execute(input, ctx) {
       if (ctx.signal.aborted) return cancelledResult();
       const text = input.text.trim().replace(/\s+/g, ' ');
-      if (!text) return clarifyResult('INVALID_PARAMS', 'על מה להזכיר לך?');
+      if (!normalizeForMatch(text)) return clarifyResult('INVALID_PARAMS', 'על מה להזכיר לך?');
 
       const resolved = resolveLocalDateTime(
         input.date,
@@ -163,7 +165,8 @@ export function createReminderTools(deps: ReminderToolsDeps): ToolDefinition[] {
           timezone: ZONE,
           dueLocal_he: resolved.display_he,
         });
-      } catch {
+      } catch (err) {
+        if (err instanceof ReminderValidationError) return errorResult('INVALID_PARAMS', err.message_he);
         return storageErrorResult('שמירת התזכורת');
       }
       ctx.emit({ type: 'data-changed', scope: 'reminders' });

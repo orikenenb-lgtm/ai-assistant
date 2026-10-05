@@ -38,6 +38,7 @@ interface Playback {
   watchdog: TimerHandle | null;
   promise: Promise<'ended' | 'stopped'>;
   resolve: (outcome: 'ended' | 'stopped') => void;
+  reject: (error: Error) => void;
 }
 
 function stateOf(ctx: BaseAudioContext): string {
@@ -82,8 +83,11 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
     }, PLAYBACK_IDLE_SUSPEND_MS);
   }
 
-  /** מנקה את ההשמעה. resolveWith=null: הסתיים בשגיאה (play זורק, ההבטחה הפנימית לא בשימוש). */
-  function settle(p: Playback, resolveWith: 'ended' | 'stopped' | null, stopSource: boolean): void {
+  /**
+   * מסיים השמעה פעם אחת בלבד: מנקה טיימר ו-source, ופותר/דוחה את ההבטחה שהוחזרה מ-play.
+   * play מחזיר את p.promise ישירות (לא async), כך ש-stop() פותר אותה מיד — גם באמצע פענוח.
+   */
+  function settle(p: Playback, outcome: 'ended' | 'stopped' | Error, stopSource: boolean): void {
     if (p.settled) return;
     p.settled = true;
     if (p.watchdog !== null) {
@@ -111,29 +115,19 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
       current = null;
       scheduleIdleSuspend();
     }
-    if (resolveWith) p.resolve(resolveWith);
+    if (outcome instanceof Error) p.reject(outcome);
+    else p.resolve(outcome);
   }
 
-  async function play(audio: Uint8Array, mimeType: string): Promise<'ended' | 'stopped'> {
-    if (!(audio instanceof Uint8Array) || audio.byteLength === 0) throw new Error(PLAYBACK_MESSAGES.empty);
-    // השמעה חדשה מחליפה את הקודמת
-    if (current) settle(current, 'stopped', true);
-    cancelIdleTimer();
-
-    let resolve: (outcome: 'ended' | 'stopped') => void = () => undefined;
-    const promise = new Promise<'ended' | 'stopped'>((r) => {
-      resolve = r;
-    });
-    const p: Playback = { settled: false, source: null, watchdog: null, promise, resolve };
-    current = p;
-
+  /** שלבי ההשמעה. כל כישלון נהפך לדחייה של p.promise; אם p כבר נעצר — לא עושים כלום. */
+  async function run(p: Playback, audio: Uint8Array, mimeType: string): Promise<void> {
     let context: AudioContext;
     let output: AnalyserNode;
     try {
       ({ context, output } = ensureContext());
     } catch {
-      settle(p, null, false);
-      throw new Error(PLAYBACK_MESSAGES.unsupported);
+      settle(p, new Error(PLAYBACK_MESSAGES.unsupported), false);
+      return;
     }
 
     let buffer: AudioBuffer;
@@ -142,18 +136,17 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
       // על buffer גדול יותר (IPC) — לכן מפענחים עותק צמוד.
       buffer = await context.decodeAudioData(audio.slice().buffer);
     } catch {
-      if (p.settled) return p.promise; // נעצר בזמן הפענוח
-      settle(p, null, false);
-      throw new Error(PLAYBACK_MESSAGES.decode(mimeType));
+      settle(p, new Error(PLAYBACK_MESSAGES.decode(mimeType)), false);
+      return;
     }
-    if (p.settled) return p.promise;
+    if (p.settled) return; // נעצר בזמן הפענוח
 
     if (stateOf(context) !== 'running') {
       const resumed = await settleWithin(context.resume(), RESUME_TIMEOUT_MS, timers);
-      if (p.settled) return p.promise;
+      if (p.settled) return;
       if (resumed.status !== 'ok' || stateOf(context) !== 'running') {
-        settle(p, null, false);
-        throw new Error(PLAYBACK_MESSAGES.output);
+        settle(p, new Error(PLAYBACK_MESSAGES.output), false);
+        return;
       }
     }
 
@@ -169,10 +162,28 @@ export function createSpeechPlaybackWith(deps: SpeechPlaybackDeps): SpeechPlayba
     try {
       source.start();
     } catch {
-      settle(p, null, false);
-      throw new Error(PLAYBACK_MESSAGES.output);
+      settle(p, new Error(PLAYBACK_MESSAGES.output), false);
     }
-    return p.promise;
+  }
+
+  function play(audio: Uint8Array, mimeType: string): Promise<'ended' | 'stopped'> {
+    if (!(audio instanceof Uint8Array) || audio.byteLength === 0) {
+      return Promise.reject(new Error(PLAYBACK_MESSAGES.empty));
+    }
+    // השמעה חדשה מחליפה את הקודמת
+    if (current) settle(current, 'stopped', true);
+    cancelIdleTimer();
+
+    let resolve: Playback['resolve'] = () => undefined;
+    let reject: Playback['reject'] = () => undefined;
+    const promise = new Promise<'ended' | 'stopped'>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    const p: Playback = { settled: false, source: null, watchdog: null, promise, resolve, reject };
+    current = p;
+    run(p, audio, mimeType).catch(() => settle(p, new Error(PLAYBACK_MESSAGES.output), false));
+    return promise;
   }
 
   return {

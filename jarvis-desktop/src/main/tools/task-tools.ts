@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import type { Clock, Database, ToolContext, ToolDefinition } from '../core/contracts';
 import type { ErrorCode, TaskDTO, ToolResult } from '../../shared/types';
+import { normalizeForMatch } from '../../shared/text-normalize';
+import { TaskValidationError } from '../db/tasks-repository';
 import { pickSingle, rankByText } from '../db/text-search';
 import { addDaysLocal, formatHebrewDate, formatHebrewDayMonth, parseLocalDate, todayLocal } from '../time/time';
 import { clip, countFeminine, joinHebrew, joinHebrewCapped, stripTrailingPunctuation } from '../time/hebrew-text';
@@ -176,7 +178,8 @@ export function createTaskTools(deps: TaskToolsDeps): ToolDefinition[] {
     async execute(input, ctx: ToolContext) {
       if (ctx.signal.aborted) return cancelledResult();
       const title = input.title.trim().replace(/\s+/g, ' ');
-      if (!title) return clarifyResult('INVALID_PARAMS', 'כותרת המשימה ריקה. מה לרשום?');
+      // כותרת בלי אף אות או ספרה ("...", "?") היא לא משימה
+      if (!normalizeForMatch(title)) return clarifyResult('INVALID_PARAMS', 'כותרת המשימה ריקה. מה לרשום?');
       const due = input.due_date ?? null;
       if (due !== null && !parseLocalDate(due)) {
         return errorResult('INVALID_PARAMS', `התאריך "${due}" לא תקין. לאיזה תאריך לקבוע את המשימה?`);
@@ -185,7 +188,8 @@ export function createTaskTools(deps: TaskToolsDeps): ToolDefinition[] {
       let task: TaskDTO;
       try {
         task = db.tasks.create({ title, notes, dueDate: due, source: 'tool' });
-      } catch {
+      } catch (err) {
+        if (err instanceof TaskValidationError) return errorResult('INVALID_PARAMS', err.message_he);
         return storageErrorResult('שמירת המשימה');
       }
       ctx.emit({ type: 'data-changed', scope: 'tasks' });

@@ -173,9 +173,8 @@ describe('reminder scheduler (mock clock + mock notifier)', () => {
 
   it('re-entrancy: checkNow called from inside emit does not double-notify (mock)', () => {
     addReminder(db, 'פעם אחת', iso(T0, -1_000));
-    let h!: Harness;
     let reentered = 0;
-    h = harness(db, clock, {
+    const h: Harness = harness(db, clock, {
       emit: (e) => {
         if (e.type === 'reminder-fired') {
           reentered++;
@@ -246,7 +245,7 @@ describe('reminder scheduler across restarts and instances (file DB, mock)', () 
   });
   afterEach(() => tmp.cleanup());
 
-  it('restart after downtime: missed shown once, never re-notified; acknowledged not shown again', () => {
+  it('restart after downtime: missed shown once, never re-notified; acknowledged not shown again (mock)', () => {
     const file = tmp.file('jarvis.db');
     const clock = mockClock(T0);
 
@@ -303,7 +302,7 @@ describe('reminder scheduler across restarts and instances (file DB, mock)', () 
     db.close();
   });
 
-  it('two scheduler instances sharing one DB file never duplicate a notification', () => {
+  it('two scheduler instances sharing one DB file never duplicate a notification (mock)', () => {
     const file = tmp.file('shared.db');
     const clock = mockClock(T0);
     const dbA = openDatabase(file, { clock });

@@ -1,4 +1,4 @@
-import { editDistance, matchScore, normalizeForMatch } from '../../shared/text-normalize';
+import { editDistance, matchScore, normalizeForMatch, stripHebrewPrefixes } from '../../shared/text-normalize';
 
 /**
  * חיפוש טקסט חופשי במשימות ובתזכורות ("סיימתי את הדוח", "בטל את התזכורת לשתות מים").
@@ -10,6 +10,11 @@ import { editDistance, matchScore, normalizeForMatch } from '../../shared/text-n
 export const MIN_SEARCH_SCORE = 0.2;
 /** ציון שמעליו התאמה יחידה נחשבת ודאית מספיק לביצוע פעולה בלי לשאול. */
 export const STRONG_MATCH_SCORE = 0.5;
+/**
+ * התאמה "מטושטשת" של המחרוזת כולה (מרחק עריכה) מוגבלת מתחת לסף החזק:
+ * "להתקשר לאמא" מול "להתקשר לאבא" שונות באות אחת אבל במשמעות — מציעים, לא מבצעים.
+ */
+const FUZZY_CAP = 0.45;
 
 /** מילים שלא מבדילות בין משימות. */
 const STOP_WORDS = new Set([
@@ -68,7 +73,12 @@ export function scoreText(query: string, candidate: string): number {
   const nc = normalizeForMatch(candidate);
   if (!nq || !nc) return 0;
   if (nq === nc) return 1;
-  return Math.max(matchScore(nq, nc), tokenCoverageScore(nq, nc));
+  const sq = stripHebrewPrefixes(nq);
+  const sc = stripHebrewPrefixes(nc);
+  const substring = sq.length >= 3 && sc.length >= 3 && (sq.includes(sc) || sc.includes(sq));
+  let base = matchScore(nq, nc);
+  if (base > 0 && base < 1 && !substring) base = Math.min(base, FUZZY_CAP);
+  return Math.max(base, tokenCoverageScore(nq, nc));
 }
 
 export interface Ranked<T> {

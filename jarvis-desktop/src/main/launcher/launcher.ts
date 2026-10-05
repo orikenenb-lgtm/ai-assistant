@@ -16,6 +16,7 @@ import type { AppCandidate, ErrorCode, PathValidation, ToolResult } from '../../
 import type { LaunchOutcome, LauncherService, Logger, OsLauncherAdapter } from '../core/contracts';
 import { FORBIDDEN_LAUNCH_TARGETS } from '../settings/settings-store';
 import {
+  COMMAND_PROXY_EXECUTABLES,
   checkExtension,
   checkWindowsPath,
   kindFromExtension,
@@ -160,10 +161,10 @@ export function createLauncherService(deps: LauncherServiceDeps): LauncherServic
       logger.debug('launcher.realpath_failed', { code: errCode(err) });
     }
     for (const name of names) {
-      if (FORBIDDEN_LAUNCH_TARGETS.has(name)) {
+      if (FORBIDDEN_LAUNCH_TARGETS.has(name) || COMMAND_PROXY_EXECUTABLES.includes(name)) {
         return {
           ok: false,
-          reason_he: `"${name}" חסום — JARVIS לא מפעיל מעטפות פקודה או מפרשי סקריפטים.`,
+          reason_he: `"${name}" חסום — JARVIS לא מפעיל מעטפות פקודה, מפרשי סקריפטים או כלים שמריצים פקודות אחרות.`,
         };
       }
     }
@@ -209,7 +210,8 @@ export function createLauncherService(deps: LauncherServiceDeps): LauncherServic
         };
       }
       if (code === 'EACCES' || code === 'EPERM') {
-        return { ok: false, code: 'PATH_INVALID', reason_he: `אין הרשאת גישה לנתיב ${path}.`, exists: true, detectedKind: 'unknown' };
+        // אין גישה = אי אפשר לדעת אם הנתיב קיים, ולכן לא טוענים שהוא קיים
+        return { ok: false, code: 'PATH_INVALID', reason_he: `אין הרשאת גישה לנתיב ${path}.`, exists: false, detectedKind: 'unknown' };
       }
       logger.warn('launcher.stat_failed', { code });
       return {
@@ -415,7 +417,8 @@ export function createLauncherService(deps: LauncherServiceDeps): LauncherServic
     } catch (err) {
       openError = errMessage(err) || 'שגיאה לא ידועה';
     }
-    const fileName = winPath.basename(insp.path);
+    // שורש כונן (D:\) אין לו "שם קובץ" — מציגים את הנתיב עצמו
+    const fileName = winPath.basename(insp.path) || insp.path;
     if (openError) {
       logger.warn('launcher.project_failed', { project_id: p.id, error: openError });
       const program = p.kind === 'eplan' ? 'EPLAN' : 'התוכנה המתאימה';

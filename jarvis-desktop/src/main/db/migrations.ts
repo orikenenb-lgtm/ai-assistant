@@ -133,8 +133,15 @@ export function runMigrations(db: DatabaseSync, migrations: readonly Migration[]
   }
   for (const m of sorted) {
     if (m.version <= current) continue;
-    runSql(db, 'BEGIN IMMEDIATE');
     try {
+      runSql(db, 'BEGIN IMMEDIATE');
+      // חיבור אחר (מופע נוסף) אולי הריץ את המיגרציה בזמן שחיכינו לנעילה — קוראים שוב בתוך הטרנזקציה
+      const inside = readUserVersion(db);
+      if (inside >= m.version) {
+        runSql(db, 'COMMIT');
+        current = inside;
+        continue;
+      }
       for (const statement of m.statements) runSql(db, statement);
       // PRAGMA לא מקבל פרמטרים קשורים; הערך הוא מספר שלם שאומת למעלה ומגיע מהקוד בלבד
       runSql(db, `PRAGMA user_version = ${m.version}`);

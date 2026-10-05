@@ -54,9 +54,9 @@ const STATE_LABELS: Record<ServiceStatus['state'], string> = {
 
 const SERVICE_ORDER: ServiceStatus['service'][] = ['llm', 'stt', 'tts', 'wakeword'];
 
+/** ספק ה-LLM הוא תמיד Anthropic (provider מכיל את שם המודל), ולכן "Claude". */
 function serviceLabel(s: ServiceStatus): string {
-  if (s.service === 'llm' && s.provider !== 'anthropic') return s.provider;
-  return SERVICE_LABELS[s.service];
+  return SERVICE_LABELS[s.service] ?? s.service;
 }
 
 /** סיכום שמתאים להקראה, למשל: "מעבד 23%, זיכרון 41% בשימוש (26.1 מתוך 63.7 GB), בכונן C: פנויים 212 GB. סוללה: לא זוהתה. Claude: מחובר." */

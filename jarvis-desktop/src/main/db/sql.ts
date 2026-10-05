@@ -12,7 +12,7 @@ export function str(row: Row, key: string): string {
   const v = row[key];
   if (typeof v === 'string') return v;
   if (typeof v === 'number' || typeof v === 'bigint') return String(v);
-  throw new Error(`DB: missing text column "${key}"`);
+  throw new Error(`שורה פגומה במסד הנתונים: חסרה העמודה "${key}"`);
 }
 
 export function strOrNull(row: Row, key: string): string | null {

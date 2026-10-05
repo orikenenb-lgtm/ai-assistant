@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { Clock, TaskRepository } from '../core/contracts';
-import type { InputSource, TaskDTO } from '../../shared/types';
+import type { TaskDTO } from '../../shared/types';
 import { normalizeForMatch } from '../../shared/text-normalize';
 import { parseLocalDate } from '../time/time';
 import { rankByText } from './text-search';
@@ -85,8 +85,7 @@ export function createTaskRepository(db: DatabaseSync, deps: { clock: Clock; idF
       }
       const id = deps.idFactory();
       const now = nowIso();
-      const source: InputSource | 'tool' = input.source;
-      insertStmt.run(id, title, normalizeForMatch(title), notes, dueDate, source, now, now);
+      insertStmt.run(id, title, normalizeForMatch(title), notes, dueDate, input.source, now, now);
       return {
         id,
         title,

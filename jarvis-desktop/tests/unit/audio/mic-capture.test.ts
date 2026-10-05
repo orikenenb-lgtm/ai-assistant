@@ -113,6 +113,15 @@ describe('createMicCaptureWith (mock)', () => {
     expectReleased(tracks, graphs.graphs[0]!.closeCalls, timers);
   });
 
+  it('a caller asking for a long silence (settings mic meter) is not cut off after 6 s (mock)', async () => {
+    const { mic, graphs } = setup();
+    await mic.start({ silenceTimeoutMs: 60_000, maxUtteranceSec: 60 });
+    graphs.graphs[0]!.emit(noise(20_000, RATE, 0.002));
+    expect(mic.active).toBe(true);
+    mic.cancel();
+    expect((await mic.done)?.reason).toBe('cancelled');
+  });
+
   it('stops at maxUtteranceSec (mock)', async () => {
     const { mic, graphs } = setup();
     await mic.start({ silenceTimeoutMs: 1_000, maxUtteranceSec: 3 });
@@ -187,7 +196,7 @@ describe('createMicCaptureWith (mock)', () => {
     const error = await fresh.start(OPTIONS).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(MicError);
     expect((error as MicError).kind).toBe(kind);
-    expect((error as MicError).message).toMatch(/[֐-׿]/); // הודעה בעברית
+    expect((error as MicError).message).toMatch(/[\u0590-\u05FF]/); // הודעה בעברית
     expect(fresh.active).toBe(false);
     expect(fresh.done).toBeNull();
     expect(graphs.calls).toBe(0);

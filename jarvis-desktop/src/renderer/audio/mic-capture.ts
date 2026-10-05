@@ -9,7 +9,7 @@ import {
   type MicCapture,
   type MicCaptureOptions,
 } from './types';
-import { createVad, type Vad, type VadEvent } from './vad';
+import { createVad, NO_SPEECH_TIMEOUT_MS, type Vad, type VadEvent } from './vad';
 import { concatFloat32, encodeWav16, resampleTo16k, TARGET_SAMPLE_RATE } from './wav';
 
 /**
@@ -93,7 +93,7 @@ interface Session {
 
 function sanitizeOptions(options: MicCaptureOptions): { silenceTimeoutMs: number; maxUtteranceSec: number } {
   const silence = Number.isFinite(options.silenceTimeoutMs) && options.silenceTimeoutMs > 0
-    ? Math.min(10_000, Math.max(200, options.silenceTimeoutMs))
+    ? Math.min(MAX_UTTERANCE_SEC_CAP * 1000, Math.max(200, options.silenceTimeoutMs))
     : DEFAULT_SILENCE_TIMEOUT_MS;
   const max = Number.isFinite(options.maxUtteranceSec) && options.maxUtteranceSec > 0
     ? Math.min(MAX_UTTERANCE_SEC_CAP, options.maxUtteranceSec)
@@ -317,7 +317,12 @@ export function createMicCaptureWith(deps: MicCaptureDeps): MicCapture {
     s.phase = 'active';
     s.sampleRate = graph.sampleRate;
     s.frameSize = Math.max(1, Math.round((graph.sampleRate * MIC_FRAME_MS) / 1000));
-    s.vad = createVad({ silenceTimeoutMs: s.silenceTimeoutMs, maxUtteranceMs: s.maxUtteranceSec * 1000 });
+    s.vad = createVad({
+      silenceTimeoutMs: s.silenceTimeoutMs,
+      maxUtteranceMs: s.maxUtteranceSec * 1000,
+      // 6 שניות בלי דיבור -> מוותרים. מי שביקש שקט ארוך יותר (למשל מד העוצמה בהגדרות) מחכה לפחות כמוהו.
+      noSpeechTimeoutMs: Math.max(NO_SPEECH_TIMEOUT_MS, s.silenceTimeoutMs),
+    });
     s.lastChunkAt = timers.now();
     published = s.done;
 

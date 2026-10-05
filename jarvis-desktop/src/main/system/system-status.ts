@@ -283,8 +283,10 @@ export function createSystemStatusService(deps: SystemStatusDeps): SystemStatusS
     }
     const merged = configured.map((c) => {
       const reported = reportedServices.get(c.service);
-      // דיווח ישן לא גובר על ההגדרות: ספק אחר או שירות שכבר לא מוגדר → ההגדרות קובעות
-      if (!reported || reported.provider !== c.provider || !c.configured) return { ...c };
+      // דיווח ישן לא גובר על ההגדרות: ספק/מודל אחר, שירות שכבר לא מוגדר, או מצב מקומי → ההגדרות קובעות
+      if (!reported || reported.provider !== c.provider || !c.configured || c.state === 'not_configured' || c.state === 'local') {
+        return { ...c };
+      }
       return { ...c, ...reported, configured: c.configured };
     });
     for (const r of reportedServices.values()) {
