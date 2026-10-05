@@ -1046,9 +1046,12 @@ export function createConversationEngine(deps: ConversationEngineDeps): Conversa
           if (turn.cancelled) return;
           results.push(toToolResultBlock(use.id, result));
           if (result.summary_he) batchSummaries.push(result.summary_he);
-          if (use.name === 'create_reminder' && result.ok && result.status === 'success') {
+          // נקבעה (או כבר קיימת זהה — deduplicated): המועד המלא חייב להיאמר
+          if (use.name === 'create_reminder' && result.ok && (result.status === 'success' || result.status === 'deduplicated')) {
             const due = (result.data as { due_local_full?: unknown } | undefined)?.due_local_full;
-            if (typeof due === 'string' && due.trim()) turn.reminderReadbacks.push({ due: due.trim(), summary: result.summary_he });
+            if (typeof due === 'string' && due.trim() && !turn.reminderReadbacks.some((r) => r.due === due.trim())) {
+              turn.reminderReadbacks.push({ due: due.trim(), summary: result.summary_he });
+            }
           }
         }
         if (call === MAX_MODEL_CALLS) {

@@ -183,7 +183,11 @@ export const he = {
 
   compact: {
     expand: 'הרחב לתצוגה מלאה',
+    settings: 'הגדרות (Ctrl+,)',
     lastLineEmpty: 'מוכן לפקודה.',
+    wakeListening: 'מאזין למילת הפעלה (מקומית)',
+    wakeError: 'מילת ההפעלה לא זמינה',
+    wakeRetryTitle: (error: string) => `${error} לחץ כדי לנסות שוב.`,
   },
 
   approval: {
@@ -234,6 +238,7 @@ export const he = {
     initFailed: 'טעינת ההגדרות נכשלה. חלק מהיכולות לא יפעלו עד הפעלה מחדש.',
     micTestRunning: 'בדיקת המיקרופון בהגדרות הופסקה כדי להתחיל האזנה.',
     busyListening: 'JARVIS מאזין כרגע.',
+    approvalPending: 'יש בקשת אישור פתוחה — אשר או דחה אותה קודם.',
   },
 
   mic: {
@@ -251,11 +256,15 @@ export const he = {
     unknownReason: 'שגיאה לא ידועה',
     technicalReason: 'טעינת מנוע הזיהוי נכשלה',
     technicalDetail: 'פרטים טכניים:',
+    retry: 'נסה שוב',
+    retryingAuto: 'JARVIS ינסה שוב אוטומטית בעוד זמן קצר.',
+    retryExhausted: 'הנסיונות האוטומטיים הופסקו. לחץ "נסה שוב" אחרי שתבדוק את המיקרופון.',
   },
 
   errors: {
     unknown: 'שגיאה לא צפויה.',
-    ipc: (what: string) => `התקשורת עם המערכת נכשלה (${what}).`,
+    ipc: 'התקשורת עם רכיב המערכת של JARVIS נכשלה. נסה שוב.',
+    cancelFailed: 'העצירה לא הגיעה למערכת. נסה שוב.',
   },
 
   fatal: {
@@ -303,6 +312,12 @@ export const he = {
       closeToTray: 'סגירת החלון ממזערת למגש המערכת',
       closeToTrayHint: 'כשכבוי — סגירת החלון יוצאת מ-JARVIS, ותזכורות לא יתריעו.',
       startHidden: 'הפעלה מוסתרת (במגש בלבד)',
+      openAtLogin: 'הפעלה עם Windows',
+      openAtLoginHint: 'כדי שתזכורות יתריעו גם אחרי הפעלה מחדש של המחשב. מומלץ יחד עם "הפעלה מוסתרת".',
+      remindersTitle: 'תזכורות',
+      graceMinutes: 'חלון חסד לתזכורת שהוחמצה (דקות)',
+      graceMinutesHint:
+        'אם המחשב או JARVIS היו כבויים במועד התזכורת וחזרו לפעול תוך מספר הדקות הזה — התזכורת תתריע כרגיל. מאוחר יותר היא תסומן כ"הוחמצה". 0 = בלי חלון חסד.',
       reducedMotion: 'הפחתת תנועה',
       motionSystem: 'לפי Windows',
       motionOn: 'מופעלת',
@@ -484,11 +499,15 @@ export const he = {
       emptyPath: 'לא הוגדר נתיב.',
       validOk: '✓',
       validBad: '✗',
+      validating: 'בודק את הנתיב…',
+      shortcutHint:
+        'לקיצור דרך (‎.lnk) — למשל כזה שמריץ כמנהל או עם פרמטרים — הדבק את הנתיב המלא שלו בשדה. JARVIS יבקש אישור בחלון של Windows.',
     },
 
     screen: {
-      requireConfirmation: 'בקש אישור לפני כל צילום מסך',
-      requireConfirmationHint: 'מומלץ להשאיר פעיל. התמונה נשלחת לניתוח ונמחקת מהזיכרון מיד אחר כך.',
+      requireConfirmation: 'בקש אישור לפני צילום מסך שהתבקש בשיחה (קול או טקסט)',
+      requireConfirmationHint:
+        'לחיצה על כפתור המצלמה נחשבת אישור. בקשה שמגיעה אחרי תוכן ממסך/קובץ תמיד דורשת אישור. התמונה נשלחת לניתוח ונמחקת מהזיכרון מיד אחר כך.',
       maxLongEdge: 'רזולוציה מרבית לצד הארוך (פיקסלים)',
     },
 

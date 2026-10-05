@@ -48,7 +48,7 @@ import { createTaskTools } from './tools/task-tools';
 import { createReminderTools } from './tools/reminder-tools';
 import { createToolRegistry } from './tools/registry';
 import { createApprovalService } from './permissions/approvals';
-import { createAnthropicLlmClient, createAnthropicVisionAnalyzer } from './ai/llm-client';
+import { createAnthropicLlmClient, createAnthropicVisionAnalyzer, type LlmCallResult } from './ai/llm-client';
 import { createConversationEngine } from './conversation/engine';
 import { createPorcupineService } from './wakeword/porcupine-service';
 
@@ -150,12 +150,30 @@ async function bootstrap(): Promise<void> {
 
   // ---------- שירותים ----------
   const voice = createVoiceService({ getSettings: () => settings.get(), secrets, usage: db.usage, logger, clock });
+  const llmStatus: { value: ServiceStatus | null } = { value: null };
+  // מצב החיבור ל-Claude לפי הקריאות האמיתיות (לא רק "בדוק חיבור") — כך ה-HUD מציג שגיאה אמיתית, למשל מפתח שבוטל
+  const onLlmResult = (r: LlmCallResult): void => {
+    const model = settings.get().ai.model;
+    const lastCheckedAt = clock.now().toISOString();
+    llmStatus.value = r.ok
+      ? { service: 'llm', provider: model, configured: true, state: 'ok', lastCheckedAt }
+      : {
+          service: 'llm',
+          provider: model,
+          configured: r.code !== 'MISSING_API_KEY',
+          state: r.code === 'MISSING_API_KEY' ? 'not_configured' : 'error',
+          lastCheckedAt,
+          lastError_he: r.message_he,
+        };
+    system.setServiceStatus(llmStatus.value);
+  };
   const llm = createAnthropicLlmClient({
     getApiKey: () => secrets.get('anthropicApiKey'),
     getModel: () => settings.get().ai.model,
     logger,
     usage: db.usage,
     clock,
+    onLlmResult,
   });
   const vision = createAnthropicVisionAnalyzer({
     getApiKey: () => secrets.get('anthropicApiKey'),
@@ -163,8 +181,8 @@ async function bootstrap(): Promise<void> {
     logger,
     usage: db.usage,
     clock,
+    onLlmResult,
   });
-  const llmStatus: { value: ServiceStatus | null } = { value: null };
 
   const configuredServices = (): ServiceStatus[] => {
     const s = settings.get();

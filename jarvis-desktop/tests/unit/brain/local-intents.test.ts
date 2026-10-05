@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { defaultSettings } from '../../../src/shared/settings-schema';
 import {
+  ambiguousHourQuestion,
+  approvalAnswer,
   isCancelCommand,
   parseLocalIntent,
   pendingFromToolResult,
@@ -476,5 +478,133 @@ describe('choice clarification from tool options', () => {
 
   it('no options -> no pending', () => {
     expect(pendingFromToolResult('open_project', { ok: false, status: 'error', summary_he: 'x' })).toBeNull();
+  });
+});
+
+describe('local intents — date parsing review fixes', () => {
+  const MON_0800 = new Date('2026-10-05T05:00:00Z'); // יום שני 08:00 בישראל
+
+  it('[8a] the day next to the time wins; a day word inside the reminder text stays in the text', () => {
+    expectTool(parse('תזכיר לי לשלוח את הדוח של היום מחר ב-9 בבוקר', MON_0800), 'create_reminder', {
+      text: 'לשלוח את הדוח של היום',
+      date: '2026-10-06',
+      time: '09:00',
+    });
+    expectTool(parse('תזכיר לי מחר ב-9 בבוקר לשלוח את הדוח של היום', MON_0800), 'create_reminder', {
+      text: 'לשלוח את הדוח של היום',
+      date: '2026-10-06',
+      time: '09:00',
+    });
+  });
+
+  it('[8a] dd/mm inside the text is not a date unless it is next to the time or written as ב-dd/mm', () => {
+    expectTool(parse('תזכיר לי ב-20:30 לשלוח מייל ללקוח על הזמנה 12/10', MON_0800), 'create_reminder', {
+      text: 'לשלוח מייל ללקוח על הזמנה 12/10',
+      date: '2026-10-05',
+      time: '20:30',
+    });
+    expectTool(parse('תזכיר לי 12/10 בשעה 10:00 לשלם חשבון', MON_0800), 'create_reminder', { text: 'לשלם חשבון', date: '2026-10-12', time: '10:00' });
+    expectTool(parse('תזכיר לי ב-12.10 בשעה 10:00 לשלם חשבון', MON_0800), 'create_reminder', { text: 'לשלם חשבון', date: '2026-10-12', time: '10:00' });
+  });
+
+  it('[8a] ל+weekday without "יום" is not a date ("להתקשר לשני", "לשבת עם אבא", "לשלוח לראשון")', () => {
+    expectTool(parse('תזכיר לי מחר בשמונה בבוקר להתקשר לשני'), 'create_reminder', { text: 'להתקשר לשני', date: '2026-10-06', time: '08:00' });
+    expectTool(parse('תזכיר לי מחר בשמונה בבוקר לשבת עם אבא על הפרויקט'), 'create_reminder', {
+      text: 'לשבת עם אבא על הפרויקט',
+      date: '2026-10-06',
+      time: '08:00',
+    });
+    expectTool(parse('תזכיר לי מחר בשמונה בערב לשלוח לראשון את הקובץ'), 'create_reminder', {
+      text: 'לשלוח לראשון את הקובץ',
+      date: '2026-10-06',
+      time: '20:00',
+    });
+    // עם "יום" (או "ב") זה כן יום בשבוע
+    expectTool(parse('תזכיר לי ליום שני בעשר בבוקר לנקות'), 'create_reminder', { text: 'לנקות', date: '2026-10-12', time: '10:00' });
+    expectTool(parse('תזכיר לי בשבת בעשר בבוקר לנקות'), 'create_reminder', { text: 'לנקות', date: '2026-10-10', time: '10:00' });
+  });
+
+  it('[8a] two different explicit days with no clear preference -> asks, and the answer completes it', () => {
+    const { question, pending } = expectClarify(parse('תזכיר לי מחר לשלוח את הדוח של היום בשמונה בבוקר', MON_0800));
+    expect(question).toBe('לאיזה יום לקבוע את התזכורת — מחר או היום?');
+    expectTool(resolveClarification(pending, 'מחר', settings, MON_0800), 'create_reminder', {
+      text: 'לשלוח את הדוח של היום',
+      date: '2026-10-06',
+      time: '08:00',
+    });
+  });
+
+  it('[8a] a relative offset keeps day words in the text', () => {
+    expectTool(parse('תזכיר לי בעוד 10 דקות לשלוח את הדוח של היום'), 'create_reminder', {
+      text: 'לשלוח את הדוח של היום',
+      date: '2026-10-05',
+      time: '20:25',
+    });
+  });
+
+  it('[8b] "הלילה בשתיים" said after midnight is tonight, not tomorrow night', () => {
+    const at0030 = new Date('2026-10-05T21:30:00Z'); // 00:30 ב-6 באוקטובר
+    expectTool(parse('תזכיר לי הלילה בשתיים לכבות את המחשב', at0030), 'create_reminder', {
+      text: 'לכבות את המחשב',
+      date: '2026-10-06',
+      time: '02:00',
+    });
+    // שעה שכבר עברה הלילה -> המופע הבא
+    expectTool(parse('תזכיר לי הלילה בשתים עשרה לכבות את המחשב', at0030), 'create_reminder', {
+      text: 'לכבות את המחשב',
+      date: '2026-10-07',
+      time: '00:00',
+    });
+    // לפני חצות — כמו קודם: הלילה שאחרי היום
+    expectTool(parse('תזכיר לי הלילה באחת וחצי לכבות את המחשב', new Date('2026-10-05T20:30:00Z')), 'create_reminder', {
+      text: 'לכבות את המחשב',
+      date: '2026-10-06',
+      time: '01:30',
+    });
+  });
+
+  it('[8c] PAST_TIME draft: "מחר" keeps the time, "מחר בשמונה בערב" replaces it', () => {
+    const pending = pendingFromToolResult(
+      'create_reminder',
+      { ok: false, status: 'needs_clarification', error_code: 'PAST_TIME', summary_he: 'המועד הזה כבר עבר. לאיזה מועד לקבוע?' },
+      { text: 'לפתוח את הפרויקט', date: '2026-10-05', time: '08:00' },
+    );
+    if (!pending) throw new Error('expected pending');
+    expectTool(resolveClarification(pending, 'מחר', settings, NOW), 'create_reminder', { text: 'לפתוח את הפרויקט', date: '2026-10-06', time: '08:00' });
+    expectTool(resolveClarification(pending, 'מחר בשמונה בערב', settings, NOW), 'create_reminder', {
+      text: 'לפתוח את הפרויקט',
+      date: '2026-10-06',
+      time: '20:00',
+    });
+  });
+});
+
+describe('approval answers and ambiguous hours (helpers for the engine)', () => {
+  it.each([
+    ['כן', 'yes'],
+    ["ג'רוויס, כן", 'yes'],
+    ['אשר', 'yes'],
+    ['מאשר', 'yes'],
+    ['בטח', 'yes'],
+    ['yes', 'yes'],
+    ['approve', 'yes'],
+    ['לא', 'no'],
+    ['בטל', 'no'],
+    ['דחה', 'no'],
+    ['no', 'no'],
+  ] as const)('"%s" -> %s', (text, expected) => {
+    expect(approvalAnswer(text)).toBe(expected);
+  });
+
+  it.each(['כן תפתח את EPLAN', 'עצור', 'מה השעה', ''])('"%s" -> null', (text) => {
+    expect(approvalAnswer(text)).toBeNull();
+  });
+
+  it('ambiguous hour detection', () => {
+    expect(ambiguousHourQuestion('תזכיר לי מחר בשמונה לפתוח את הפרויקט', NOW)).toBe('בשמונה בבוקר או בערב?');
+    expect(ambiguousHourQuestion('תזכיר לי בשתים עשרה לאכול', NOW)).toBe('בשתים עשרה בצהריים או בלילה?');
+    for (const clear of ['תזכיר לי מחר בשמונה בבוקר', 'תזכיר לי ב-20:30', 'תזכיר לי הערב בתשע', 'תזכיר לי בעוד שעה', 'בערב', 'תזכיר לי מחר']) {
+      expect(ambiguousHourQuestion(clear, NOW)).toBeNull();
+    }
   });
 });

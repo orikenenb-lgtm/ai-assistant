@@ -6,6 +6,8 @@ import {
   mapAnthropicError,
   supportsServerFallback,
   VISION_SYSTEM_PROMPT,
+  VISION_TOTAL_TIMEOUT_MS,
+  type LlmCallResult,
   type LlmTurnRequest,
 } from '../../../src/main/ai/llm-client';
 import { ProviderError, type CapturedImage } from '../../../src/main/core/contracts';
@@ -230,5 +232,135 @@ describe('createAnthropicVisionAnalyzer (MOCK Anthropic client)', () => {
     await expect(t.analyzer.analyze({ image, question: 'x', signal: new AbortController().signal })).rejects.toMatchObject({ code: 'REFUSAL' });
     t.mock.create.mockResolvedValueOnce(mockMessage([thinkingBlock()], 'end_turn'));
     await expect(t.analyzer.analyze({ image, question: 'x', signal: new AbortController().signal })).rejects.toMatchObject({ code: 'PROVIDER_ERROR' });
+  });
+});
+
+describe('LLM total deadline and connection-state callback (review fixes)', () => {
+  /** MOCK: create שלא עונה עד שה-signal מתבטל — ואז זורק כמו ה-SDK. */
+  function hangUntilAbort(mock: ReturnType<typeof createMockAnthropic>): void {
+    mock.create.mockImplementation(
+      (_params, options) =>
+        new Promise((_resolve, reject) => {
+          const signal = options.signal as AbortSignal;
+          if (signal.aborted) reject(new Anthropic.APIUserAbortError());
+          signal.addEventListener('abort', () => reject(new Anthropic.APIUserAbortError()), { once: true });
+        }),
+    );
+  }
+
+  function setupWithListener() {
+    const mock = createMockAnthropic();
+    const results: LlmCallResult[] = [];
+    const llm = createAnthropicLlmClient({
+      getApiKey: () => KEY,
+      logger: createMockLogger(),
+      usage: createMockDatabase().usage,
+      clock: createMockClock(),
+      createClient: () => mock.client,
+      onLlmResult: (r) => results.push(r),
+    });
+    return { mock, llm, results };
+  }
+
+  it('[6] the deadline is total (not per attempt): a hanging call ends as TIMEOUT (not CANCELLED) at the budget (mock)', async () => {
+    const t = setupWithListener();
+    hangUntilAbort(t.mock);
+    const started = Date.now();
+    const err = await t.llm.runTurn(request({ timeoutMs: 80 })).catch((e: unknown) => e);
+    expect(Date.now() - started).toBeLessThan(1_000);
+    expect(err).toMatchObject({ code: 'TIMEOUT', retryable: true });
+    expect(t.mock.create.mock.calls[0]![1]).toMatchObject({ timeout: 80, maxRetries: 1 });
+    expect(t.results).toEqual([{ ok: false, code: 'TIMEOUT', message_he: (err as ProviderError).message_he }]);
+  });
+
+  it('[6] with the real SDK retry loop, a hanging endpoint never exceeds the total budget (fake fetch, no network)', async () => {
+    let attempts = 0;
+    const hangingFetch = (async (_url: unknown, init: { signal?: AbortSignal }) => {
+      attempts++;
+      return new Promise((_res, rej) =>
+        init.signal?.addEventListener('abort', () => rej(Object.assign(new Error('aborted'), { name: 'AbortError' }))),
+      );
+    }) as unknown as typeof fetch;
+    const llm = createAnthropicLlmClient({
+      getApiKey: () => KEY,
+      logger: createMockLogger(),
+      usage: createMockDatabase().usage,
+      clock: createMockClock(),
+      createClient: (k) => new Anthropic({ apiKey: k, authToken: null, baseURL: 'https://api.anthropic.com', logLevel: 'off', fetch: hangingFetch }),
+    });
+    const started = Date.now();
+    const err = await llm.runTurn(request({ timeoutMs: 400 })).catch((e: unknown) => e);
+    const elapsed = Date.now() - started;
+    expect(err).toMatchObject({ code: 'TIMEOUT' });
+    expect(elapsed).toBeLessThan(1_000);
+    expect(attempts).toBeLessThanOrEqual(2);
+  });
+
+  it('[6] a user cancel is still CANCELLED and is not reported as a connection failure (mock)', async () => {
+    const t = setupWithListener();
+    hangUntilAbort(t.mock);
+    const controller = new AbortController();
+    const pending = t.llm.runTurn(request({ signal: controller.signal }));
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ code: 'CANCELLED' });
+    expect(t.results).toEqual([]);
+  });
+
+  it('[13] onLlmResult reports ok after a response (also a refusal) and the mapped error otherwise, never the key (mock)', async () => {
+    const t = setupWithListener();
+    t.mock.create.mockResolvedValueOnce(mockMessage([textBlock('x')], 'end_turn'));
+    await t.llm.runTurn(request());
+    t.mock.create.mockResolvedValueOnce(mockMessage([], 'refusal'));
+    await t.llm.runTurn(request());
+    t.mock.create.mockRejectedValueOnce(new Anthropic.AuthenticationError(401, { type: 'error' }, `invalid x-api-key ${KEY}`, headers));
+    await t.llm.runTurn(request()).catch(() => undefined);
+    expect(t.results).toEqual([
+      { ok: true },
+      { ok: true },
+      { ok: false, code: 'INVALID_API_KEY', message_he: 'מפתח ה-API של Claude לא תקין. עדכן אותו בהגדרות ← מוח.' },
+    ]);
+    expect(JSON.stringify(t.results)).not.toContain(KEY);
+  });
+
+  it('[13] a throwing listener never breaks the call (mock)', async () => {
+    const mock = createMockAnthropic();
+    const llm = createAnthropicLlmClient({
+      getApiKey: () => KEY,
+      logger: createMockLogger(),
+      usage: createMockDatabase().usage,
+      clock: createMockClock(),
+      createClient: () => mock.client,
+      onLlmResult: () => {
+        throw new Error('listener boom');
+      },
+    });
+    mock.create.mockResolvedValueOnce(mockMessage([textBlock('שלום')], 'end_turn'));
+    await expect(llm.runTurn(request())).resolves.toMatchObject({ stop_reason: 'end_turn' });
+  });
+
+  it('[6][13] vision: one total budget (75 s by default) with at most 1 retry, deadline -> TIMEOUT, result reported (mock)', async () => {
+    const image: CapturedImage = { data: Buffer.from([1]), mediaType: 'image/png', width: 1, height: 1, display: mockDisplay('1', true) };
+    const mock = createMockAnthropic();
+    const results: LlmCallResult[] = [];
+    const make = (timeoutMs?: number) =>
+      createAnthropicVisionAnalyzer({
+        getApiKey: () => KEY,
+        getModel: () => 'claude-opus-5-5',
+        logger: createMockLogger(),
+        usage: createMockDatabase().usage,
+        clock: createMockClock(),
+        createClient: () => mock.client,
+        onLlmResult: (r) => results.push(r),
+        ...(timeoutMs ? { timeoutMs } : {}),
+      });
+    mock.create.mockResolvedValueOnce(mockMessage([textBlock('מה רואים בוודאות: חלון.')], 'end_turn'));
+    await make().analyze({ image, question: 'מה?', signal: new AbortController().signal });
+    expect(VISION_TOTAL_TIMEOUT_MS).toBe(75_000);
+    expect(mock.create.mock.calls[0]![1]).toMatchObject({ timeout: 75_000, maxRetries: 1 });
+    expect(results).toEqual([{ ok: true }]);
+
+    hangUntilAbort(mock);
+    await expect(make(60).analyze({ image, question: 'מה?', signal: new AbortController().signal })).rejects.toMatchObject({ code: 'TIMEOUT' });
+    expect(results.at(-1)).toMatchObject({ ok: false, code: 'TIMEOUT' });
   });
 });
