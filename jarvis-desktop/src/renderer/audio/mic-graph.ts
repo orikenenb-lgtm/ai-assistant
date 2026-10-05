@@ -20,6 +20,7 @@ const PROCESSOR_NAME = 'jarvis-pcm-capture';
 /** גודל מקטע שה-worklet שולח (~32ms) — איזון בין תקורת הודעות לתגובתיות. */
 const BATCH_MS = 32;
 const RESUME_TIMEOUT_MS = 3_000;
+const ADD_MODULE_TIMEOUT_MS = 8_000;
 const ANALYSER_FFT_SIZE = 2048;
 
 /**
@@ -107,7 +108,10 @@ export async function openBrowserMicGraph(stream: MediaStream, handlers: MicGrap
 
     let capture: AudioNode;
     if (ctx.audioWorklet && typeof globalThis.AudioWorkletNode === 'function') {
-      await ctx.audioWorklet.addModule(workletModuleUrl());
+      // הגבלת זמן קצרה מזו של MicCapture, כדי שגם במקרה תקוע ה-AudioContext ייסגר כאן
+      const loaded = await settleWithin(ctx.audioWorklet.addModule(workletModuleUrl()), ADD_MODULE_TIMEOUT_MS, browserTimers);
+      if (loaded.status === 'timeout') throw new MicError('unknown', MIC_MESSAGES.audioEngineTimeout);
+      if (loaded.status === 'failed') throw loaded.error;
       const batchSize = Math.max(128, Math.round((ctx.sampleRate * BATCH_MS) / 1000 / 128) * 128);
       const node = new AudioWorkletNode(ctx, PROCESSOR_NAME, {
         numberOfInputs: 1,
