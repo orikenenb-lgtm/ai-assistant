@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>10 SMOKE DETECTOR B5 AND GAS SENSOR B6</title>
+<desc>B5 supply via KA1 NC (conditional), alarm → IB ; MQ-2 B6 DO → KA2 IN, KA2 COM-NO → IC | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<text x="22" y="124" font-size="12" text-anchor="start" font-weight="bold">X2 : +24V_IN</text>
+<text x="22" y="154" font-size="12" text-anchor="start" font-weight="bold">X2 : +24V_SENS</text>
+<line x1="140" y1="120" x2="1400" y2="120" stroke="#000" stroke-width="2" fill="none"/>
+<line x1="140" y1="150" x2="200" y2="150" stroke="#000" stroke-width="2" fill="none"/>
+<circle cx="200" cy="150" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="200" y1="150" x2="200" y2="200" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<text x="208" y="182" font-size="11" text-anchor="start" font-style="italic" fill="#555">S003</text>
+<circle cx="200" cy="200" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="192" y="204" font-size="11" text-anchor="end">11 (NC)</text>
+<line x1="200" y1="200" x2="200" y2="218" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<line x1="200" y1="242" x2="200" y2="260" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<line x1="200" y1="218" x2="190" y2="218" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<line x1="200" y1="242" x2="190" y2="215" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<circle cx="200" cy="260" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="192" y="264" font-size="11" text-anchor="end">12 (NC)</text>
+<text x="218" y="228" font-size="12" text-anchor="start" font-weight="bold">KA1</text>
+<text x="218" y="243" font-size="11" text-anchor="start" fill="#b00000">[CONDITIONAL]</text>
+<line x1="200" y1="264" x2="200" y2="340" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<text x="208" y="305" font-size="11" text-anchor="start" font-style="italic" fill="#555">S004</text>
+<rect x="150" y="340" width="320" height="140" stroke="#000" stroke-width="1.6" fill="none"/>
+<circle cx="200" cy="340" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="192" y="334" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">+ הזנה (TBD)</text>
+<circle cx="400" cy="120" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="400" y1="120" x2="400" y2="340" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="408" y="240" font-size="11" text-anchor="start" font-style="italic" fill="#555">I021</text>
+<circle cx="400" cy="340" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="408" y="334" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">COM ממסר התראה (TBD)</text>
+<line x1="400" y1="344" x2="400" y2="395" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="400" y1="425" x2="400" y2="476" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="400" y1="425" x2="411" y2="392" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="400" cy="480" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="408" y="498" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">NO ממסר התראה (TBD)</text>
+<circle cx="200" cy="480" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="192" y="498" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">− הזנה (TBD)</text>
+<text x="285" y="384" font-size="14" text-anchor="middle" font-weight="bold">B5</text>
+<text x="285" y="401" font-size="11" text-anchor="middle">smoke detector 4-wire</text>
+<text x="285" y="418" font-size="11" text-anchor="middle">12-24V (verify)</text>
+<text x="285" y="435" font-size="11" text-anchor="middle">enclosure ceiling</text>
+<line x1="200" y1="484" x2="200" y2="640" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="208" y="560" font-size="11" text-anchor="start" font-style="italic" fill="#555">S005</text>
+<circle cx="200" cy="640" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="200" y="660" font-size="12" text-anchor="middle" font-weight="bold">X2 : 0V</text>
+<line x1="400" y1="484" x2="400" y2="580" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="408" y="530" font-size="11" text-anchor="start" font-style="italic" fill="#555">I022</text>
+<rect x="330" y="580" width="260" height="60" stroke="#000" stroke-width="1.6" fill="none"/>
+<circle cx="400" cy="580" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="400" y="600" font-size="13" text-anchor="middle" font-weight="bold">IB</text>
+<text x="400" y="616" font-size="11" text-anchor="middle">SMOKE</text>
+<text x="500" y="616" font-size="12" text-anchor="middle" font-weight="bold">K1 (input)</text>
+<text x="640" y="192" font-size="12" text-anchor="middle" font-weight="bold">K1 : Q9</text>
+<circle cx="640" cy="200" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<line x1="640" y1="204" x2="640" y2="240" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<text x="648" y="226" font-size="11" text-anchor="start" font-style="italic" fill="#555">O019</text>
+<circle cx="640" cy="240" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="632" y="244" font-size="12" text-anchor="end">A1</text>
+<line x1="640" y1="240" x2="640" y2="260" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<line x1="640" y1="280" x2="640" y2="300" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<rect x="620" y="260" width="40" height="20" stroke="#000" stroke-width="1.4" fill="#fff" stroke-dasharray="2 4"/>
+<circle cx="640" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="632" y="304" font-size="12" text-anchor="end">A2</text>
+<text x="668" y="266" font-size="12" text-anchor="start" font-weight="bold">KA1 coil</text>
+<text x="668" y="281" font-size="11" text-anchor="start">24V DC</text>
+<line x1="640" y1="304" x2="640" y2="340" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<text x="648" y="326" font-size="11" text-anchor="start" font-style="italic" fill="#555">O020</text>
+<circle cx="640" cy="340" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="640" y="360" font-size="12" text-anchor="middle" font-weight="bold">X2 : 0V</text>
+<text x="540" y="392" font-size="11" text-anchor="start" font-style="italic">KA1 coil opens its NC 11-12 →</text>
+<text x="540" y="407" font-size="11" text-anchor="start" font-style="italic">B5 power cut = detector reset</text>
+<text x="540" y="422" font-size="11" text-anchor="start" font-style="italic">(Q9 pulse, sheet 08)</text>
+<rect x="30" y="690" width="730" height="100" stroke="#b00000" stroke-width="1.6" fill="none"/>
+<text x="42" y="712" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">Alternative without KA1 (if B5 does NOT latch until power-off):</text>
+<text x="42" y="731" font-size="11" text-anchor="start">X2 +24V_SENS connects directly to B5 '+' (S003 note); KA1 not fitted; Q9 / O019 / O020</text>
+<text x="42" y="747" font-size="11" text-anchor="start">not connected. Dotted items on this sheet exist ONLY if KA1 is fitted.</text>
+<text x="748" y="775" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed">בלי KA1 — גלאי העשן מוזן ישירות, והיציאה Q9 לא מחוברת</text>
+<text x="822" y="204" font-size="12" text-anchor="end" font-weight="bold">X3 : +5V</text>
+<text x="822" y="524" font-size="12" text-anchor="end" font-weight="bold">X3 : 0V5</text>
+<text x="822" y="220" font-size="11" text-anchor="end" fill="#555">(G2, sheet 06)</text>
+<line x1="830" y1="200" x2="1290" y2="200" stroke="#000" stroke-width="2" fill="none"/>
+<line x1="830" y1="520" x2="1290" y2="520" stroke="#000" stroke-width="2" fill="none"/>
+<rect x="860" y="260" width="180" height="180" stroke="#000" stroke-width="1.6" fill="none"/>
+<circle cx="900" cy="200" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="900" y1="200" x2="900" y2="260" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="260" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="908" y="232" font-size="11" text-anchor="start" font-style="italic" fill="#555">E003</text>
+<text x="900" y="278" font-size="11" text-anchor="middle" font-weight="bold">VCC</text>
+<circle cx="900" cy="520" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="900" y1="440" x2="900" y2="520" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="440" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="908" y="482" font-size="11" text-anchor="start" font-style="italic" fill="#555">E004</text>
+<text x="900" y="432" font-size="11" text-anchor="middle" font-weight="bold">GND</text>
+<text x="955" y="322" font-size="14" text-anchor="middle" font-weight="bold">B6</text>
+<text x="955" y="337" font-size="11" text-anchor="middle">MQ-2 module</text>
+<text x="955" y="352" font-size="11" text-anchor="middle">warm-up required</text>
+<text x="955" y="367" font-size="11" text-anchor="middle">not an approved</text>
+<text x="955" y="382" font-size="11" text-anchor="middle">gas detector</text>
+<circle cx="1040" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1033" y="304" font-size="11" text-anchor="end" font-weight="bold">DO</text>
+<circle cx="1040" cy="410" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1033" y="425" font-size="11" text-anchor="end" font-weight="bold">AO</text>
+<line x1="1044" y1="410" x2="1066" y2="410" stroke="#888" stroke-width="1.4" fill="none"/>
+<line x1="1062" y1="404" x2="1072" y2="416" stroke="#888" stroke-width="1.4" fill="none"/>
+<line x1="1062" y1="416" x2="1072" y2="404" stroke="#888" stroke-width="1.4" fill="none"/>
+<text x="1080" y="404" font-size="11" text-anchor="start" font-weight="bold" fill="#555">AO — not connected</text>
+<text x="1080" y="419" font-size="11" text-anchor="start" fill="#555">future: IG (analog)</text>
+<text x="1080" y="434" font-size="11" text-anchor="start" fill="#555">only after check</text>
+<line x1="1044" y1="300" x2="1230" y2="300" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1135" y="292" font-size="11" text-anchor="middle" font-style="italic" fill="#555">E007</text>
+<text x="1135" y="318" font-size="11" text-anchor="middle" fill="#b00000">active level TBD</text>
+<rect x="1230" y="260" width="210" height="180" stroke="#000" stroke-width="1.6" fill="none"/>
+<circle cx="1230" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1237" y="304" font-size="11" text-anchor="start" font-weight="bold">IN</text>
+<circle cx="1270" cy="200" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="1270" y1="200" x2="1270" y2="260" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1270" cy="260" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1278" y="232" font-size="11" text-anchor="start" font-style="italic" fill="#555">E005</text>
+<text x="1262" y="254" font-size="11" text-anchor="end" font-weight="bold">DC+ / VCC</text>
+<circle cx="1270" cy="520" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="1270" y1="440" x2="1270" y2="520" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1270" cy="440" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1278" y="482" font-size="11" text-anchor="start" font-style="italic" fill="#555">E006</text>
+<text x="1262" y="458" font-size="11" text-anchor="end" font-weight="bold">DC− / GND</text>
+<text x="1320" y="340" font-size="14" text-anchor="middle" font-weight="bold">KA2</text>
+<text x="1320" y="355" font-size="11" text-anchor="middle">5V relay module</text>
+<text x="1320" y="370" font-size="11" text-anchor="middle">coil 5V</text>
+<text x="1320" y="385" font-size="11" text-anchor="middle">COM / NO / NC</text>
+<circle cx="1400" cy="120" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="1400" y1="120" x2="1400" y2="260" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1408" y="190" font-size="11" text-anchor="start" font-style="italic" fill="#555">I023</text>
+<circle cx="1400" cy="260" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1410" y="254" font-size="11" text-anchor="start" font-weight="bold">COM</text>
+<line x1="1400" y1="264" x2="1400" y2="335" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="1400" y1="365" x2="1400" y2="436" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="1400" y1="365" x2="1411" y2="332" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1400" cy="440" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1410" y="458" font-size="11" text-anchor="start" font-weight="bold">NO</text>
+<line x1="1400" y1="444" x2="1400" y2="580" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1408" y="540" font-size="11" text-anchor="start" font-style="italic" fill="#555">I024</text>
+<rect x="1300" y="580" width="250" height="60" stroke="#000" stroke-width="1.6" fill="none"/>
+<circle cx="1400" cy="580" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1400" y="600" font-size="13" text-anchor="middle" font-weight="bold">IC</text>
+<text x="1400" y="616" font-size="11" text-anchor="middle">GAS</text>
+<text x="1490" y="616" font-size="12" text-anchor="middle" font-weight="bold">K1 (input)</text>
+<rect x="830" y="690" width="725" height="100" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="842" y="712" font-size="12" text-anchor="start" font-weight="bold">Gas channel notes</text>
+<text x="842" y="731" font-size="11" text-anchor="start">MQ-2 is an educational sensor, NOT an approved gas detector. GAS is masked during</text>
+<text x="842" y="747" font-size="11" text-anchor="start">warm-up (T1). Threshold = potentiometer on the module. Sensor body gets hot.</text>
+<text x="1543" y="775" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed">רמת ההפעלה של מודול הממסר (Active LOW/HIGH) — TBD</text>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">10 — SMOKE DETECTOR B5 AND GAS SENSOR B6</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">גלאי עשן B5 וחיישן גז B6</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">B5: check 24V operation, current draw and whether it latches until power-off (BOM).</text>
+<text x="1055" y="975" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">לבדוק אם הגלאי ננעל</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">IB and IC are analog-capable inputs used here as digital inputs (IO_MAP).</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">G2 / X3 5V is NOT isolated: X3 0V5 is common with X2 0V (sheet 06).</text>
+<text x="1055" y="1015" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">הממיר לא מבודד</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">B5 and KA2 contact terminal names are TBD / to verify on the real devices.</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">Dotted = CONDITIONAL (KA1). Final location of B6 depends on gas type (TBD).</text>
+<text x="22" y="1075" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1075" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">SMOKE DETECTOR B5 AND GAS SENSOR B6</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">גלאי עשן B5 וחיישן גז B6</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 10 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">10_smoke_gas.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">B5 supply via KA1 NC (conditional), alarm → IB ; MQ-2 B6 DO → KA2 IN, KA2 COM-NO → IC</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>14 PANEL LAYOUT — FRONT VIEW</title>
+<desc>3 DIN rails × 700 mm at 1.6 px/mm with LAYOUT.csv widths; door view; ceiling B5 | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="30" y="90" width="1186" height="815" stroke="#000" stroke-width="1.6" fill="none" stroke-dasharray="14 4 3 4"/>
+<text x="40" y="108" font-size="11.5" text-anchor="start" font-weight="bold">ENCL — enclosure interior (size TBD_SPEC, internal width &gt; 700 mm)</text>
+<text x="72" y="203" font-size="13" text-anchor="start" font-weight="bold">Rail 1 — power</text>
+<text x="1192" y="203" font-size="13" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">פס 1 — כוח</text>
+<rect x="62" y="242" width="1140" height="56" stroke="#888" stroke-width="1" fill="#d9d9d9"/>
+<rect x="72" y="215" width="115.2" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff" stroke-dasharray="9 5"/>
+<text x="129.6" y="254" font-size="12.5" text-anchor="middle" font-weight="bold">Q0</text>
+<text x="129.6" y="272" font-size="11" text-anchor="middle">main switch</text>
+<text x="129.6" y="310" font-size="11" text-anchor="middle">72 mm</text>
+<rect x="187.2" y="215" width="115.2" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="244.8" y="254" font-size="12.5" text-anchor="middle" font-weight="bold">F1</text>
+<text x="244.8" y="272" font-size="11" text-anchor="middle">RCCB 30mA</text>
+<text x="244.8" y="310" font-size="11" text-anchor="middle">72 mm</text>
+<rect x="302.4" y="215" width="86.4" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="345.6" y="254" font-size="12.5" text-anchor="middle" font-weight="bold">F2</text>
+<text x="345.6" y="272" font-size="11" text-anchor="middle">MCB 3P C</text>
+<text x="345.6" y="310" font-size="11" text-anchor="middle">54 mm</text>
+<rect x="388.8" y="215" width="86.4" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="432" y="254" font-size="12.5" text-anchor="middle" font-weight="bold">F3</text>
+<text x="432" y="272" font-size="11" text-anchor="middle">MCB 3P D</text>
+<text x="432" y="310" font-size="11" text-anchor="middle">54 mm</text>
+<rect x="475.2" y="215" width="28.8" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="489.6" y="254" font-size="11" text-anchor="middle">F5</text>
+<text x="489.6" y="310" font-size="11" text-anchor="middle">18</text>
+<rect x="504" y="215" width="28.8" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="518.4" y="254" font-size="11" text-anchor="middle">F6</text>
+<text x="518.4" y="310" font-size="11" text-anchor="middle">18</text>
+<rect x="532.8" y="215" width="28.8" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="547.2" y="254" font-size="11" text-anchor="middle">F7</text>
+<text x="547.2" y="310" font-size="11" text-anchor="middle">18</text>
+<rect x="561.6" y="215" width="28.8" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="576" y="254" font-size="11" text-anchor="middle">F8</text>
+<text x="576" y="310" font-size="11" text-anchor="middle">18</text>
+<rect x="590.4" y="215" width="28.8" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="604.8" y="254" font-size="11" text-anchor="middle">F9</text>
+<text x="604.8" y="310" font-size="11" text-anchor="middle">18</text>
+<rect x="619.2" y="215" width="28.8" height="110" stroke="#999" stroke-width="0.8" fill="#f2f2f2" stroke-dasharray="2 2"/>
+<text x="633.6" y="274" font-size="11" text-anchor="middle" fill="#777">gap</text>
+<text x="633.6" y="310" font-size="11" text-anchor="middle" fill="#777">18</text>
+<rect x="648" y="215" width="72" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="684" y="254" font-size="12.5" text-anchor="middle" font-weight="bold">KM1</text>
+<text x="684" y="310" font-size="11" text-anchor="middle">45 mm</text>
+<rect x="652" y="327" width="64" height="34" stroke="#000" stroke-width="1.4" fill="#ffffff"/>
+<text x="684" y="349" font-size="12" text-anchor="middle" font-weight="bold">F4</text>
+<rect x="720" y="215" width="72" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="756" y="254" font-size="12.5" text-anchor="middle" font-weight="bold">KM2</text>
+<text x="756" y="272" font-size="11" text-anchor="middle">contactor</text>
+<text x="756" y="310" font-size="11" text-anchor="middle">45 mm</text>
+<rect x="792" y="215" width="28.8" height="110" stroke="#999" stroke-width="0.8" fill="#f2f2f2" stroke-dasharray="2 2"/>
+<text x="806.4" y="274" font-size="11" text-anchor="middle" fill="#777">gap</text>
+<text x="806.4" y="310" font-size="11" text-anchor="middle" fill="#777">18</text>
+<rect x="820.8" y="215" width="144" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff" stroke-dasharray="9 5"/>
+<text x="892.8" y="254" font-size="12.5" text-anchor="middle" font-weight="bold">X1</text>
+<text x="892.8" y="272" font-size="11" text-anchor="middle">power terminals</text>
+<text x="892.8" y="310" font-size="11" text-anchor="middle">90 mm</text>
+<text x="1192" y="343" font-size="11.5" text-anchor="end" font-weight="bold">used 558 mm (incl. gaps 36 mm) / 700 mm — free 142 mm</text>
+<text x="72" y="448" font-size="13" text-anchor="start" font-weight="bold">Rail 2 — control 24V</text>
+<text x="1192" y="448" font-size="13" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">פס 2 — פיקוד 24V</text>
+<rect x="62" y="487" width="1140" height="56" stroke="#888" stroke-width="1" fill="#d9d9d9"/>
+<rect x="72" y="460" width="84.8" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="114.4" y="499" font-size="12.5" text-anchor="middle" font-weight="bold">G1</text>
+<text x="114.4" y="517" font-size="11" text-anchor="middle">HDR-60-24</text>
+<text x="114.4" y="555" font-size="11" text-anchor="middle">53 mm</text>
+<rect x="156.8" y="460" width="28.8" height="110" stroke="#999" stroke-width="0.8" fill="#f2f2f2" stroke-dasharray="2 2"/>
+<text x="171.2" y="519" font-size="11" text-anchor="middle" fill="#777">gap</text>
+<text x="171.2" y="555" font-size="11" text-anchor="middle" fill="#777">18</text>
+<rect x="185.6" y="460" width="200" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="285.6" y="499" font-size="12.5" text-anchor="middle" font-weight="bold">K1</text>
+<text x="285.6" y="517" font-size="11" text-anchor="middle">Zelio SR3B261BD</text>
+<text x="285.6" y="555" font-size="11" text-anchor="middle">125 mm</text>
+<rect x="385.6" y="460" width="57.6" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff" stroke-dasharray="9 5"/>
+<text x="414.4" y="499" font-size="12.5" text-anchor="middle" font-weight="bold">F10-F13</text>
+<text x="414.4" y="517" font-size="11" text-anchor="middle">fuse</text>
+<text x="414.4" y="531" font-size="11" text-anchor="middle">terms</text>
+<text x="414.4" y="555" font-size="11" text-anchor="middle">36 mm</text>
+<rect x="443.2" y="460" width="115.2" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="500.8" y="499" font-size="12.5" text-anchor="middle" font-weight="bold">G2</text>
+<text x="500.8" y="517" font-size="11" text-anchor="middle">LM2596</text>
+<text x="500.8" y="555" font-size="11" text-anchor="middle">72 mm</text>
+<rect x="558.4" y="460" width="25.6" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff" stroke-dasharray="2 4"/>
+<text x="571.2" y="499" font-size="11" text-anchor="middle">KA1</text>
+<text x="571.2" y="555" font-size="11" text-anchor="middle">16</text>
+<rect x="584" y="460" width="256" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff" stroke-dasharray="9 5"/>
+<text x="712" y="499" font-size="12.5" text-anchor="middle" font-weight="bold">X2</text>
+<text x="712" y="517" font-size="11" text-anchor="middle">control terminals 24V</text>
+<text x="712" y="555" font-size="11" text-anchor="middle">160 mm</text>
+<text x="1192" y="588" font-size="11.5" text-anchor="end" font-weight="bold">used 480 mm (incl. gaps 18 mm) / 700 mm — free 220 mm</text>
+<text x="72" y="693" font-size="13" text-anchor="start" font-weight="bold">Rail 3 — sensors (SELV only)</text>
+<text x="1192" y="693" font-size="13" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">פס 3 — חיישנים (SELV בלבד)</text>
+<rect x="62" y="732" width="1140" height="56" stroke="#888" stroke-width="1" fill="#d9d9d9"/>
+<rect x="72" y="705" width="144" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="144" y="744" font-size="12.5" text-anchor="middle" font-weight="bold">B1</text>
+<text x="144" y="762" font-size="11" text-anchor="middle">zone A warn</text>
+<text x="144" y="800" font-size="11" text-anchor="middle">90 mm</text>
+<rect x="216" y="705" width="144" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="288" y="744" font-size="12.5" text-anchor="middle" font-weight="bold">B2</text>
+<text x="288" y="762" font-size="11" text-anchor="middle">zone A alarm</text>
+<text x="288" y="800" font-size="11" text-anchor="middle">90 mm</text>
+<rect x="360" y="705" width="144" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="432" y="744" font-size="12.5" text-anchor="middle" font-weight="bold">B3</text>
+<text x="432" y="762" font-size="11" text-anchor="middle">zone B warn</text>
+<text x="432" y="800" font-size="11" text-anchor="middle">90 mm</text>
+<rect x="504" y="705" width="144" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="576" y="744" font-size="12.5" text-anchor="middle" font-weight="bold">B4</text>
+<text x="576" y="762" font-size="11" text-anchor="middle">zone B alarm</text>
+<text x="576" y="800" font-size="11" text-anchor="middle">90 mm</text>
+<rect x="648" y="705" width="96" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="696" y="744" font-size="12.5" text-anchor="middle" font-weight="bold">KA2</text>
+<text x="696" y="762" font-size="11" text-anchor="middle">5V relay</text>
+<text x="696" y="800" font-size="11" text-anchor="middle">60 mm</text>
+<rect x="744" y="705" width="72" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff"/>
+<text x="780" y="744" font-size="12.5" text-anchor="middle" font-weight="bold">B6</text>
+<text x="780" y="762" font-size="11" text-anchor="middle">MQ-2</text>
+<text x="780" y="800" font-size="11" text-anchor="middle">45 mm</text>
+<rect x="816" y="705" width="64" height="110" stroke="#000" stroke-width="1.5" fill="#ffffff" stroke-dasharray="9 5"/>
+<text x="848" y="744" font-size="12.5" text-anchor="middle" font-weight="bold">X3</text>
+<text x="848" y="762" font-size="11" text-anchor="middle">5V terms</text>
+<text x="848" y="800" font-size="11" text-anchor="middle">40 mm</text>
+<text x="1192" y="833" font-size="11.5" text-anchor="end" font-weight="bold">used 505 mm (incl. gaps 0 mm) / 700 mm — free 195 mm</text>
+<rect x="543" y="124" width="160" height="40" stroke="#000" stroke-width="1.5" fill="none"/>
+<text x="623" y="142" font-size="12" text-anchor="middle" font-weight="bold">B5  smoke detector</text>
+<text x="623" y="157" font-size="11" text-anchor="middle">enclosure ceiling, 100 mm</text>
+<line x1="72" y1="870" x2="232" y2="870" stroke="#000" stroke-width="2" fill="none"/>
+<line x1="72" y1="865" x2="72" y2="875" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="112" y1="865" x2="112" y2="875" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="152" y1="865" x2="152" y2="875" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="192" y1="865" x2="192" y2="875" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="232" y1="865" x2="232" y2="875" stroke="#000" stroke-width="1" fill="none"/>
+<text x="242" y="874" font-size="11" text-anchor="start">100 mm  (scale 1.6 px / mm — widths only, heights not to scale)</text>
+<rect x="1230" y="90" width="325" height="510" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="1240" y="110" font-size="13" text-anchor="start" font-weight="bold">DOOR — front view</text>
+<text x="1545" y="110" font-size="13" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">דלת הלוח</text>
+<circle cx="1272" cy="170" r="17.6" stroke="#000" stroke-width="1.6" fill="#ffffff"/>
+<line x1="1259.56" y1="157.56" x2="1284.44" y2="182.44" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="1259.56" y1="182.44" x2="1284.44" y2="157.56" stroke="#000" stroke-width="1" fill="none"/>
+<text x="1272" y="205.6" font-size="12.5" text-anchor="middle" font-weight="bold">H2</text>
+<text x="1272" y="220.6" font-size="11" text-anchor="middle">WHITE</text>
+<circle cx="1332" cy="170" r="17.6" stroke="#000" stroke-width="1.6" fill="#bfeebf"/>
+<line x1="1319.56" y1="157.56" x2="1344.44" y2="182.44" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="1319.56" y1="182.44" x2="1344.44" y2="157.56" stroke="#000" stroke-width="1" fill="none"/>
+<text x="1332" y="205.6" font-size="12.5" text-anchor="middle" font-weight="bold">H1</text>
+<text x="1332" y="220.6" font-size="11" text-anchor="middle">GREEN</text>
+<circle cx="1392" cy="170" r="17.6" stroke="#000" stroke-width="1.6" fill="#fff29a"/>
+<line x1="1379.56" y1="157.56" x2="1404.44" y2="182.44" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="1379.56" y1="182.44" x2="1404.44" y2="157.56" stroke="#000" stroke-width="1" fill="none"/>
+<text x="1392" y="205.6" font-size="12.5" text-anchor="middle" font-weight="bold">H3</text>
+<text x="1392" y="220.6" font-size="11" text-anchor="middle">YELLOW</text>
+<circle cx="1452" cy="170" r="17.6" stroke="#000" stroke-width="1.6" fill="#ffc77a"/>
+<line x1="1439.56" y1="157.56" x2="1464.44" y2="182.44" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="1439.56" y1="182.44" x2="1464.44" y2="157.56" stroke="#000" stroke-width="1" fill="none"/>
+<text x="1452" y="205.6" font-size="12.5" text-anchor="middle" font-weight="bold">H4</text>
+<text x="1452" y="220.6" font-size="11" text-anchor="middle">AMBER</text>
+<circle cx="1512" cy="170" r="17.6" stroke="#000" stroke-width="1.6" fill="#ffaaaa"/>
+<line x1="1499.56" y1="157.56" x2="1524.44" y2="182.44" stroke="#000" stroke-width="1" fill="none"/>
+<line x1="1499.56" y1="182.44" x2="1524.44" y2="157.56" stroke="#000" stroke-width="1" fill="none"/>
+<text x="1512" y="205.6" font-size="12.5" text-anchor="middle" font-weight="bold">H5</text>
+<text x="1512" y="220.6" font-size="11" text-anchor="middle">RED</text>
+<circle cx="1272" cy="310" r="17.6" stroke="#000" stroke-width="1.6" fill="#dddddd"/>
+<text x="1272" y="345.6" font-size="12.5" text-anchor="middle" font-weight="bold">HA1</text>
+<text x="1272" y="360.6" font-size="11" text-anchor="middle">buzzer</text>
+<circle cx="1352" cy="310" r="17.6" stroke="#000" stroke-width="1.6" fill="#bfeebf"/>
+<text x="1352" y="345.6" font-size="12.5" text-anchor="middle" font-weight="bold">S1</text>
+<text x="1352" y="360.6" font-size="11" text-anchor="middle">START</text>
+<circle cx="1432" cy="310" r="17.6" stroke="#000" stroke-width="1.6" fill="#ffffff" stroke-dasharray="9 5"/>
+<text x="1432" y="345.6" font-size="12.5" text-anchor="middle" font-weight="bold">S2</text>
+<text x="1432" y="360.6" font-size="11" text-anchor="middle">STOP NC</text>
+<circle cx="1512" cy="310" r="17.6" stroke="#000" stroke-width="1.6" fill="#ffffff"/>
+<text x="1512" y="345.6" font-size="12.5" text-anchor="middle" font-weight="bold">S3</text>
+<text x="1512" y="360.6" font-size="11" text-anchor="middle">RESET</text>
+<circle cx="1392.5" cy="450" r="44" stroke="#000" stroke-width="1.4" fill="#fff176"/>
+<circle cx="1392.5" cy="450" r="32" stroke="#000" stroke-width="1.8" fill="#ff6b6b"/>
+<text x="1392.5" y="455" font-size="13" text-anchor="middle" font-weight="bold">S0</text>
+<text x="1392.5" y="514" font-size="11.5" text-anchor="middle" font-weight="bold">S0  E-STOP — red mushroom on yellow</text>
+<text x="1392.5" y="530" font-size="11" text-anchor="middle">Ø40 mm (verify); 2nd NC block S0-NC2</text>
+<text x="1392.5" y="545" font-size="11" text-anchor="middle" fill="#b00000">[ADD_RECOMMENDED] behind the head</text>
+<text x="1392.5" y="585" font-size="11" text-anchor="middle">lamps / buttons: Ø22 mm holes (typical)</text>
+<rect x="1230" y="625" width="325" height="280" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="1242" y="645" font-size="12.5" text-anchor="start" font-weight="bold">LEGEND</text>
+<text x="1543" y="645" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">מקרא</text>
+<rect x="1244" y="661" width="50" height="18" stroke="#000" stroke-width="1.4" fill="#ffffff"/>
+<text x="1306" y="675" font-size="11.5" text-anchor="start">OWNED / PLANNED (BOM)</text>
+<rect x="1244" y="689" width="50" height="18" stroke="#000" stroke-width="1.4" fill="#ffffff" stroke-dasharray="9 5"/>
+<text x="1306" y="703" font-size="11.5" text-anchor="start">ADD_RECOMMENDED</text>
+<rect x="1244" y="717" width="50" height="18" stroke="#000" stroke-width="1.4" fill="#ffffff" stroke-dasharray="2 4"/>
+<text x="1306" y="731" font-size="11.5" text-anchor="start">CONDITIONAL</text>
+<rect x="1244" y="745" width="50" height="18" stroke="#000" stroke-width="1.4" fill="#ffffff" stroke-dasharray="14 4 3 4"/>
+<text x="1306" y="759" font-size="11.5" text-anchor="start">TBD_SPEC (enclosure)</text>
+<rect x="1244" y="773" width="50" height="18" stroke="#000" stroke-width="1.4" fill="#f2f2f2" stroke-dasharray="2 2"/>
+<text x="1306" y="787" font-size="11.5" text-anchor="start">gap / ventilation (LAYOUT)</text>
+<rect x="1244" y="801" width="50" height="18" stroke="#000" stroke-width="1.4" fill="#d9d9d9"/>
+<text x="1306" y="815" font-size="11.5" text-anchor="start">DIN rail TS35 (verify)</text>
+<text x="1242" y="847" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">Widths are estimates — verify</text>
+<text x="1242" y="863" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">against real devices.</text>
+<text x="1543" y="887" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">הרוחבים הם הערכה — לאמת מול הרכיבים</text>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">14 — PANEL LAYOUT — FRONT VIEW</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">סידור רכיבים בלוח — מבט חזית</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">Widths from LAYOUT.csv (width_source: ESTIMATE / TYPICAL_VERIFY / HOLE_22MM_TYPICAL).</text>
+<text x="1055" y="975" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">מידות לפי LAYOUT.csv</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">F4 hangs below KM1 and adds height — check rail-to-rail spacing (LAYOUT note).</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">PE-BAR (bottom of enclosure) and N-BAR (near F1) are in BOM but not in LAYOUT.csv — position TBD.</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">Keep access to K1 USB port (SR2USB01) and display; ventilation space above / below G1.</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">Rail 3 is SELV only; bare PCB modules (B1–B4, KA2, B6, G2) sit on DIN carriers (CARRIER).</text>
+<text x="22" y="1075" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1075" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">PANEL LAYOUT — FRONT VIEW</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">סידור רכיבים בלוח — מבט חזית</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 14 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">14_panel_layout.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">3 DIN rails × 700 mm at 1.6 px/mm with LAYOUT.csv widths; door view; ceiling B5</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>

@@ -101,7 +101,7 @@ class TestDesignDataConsistency(unittest.TestCase):
         return out
 
     def test_all_tags_known(self):
-        known = {"SUPPLY", "BUS-L123"}
+        known = {"SUPPLY"}  # מקור ההזנה — מחוץ ללוח
         for r in self._rows("10_Documentation/BOM.csv"):
             known |= self._expand(r["tag"])
         for r in self._rows("10_Documentation/CONNECTIONS.csv"):

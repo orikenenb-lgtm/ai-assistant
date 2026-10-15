@@ -21,8 +21,8 @@
 | 6 | חיפוש בספריית EduVolt | ⏳ | עמודות EduVolt מסומנות `NOT_CHECKED`. נתוני הדקים ומקורות — מולאו | `03_Custom_Components/Component_Audit.csv` |
 | 7 | רכיבי EVC | ⏳ | מפרט הדקים מוכן. לא נוצרו קבצי `.evc` | `03_Custom_Components/EVC_COMPONENT_SPECS.md` |
 | 8 | מבנה הלוח | ✅ תכנון | פריסה של 3 פסים, דלת ותקרה (שרטוט ייחוס) | `05_Panel_Layout/` |
-| 9 | דפי שרטוט | ✅ ייחוס / ⏳ ב-EduVolt | 20 דפים: SVG ומסמכים | `04_Schematics/DRAWING_INDEX.md` |
-| 10 | חיבורים | ✅ | 96 שורות חיבור. רשת = תכנון בלבד, לבדיקת חשמלאי | `10_Documentation/CONNECTIONS.csv`, `TERMINALS.csv`, `WIRE_COLORS.md` |
+| 9 | דפי שרטוט | ✅ ייחוס / ⏳ ב-EduVolt | 20 דפים: 12 שרטוטי SVG שנוצרים מהטבלאות + מסמכים. כל 99 החיבורים מצוירים | `04_Schematics/DRAWING_INDEX.md` |
+| 10 | חיבורים | ✅ | 99 שורות חיבור. רשת = תכנון בלבד, לבדיקת חשמלאי | `10_Documentation/CONNECTIONS.csv`, `TERMINALS.csv`, `WIRE_COLORS.md` |
 | 11 | בדיקת התאמה חשמלית | ✅ (עם TBD) | 13 נושאים, תקציב הספק | `10_Documentation/ELECTRICAL_CHECK.md` |
 | 12 | מיפוי PLC | ✅ | 12/16 כניסות, 9/10 יציאות. אין צורך בהרחבה | `06_PLC_Logic/IO_MAP.csv`, `PLC_IO_CHECK.md` |
 | 13 | לוגיקת בקרה | ✅ | 9 מצבים, נעילות, אישור, אין חזרה אוטומטית | `06_PLC_Logic/STATE_MACHINE.md` |

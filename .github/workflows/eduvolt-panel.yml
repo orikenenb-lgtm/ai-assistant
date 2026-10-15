@@ -35,4 +35,5 @@ jobs:
         run: |
           python 07_Simulation/run_simulation.py
           python tools/render_ladder_doc.py
-          git diff --exit-code -- 08_Test_Reports/SIMULATION_RESULTS.md 06_PLC_Logic/ZELIO_LADDER.md
+          python tools/generate_drawings.py
+          git diff --exit-code -- 08_Test_Reports/SIMULATION_RESULTS.md 06_PLC_Logic/ZELIO_LADDER.md 04_Schematics 05_Panel_Layout

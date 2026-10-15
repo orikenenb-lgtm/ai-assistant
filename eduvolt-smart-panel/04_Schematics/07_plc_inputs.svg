@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>07 PLC INPUTS I1 – IG (ZELIO K1)</title>
+<desc>Dry contacts fed from X2 +24V_IN (fuse F11) to K1 inputs; ID–IG spare | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<text x="124" y="92" font-size="11" text-anchor="end">F11 out</text>
+<text x="138" y="92" font-size="11" text-anchor="start" font-style="italic" fill="#555">C006</text>
+<line x1="130" y1="96" x2="130" y2="106" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="130" cy="109" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="138" y="113" font-size="12" text-anchor="start" font-weight="bold">X2 : +24V_IN</text>
+<text x="390" y="100" font-size="11" text-anchor="middle" font-style="italic">field contact</text>
+<text x="977.5" y="88" font-size="13" text-anchor="middle" font-weight="bold">K1  Zelio SR3B261BD</text>
+<text x="1555" y="92" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" font-style="italic">1 = / כשל-בטוח (IO_MAP)</text>
+<rect x="890" y="98" width="175" height="808" stroke="#000" stroke-width="1.6" fill="none"/>
+<circle cx="890" cy="128" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="133" font-size="13" text-anchor="start" font-weight="bold">I1</text>
+<text x="932" y="133" font-size="11.5" text-anchor="start">START</text>
+<circle cx="130" cy="128" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="128" x2="360" y2="128" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="143" font-size="11" text-anchor="start" font-style="italic" fill="#555">I001</text>
+<line x1="360" y1="128" x2="377" y2="128" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="128" x2="420" y2="128" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="128" x2="374" y2="117" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="354" y="122" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NO (כניסה)</text>
+<text x="426" y="122" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">NO (יציאה)</text>
+<text x="390" y="153" font-size="12" text-anchor="middle" font-weight="bold">S1</text>
+<line x1="420" y1="128" x2="890" y2="128" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="143" font-size="11" text-anchor="start" font-style="italic" fill="#555">I002</text>
+<text x="580" y="122" font-size="11.5" text-anchor="start">S1 START pushbutton (NO)</text>
+<text x="882" y="143" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">לחצן הפעלה</text>
+<text x="1555" y="124" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = הלחצן לחוץ</text>
+<text x="1555" y="141" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא — לחצן NO</text>
+<circle cx="890" cy="178" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="183" font-size="13" text-anchor="start" font-weight="bold">I2</text>
+<text x="932" y="183" font-size="11.5" text-anchor="start">STOP_OK</text>
+<circle cx="130" cy="178" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="178" x2="360" y2="178" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="193" font-size="11" text-anchor="start" font-style="italic" fill="#555">I003</text>
+<line x1="360" y1="178" x2="377" y2="178" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="178" x2="420" y2="178" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="377" y1="178" x2="377" y2="188" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="178" x2="374" y2="188" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="354" y="172" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC (כניסה)</text>
+<text x="426" y="172" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">NC (יציאה)</text>
+<text x="390" y="203" font-size="12" text-anchor="middle" font-weight="bold">S2</text>
+<line x1="420" y1="178" x2="890" y2="178" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="193" font-size="11" text-anchor="start" font-style="italic" fill="#555">I004</text>
+<text x="580" y="172" font-size="11.5" text-anchor="start">S2 STOP pushbutton (NC) — recommended purchase</text>
+<text x="498" y="193" font-size="11" text-anchor="start" fill="#b00000">[ADD_RECOMMENDED]</text>
+<text x="882" y="193" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">לחצן עצירה</text>
+<text x="1555" y="174" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = הלחצן משוחרר והמעגל שלם</text>
+<text x="1555" y="191" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: כן — ניתוק חוט נקרא כעצירה</text>
+<circle cx="890" cy="228" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="233" font-size="13" text-anchor="start" font-weight="bold">I3</text>
+<text x="932" y="233" font-size="11.5" text-anchor="start">RESET</text>
+<circle cx="130" cy="228" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="228" x2="360" y2="228" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="243" font-size="11" text-anchor="start" font-style="italic" fill="#555">I005</text>
+<line x1="360" y1="228" x2="377" y2="228" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="228" x2="420" y2="228" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="228" x2="374" y2="217" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="354" y="222" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NO (כניסה)</text>
+<text x="426" y="222" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">NO (יציאה)</text>
+<text x="390" y="253" font-size="12" text-anchor="middle" font-weight="bold">S3</text>
+<line x1="420" y1="228" x2="890" y2="228" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="243" font-size="11" text-anchor="start" font-style="italic" fill="#555">I006</text>
+<text x="580" y="222" font-size="11.5" text-anchor="start">S3 RESET pushbutton (NO)</text>
+<text x="882" y="243" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">לחצן איפוס</text>
+<text x="1555" y="224" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = הלחצן לחוץ</text>
+<text x="1555" y="241" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא — לחצן NO</text>
+<circle cx="890" cy="278" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="283" font-size="13" text-anchor="start" font-weight="bold">I4</text>
+<text x="932" y="283" font-size="11.5" text-anchor="start">ESTOP_OK</text>
+<circle cx="130" cy="278" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="278" x2="360" y2="278" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="293" font-size="11" text-anchor="start" font-style="italic" fill="#555">I007</text>
+<line x1="360" y1="278" x2="377" y2="278" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="278" x2="420" y2="278" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="377" y1="278" x2="377" y2="288" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="278" x2="374" y2="288" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="354" y="272" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC-2 (כניסה)</text>
+<text x="426" y="272" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">NC-2 (יציאה)</text>
+<text x="390" y="303" font-size="12" text-anchor="middle" font-weight="bold">S0</text>
+<line x1="420" y1="278" x2="890" y2="278" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="293" font-size="11" text-anchor="start" font-style="italic" fill="#555">I008</text>
+<text x="580" y="272" font-size="11.5" text-anchor="start">S0 E-stop, 2nd NC block NC-2 — recommended</text>
+<text x="498" y="293" font-size="11" text-anchor="start" fill="#b00000">[ADD_RECOMMENDED]</text>
+<text x="882" y="293" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">ניטור מפסק חירום</text>
+<text x="1555" y="274" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = מפסק החירום משוחרר</text>
+<text x="1555" y="291" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: כן</text>
+<circle cx="890" cy="328" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="333" font-size="13" text-anchor="start" font-weight="bold">I5</text>
+<text x="932" y="333" font-size="11.5" text-anchor="start">OL_TRIPPED</text>
+<circle cx="130" cy="328" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="328" x2="360" y2="328" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="343" font-size="11" text-anchor="start" font-style="italic" fill="#555">I009</text>
+<line x1="360" y1="328" x2="377" y2="328" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="328" x2="420" y2="328" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="328" x2="374" y2="317" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="354" y="322" font-size="11" text-anchor="end">97</text>
+<text x="426" y="322" font-size="11" text-anchor="start">98</text>
+<text x="390" y="353" font-size="12" text-anchor="middle" font-weight="bold">F4</text>
+<line x1="420" y1="328" x2="890" y2="328" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="343" font-size="11" text-anchor="start" font-style="italic" fill="#555">I010</text>
+<text x="580" y="322" font-size="11.5" text-anchor="start">F4 overload relay, auxiliary NO 97-98</text>
+<text x="882" y="343" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">ממסר עומס יתר הופעל</text>
+<text x="1555" y="324" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = ממסר עומס היתר במצב ניתוק</text>
+<text x="1555" y="341" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא — אבל 95-96 מנתק את KM1 בחיווט קשיח</text>
+<circle cx="890" cy="378" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="383" font-size="13" text-anchor="start" font-weight="bold">I6</text>
+<text x="932" y="383" font-size="11.5" text-anchor="start">KM1_FB</text>
+<circle cx="130" cy="378" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="378" x2="360" y2="378" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="393" font-size="11" text-anchor="start" font-style="italic" fill="#555">I011</text>
+<line x1="360" y1="378" x2="377" y2="378" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="378" x2="420" y2="378" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="378" x2="374" y2="367" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="354" y="372" font-size="11" text-anchor="end">13</text>
+<text x="426" y="372" font-size="11" text-anchor="start">14</text>
+<text x="390" y="403" font-size="12" text-anchor="middle" font-weight="bold">KM1</text>
+<line x1="420" y1="378" x2="890" y2="378" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="393" font-size="11" text-anchor="start" font-style="italic" fill="#555">I012</text>
+<text x="580" y="372" font-size="11.5" text-anchor="start">KM1 auxiliary NO 13-14 (feedback)</text>
+<text x="882" y="393" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">משוב מגען מנוע</text>
+<text x="1555" y="374" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = המגען סגור</text>
+<circle cx="890" cy="428" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="433" font-size="13" text-anchor="start" font-weight="bold">I7</text>
+<text x="932" y="433" font-size="11.5" text-anchor="start">TS1_WARN</text>
+<circle cx="130" cy="428" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="428" x2="360" y2="428" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="443" font-size="11" text-anchor="start" font-style="italic" fill="#555">I013</text>
+<line x1="360" y1="428" x2="377" y2="428" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="428" x2="420" y2="428" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="428" x2="374" y2="417" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="390" y="441" font-size="12" text-anchor="middle" font-weight="bold">?</text>
+<text x="354" y="422" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מגע ממסר (TBD)</text>
+<text x="426" y="422" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">מגע ממסר (TBD)</text>
+<text x="390" y="453" font-size="12" text-anchor="middle" font-weight="bold">B1</text>
+<line x1="420" y1="428" x2="890" y2="428" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="443" font-size="11" text-anchor="start" font-style="italic" fill="#555">I014</text>
+<text x="580" y="422" font-size="11.5" text-anchor="start">B1 XH-W3001 relay — Zone A warning</text>
+<text x="882" y="443" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">טמפרטורה אזור A (כוח) — סף אזהרה</text>
+<text x="1555" y="424" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = הטמפרטורה מעל הסף</text>
+<text x="1555" y="441" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא — אובדן מתח למודול נקרא כ'תקין'</text>
+<circle cx="890" cy="478" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="483" font-size="13" text-anchor="start" font-weight="bold">I8</text>
+<text x="932" y="483" font-size="11.5" text-anchor="start">TS2_ALARM</text>
+<circle cx="130" cy="478" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="478" x2="360" y2="478" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="493" font-size="11" text-anchor="start" font-style="italic" fill="#555">I015</text>
+<line x1="360" y1="478" x2="377" y2="478" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="478" x2="420" y2="478" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="478" x2="374" y2="467" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="390" y="491" font-size="12" text-anchor="middle" font-weight="bold">?</text>
+<text x="354" y="472" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מגע ממסר (TBD)</text>
+<text x="426" y="472" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">מגע ממסר (TBD)</text>
+<text x="390" y="503" font-size="12" text-anchor="middle" font-weight="bold">B2</text>
+<line x1="420" y1="478" x2="890" y2="478" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="493" font-size="11" text-anchor="start" font-style="italic" fill="#555">I016</text>
+<text x="580" y="472" font-size="11.5" text-anchor="start">B2 XH-W3001 relay — Zone A alarm</text>
+<text x="882" y="493" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">טמפרטורה אזור A (כוח) — סף התראה</text>
+<text x="1555" y="474" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = הטמפרטורה מעל הסף</text>
+<text x="1555" y="491" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא — אובדן מתח למודול נקרא כ'תקין'</text>
+<circle cx="890" cy="528" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="533" font-size="13" text-anchor="start" font-weight="bold">I9</text>
+<text x="932" y="533" font-size="11.5" text-anchor="start">TS3_WARN</text>
+<circle cx="130" cy="528" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="528" x2="360" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="543" font-size="11" text-anchor="start" font-style="italic" fill="#555">I017</text>
+<line x1="360" y1="528" x2="377" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="528" x2="420" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="528" x2="374" y2="517" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="390" y="541" font-size="12" text-anchor="middle" font-weight="bold">?</text>
+<text x="354" y="522" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מגע ממסר (TBD)</text>
+<text x="426" y="522" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">מגע ממסר (TBD)</text>
+<text x="390" y="553" font-size="12" text-anchor="middle" font-weight="bold">B3</text>
+<line x1="420" y1="528" x2="890" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="543" font-size="11" text-anchor="start" font-style="italic" fill="#555">I018</text>
+<text x="580" y="522" font-size="11.5" text-anchor="start">B3 XH-W3001 relay — Zone B warning</text>
+<text x="882" y="543" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">טמפרטורה אזור B (פיקוד) — סף אזהרה</text>
+<text x="1555" y="524" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = הטמפרטורה מעל הסף</text>
+<text x="1555" y="541" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא — אובדן מתח למודול נקרא כ'תקין'</text>
+<circle cx="890" cy="578" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="583" font-size="13" text-anchor="start" font-weight="bold">IA</text>
+<text x="932" y="583" font-size="11.5" text-anchor="start">TS4_ALARM</text>
+<circle cx="130" cy="578" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="578" x2="360" y2="578" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="593" font-size="11" text-anchor="start" font-style="italic" fill="#555">I019</text>
+<line x1="360" y1="578" x2="377" y2="578" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="578" x2="420" y2="578" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="578" x2="374" y2="567" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="390" y="591" font-size="12" text-anchor="middle" font-weight="bold">?</text>
+<text x="354" y="572" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מגע ממסר (TBD)</text>
+<text x="426" y="572" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">מגע ממסר (TBD)</text>
+<text x="390" y="603" font-size="12" text-anchor="middle" font-weight="bold">B4</text>
+<line x1="420" y1="578" x2="890" y2="578" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="593" font-size="11" text-anchor="start" font-style="italic" fill="#555">I020</text>
+<text x="580" y="572" font-size="11.5" text-anchor="start">B4 XH-W3001 relay — Zone B alarm</text>
+<text x="882" y="593" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">טמפרטורה אזור B (פיקוד) — סף התראה</text>
+<text x="1555" y="574" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = הטמפרטורה מעל הסף</text>
+<text x="1555" y="591" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא — אובדן מתח למודול נקרא כ'תקין'</text>
+<circle cx="890" cy="628" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="633" font-size="13" text-anchor="start" font-weight="bold">IB</text>
+<text x="932" y="633" font-size="11.5" text-anchor="start">SMOKE</text>
+<circle cx="130" cy="628" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="628" x2="360" y2="628" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="643" font-size="11" text-anchor="start" font-style="italic" fill="#555">I021</text>
+<line x1="360" y1="628" x2="377" y2="628" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="628" x2="420" y2="628" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="628" x2="374" y2="617" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="354" y="622" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">COM ממסר התראה (TBD)</text>
+<text x="426" y="622" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">NO ממסר התראה (TBD)</text>
+<text x="390" y="653" font-size="12" text-anchor="middle" font-weight="bold">B5</text>
+<line x1="420" y1="628" x2="890" y2="628" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="643" font-size="11" text-anchor="start" font-style="italic" fill="#555">I022</text>
+<text x="580" y="622" font-size="11.5" text-anchor="start">B5 smoke detector alarm relay</text>
+<text x="882" y="643" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">גלאי עשן</text>
+<text x="1555" y="624" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = הגלאי במצב התראה</text>
+<text x="1555" y="641" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא</text>
+<circle cx="890" cy="678" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="683" font-size="13" text-anchor="start" font-weight="bold">IC</text>
+<text x="932" y="683" font-size="11.5" text-anchor="start">GAS</text>
+<circle cx="130" cy="678" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="130" y1="678" x2="360" y2="678" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="140" y="693" font-size="11" text-anchor="start" font-style="italic" fill="#555">I023</text>
+<line x1="360" y1="678" x2="377" y2="678" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="678" x2="420" y2="678" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="403" y1="678" x2="374" y2="667" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="354" y="672" font-size="11" text-anchor="end">COM</text>
+<text x="426" y="672" font-size="11" text-anchor="start">NO</text>
+<text x="390" y="703" font-size="12" text-anchor="middle" font-weight="bold">KA2</text>
+<line x1="420" y1="678" x2="890" y2="678" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="440" y="693" font-size="11" text-anchor="start" font-style="italic" fill="#555">I024</text>
+<text x="580" y="672" font-size="11.5" text-anchor="start">KA2 5V relay module (from MQ-2 DO)</text>
+<text x="882" y="693" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">גילוי גז (MQ-2 דרך מודול ממסר 5V)</text>
+<text x="1555" y="674" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">1 = יציאת DO של MQ-2 במצב 'גז מעל סף הפוטנציומטר'</text>
+<text x="1555" y="691" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#444">כשל-בטוח: לא</text>
+<circle cx="890" cy="728" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="733" font-size="13" text-anchor="start" font-weight="bold">ID</text>
+<text x="932" y="733" font-size="11.5" text-anchor="start">SPARE_ID</text>
+<text x="878" y="732" font-size="12" text-anchor="end" font-weight="bold" fill="#555">SPARE</text>
+<text x="820" y="732" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#555">רזרבה</text>
+<circle cx="890" cy="778" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="783" font-size="13" text-anchor="start" font-weight="bold">IE</text>
+<text x="932" y="783" font-size="11.5" text-anchor="start">SPARE_IE</text>
+<text x="878" y="782" font-size="12" text-anchor="end" font-weight="bold" fill="#555">SPARE</text>
+<text x="820" y="782" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#555">רזרבה</text>
+<circle cx="890" cy="828" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="833" font-size="13" text-anchor="start" font-weight="bold">IF</text>
+<text x="932" y="833" font-size="11.5" text-anchor="start">SPARE_IF</text>
+<text x="878" y="832" font-size="12" text-anchor="end" font-weight="bold" fill="#555">SPARE</text>
+<text x="820" y="832" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#555">רזרבה</text>
+<circle cx="890" cy="878" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="900" y="883" font-size="13" text-anchor="start" font-weight="bold">IG</text>
+<text x="932" y="883" font-size="11.5" text-anchor="start">SPARE_IG</text>
+<text x="878" y="882" font-size="12" text-anchor="end" font-weight="bold" fill="#555">SPARE</text>
+<text x="820" y="882" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#555">רזרבה</text>
+<text x="1555" y="882" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed" fill="#555">רק אחרי בדיקת טווח הכניסה האנלוגית (0-10V) ורזולוציה של 8 ביט</text>
+<line x1="130" y1="109" x2="130" y2="678" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">07 — PLC INPUTS I1 – IG (ZELIO K1)</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">כניסות הבקר I1 – IG (Zelio K1)</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">K1 supply: '+' from F10 out (C002), '-' from X2 0V (C004) — see sheet 06.</text>
+<text x="1055" y="975" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">הזנת K1 — ראו גיליון 06</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">Inputs IB–IG are analog-capable (0-10V); IB and IC are used here as digital inputs.</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">Contact terminal markings to be verified on each device; '?' = contact type TBD (XH-W3001).</text>
+<text x="1055" y="1015" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">הדקי XH-W3001 — לקרוא מהלוח</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">I2 (S2) and I4 (S0 NC-2) are fail-safe NC circuits: a broken wire reads as STOP / E-STOP.</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">Temperature modules read 'OK' on loss of supply (not fail-safe) — see IO_MAP I7–IA.</text>
+<text x="22" y="1075" font-size="11.5" text-anchor="start">Spare inputs ID, IE, IF, IG are not wired. IG: future MQ-2 AO only after checking range.</text>
+<text x="22" y="1095" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1095" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">PLC INPUTS I1 – IG (ZELIO K1)</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">כניסות הבקר I1 – IG (Zelio K1)</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 07 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">07_plc_inputs.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">Dry contacts fed from X2 +24V_IN (fuse F11) to K1 inputs; ID–IG spare</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>

@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>04 FEED, PROTECTION AND EARTHING</title>
+<desc>Q0 main switch, F1 RCCB, N-BAR, PE-BAR and protective-earth connections | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<text x="30" y="92" font-size="11" text-anchor="start" font-style="italic">SUPPLY 3~ + N + PE, 400/230V AC (from building distribution — TBD)</text>
+<circle cx="190" cy="120" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="190" y="112" font-size="12" text-anchor="middle" font-weight="bold">L1</text>
+<line x1="190" y1="124" x2="190" y2="190" stroke="#8B4513" stroke-width="1.8" fill="none"/>
+<text x="198" y="160" font-size="11" text-anchor="start" font-style="italic" fill="#555">P001</text>
+<circle cx="260" cy="120" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="260" y="112" font-size="12" text-anchor="middle" font-weight="bold">L2</text>
+<line x1="260" y1="124" x2="260" y2="190" stroke="#000000" stroke-width="1.8" fill="none"/>
+<text x="268" y="160" font-size="11" text-anchor="start" font-style="italic" fill="#555">P002</text>
+<circle cx="330" cy="120" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="330" y="112" font-size="12" text-anchor="middle" font-weight="bold">L3</text>
+<line x1="330" y1="124" x2="330" y2="190" stroke="#7a7a7a" stroke-width="1.8" fill="none"/>
+<text x="338" y="160" font-size="11" text-anchor="start" font-style="italic" fill="#555">P003</text>
+<circle cx="400" cy="120" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="400" y="112" font-size="12" text-anchor="middle" font-weight="bold">N</text>
+<line x1="400" y1="124" x2="400" y2="190" stroke="#2f8fdf" stroke-width="1.8" fill="none"/>
+<text x="408" y="160" font-size="11" text-anchor="start" font-style="italic" fill="#555">P004</text>
+<circle cx="640" cy="120" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="640" y="112" font-size="12" text-anchor="middle" font-weight="bold">PE</text>
+<line x1="190" y1="190" x2="190" y2="218" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="190" y1="242" x2="190" y2="270" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="190" y1="242" x2="201" y2="215" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="185" y1="218" x2="195" y2="218" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="260" y1="190" x2="260" y2="218" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="260" y1="242" x2="260" y2="270" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="260" y1="242" x2="271" y2="215" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="255" y1="218" x2="265" y2="218" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="330" y1="190" x2="330" y2="218" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="330" y1="242" x2="330" y2="270" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="330" y1="242" x2="341" y2="215" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="325" y1="218" x2="335" y2="218" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="400" y1="190" x2="400" y2="218" stroke="#2f8fdf" stroke-width="1.4" fill="none"/>
+<line x1="400" y1="242" x2="400" y2="270" stroke="#2f8fdf" stroke-width="1.4" fill="none"/>
+<line x1="400" y1="242" x2="411" y2="215" stroke="#2f8fdf" stroke-width="1.4" fill="none"/>
+<line x1="395" y1="218" x2="405" y2="218" stroke="#2f8fdf" stroke-width="1.4" fill="none"/>
+<line x1="196" y1="230" x2="414" y2="230" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<circle cx="190" cy="190" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="183" y="194" font-size="11" text-anchor="end">1</text>
+<circle cx="190" cy="270" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="183" y="274" font-size="11" text-anchor="end">2</text>
+<line x1="190" y1="274" x2="190" y2="350" stroke="#8B4513" stroke-width="1.8" fill="none"/>
+<text x="198" y="316" font-size="11" text-anchor="start" font-style="italic" fill="#555">P010</text>
+<circle cx="260" cy="190" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="253" y="194" font-size="11" text-anchor="end">3</text>
+<circle cx="260" cy="270" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="253" y="274" font-size="11" text-anchor="end">4</text>
+<line x1="260" y1="274" x2="260" y2="350" stroke="#000000" stroke-width="1.8" fill="none"/>
+<text x="268" y="316" font-size="11" text-anchor="start" font-style="italic" fill="#555">P011</text>
+<circle cx="330" cy="190" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="323" y="194" font-size="11" text-anchor="end">5</text>
+<circle cx="330" cy="270" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="323" y="274" font-size="11" text-anchor="end">6</text>
+<line x1="330" y1="274" x2="330" y2="350" stroke="#7a7a7a" stroke-width="1.8" fill="none"/>
+<text x="338" y="316" font-size="11" text-anchor="start" font-style="italic" fill="#555">P012</text>
+<circle cx="400" cy="190" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="393" y="194" font-size="11" text-anchor="end">N</text>
+<circle cx="400" cy="270" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="393" y="274" font-size="11" text-anchor="end">N</text>
+<line x1="400" y1="274" x2="400" y2="350" stroke="#2f8fdf" stroke-width="1.8" fill="none"/>
+<text x="408" y="316" font-size="11" text-anchor="start" font-style="italic" fill="#555">P013</text>
+<text x="30" y="212" font-size="13" text-anchor="start" font-weight="bold">Q0</text>
+<text x="30" y="226" font-size="11" text-anchor="start">main switch 4P</text>
+<text x="30" y="240" font-size="11" text-anchor="start">In TBD</text>
+<text x="30" y="254" font-size="11" text-anchor="start">[ADD_RECOMMENDED]</text>
+<line x1="190" y1="350" x2="190" y2="378" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="190" y1="402" x2="190" y2="430" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="190" y1="402" x2="201" y2="375" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="260" y1="350" x2="260" y2="378" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="260" y1="402" x2="260" y2="430" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="260" y1="402" x2="271" y2="375" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="330" y1="350" x2="330" y2="378" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="330" y1="402" x2="330" y2="430" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="330" y1="402" x2="341" y2="375" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="400" y1="350" x2="400" y2="378" stroke="#2f8fdf" stroke-width="1.4" fill="none"/>
+<line x1="400" y1="402" x2="400" y2="430" stroke="#2f8fdf" stroke-width="1.4" fill="none"/>
+<line x1="400" y1="402" x2="411" y2="375" stroke="#2f8fdf" stroke-width="1.4" fill="none"/>
+<line x1="196" y1="390" x2="414" y2="390" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<circle cx="190" cy="350" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="183" y="354" font-size="11" text-anchor="end">1</text>
+<circle cx="190" cy="430" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="183" y="434" font-size="11" text-anchor="end">2</text>
+<circle cx="260" cy="350" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="253" y="354" font-size="11" text-anchor="end">3</text>
+<circle cx="260" cy="430" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="253" y="434" font-size="11" text-anchor="end">4</text>
+<circle cx="330" cy="350" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="323" y="354" font-size="11" text-anchor="end">5</text>
+<circle cx="330" cy="430" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="323" y="434" font-size="11" text-anchor="end">6</text>
+<circle cx="400" cy="350" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="393" y="354" font-size="11" text-anchor="end">N</text>
+<circle cx="400" cy="430" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="393" y="434" font-size="11" text-anchor="end">N</text>
+<rect x="180" y="448" width="240" height="26" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="300" y="466" font-size="11" text-anchor="middle">IΔn = 30 mA — type AC/A/F TBD</text>
+<line x1="418" y1="390" x2="440" y2="390" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<line x1="440" y1="390" x2="440" y2="461" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<line x1="440" y1="461" x2="420" y2="461" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<text x="30" y="372" font-size="13" text-anchor="start" font-weight="bold">F1</text>
+<text x="30" y="386" font-size="11" text-anchor="start">RCCB 4P 30 mA</text>
+<text x="30" y="400" font-size="11" text-anchor="start">In TBD</text>
+<line x1="190" y1="434" x2="190" y2="448" stroke="#8B4513" stroke-width="1.8" fill="none"/>
+<line x1="190" y1="474" x2="190" y2="520" stroke="#8B4513" stroke-width="1.8" fill="none"/>
+<line x1="190" y1="520" x2="190" y2="540" stroke="#8B4513" stroke-width="1.8" fill="none"/>
+<polygon points="190,548 186.4,540 193.6,540" stroke="#8B4513" stroke-width="1" fill="#8B4513"/>
+<line x1="260" y1="434" x2="260" y2="448" stroke="#000000" stroke-width="1.8" fill="none"/>
+<line x1="260" y1="474" x2="260" y2="520" stroke="#000000" stroke-width="1.8" fill="none"/>
+<line x1="260" y1="520" x2="260" y2="540" stroke="#000000" stroke-width="1.8" fill="none"/>
+<polygon points="260,548 256.4,540 263.6,540" stroke="#000000" stroke-width="1" fill="#000000"/>
+<line x1="330" y1="434" x2="330" y2="448" stroke="#7a7a7a" stroke-width="1.8" fill="none"/>
+<line x1="330" y1="474" x2="330" y2="520" stroke="#7a7a7a" stroke-width="1.8" fill="none"/>
+<line x1="330" y1="520" x2="330" y2="540" stroke="#7a7a7a" stroke-width="1.8" fill="none"/>
+<polygon points="330,548 326.4,540 333.6,540" stroke="#7a7a7a" stroke-width="1" fill="#7a7a7a"/>
+<text x="338" y="506" font-size="11" text-anchor="start" font-style="italic" fill="#555">P020</text>
+<text x="260" y="566" font-size="12" text-anchor="middle" font-weight="bold">→ BUS-L123 (sheet 03)</text>
+<line x1="400" y1="434" x2="400" y2="448" stroke="#2f8fdf" stroke-width="1.8" fill="none"/>
+<line x1="400" y1="474" x2="400" y2="610" stroke="#2f8fdf" stroke-width="1.8" fill="none"/>
+<text x="408" y="540" font-size="11" text-anchor="start" font-style="italic" fill="#555">P021</text>
+<line x1="330" y1="610" x2="560" y2="610" stroke="#2f8fdf" stroke-width="5" fill="none"/>
+<text x="330" y="600" font-size="12" text-anchor="start" font-weight="bold">N-BAR</text>
+<circle cx="400" cy="610" r="3.2" stroke="#2f8fdf" stroke-width="1" fill="#2f8fdf"/>
+<line x1="450" y1="610" x2="450" y2="652" stroke="#2f8fdf" stroke-width="1.6" fill="none"/>
+<polygon points="450,660 446.4,652 453.6,652" stroke="#2f8fdf" stroke-width="1" fill="#2f8fdf"/>
+<line x1="530" y1="610" x2="530" y2="652" stroke="#2f8fdf" stroke-width="1.6" fill="none"/>
+<polygon points="530,660 526.4,652 533.6,652" stroke="#2f8fdf" stroke-width="1" fill="#2f8fdf"/>
+<text x="442" y="682" font-size="11" text-anchor="end" font-style="italic" fill="#555">P052</text>
+<text x="442" y="698" font-size="11" text-anchor="end">→ G1 : N</text>
+<text x="538" y="682" font-size="11" text-anchor="start" font-style="italic" fill="#555">P062</text>
+<text x="538" y="698" font-size="11" text-anchor="start">→ X1 : N.F6-N.F9</text>
+<line x1="640" y1="124" x2="640" y2="760" stroke="#1f8f3a" stroke-width="2.2" fill="none"/>
+<line x1="640" y1="124" x2="640" y2="760" stroke="#e3c800" stroke-width="1.21" fill="none" stroke-dasharray="7 7"/>
+<text x="648" y="300" font-size="11" text-anchor="start" font-style="italic" fill="#555">PE001</text>
+<line x1="600" y1="760" x2="1150" y2="760" stroke="#1f8f3a" stroke-width="6" fill="none"/>
+<text x="590" y="765" font-size="13" text-anchor="end" font-weight="bold">PE-BAR</text>
+<circle cx="640" cy="760" r="3.2" stroke="#1f8f3a" stroke-width="1" fill="#1f8f3a"/>
+<line x1="650" y1="760" x2="650" y2="830" stroke="#1f8f3a" stroke-width="2.2" fill="none"/>
+<line x1="650" y1="760" x2="650" y2="830" stroke="#e3c800" stroke-width="1.21" fill="none" stroke-dasharray="7 7"/>
+<circle cx="650" cy="760" r="3.2" stroke="#1f8f3a" stroke-width="1" fill="#1f8f3a"/>
+<circle cx="650" cy="834" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="658" y="800" font-size="11" text-anchor="start" font-style="italic" fill="#555">PE010</text>
+<line x1="770" y1="760" x2="770" y2="830" stroke="#1f8f3a" stroke-width="2.2" fill="none"/>
+<line x1="770" y1="760" x2="770" y2="830" stroke="#e3c800" stroke-width="1.21" fill="none" stroke-dasharray="7 7"/>
+<circle cx="770" cy="760" r="3.2" stroke="#1f8f3a" stroke-width="1" fill="#1f8f3a"/>
+<circle cx="770" cy="834" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="778" y="800" font-size="11" text-anchor="start" font-style="italic" fill="#555">PE012</text>
+<line x1="890" y1="760" x2="890" y2="830" stroke="#1f8f3a" stroke-width="2.2" fill="none"/>
+<line x1="890" y1="760" x2="890" y2="830" stroke="#e3c800" stroke-width="1.21" fill="none" stroke-dasharray="7 7"/>
+<circle cx="890" cy="760" r="3.2" stroke="#1f8f3a" stroke-width="1" fill="#1f8f3a"/>
+<circle cx="890" cy="834" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="898" y="800" font-size="11" text-anchor="start" font-style="italic" fill="#555">PE013</text>
+<line x1="1010" y1="760" x2="1010" y2="830" stroke="#1f8f3a" stroke-width="2.2" fill="none"/>
+<line x1="1010" y1="760" x2="1010" y2="830" stroke="#e3c800" stroke-width="1.21" fill="none" stroke-dasharray="7 7"/>
+<circle cx="1010" cy="760" r="3.2" stroke="#1f8f3a" stroke-width="1" fill="#1f8f3a"/>
+<circle cx="1010" cy="834" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1018" y="800" font-size="11" text-anchor="start" font-style="italic" fill="#555">PE020</text>
+<line x1="1130" y1="760" x2="1130" y2="830" stroke="#1f8f3a" stroke-width="1.8" fill="none" stroke-dasharray="6 4"/>
+<circle cx="1130" cy="760" r="3.2" stroke="#1f8f3a" stroke-width="1" fill="#1f8f3a"/>
+<circle cx="1130" cy="834" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1138" y="800" font-size="11" text-anchor="start" font-style="italic" fill="#555">C011</text>
+<text x="650" y="856" font-size="12" text-anchor="middle" font-weight="bold">X1</text>
+<text x="650" y="872" font-size="11" text-anchor="middle">PE.M</text>
+<text x="650" y="888" font-size="11" text-anchor="middle">motor (sheet 05)</text>
+<text x="770" y="856" font-size="12" text-anchor="middle" font-weight="bold">X1</text>
+<text x="770" y="872" font-size="11" text-anchor="middle">PE.2</text>
+<text x="770" y="888" font-size="11" text-anchor="middle">3~ outgoing</text>
+<text x="890" y="856" font-size="12" text-anchor="middle" font-weight="bold">X1</text>
+<text x="890" y="872" font-size="11" text-anchor="middle">PE.F6-PE.F9</text>
+<text x="890" y="888" font-size="11" text-anchor="middle">1~ outgoing</text>
+<text x="1010" y="856" font-size="12" text-anchor="middle" font-weight="bold">ENCL</text>
+<text x="1010" y="872" font-size="11" text-anchor="middle">enclosure + door</text>
+<text x="1010" y="888" font-size="11" text-anchor="middle">(flexible bridge)</text>
+<text x="1130" y="856" font-size="12" text-anchor="middle" font-weight="bold">X2 : 0V</text>
+<text x="1130" y="872" font-size="11" text-anchor="middle" fill="#b00000">0V–PE (PELV)</text>
+<text x="1130" y="888" font-size="11" text-anchor="middle" fill="#b00000">decision TBD</text>
+<text x="1138" y="92" font-size="12" text-anchor="start" font-weight="bold">Feed and earthing wires (CONNECTIONS.csv)</text>
+<rect x="1138" y="102" width="412" height="399" stroke="#000" stroke-width="1" fill="none"/>
+<text x="1144" y="117" font-size="11" text-anchor="start" font-weight="bold">Wire</text>
+<text x="1194" y="117" font-size="11" text-anchor="start" font-weight="bold">From</text>
+<text x="1302" y="117" font-size="11" text-anchor="start" font-weight="bold">To</text>
+<text x="1444" y="117" font-size="11" text-anchor="start" font-weight="bold">Terminal source</text>
+<line x1="1138" y1="123" x2="1550" y2="123" stroke="#000" stroke-width="1" fill="none"/>
+<text x="1144" y="138" font-size="11" text-anchor="start">P001</text>
+<text x="1194" y="138" font-size="11" text-anchor="start" font-weight="bold">SUPPLY</text>
+<text x="1248" y="138" font-size="11" text-anchor="start">L1</text>
+<text x="1302" y="138" font-size="11" text-anchor="start" font-weight="bold">Q0</text>
+<text x="1370" y="138" font-size="11" text-anchor="start">1</text>
+<text x="1444" y="138" font-size="11" text-anchor="start">IEC_STANDARD</text>
+<text x="1144" y="159" font-size="11" text-anchor="start">P002</text>
+<text x="1194" y="159" font-size="11" text-anchor="start" font-weight="bold">SUPPLY</text>
+<text x="1248" y="159" font-size="11" text-anchor="start">L2</text>
+<text x="1302" y="159" font-size="11" text-anchor="start" font-weight="bold">Q0</text>
+<text x="1370" y="159" font-size="11" text-anchor="start">3</text>
+<text x="1444" y="159" font-size="11" text-anchor="start">IEC_STANDARD</text>
+<text x="1144" y="180" font-size="11" text-anchor="start">P003</text>
+<text x="1194" y="180" font-size="11" text-anchor="start" font-weight="bold">SUPPLY</text>
+<text x="1248" y="180" font-size="11" text-anchor="start">L3</text>
+<text x="1302" y="180" font-size="11" text-anchor="start" font-weight="bold">Q0</text>
+<text x="1370" y="180" font-size="11" text-anchor="start">5</text>
+<text x="1444" y="180" font-size="11" text-anchor="start">IEC_STANDARD</text>
+<text x="1144" y="201" font-size="11" text-anchor="start">P004</text>
+<text x="1194" y="201" font-size="11" text-anchor="start" font-weight="bold">SUPPLY</text>
+<text x="1248" y="201" font-size="11" text-anchor="start">N</text>
+<text x="1302" y="201" font-size="11" text-anchor="start" font-weight="bold">Q0</text>
+<text x="1370" y="201" font-size="11" text-anchor="start">N</text>
+<text x="1444" y="201" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="222" font-size="11" text-anchor="start">PE001</text>
+<text x="1194" y="222" font-size="11" text-anchor="start" font-weight="bold">SUPPLY</text>
+<text x="1248" y="222" font-size="11" text-anchor="start">PE</text>
+<text x="1302" y="222" font-size="11" text-anchor="start" font-weight="bold">PE-BAR</text>
+<text x="1370" y="222" font-size="11" text-anchor="start">—</text>
+<text x="1444" y="222" font-size="11" text-anchor="start">IEC_STANDARD</text>
+<text x="1144" y="243" font-size="11" text-anchor="start">P010</text>
+<text x="1194" y="243" font-size="11" text-anchor="start" font-weight="bold">Q0</text>
+<text x="1248" y="243" font-size="11" text-anchor="start">2</text>
+<text x="1302" y="243" font-size="11" text-anchor="start" font-weight="bold">F1</text>
+<text x="1370" y="243" font-size="11" text-anchor="start">1</text>
+<text x="1444" y="243" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="264" font-size="11" text-anchor="start">P011</text>
+<text x="1194" y="264" font-size="11" text-anchor="start" font-weight="bold">Q0</text>
+<text x="1248" y="264" font-size="11" text-anchor="start">4</text>
+<text x="1302" y="264" font-size="11" text-anchor="start" font-weight="bold">F1</text>
+<text x="1370" y="264" font-size="11" text-anchor="start">3</text>
+<text x="1444" y="264" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="285" font-size="11" text-anchor="start">P012</text>
+<text x="1194" y="285" font-size="11" text-anchor="start" font-weight="bold">Q0</text>
+<text x="1248" y="285" font-size="11" text-anchor="start">6</text>
+<text x="1302" y="285" font-size="11" text-anchor="start" font-weight="bold">F1</text>
+<text x="1370" y="285" font-size="11" text-anchor="start">5</text>
+<text x="1444" y="285" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="306" font-size="11" text-anchor="start">P013</text>
+<text x="1194" y="306" font-size="11" text-anchor="start" font-weight="bold">Q0</text>
+<text x="1248" y="306" font-size="11" text-anchor="start">N</text>
+<text x="1302" y="306" font-size="11" text-anchor="start" font-weight="bold">F1</text>
+<text x="1370" y="306" font-size="11" text-anchor="start">N</text>
+<text x="1444" y="306" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="327" font-size="11" text-anchor="start">P020</text>
+<text x="1194" y="327" font-size="11" text-anchor="start" font-weight="bold">F1</text>
+<text x="1248" y="327" font-size="11" text-anchor="start">2/4/6</text>
+<text x="1302" y="327" font-size="11" text-anchor="start" font-weight="bold">BUS-L123</text>
+<text x="1370" y="327" font-size="11" text-anchor="start">—</text>
+<text x="1444" y="327" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="348" font-size="11" text-anchor="start">P021</text>
+<text x="1194" y="348" font-size="11" text-anchor="start" font-weight="bold">F1</text>
+<text x="1248" y="348" font-size="11" text-anchor="start">N</text>
+<text x="1302" y="348" font-size="11" text-anchor="start" font-weight="bold">N-BAR</text>
+<text x="1370" y="348" font-size="11" text-anchor="start">—</text>
+<text x="1444" y="348" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="369" font-size="11" text-anchor="start">P052</text>
+<text x="1194" y="369" font-size="11" text-anchor="start" font-weight="bold">N-BAR</text>
+<text x="1248" y="369" font-size="11" text-anchor="start">—</text>
+<text x="1302" y="369" font-size="11" text-anchor="start" font-weight="bold">G1</text>
+<text x="1370" y="369" font-size="11" text-anchor="start">N</text>
+<text x="1444" y="369" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="390" font-size="11" text-anchor="start">P062</text>
+<text x="1194" y="390" font-size="11" text-anchor="start" font-weight="bold">N-BAR</text>
+<text x="1248" y="390" font-size="11" text-anchor="start">—</text>
+<text x="1302" y="390" font-size="11" text-anchor="start" font-weight="bold">X1</text>
+<text x="1370" y="390" font-size="11" text-anchor="start">N.F6-N.F9</text>
+<text x="1444" y="390" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="411" font-size="11" text-anchor="start">PE010</text>
+<text x="1194" y="411" font-size="11" text-anchor="start" font-weight="bold">PE-BAR</text>
+<text x="1248" y="411" font-size="11" text-anchor="start">—</text>
+<text x="1302" y="411" font-size="11" text-anchor="start" font-weight="bold">X1</text>
+<text x="1370" y="411" font-size="11" text-anchor="start">PE.M</text>
+<text x="1444" y="411" font-size="11" text-anchor="start">IEC_STANDARD</text>
+<text x="1144" y="432" font-size="11" text-anchor="start">PE012</text>
+<text x="1194" y="432" font-size="11" text-anchor="start" font-weight="bold">PE-BAR</text>
+<text x="1248" y="432" font-size="11" text-anchor="start">—</text>
+<text x="1302" y="432" font-size="11" text-anchor="start" font-weight="bold">X1</text>
+<text x="1370" y="432" font-size="11" text-anchor="start">PE.2</text>
+<text x="1444" y="432" font-size="11" text-anchor="start">IEC_STANDARD</text>
+<text x="1144" y="453" font-size="11" text-anchor="start">PE013</text>
+<text x="1194" y="453" font-size="11" text-anchor="start" font-weight="bold">PE-BAR</text>
+<text x="1248" y="453" font-size="11" text-anchor="start">—</text>
+<text x="1302" y="453" font-size="11" text-anchor="start" font-weight="bold">X1</text>
+<text x="1370" y="453" font-size="11" text-anchor="start">PE.F6-PE.F9</text>
+<text x="1444" y="453" font-size="11" text-anchor="start">IEC_STANDARD</text>
+<text x="1144" y="474" font-size="11" text-anchor="start">PE020</text>
+<text x="1194" y="474" font-size="11" text-anchor="start" font-weight="bold">PE-BAR</text>
+<text x="1248" y="474" font-size="11" text-anchor="start">—</text>
+<text x="1302" y="474" font-size="11" text-anchor="start" font-weight="bold">ENCL</text>
+<text x="1370" y="474" font-size="11" text-anchor="start">—</text>
+<text x="1444" y="474" font-size="11" text-anchor="start">TYPICAL_VERIFY</text>
+<text x="1144" y="495" font-size="11" text-anchor="start">C011</text>
+<text x="1194" y="495" font-size="11" text-anchor="start" font-weight="bold">X2</text>
+<text x="1248" y="495" font-size="11" text-anchor="start">0V</text>
+<text x="1302" y="495" font-size="11" text-anchor="start" font-weight="bold">PE-BAR</text>
+<text x="1370" y="495" font-size="11" text-anchor="start">—</text>
+<text x="1444" y="495" font-size="11" text-anchor="start" fill="#b00000">TBD</text>
+<rect x="1138" y="525" width="412" height="200" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="1150" y="547" font-size="12" text-anchor="start" font-weight="bold">Protection notes (BOM)</text>
+<text x="1150" y="564" font-size="11.5" text-anchor="start">F1 RCCB protects persons (30 mA). It is NOT overload</text>
+<text x="1150" y="581" font-size="11.5" text-anchor="start">or short-circuit protection — MCBs F2–F9 do that.</text>
+<text x="1150" y="598" font-size="11.5" text-anchor="start">Type A RCCB preferred for electronic loads —</text>
+<text x="1150" y="615" font-size="11.5" text-anchor="start">teacher / electrician decision.</text>
+<text x="1150" y="632" font-size="11.5" text-anchor="start">Q0: RCCB and MCBs are no substitute for a</text>
+<text x="1150" y="649" font-size="11.5" text-anchor="start">dedicated main isolator (recommended purchase).</text>
+<text x="1536" y="671" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">ממסר הפחת אינו מגן מפני עומס יתר או קצר</text>
+<text x="1536" y="689" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">סוג A מועדף — להחלטת מורה/חשמלאי</text>
+<text x="1536" y="707" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">חובה פס הארקה בכל לוח</text>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">04 — FEED, PROTECTION AND EARTHING</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הזנה, הגנה והארקה</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">PE conductors are green-yellow; PE-BAR must be bonded to the enclosure and door (PE020).</text>
+<text x="1055" y="975" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">גשר הארקה גמיש לדלת</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">C011 (0V–PE bridge, PELV) is a design decision still TBD — drawn dashed, not to be assumed.</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">Q0 / F1 N terminals: in and out are both marked 'N' in CONNECTIONS.csv — verify on device.</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">Supply rating, cable cross-sections and Q0 / F1 rated currents are TBD.</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">Outgoing-circuit PE: PE012 → X1 PE.2 (3~ via KM2), PE013 → X1 PE.F6-PE.F9 (1~ circuits).</text>
+<text x="22" y="1075" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1075" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">FEED, PROTECTION AND EARTHING</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הזנה, הגנה והארקה</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 04 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">04_feed_and_protection.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">Q0 main switch, F1 RCCB, N-BAR, PE-BAR and protective-earth connections</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>
