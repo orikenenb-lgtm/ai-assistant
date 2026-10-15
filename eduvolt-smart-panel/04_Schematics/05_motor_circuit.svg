@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>05 MOTOR CIRCUIT — POWER + HARDWIRED COIL CHAIN</title>
+<desc>F3 → KM1 → F4 → X1 → M1 (400V) and Q1 → S0 NC-1 → F4 95-96 → KM1 A1-A2 (24V DC) | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<text x="30" y="92" font-size="11" text-anchor="start" font-style="italic">BUS-L123 (from F1, sheet 03)</text>
+<line x1="110" y1="110" x2="340" y2="110" stroke="#8B4513" stroke-width="2.4" fill="none"/>
+<text x="102" y="114" font-size="11" text-anchor="end" font-weight="bold">L1</text>
+<circle cx="170" cy="110" r="3.2" stroke="#8B4513" stroke-width="1" fill="#8B4513"/>
+<line x1="110" y1="130" x2="340" y2="130" stroke="#000000" stroke-width="2.4" fill="none"/>
+<text x="102" y="134" font-size="11" text-anchor="end" font-weight="bold">L2</text>
+<circle cx="230" cy="130" r="3.2" stroke="#000000" stroke-width="1" fill="#000000"/>
+<line x1="110" y1="150" x2="340" y2="150" stroke="#7a7a7a" stroke-width="2.4" fill="none"/>
+<text x="102" y="154" font-size="11" text-anchor="end" font-weight="bold">L3</text>
+<circle cx="290" cy="150" r="3.2" stroke="#7a7a7a" stroke-width="1" fill="#7a7a7a"/>
+<line x1="170" y1="110" x2="170" y2="205" stroke="#8B4513" stroke-width="1.6" fill="none"/>
+<line x1="230" y1="130" x2="230" y2="205" stroke="#000000" stroke-width="1.6" fill="none"/>
+<line x1="290" y1="150" x2="290" y2="205" stroke="#7a7a7a" stroke-width="1.6" fill="none"/>
+<text x="298" y="188" font-size="11" text-anchor="start" font-style="italic" fill="#555">P040</text>
+<line x1="170" y1="205" x2="170" y2="228" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="170" y1="252" x2="170" y2="275" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="170" y1="252" x2="181" y2="225" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="166" y1="224" x2="174" y2="232" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="174" y1="224" x2="166" y2="232" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="230" y1="205" x2="230" y2="228" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="230" y1="252" x2="230" y2="275" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="230" y1="252" x2="241" y2="225" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="226" y1="224" x2="234" y2="232" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="234" y1="224" x2="226" y2="232" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="290" y1="205" x2="290" y2="228" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="290" y1="252" x2="290" y2="275" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="290" y1="252" x2="301" y2="225" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="286" y1="224" x2="294" y2="232" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="294" y1="224" x2="286" y2="232" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="176" y1="240" x2="304" y2="240" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<circle cx="170" cy="205" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="163" y="209" font-size="11" text-anchor="end">1</text>
+<circle cx="230" cy="205" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="223" y="209" font-size="11" text-anchor="end">3</text>
+<circle cx="290" cy="205" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="283" y="209" font-size="11" text-anchor="end">5</text>
+<circle cx="170" cy="275" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="163" y="279" font-size="11" text-anchor="end">2</text>
+<circle cx="230" cy="275" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="223" y="279" font-size="11" text-anchor="end">4</text>
+<circle cx="290" cy="275" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="283" y="279" font-size="11" text-anchor="end">6</text>
+<text x="30" y="225" font-size="13" text-anchor="start" font-weight="bold">F3</text>
+<text x="30" y="239" font-size="11" text-anchor="start">MCB 3P curve D</text>
+<text x="30" y="253" font-size="11" text-anchor="start">In: TBD</text>
+<line x1="170" y1="275" x2="170" y2="345" stroke="#8B4513" stroke-width="1.6" fill="none"/>
+<line x1="230" y1="275" x2="230" y2="345" stroke="#000000" stroke-width="1.6" fill="none"/>
+<line x1="290" y1="275" x2="290" y2="345" stroke="#7a7a7a" stroke-width="1.6" fill="none"/>
+<text x="298" y="314" font-size="11" text-anchor="start" font-style="italic" fill="#555">P041</text>
+<line x1="170" y1="345" x2="170" y2="368" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="170" y1="392" x2="170" y2="415" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="170" y1="392" x2="181" y2="365" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<polyline points="165.5,363.5 165.84,365.22 166.82,366.68 168.28,367.66 170,368 171.72,367.66 173.18,366.68 174.16,365.22 174.5,363.5" stroke="#8B4513" stroke-width="1.4" fill="none"/>
+<line x1="230" y1="345" x2="230" y2="368" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="230" y1="392" x2="230" y2="415" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="230" y1="392" x2="241" y2="365" stroke="#000000" stroke-width="1.4" fill="none"/>
+<polyline points="225.5,363.5 225.84,365.22 226.82,366.68 228.28,367.66 230,368 231.72,367.66 233.18,366.68 234.16,365.22 234.5,363.5" stroke="#000000" stroke-width="1.4" fill="none"/>
+<line x1="290" y1="345" x2="290" y2="368" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="290" y1="392" x2="290" y2="415" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="290" y1="392" x2="301" y2="365" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<polyline points="285.5,363.5 285.84,365.22 286.82,366.68 288.28,367.66 290,368 291.72,367.66 293.18,366.68 294.16,365.22 294.5,363.5" stroke="#7a7a7a" stroke-width="1.4" fill="none"/>
+<line x1="176" y1="380" x2="304" y2="380" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<circle cx="170" cy="345" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="163" y="349" font-size="11" text-anchor="end">1/L1</text>
+<circle cx="230" cy="345" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="223" y="349" font-size="11" text-anchor="end">3/L2</text>
+<circle cx="290" cy="345" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="283" y="349" font-size="11" text-anchor="end">5/L3</text>
+<circle cx="170" cy="415" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="163" y="419" font-size="11" text-anchor="end">2/T1</text>
+<circle cx="230" cy="415" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="223" y="419" font-size="11" text-anchor="end">4/T2</text>
+<circle cx="290" cy="415" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="283" y="419" font-size="11" text-anchor="end">6/T3</text>
+<text x="30" y="365" font-size="13" text-anchor="start" font-weight="bold">KM1</text>
+<text x="30" y="379" font-size="11" text-anchor="start">LC1D09BD</text>
+<text x="30" y="393" font-size="11" text-anchor="start">main contacts</text>
+<line x1="170" y1="415" x2="170" y2="480" stroke="#8B4513" stroke-width="1.6" fill="none"/>
+<line x1="230" y1="415" x2="230" y2="480" stroke="#000000" stroke-width="1.6" fill="none"/>
+<line x1="290" y1="415" x2="290" y2="480" stroke="#7a7a7a" stroke-width="1.6" fill="none"/>
+<text x="298" y="437" font-size="11" text-anchor="start" font-style="italic" fill="#555">P042</text>
+<text x="336" y="437" font-size="11" text-anchor="start">KM1 → F4 (direct mount):</text>
+<text x="336" y="453" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">כניסות (פינים ישירים)</text>
+<line x1="170" y1="480" x2="170" y2="497" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="170" y1="523" x2="170" y2="540" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="162" y="497" width="16" height="26" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<polyline points="170,497 170,505 175,505 175,515 170,515 170,523" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="230" y1="480" x2="230" y2="497" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="230" y1="523" x2="230" y2="540" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="222" y="497" width="16" height="26" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<polyline points="230,497 230,505 235,505 235,515 230,515 230,523" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="290" y1="480" x2="290" y2="497" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="290" y1="523" x2="290" y2="540" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="282" y="497" width="16" height="26" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<polyline points="290,497 290,505 295,505 295,515 290,515 290,523" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="150" y="488" width="160" height="44" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<circle cx="170" cy="540" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="163" y="544" font-size="11" text-anchor="end">2/T1</text>
+<circle cx="230" cy="540" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="223" y="544" font-size="11" text-anchor="end">4/T2</text>
+<circle cx="290" cy="540" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="283" y="544" font-size="11" text-anchor="end">6/T3</text>
+<text x="30" y="494" font-size="13" text-anchor="start" font-weight="bold">F4</text>
+<text x="30" y="508" font-size="11" text-anchor="start">overload LRD</text>
+<text x="30" y="522" font-size="11" text-anchor="start">range TBD</text>
+<line x1="170" y1="540" x2="170" y2="610" stroke="#8B4513" stroke-width="1.6" fill="none"/>
+<line x1="230" y1="540" x2="230" y2="610" stroke="#000000" stroke-width="1.6" fill="none"/>
+<line x1="290" y1="540" x2="290" y2="610" stroke="#7a7a7a" stroke-width="1.6" fill="none"/>
+<text x="298" y="579" font-size="11" text-anchor="start" font-style="italic" fill="#555">P043</text>
+<circle cx="170" cy="610" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="163" y="614" font-size="11" text-anchor="end">U1</text>
+<circle cx="230" cy="610" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="223" y="614" font-size="11" text-anchor="end">V1</text>
+<circle cx="290" cy="610" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="283" y="614" font-size="11" text-anchor="end">W1</text>
+<text x="30" y="606" font-size="13" text-anchor="start" font-weight="bold">X1</text>
+<text x="30" y="620" font-size="11" text-anchor="start">terminals</text>
+<text x="30" y="634" font-size="11" text-anchor="start">[ADD_RECOMMENDED]</text>
+<line x1="170" y1="610" x2="170" y2="690" stroke="#8B4513" stroke-width="1.6" fill="none"/>
+<line x1="230" y1="610" x2="230" y2="690" stroke="#000000" stroke-width="1.6" fill="none"/>
+<line x1="290" y1="610" x2="290" y2="690" stroke="#7a7a7a" stroke-width="1.6" fill="none"/>
+<text x="298" y="654" font-size="11" text-anchor="start" font-style="italic" fill="#555">P044</text>
+<text x="336" y="654" font-size="11" text-anchor="start">motor cable (cross-section TBD)</text>
+<circle cx="170" cy="690" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="163" y="694" font-size="11" text-anchor="end">U1</text>
+<circle cx="230" cy="690" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="223" y="694" font-size="11" text-anchor="end">V1</text>
+<circle cx="290" cy="690" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="283" y="694" font-size="11" text-anchor="end">W1</text>
+<polyline points="170,690 170,704 201.72,756.29" stroke="#8B4513" stroke-width="1.6" fill="none"/>
+<polyline points="230,690 230,704 230,746" stroke="#000000" stroke-width="1.6" fill="none"/>
+<polyline points="290,690 290,704 258.28,756.29" stroke="#7a7a7a" stroke-width="1.6" fill="none"/>
+<circle cx="230" cy="790" r="44" stroke="#000" stroke-width="1.8" fill="#fff"/>
+<text x="230" y="788" font-size="18" text-anchor="middle" font-weight="bold">M</text>
+<text x="230" y="807" font-size="13" text-anchor="middle">3~</text>
+<text x="30" y="780" font-size="13" text-anchor="start" font-weight="bold">M1</text>
+<text x="30" y="794" font-size="11" text-anchor="start">3~ motor</text>
+<text x="30" y="808" font-size="11" text-anchor="start">data TBD</text>
+<line x1="520" y1="560" x2="640" y2="560" stroke="#000" stroke-width="4" fill="none"/>
+<text x="580" y="550" font-size="11" text-anchor="middle" font-weight="bold">PE-BAR</text>
+<line x1="560" y1="560" x2="560" y2="610" stroke="#1f8f3a" stroke-width="2.2" fill="none"/>
+<line x1="560" y1="560" x2="560" y2="610" stroke="#e3c800" stroke-width="1.21" fill="none" stroke-dasharray="7 7"/>
+<circle cx="560" cy="610" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="568" y="589" font-size="11" text-anchor="start" font-style="italic" fill="#555">PE010</text>
+<text x="568" y="614" font-size="11" text-anchor="start">PE.M</text>
+<line x1="560" y1="614" x2="560" y2="790" stroke="#1f8f3a" stroke-width="2.2" fill="none"/>
+<line x1="560" y1="614" x2="560" y2="790" stroke="#e3c800" stroke-width="1.21" fill="none" stroke-dasharray="7 7"/>
+<line x1="560" y1="790" x2="274" y2="790" stroke="#1f8f3a" stroke-width="2.2" fill="none"/>
+<line x1="560" y1="790" x2="274" y2="790" stroke="#e3c800" stroke-width="1.21" fill="none" stroke-dasharray="7 7"/>
+<text x="568" y="736" font-size="11" text-anchor="start" font-style="italic" fill="#555">PE011</text>
+<text x="568" y="751" font-size="11" text-anchor="start">→ M1 : PE  (PE core of motor cable)</text>
+<text x="892" y="98" font-size="11" text-anchor="end">+24V via F12 out</text>
+<text x="908" y="98" font-size="11" text-anchor="start" font-style="italic" fill="#555">C008</text>
+<text x="952" y="98" font-size="11" text-anchor="start">(COM grouping TBD)</text>
+<line x1="900" y1="104" x2="900" y2="124" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="124" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="128" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">COM יציאות</text>
+<rect x="870" y="136" width="210" height="92" stroke="#000" stroke-width="1.2" fill="none" stroke-dasharray="10 3 2 3"/>
+<line x1="900" y1="124" x2="900" y2="169" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="195" x2="900" y2="240" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="195" x2="911" y2="166" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="930" y="165" font-size="13" text-anchor="start" font-weight="bold">K1</text>
+<text x="930" y="180" font-size="11" text-anchor="start">Zelio SR3B261BD</text>
+<text x="930" y="195" font-size="11" text-anchor="start">relay output Q1</text>
+<circle cx="900" cy="240" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="244" font-size="12" text-anchor="end" font-weight="bold">Q1</text>
+<text x="908" y="290" font-size="11" text-anchor="start" font-style="italic" fill="#555">O001</text>
+<circle cx="900" cy="335" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="339" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC-1 (כניסה)</text>
+<line x1="900" y1="335" x2="900" y2="358" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="382" x2="900" y2="405" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="358" x2="890" y2="358" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="382" x2="890" y2="355" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="405" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="409" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC-1 (יציאה)</text>
+<text x="930" y="356" font-size="13" text-anchor="start" font-weight="bold">S0  EMERGENCY STOP</text>
+<text x="930" y="370" font-size="11" text-anchor="start">NC-1 block — hardwired</text>
+<text x="930" y="384" font-size="11" text-anchor="start">in series with KM1 coil</text>
+<text x="908" y="445" font-size="11" text-anchor="start" font-style="italic" fill="#555">O002</text>
+<circle cx="900" cy="475" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="479" font-size="12" text-anchor="end">95</text>
+<line x1="900" y1="475" x2="900" y2="498" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="522" x2="900" y2="545" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="498" x2="890" y2="498" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="522" x2="890" y2="495" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="545" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="549" font-size="12" text-anchor="end">96</text>
+<text x="930" y="496" font-size="13" text-anchor="start" font-weight="bold">F4  overload relay</text>
+<text x="930" y="510" font-size="11" text-anchor="start">auxiliary NC 95-96</text>
+<text x="930" y="524" font-size="11" text-anchor="start">opens on overload</text>
+<line x1="310" y1="510" x2="868" y2="510" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<text x="590" y="502" font-size="11" text-anchor="middle" font-style="italic">F4 thermal trip operates 95-96 (mechanical link)</text>
+<text x="908" y="590" font-size="11" text-anchor="start" font-style="italic" fill="#555">O003</text>
+<circle cx="900" cy="625" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="629" font-size="12" text-anchor="end" font-weight="bold">A1</text>
+<line x1="900" y1="625" x2="900" y2="655" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="900" y1="675" x2="900" y2="705" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="880" y="655" width="40" height="20" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<circle cx="900" cy="705" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="709" font-size="12" text-anchor="end" font-weight="bold">A2</text>
+<text x="930" y="652" font-size="13" text-anchor="start" font-weight="bold">KM1  coil 24V DC</text>
+<text x="930" y="666" font-size="11" text-anchor="start">operates main contacts</text>
+<text x="930" y="680" font-size="11" text-anchor="start">1/L1-2/T1, 3/L2-4/T2, 5/L3-6/T3</text>
+<text x="908" y="745" font-size="11" text-anchor="start" font-style="italic" fill="#555">O004</text>
+<circle cx="900" cy="785" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="789" font-size="12" text-anchor="end" font-weight="bold">X2</text>
+<text x="908" y="789" font-size="12" text-anchor="start" font-weight="bold">0V</text>
+<line x1="900" y1="789" x2="900" y2="800" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="860" y1="800" x2="940" y2="800" stroke="#000" stroke-width="2.4" fill="none"/>
+<text x="900" y="818" font-size="11" text-anchor="middle">0V (G1 −V)</text>
+<rect x="1130" y="96" width="425" height="250" stroke="#b00000" stroke-width="2.4" fill="none"/>
+<text x="1144" y="120" font-size="14" text-anchor="start" font-weight="bold" fill="#b00000">HARDWIRED SAFETY CHAIN</text>
+<text x="1144" y="144" font-size="12" text-anchor="start">E-stop S0 (NC-1) and overload F4 (95-96) are wired</text>
+<text x="1144" y="161" font-size="12" text-anchor="start">in SERIES with the KM1 coil, after PLC output Q1.</text>
+<text x="1144" y="178" font-size="12" text-anchor="start">They cut the coil even if the PLC fails or its</text>
+<text x="1144" y="195" font-size="12" text-anchor="start">Q1 relay contact welds closed. The PLC only</text>
+<text x="1144" y="212" font-size="12" text-anchor="start">monitors: S0 NC-2 → I4, F4 97-98 → I5, KM1 13-14 → I6.</text>
+<text x="1541" y="246" font-size="13" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">שרשרת בטיחות בחיווט קשיח</text>
+<text x="1541" y="268" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">מפסק החירום וממסר עומס היתר בטור לסליל KM1</text>
+<text x="1541" y="290" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">עצירת חירום ועומס יתר מנתקים את הסליל גם אם ה-PLC תקול</text>
+<text x="1541" y="312" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">ה-PLC רק מנטר (ראו גיליון 07)</text>
+<text x="1130" y="385" font-size="12" text-anchor="start" font-weight="bold">Monitoring contacts (drawn on sheet 07):</text>
+<text x="1136" y="409" font-size="12" text-anchor="start" font-weight="bold">S0 NC-2</text>
+<text x="1225" y="409" font-size="12" text-anchor="start">→ I4  ESTOP_OK</text>
+<text x="1385" y="409" font-size="11" text-anchor="start" font-style="italic" fill="#555">I007 / I008</text>
+<text x="1136" y="429" font-size="12" text-anchor="start" font-weight="bold">F4 97-98</text>
+<text x="1225" y="429" font-size="12" text-anchor="start">→ I5  OL_TRIPPED</text>
+<text x="1385" y="429" font-size="11" text-anchor="start" font-style="italic" fill="#555">I009 / I010</text>
+<text x="1136" y="449" font-size="12" text-anchor="start" font-weight="bold">KM1 13-14</text>
+<text x="1225" y="449" font-size="12" text-anchor="start">→ I6  KM1_FB</text>
+<text x="1385" y="449" font-size="11" text-anchor="start" font-style="italic" fill="#555">I011 / I012</text>
+<text x="1130" y="515" font-size="12" text-anchor="start" font-weight="bold">What happens if ... (design intent)</text>
+<text x="1555" y="515" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">מה קורה אם...</text>
+<text x="1136" y="541" font-size="12" text-anchor="start" font-weight="bold">E-stop pressed</text>
+<text x="1148" y="558" font-size="11.5" text-anchor="start">NC-1 opens → KM1 drops (no PLC needed)</text>
+<text x="1148" y="574" font-size="11.5" text-anchor="start">NC-2 opens → I4 = 0 → PLC latches fault</text>
+<text x="1136" y="597" font-size="12" text-anchor="start" font-weight="bold">Motor overload</text>
+<text x="1148" y="614" font-size="11.5" text-anchor="start">95-96 opens → KM1 drops</text>
+<text x="1148" y="630" font-size="11.5" text-anchor="start">97-98 closes → I5 = 1 → PLC latches fault</text>
+<text x="1136" y="653" font-size="12" text-anchor="start" font-weight="bold">PLC fault / Q1 welded</text>
+<text x="1148" y="670" font-size="11.5" text-anchor="start">S0 and F4 still open the coil chain</text>
+<text x="1148" y="686" font-size="11.5" text-anchor="start">KM1 13-14 → I6 detects contactor state</text>
+<text x="1136" y="709" font-size="12" text-anchor="start" font-weight="bold">Q1 = 1 but KM1 not closed</text>
+<text x="1148" y="726" font-size="11.5" text-anchor="start">I6 stays 0 → feedback fault</text>
+<text x="1148" y="742" font-size="11.5" text-anchor="start">see IO_MAP I6 notes (T2 / T3)</text>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">05 — MOTOR CIRCUIT — POWER + HARDWIRED COIL CHAIN</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">מעגל מנוע — כוח ושרשרת סליל קשיחה</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">Motor data (power, In, star/delta) is TBD → F3 rating, F4 range and cable size are TBD.</text>
+<text x="1055" y="975" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נתוני המנוע חסרים — חסם תכנוני</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">Markings 95-96 / 97-98 / 13-14 / A1-A2 are standard LRD / LC1D markings — verify on the real device.</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">SUP-KM (CONDITIONAL) coil suppressor only if KM1 has no built-in suppressor — not drawn (no wire row).</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">KM1 coil chain per IO_MAP Q1: Q1 → S0 (NC-1) → F4 (95-96) → KM1 A1 ; KM1 A2 → 0V.</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">Motor PE: PE-BAR → X1 PE.M (PE010) → M1 PE (PE011, PE core of the motor cable).</text>
+<text x="1055" y="1075" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">עצירת חירום ועומס יתר מנתקים את הסליל גם אם ה-PLC תקול (IO_MAP Q1)</text>
+<text x="22" y="1095" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1095" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">MOTOR CIRCUIT — POWER + HARDWIRED COIL CHAIN</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">מעגל מנוע — כוח ושרשרת סליל קשיחה</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 05 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">05_motor_circuit.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">F3 → KM1 → F4 → X1 → M1 (400V) and Q1 → S0 NC-1 → F4 95-96 → KM1 A1-A2 (24V DC)</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>

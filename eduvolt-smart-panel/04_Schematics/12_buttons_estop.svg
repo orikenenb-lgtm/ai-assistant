@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>12 PUSHBUTTONS AND EMERGENCY STOP</title>
+<desc>S1 START (NO), S2 STOP (NC), S3 RESET (NO), S0 E-stop with NC-1 (hardwired) and NC-2 (→ I4) | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<text x="22" y="134" font-size="12" text-anchor="start" font-weight="bold">X2 : +24V_IN</text>
+<text x="22" y="118" font-size="11" text-anchor="start" fill="#555">(F11)</text>
+<line x1="130" y1="130" x2="900" y2="130" stroke="#000" stroke-width="2" fill="none"/>
+<rect x="150" y="470" width="750" height="70" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="160" y="530" font-size="12" text-anchor="start" font-weight="bold">K1  Zelio SR3B261BD (inputs)</text>
+<circle cx="220" cy="130" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="220" y1="130" x2="220" y2="250" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="228" y="175" font-size="11" text-anchor="start" font-style="italic" fill="#555">I001</text>
+<text x="230" y="214" font-size="12.5" text-anchor="start" font-weight="bold">S1  START</text>
+<text x="230" y="230" font-size="11" text-anchor="start">NO contact</text>
+<circle cx="220" cy="250" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="212" y="254" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NO (כניסה)</text>
+<line x1="220" y1="250" x2="220" y2="280" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="220" y1="310" x2="220" y2="340" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="220" y1="310" x2="231" y2="277" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="220" cy="340" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="212" y="344" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NO (יציאה)</text>
+<line x1="226" y1="295" x2="262" y2="295" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<polyline points="268,285 262,285 262,305 268,305" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="220" y1="344" x2="220" y2="470" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="228" y="430" font-size="11" text-anchor="start" font-style="italic" fill="#555">I002</text>
+<circle cx="220" cy="470" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="220" y="490" font-size="13" text-anchor="middle" font-weight="bold">I1</text>
+<text x="220" y="506" font-size="11" text-anchor="middle">START</text>
+<circle cx="420" cy="130" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="420" y1="130" x2="420" y2="250" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="428" y="175" font-size="11" text-anchor="start" font-style="italic" fill="#555">I003</text>
+<text x="430" y="214" font-size="12.5" text-anchor="start" font-weight="bold">S2  STOP</text>
+<text x="430" y="230" font-size="11" text-anchor="start">NC contact</text>
+<circle cx="420" cy="250" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="412" y="254" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC (כניסה)</text>
+<line x1="420" y1="250" x2="420" y2="280" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="420" y1="310" x2="420" y2="340" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="420" y1="280" x2="410" y2="280" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="420" y1="310" x2="410" y2="277" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="420" cy="340" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="412" y="344" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC (יציאה)</text>
+<line x1="415" y1="295" x2="451" y2="295" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<polyline points="457,285 451,285 451,305 457,305" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="430" y="372" font-size="11" text-anchor="start" fill="#b00000">[ADD_RECOMMENDED]</text>
+<text x="430" y="387" font-size="11" text-anchor="start" fill="#b00000">recommended purchase</text>
+<line x1="420" y1="344" x2="420" y2="470" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="428" y="430" font-size="11" text-anchor="start" font-style="italic" fill="#555">I004</text>
+<circle cx="420" cy="470" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="420" y="490" font-size="13" text-anchor="middle" font-weight="bold">I2</text>
+<text x="420" y="506" font-size="11" text-anchor="middle">STOP_OK</text>
+<circle cx="620" cy="130" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="620" y1="130" x2="620" y2="250" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="628" y="175" font-size="11" text-anchor="start" font-style="italic" fill="#555">I005</text>
+<text x="630" y="214" font-size="12.5" text-anchor="start" font-weight="bold">S3  RESET</text>
+<text x="630" y="230" font-size="11" text-anchor="start">NO contact</text>
+<circle cx="620" cy="250" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="612" y="254" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NO (כניסה)</text>
+<line x1="620" y1="250" x2="620" y2="280" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="620" y1="310" x2="620" y2="340" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="620" y1="310" x2="631" y2="277" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="620" cy="340" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="612" y="344" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NO (יציאה)</text>
+<line x1="626" y1="295" x2="662" y2="295" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<polyline points="668,285 662,285 662,305 668,305" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="620" y1="344" x2="620" y2="470" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="628" y="430" font-size="11" text-anchor="start" font-style="italic" fill="#555">I006</text>
+<circle cx="620" cy="470" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="620" y="490" font-size="13" text-anchor="middle" font-weight="bold">I3</text>
+<text x="620" y="506" font-size="11" text-anchor="middle">RESET</text>
+<circle cx="820" cy="130" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="820" y1="130" x2="820" y2="250" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="828" y="175" font-size="11" text-anchor="start" font-style="italic" fill="#555">I007</text>
+<text x="830" y="214" font-size="12.5" text-anchor="start" font-weight="bold">S0  E-STOP NC-2</text>
+<text x="830" y="230" font-size="11" text-anchor="start">NC contact</text>
+<circle cx="820" cy="250" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="812" y="254" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC-2 (כניסה)</text>
+<line x1="820" y1="250" x2="820" y2="280" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="820" y1="310" x2="820" y2="340" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="820" y1="280" x2="810" y2="280" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="820" y1="310" x2="810" y2="277" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="820" cy="340" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="812" y="344" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC-2 (יציאה)</text>
+<text x="830" y="372" font-size="11" text-anchor="start" fill="#b00000">[ADD_RECOMMENDED]</text>
+<text x="830" y="387" font-size="11" text-anchor="start" fill="#b00000">recommended purchase</text>
+<line x1="820" y1="344" x2="820" y2="470" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="828" y="430" font-size="11" text-anchor="start" font-style="italic" fill="#555">I008</text>
+<circle cx="820" cy="470" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="820" y="490" font-size="13" text-anchor="middle" font-weight="bold">I4</text>
+<text x="820" y="506" font-size="11" text-anchor="middle">ESTOP_OK</text>
+<circle cx="1000" cy="190" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1000" y="182" font-size="12" text-anchor="middle" font-weight="bold">K1 : Q1</text>
+<line x1="1000" y1="194" x2="1000" y2="250" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1008" y="225" font-size="11" text-anchor="start" font-style="italic" fill="#555">O001</text>
+<text x="1012" y="244" font-size="12.5" text-anchor="start" font-weight="bold">S0  E-STOP NC-1</text>
+<circle cx="1000" cy="250" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="992" y="254" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC-1 (כניסה)</text>
+<line x1="1000" y1="250" x2="1000" y2="280" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="1000" y1="310" x2="1000" y2="340" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="1000" y1="280" x2="990" y2="280" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="1000" y1="310" x2="990" y2="277" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1000" cy="340" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="992" y="344" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC-1 (יציאה)</text>
+<line x1="1000" y1="344" x2="1000" y2="470" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1008" y="430" font-size="11" text-anchor="start" font-style="italic" fill="#555">O002</text>
+<circle cx="1000" cy="470" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1000" y="490" font-size="12.5" text-anchor="middle" font-weight="bold">F4 : 95</text>
+<text x="1000" y="506" font-size="11" text-anchor="middle">→ 96 → KM1 A1 (sheet 05)</text>
+<line x1="815" y1="295" x2="995" y2="295" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<line x1="995" y1="295" x2="1035" y2="295" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="5 4"/>
+<polyline points="1035,280 1038.88,280.51 1042.5,282.01 1045.61,284.39 1047.99,287.5 1049.49,291.12 1050,295 1049.49,298.88 1047.99,302.5 1045.61,305.61 1042.5,307.99 1038.88,309.49 1035,310 1035,280" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="1057" y="291" font-size="11" text-anchor="start">mushroom head,</text>
+<text x="1057" y="306" font-size="11" text-anchor="start">latching</text>
+<text x="830" y="405" font-size="11" text-anchor="start" font-weight="bold">S0-NC2 = 2nd NC block</text>
+<rect x="1180" y="92" width="375" height="230" stroke="#b00000" stroke-width="1.2" fill="none"/>
+<text x="1192" y="114" font-size="12.5" text-anchor="start" font-weight="bold" fill="#b00000">E-stop S0 — two NC blocks</text>
+<text x="1192" y="136" font-size="11.5" text-anchor="start">NC-1: hardwired in series with the KM1 coil</text>
+<text x="1192" y="154" font-size="11.5" text-anchor="start">(Q1 → S0 NC-1 → F4 95-96 → KM1 A1).</text>
+<text x="1192" y="172" font-size="11.5" text-anchor="start">NC-2: monitored by the PLC on I4 (ESTOP_OK).</text>
+<text x="1192" y="190" font-size="11.5" text-anchor="start">The 2nd NC block (S0-NC2) is a recommended</text>
+<text x="1192" y="208" font-size="11.5" text-anchor="start">purchase; if the head cannot take a 2nd block,</text>
+<text x="1192" y="226" font-size="11.5" text-anchor="start">see the alternative in the check document.</text>
+<text x="1192" y="244" font-size="11.5" text-anchor="start">The PLC never replaces the hardwired NC-1.</text>
+<text x="1543" y="277" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">בלוק NC ראשון — חיווט קשיח לסליל KM1</text>
+<text x="1543" y="297" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">בלוק NC שני — ניטור בכניסה I4</text>
+<rect x="30" y="600" width="1525" height="204" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="140" y1="600" x2="140" y2="804" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="280" y1="600" x2="280" y2="804" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="420" y1="600" x2="420" y2="804" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="590" y1="600" x2="590" y2="804" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="790" y1="600" x2="790" y2="804" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="990" y1="600" x2="990" y2="804" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="622" font-size="12" text-anchor="start" font-weight="bold">Device</text>
+<text x="150" y="622" font-size="12" text-anchor="start" font-weight="bold">Function</text>
+<text x="290" y="622" font-size="12" text-anchor="start" font-weight="bold">Contact</text>
+<text x="430" y="622" font-size="12" text-anchor="start" font-weight="bold">Input / circuit</text>
+<text x="600" y="622" font-size="12" text-anchor="start" font-weight="bold">Colour</text>
+<text x="800" y="622" font-size="12" text-anchor="start" font-weight="bold">Status (IO_MAP/BOM)</text>
+<text x="1545" y="622" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">כשל-בטוח</text>
+<line x1="30" y1="634" x2="1555" y2="634" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="656" font-size="12" text-anchor="start" font-weight="bold">S1</text>
+<text x="150" y="656" font-size="12" text-anchor="start">START</text>
+<text x="290" y="656" font-size="12" text-anchor="start">NO</text>
+<text x="430" y="656" font-size="12" text-anchor="start">I1 START</text>
+<text x="600" y="656" font-size="12" text-anchor="start">green (LAYOUT)</text>
+<text x="800" y="656" font-size="12" text-anchor="start">PLANNED</text>
+<text x="1545" y="656" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed">לא — לחצן NO</text>
+<line x1="30" y1="668" x2="1555" y2="668" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="690" font-size="12" text-anchor="start" font-weight="bold">S2</text>
+<text x="150" y="690" font-size="12" text-anchor="start">STOP</text>
+<text x="290" y="690" font-size="12" text-anchor="start">NC</text>
+<text x="430" y="690" font-size="12" text-anchor="start">I2 STOP_OK</text>
+<text x="600" y="690" font-size="12" text-anchor="start">TBD</text>
+<text x="800" y="690" font-size="12" text-anchor="start" fill="#b00000">ADD_RECOMMENDED</text>
+<text x="1545" y="690" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed">כן — ניתוק חוט נקרא כעצירה</text>
+<line x1="30" y1="702" x2="1555" y2="702" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="724" font-size="12" text-anchor="start" font-weight="bold">S3</text>
+<text x="150" y="724" font-size="12" text-anchor="start">RESET</text>
+<text x="290" y="724" font-size="12" text-anchor="start">NO</text>
+<text x="430" y="724" font-size="12" text-anchor="start">I3 RESET</text>
+<text x="600" y="724" font-size="12" text-anchor="start">TBD</text>
+<text x="800" y="724" font-size="12" text-anchor="start">PLANNED</text>
+<text x="1545" y="724" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed">לא — לחצן NO</text>
+<line x1="30" y1="736" x2="1555" y2="736" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="758" font-size="12" text-anchor="start" font-weight="bold">S0 NC-1</text>
+<text x="150" y="758" font-size="12" text-anchor="start">E-STOP</text>
+<text x="290" y="758" font-size="12" text-anchor="start">NC</text>
+<text x="430" y="758" font-size="12" text-anchor="start">KM1 coil chain</text>
+<text x="600" y="758" font-size="12" text-anchor="start">red mushroom / yellow</text>
+<text x="800" y="758" font-size="12" text-anchor="start">PLANNED</text>
+<text x="1545" y="758" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed">מנתק את KM1 בחיווט קשיח</text>
+<line x1="30" y1="770" x2="1555" y2="770" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="792" font-size="12" text-anchor="start" font-weight="bold">S0 NC-2</text>
+<text x="150" y="792" font-size="12" text-anchor="start">E-STOP NC-2</text>
+<text x="290" y="792" font-size="12" text-anchor="start">NC</text>
+<text x="430" y="792" font-size="12" text-anchor="start">I4 ESTOP_OK</text>
+<text x="600" y="792" font-size="12" text-anchor="start">red mushroom / yellow</text>
+<text x="800" y="792" font-size="12" text-anchor="start" fill="#b00000">ADD_RECOMMENDED</text>
+<text x="1545" y="792" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed">כן</text>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">12 — PUSHBUTTONS AND EMERGENCY STOP</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לחצנים ועצירת חירום</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">S2 STOP NC is a recommended purchase. If it stays NO: logic inversion and loss of</text>
+<text x="1055" y="975" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">S2 — מומלץ לרכישה</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">  broken-wire detection (IO_MAP I2; alternative B in PLC_IO_CHECK.md).</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">START acts only on a rising edge and only in READY state; RESET is never a start command.</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">Contact block terminal markings (NO / NC) to be verified on each block.</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1055" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">PUSHBUTTONS AND EMERGENCY STOP</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לחצנים ועצירת חירום</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 12 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">12_buttons_estop.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">S1 START (NO), S2 STOP (NC), S3 RESET (NO), S0 E-stop with NC-1 (hardwired) and NC-2 (→ I4)</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>

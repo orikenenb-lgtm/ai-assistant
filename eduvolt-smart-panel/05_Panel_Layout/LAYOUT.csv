@@ -1,0 +1,40 @@
+﻿zone,order,tag,item_he,width_mm,width_source,notes_he
+RAIL1_TOP,1,Q0,מפסק ראשי 4P (מומלץ),72,ESTIMATE_4_MODULES,רוחב לפי דגם בפועל
+RAIL1_TOP,2,F1,ממסר פחת 4P 30mA,72,ESTIMATE_4_MODULES,רוחב לפי דגם בפועל
+RAIL1_TOP,3,F2,מא״ז 3P עקומה C,54,ESTIMATE_3_MODULES,
+RAIL1_TOP,4,F3,מא״ז 3P עקומה D,54,ESTIMATE_3_MODULES,
+RAIL1_TOP,5,F5,מא״ז 1P 10A — ספק G1,18,ESTIMATE_1_MODULE,
+RAIL1_TOP,6,F6,מא״ז 1P 10A,18,ESTIMATE_1_MODULE,תפקיד TBD
+RAIL1_TOP,7,F7,מא״ז 1P 10A,18,ESTIMATE_1_MODULE,תפקיד TBD
+RAIL1_TOP,8,F8,מא״ז 1P 10A,18,ESTIMATE_1_MODULE,תפקיד TBD
+RAIL1_TOP,9,F9,מא״ז 1P 16A,18,ESTIMATE_1_MODULE,תפקיד TBD
+RAIL1_TOP,10,GAP,מרווח אוורור,18,DESIGN_CHOICE,
+RAIL1_TOP,11,KM1+F4,מגען מנוע + ממסר עומס יתר מתחתיו,45,TYPICAL_VERIFY,ממסר העומס מוסיף גובה מתחת למגען — לבדוק מרחק בין פסים
+RAIL1_TOP,12,KM2,מגען הזנה,45,TYPICAL_VERIFY,
+RAIL1_TOP,13,GAP,מרווח והפרדה,18,DESIGN_CHOICE,
+RAIL1_TOP,14,X1,מהדקי כוח יוצאים + PE,90,ESTIMATE,מחיצת קצה בין קבוצות מתח שונות
+RAIL2_MID,1,G1,ספק Mean Well HDR-60-24,53,TYPICAL_VERIFY,מרווח אוורור מעל ומתחת לפי דף הנתונים
+RAIL2_MID,2,GAP,מרווח אוורור,18,DESIGN_CHOICE,
+RAIL2_MID,3,K1,Zelio SR3B261BD,125,TYPICAL_VERIFY,לשמור גישה לחיבור כבל SR2USB01 ולצג
+RAIL2_MID,4,F10-F13,מהדקי נתיך 24V,36,ESTIMATE,
+RAIL2_MID,5,G2,LM2596 על תושבת DIN,72,ESTIMATE,לוח חשוף — SELV בלבד בסביבתו
+RAIL2_MID,6,KA1,ממסר ממשק 24V (מותנה),16,ESTIMATE,רק אם גלאי העשן ננעל
+RAIL2_MID,7,X2,מהדקי פיקוד 24V,160,ESTIMATE,כ-30 מהדקים
+RAIL3_BOT,1,B1,XH-W3001 — אזור A אזהרה,90,ESTIMATE_VERIFY_PHYSICAL,על תושבת DIN; הגשוש באזור A
+RAIL3_BOT,2,B2,XH-W3001 — אזור A התראה,90,ESTIMATE_VERIFY_PHYSICAL,על תושבת DIN; הגשוש באזור A
+RAIL3_BOT,3,B3,XH-W3001 — אזור B אזהרה,90,ESTIMATE_VERIFY_PHYSICAL,על תושבת DIN; הגשוש באזור B
+RAIL3_BOT,4,B4,XH-W3001 — אזור B התראה,90,ESTIMATE_VERIFY_PHYSICAL,על תושבת DIN; הגשוש באזור B
+RAIL3_BOT,5,KA2,מודול ממסר 5V,60,ESTIMATE_VERIFY_PHYSICAL,
+RAIL3_BOT,6,B6,מודול MQ-2,45,ESTIMATE_VERIFY_PHYSICAL,המיקום הסופי תלוי בסוג הגז (TBD). גוף החימום חם
+RAIL3_BOT,7,X3,מהדקי 5V,40,ESTIMATE,
+DOOR,1,H2,נורה לבנה — מוכן,22,HOLE_22MM_TYPICAL,
+DOOR,2,H1,נורה ירוקה — פועל,22,HOLE_22MM_TYPICAL,
+DOOR,3,H3,נורה צהובה — אזהרה,22,HOLE_22MM_TYPICAL,
+DOOR,4,H4,נורה ענברית — נדרש איפוס,22,HOLE_22MM_TYPICAL,
+DOOR,5,H5,נורה אדומה — סכנה / חירום,22,HOLE_22MM_TYPICAL,
+DOOR,6,HA1,זמזם,22,HOLE_22MM_TYPICAL,
+DOOR,7,S1,לחצן START (ירוק),22,HOLE_22MM_TYPICAL,
+DOOR,8,S2,לחצן STOP (NC),22,HOLE_22MM_TYPICAL,
+DOOR,9,S3,לחצן RESET,22,HOLE_22MM_TYPICAL,
+DOOR,10,S0,עצירת חירום (פטרייה אדומה על רקע צהוב),40,TYPICAL_VERIFY,במקום בולט ונגיש
+CEILING,1,B5,גלאי עשן 4 גידים,100,TYPICAL_VERIFY,בתקרת הארגז — עשן עולה

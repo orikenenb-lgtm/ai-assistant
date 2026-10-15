@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>08 PLC OUTPUTS Q1 – QA (ZELIO K1)</title>
+<desc>K1 relay outputs to KM1 (hardwired chain), KM2, H1–H5, HA1, KA1 (conditional); QA spare | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<text x="152" y="88" font-size="11" text-anchor="end">F12 out</text>
+<text x="168" y="88" font-size="11" text-anchor="start" font-style="italic" fill="#555">C008</text>
+<line x1="160" y1="94" x2="160" y2="108" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="160" cy="108" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<rect x="110" y="116" width="220" height="764" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="168" y="112" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold">COM יציאות</text>
+<text x="170" y="136" font-size="11" text-anchor="start" fill="#b00000">COM (grouping TBD —</text>
+<text x="170" y="150" font-size="11" text-anchor="start" fill="#b00000">verify on device)</text>
+<line x1="160" y1="108" x2="160" y2="816" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="220" y="862" font-size="13" text-anchor="middle" font-weight="bold">K1  Zelio SR3B261BD</text>
+<text x="1440" y="120" font-size="12" text-anchor="middle" font-weight="bold">X2 : 0V</text>
+<text x="1440" y="136" font-size="11" text-anchor="middle">(G1 −V, C003)</text>
+<circle cx="160" cy="168" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="168" x2="232" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="168" x2="330" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="168" x2="229" y2="157" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="168" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="161" font-size="13" text-anchor="end" font-weight="bold">Q1</text>
+<line x1="330" y1="168" x2="470" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="344" y="184" font-size="11" text-anchor="start" font-style="italic" fill="#555">O001</text>
+<line x1="470" y1="168" x2="487" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="513" y1="168" x2="530" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="487" y1="168" x2="487" y2="178" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="513" y1="168" x2="484" y2="178" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="464" y="162" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">NC-1 (כניסה)</text>
+<text x="536" y="162" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">NC-1 (יציאה)</text>
+<text x="500" y="193" font-size="12" text-anchor="middle" font-weight="bold">S0</text>
+<line x1="530" y1="168" x2="680" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="560" y="184" font-size="11" text-anchor="start" font-style="italic" fill="#555">O002</text>
+<line x1="680" y1="168" x2="697" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="723" y1="168" x2="740" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="697" y1="168" x2="697" y2="178" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="723" y1="168" x2="694" y2="178" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="674" y="162" font-size="12" text-anchor="end">95</text>
+<text x="746" y="162" font-size="12" text-anchor="start">96</text>
+<text x="710" y="193" font-size="12" text-anchor="middle" font-weight="bold">F4</text>
+<line x1="740" y1="168" x2="860" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="770" y="184" font-size="11" text-anchor="start" font-style="italic" fill="#555">O003</text>
+<line x1="860" y1="168" x2="890" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="910" y1="168" x2="940" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="890" y="148" width="20" height="40" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<text x="868" y="160" font-size="12" text-anchor="end">A1</text>
+<text x="932" y="160" font-size="12" text-anchor="start">A2</text>
+<text x="900" y="204" font-size="12.5" text-anchor="middle" font-weight="bold">KM1</text>
+<line x1="940" y1="168" x2="1440" y2="168" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1440" cy="168" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="184" font-size="11" text-anchor="start" font-style="italic" fill="#555">O004</text>
+<text x="985" y="160" font-size="11.5" text-anchor="start">KM1 coil via hardwired chain (motor contactor)</text>
+<text x="1430" y="184" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">פקודת מגען מנוע</text>
+<circle cx="160" cy="240" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="240" x2="232" y2="240" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="240" x2="330" y2="240" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="240" x2="229" y2="229" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="240" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="233" font-size="13" text-anchor="end" font-weight="bold">Q2</text>
+<line x1="330" y1="240" x2="860" y2="240" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="344" y="256" font-size="11" text-anchor="start" font-style="italic" fill="#555">O005</text>
+<line x1="860" y1="240" x2="890" y2="240" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="910" y1="240" x2="940" y2="240" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="890" y="220" width="20" height="40" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<text x="868" y="232" font-size="12" text-anchor="end">A1</text>
+<text x="932" y="232" font-size="12" text-anchor="start">A2</text>
+<text x="900" y="276" font-size="12.5" text-anchor="middle" font-weight="bold">KM2</text>
+<line x1="940" y1="240" x2="1440" y2="240" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1440" cy="240" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="256" font-size="11" text-anchor="start" font-style="italic" fill="#555">O006</text>
+<text x="985" y="232" font-size="11.5" text-anchor="start">KM2 coil — general 3~ circuit contactor (role TBD)</text>
+<text x="1430" y="256" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">מגען הזנה למעגל תלת־פאזי כללי (תפקיד TBD)</text>
+<circle cx="160" cy="312" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="312" x2="232" y2="312" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="312" x2="330" y2="312" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="312" x2="229" y2="301" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="312" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="305" font-size="13" text-anchor="end" font-weight="bold">Q3</text>
+<line x1="330" y1="312" x2="860" y2="312" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="344" y="328" font-size="11" text-anchor="start" font-style="italic" fill="#555">O007</text>
+<line x1="860" y1="312" x2="887" y2="312" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="913" y1="312" x2="940" y2="312" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="312" r="13" stroke="#000" stroke-width="1.4" fill="#bfeebf"/>
+<line x1="890.81" y1="302.81" x2="909.19" y2="321.19" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="890.81" y1="321.19" x2="909.19" y2="302.81" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="865" y="304" font-size="12" text-anchor="end">X1</text>
+<text x="935" y="304" font-size="12" text-anchor="start">X2</text>
+<text x="900" y="348" font-size="12.5" text-anchor="middle" font-weight="bold">H1</text>
+<line x1="940" y1="312" x2="1440" y2="312" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1440" cy="312" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="328" font-size="11" text-anchor="start" font-style="italic" fill="#555">O008</text>
+<text x="985" y="304" font-size="11.5" text-anchor="start">H1 lamp GREEN — motor running (feedback confirmed)</text>
+<text x="1430" y="328" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה ירוקה — מנוע פועל (משוב מאושר)</text>
+<circle cx="160" cy="384" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="384" x2="232" y2="384" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="384" x2="330" y2="384" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="384" x2="229" y2="373" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="384" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="377" font-size="13" text-anchor="end" font-weight="bold">Q4</text>
+<line x1="330" y1="384" x2="860" y2="384" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="344" y="400" font-size="11" text-anchor="start" font-style="italic" fill="#555">O009</text>
+<line x1="860" y1="384" x2="887" y2="384" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="913" y1="384" x2="940" y2="384" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="384" r="13" stroke="#000" stroke-width="1.4" fill="#ffffff"/>
+<line x1="890.81" y1="374.81" x2="909.19" y2="393.19" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="890.81" y1="393.19" x2="909.19" y2="374.81" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="865" y="376" font-size="12" text-anchor="end">X1</text>
+<text x="935" y="376" font-size="12" text-anchor="start">X2</text>
+<text x="900" y="420" font-size="12.5" text-anchor="middle" font-weight="bold">H2</text>
+<line x1="940" y1="384" x2="1440" y2="384" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1440" cy="384" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="400" font-size="11" text-anchor="start" font-style="italic" fill="#555">O010</text>
+<text x="985" y="376" font-size="11.5" text-anchor="start">H2 lamp WHITE — READY / healthy (blinks in warm-up)</text>
+<text x="1430" y="400" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה לבנה — מערכת מוכנה ותקינה; מהבהבת בזמן חימום</text>
+<circle cx="160" cy="456" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="456" x2="232" y2="456" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="456" x2="330" y2="456" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="456" x2="229" y2="445" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="456" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="449" font-size="13" text-anchor="end" font-weight="bold">Q5</text>
+<line x1="330" y1="456" x2="860" y2="456" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="344" y="472" font-size="11" text-anchor="start" font-style="italic" fill="#555">O011</text>
+<line x1="860" y1="456" x2="887" y2="456" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="913" y1="456" x2="940" y2="456" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="456" r="13" stroke="#000" stroke-width="1.4" fill="#fff29a"/>
+<line x1="890.81" y1="446.81" x2="909.19" y2="465.19" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="890.81" y1="465.19" x2="909.19" y2="446.81" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="865" y="448" font-size="12" text-anchor="end">X1</text>
+<text x="935" y="448" font-size="12" text-anchor="start">X2</text>
+<text x="900" y="492" font-size="12.5" text-anchor="middle" font-weight="bold">H3</text>
+<line x1="940" y1="456" x2="1440" y2="456" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1440" cy="456" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="472" font-size="11" text-anchor="start" font-style="italic" fill="#555">O012</text>
+<text x="985" y="448" font-size="11.5" text-anchor="start">H3 lamp YELLOW — temperature warning</text>
+<text x="1430" y="472" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה צהובה — אזהרת טמפרטורה (סף ראשון)</text>
+<circle cx="160" cy="528" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="528" x2="232" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="528" x2="330" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="528" x2="229" y2="517" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="528" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="521" font-size="13" text-anchor="end" font-weight="bold">Q6</text>
+<line x1="330" y1="528" x2="860" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="344" y="544" font-size="11" text-anchor="start" font-style="italic" fill="#555">O013</text>
+<line x1="860" y1="528" x2="887" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="913" y1="528" x2="940" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="528" r="13" stroke="#000" stroke-width="1.4" fill="#ffc77a"/>
+<line x1="890.81" y1="518.81" x2="909.19" y2="537.19" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="890.81" y1="537.19" x2="909.19" y2="518.81" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="865" y="520" font-size="12" text-anchor="end">X1</text>
+<text x="935" y="520" font-size="12" text-anchor="start">X2</text>
+<text x="900" y="564" font-size="12.5" text-anchor="middle" font-weight="bold">H4</text>
+<line x1="940" y1="528" x2="1440" y2="528" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1440" cy="528" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="544" font-size="11" text-anchor="start" font-style="italic" fill="#555">O014</text>
+<text x="985" y="520" font-size="11.5" text-anchor="start">H4 lamp AMBER — fault latched / reset required</text>
+<text x="1430" y="544" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה ענברית — תקלה נעולה / נדרש איפוס</text>
+<circle cx="160" cy="600" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="600" x2="232" y2="600" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="600" x2="330" y2="600" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="600" x2="229" y2="589" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="600" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="593" font-size="13" text-anchor="end" font-weight="bold">Q7</text>
+<line x1="330" y1="600" x2="860" y2="600" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="344" y="616" font-size="11" text-anchor="start" font-style="italic" fill="#555">O015</text>
+<line x1="860" y1="600" x2="887" y2="600" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="913" y1="600" x2="940" y2="600" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="900" cy="600" r="13" stroke="#000" stroke-width="1.4" fill="#ffaaaa"/>
+<line x1="890.81" y1="590.81" x2="909.19" y2="609.19" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="890.81" y1="609.19" x2="909.19" y2="590.81" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="865" y="592" font-size="12" text-anchor="end">X1</text>
+<text x="935" y="592" font-size="12" text-anchor="start">X2</text>
+<text x="900" y="636" font-size="12.5" text-anchor="middle" font-weight="bold">H5</text>
+<line x1="940" y1="600" x2="1440" y2="600" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1440" cy="600" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="616" font-size="11" text-anchor="start" font-style="italic" fill="#555">O016</text>
+<text x="985" y="592" font-size="11.5" text-anchor="start">H5 lamp RED — hazard active or E-stop pressed</text>
+<text x="1430" y="616" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה אדומה — סכנה פעילה או עצירת חירום לחוצה</text>
+<circle cx="160" cy="672" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="672" x2="232" y2="672" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="672" x2="330" y2="672" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="672" x2="229" y2="661" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="672" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="665" font-size="13" text-anchor="end" font-weight="bold">Q8</text>
+<line x1="330" y1="672" x2="860" y2="672" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="344" y="688" font-size="11" text-anchor="start" font-style="italic" fill="#555">O017</text>
+<line x1="860" y1="672" x2="887" y2="672" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="913" y1="672" x2="940" y2="672" stroke="#000" stroke-width="1.4" fill="none"/>
+<polyline points="887,672 887.44,668.64 888.74,665.5 890.81,662.81 893.5,660.74 896.64,659.44 900,659 903.36,659.44 906.5,660.74 909.19,662.81 911.26,665.5 912.56,668.64 913,672 887,672" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="865" y="664" font-size="12" text-anchor="end">+</text>
+<text x="935" y="664" font-size="12" text-anchor="start">−</text>
+<text x="900" y="708" font-size="12.5" text-anchor="middle" font-weight="bold">HA1</text>
+<line x1="940" y1="672" x2="1440" y2="672" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1440" cy="672" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="688" font-size="11" text-anchor="start" font-style="italic" fill="#555">O018</text>
+<text x="985" y="664" font-size="11.5" text-anchor="start">HA1 buzzer — new unacknowledged fault</text>
+<text x="1430" y="688" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">זמזם — תקלה חדשה שטרם אושרה</text>
+<circle cx="160" cy="744" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="744" x2="232" y2="744" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="744" x2="330" y2="744" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="744" x2="229" y2="733" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="744" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="737" font-size="13" text-anchor="end" font-weight="bold">Q9</text>
+<line x1="330" y1="744" x2="860" y2="744" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<text x="344" y="760" font-size="11" text-anchor="start" font-style="italic" fill="#555">O019</text>
+<line x1="860" y1="744" x2="890" y2="744" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<line x1="910" y1="744" x2="940" y2="744" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<rect x="890" y="724" width="20" height="40" stroke="#000" stroke-width="1.4" fill="#fff" stroke-dasharray="2 4"/>
+<text x="868" y="736" font-size="12" text-anchor="end">A1</text>
+<text x="932" y="736" font-size="12" text-anchor="start">A2</text>
+<text x="900" y="780" font-size="12.5" text-anchor="middle" font-weight="bold">KA1</text>
+<line x1="940" y1="744" x2="1440" y2="744" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<circle cx="1440" cy="744" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="952" y="760" font-size="11" text-anchor="start" font-style="italic" fill="#555">O020</text>
+<text x="985" y="736" font-size="11.5" text-anchor="start">KA1 interface relay — smoke detector reset pulse</text>
+<text x="1430" y="760" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">ניתוק זמני של מתח גלאי העשן לצורך איפוס</text>
+<text x="985" y="778" font-size="11" text-anchor="start" fill="#b00000">[CONDITIONAL] only if B5 latches; without KA1 Q9 is not connected</text>
+<circle cx="160" cy="816" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="160" y1="816" x2="232" y2="816" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="816" x2="330" y2="816" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258" y1="816" x2="229" y2="805" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="330" cy="816" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="322" y="809" font-size="13" text-anchor="end" font-weight="bold">QA</text>
+<text x="344" y="820" font-size="12" text-anchor="start" font-weight="bold" fill="#555">SPARE</text>
+<text x="400" y="820" font-size="11.5" text-anchor="end" direction="rtl" unicode-bidi="embed" fill="#555">רזרבה</text>
+<line x1="1440" y1="142" x2="1440" y2="744" stroke="#000" stroke-width="2.2" fill="none"/>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">08 — PLC OUTPUTS Q1 – QA (ZELIO K1)</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">יציאות הבקר Q1 – QA (Zelio K1)</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">Zelio SR3B261BD outputs are relay contacts; COM grouping is UNKNOWN — one COM drawn (C008 TBD).</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">Q1 → S0 NC-1 → F4 95-96 → KM1 A1: E-stop and overload cut KM1 even if the PLC fails (sheet 05).</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">Q2 / KM2 drop-out on hazard is a functional PLC action, NOT a safety function (IO_MAP Q2).</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">Lamp / buzzer polarity X1/X2 and +/− to be verified on the devices. Lamp tint = lamp colour.</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">Dotted = CONDITIONAL (KA1 / Q9). SUP-KM coil suppressors (CONDITIONAL) not drawn.</text>
+<text x="1055" y="1055" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">מנורות 24V DC — קוטביות לאימות</text>
+<text x="22" y="1075" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1075" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">PLC OUTPUTS Q1 – QA (ZELIO K1)</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">יציאות הבקר Q1 – QA (Zelio K1)</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 08 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">08_plc_outputs.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">K1 relay outputs to KM1 (hardwired chain), KM2, H1–H5, HA1, KA1 (conditional); QA spare</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>

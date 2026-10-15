@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>06 24V DC AND 5V CONTROL SUPPLY</title>
+<desc>G1 → F10–F13 → K1 supply, +24V_IN, output COM, +24V_SENS ; G2 LM2596 → X3 5V | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="200" y="150" width="160" height="180" stroke="#000" stroke-width="1.6" fill="#fff"/>
+<text x="280" y="222" font-size="13" text-anchor="middle" font-weight="bold">G1</text>
+<text x="280" y="239" font-size="11" text-anchor="middle">Mean Well HDR-60-24</text>
+<text x="280" y="256" font-size="11" text-anchor="middle">24V DC 2.5A 60W</text>
+<text x="280" y="273" font-size="11" text-anchor="middle">input 85-264VAC</text>
+<text x="208" y="204" font-size="12" text-anchor="start" font-weight="bold">L</text>
+<text x="208" y="284" font-size="12" text-anchor="start" font-weight="bold">N</text>
+<text x="352" y="204" font-size="12" text-anchor="end" font-weight="bold">+V</text>
+<text x="352" y="284" font-size="12" text-anchor="end" font-weight="bold">-V</text>
+<text x="40" y="196" font-size="12" text-anchor="start" font-weight="bold">F5 : 2</text>
+<line x1="100" y1="200" x2="200" y2="200" stroke="#8B4513" stroke-width="1.6" fill="none"/>
+<circle cx="200" cy="200" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="112" y="215" font-size="11" text-anchor="start" font-style="italic" fill="#555">P051</text>
+<text x="40" y="276" font-size="12" text-anchor="start" font-weight="bold">N-BAR</text>
+<line x1="100" y1="280" x2="200" y2="280" stroke="#2f8fdf" stroke-width="1.6" fill="none"/>
+<circle cx="200" cy="280" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="112" y="295" font-size="11" text-anchor="start" font-style="italic" fill="#555">P052</text>
+<text x="40" y="320" font-size="11" text-anchor="start" font-style="italic">230V AC from sheet 03</text>
+<circle cx="360" cy="200" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<line x1="360" y1="200" x2="440" y2="200" stroke="#000" stroke-width="1.8" fill="none"/>
+<circle cx="440" cy="200" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="440" y1="130" x2="440" y2="430" stroke="#000" stroke-width="2.2" fill="none"/>
+<text x="432" y="118" font-size="11" text-anchor="end" font-weight="bold">+24V (G1 +V)</text>
+<circle cx="440" cy="130" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="440" y1="130" x2="520" y2="130" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="450" y="146" font-size="11" text-anchor="start" font-style="italic" fill="#555">C001</text>
+<line x1="520" y1="130" x2="600" y2="130" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="545" y="124" width="30" height="12" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<line x1="545" y1="130" x2="575" y2="130" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="520" cy="130" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<circle cx="600" cy="130" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="520" y="121" font-size="11" text-anchor="middle">in</text>
+<text x="600" y="121" font-size="11" text-anchor="middle">out</text>
+<text x="560" y="156" font-size="12.5" text-anchor="middle" font-weight="bold">F10</text>
+<text x="560" y="171" font-size="11" text-anchor="middle" fill="#555">rating TBD</text>
+<text x="612" y="146" font-size="11" text-anchor="start" font-style="italic" fill="#555">C002</text>
+<circle cx="440" cy="230" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="440" y1="230" x2="520" y2="230" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="450" y="246" font-size="11" text-anchor="start" font-style="italic" fill="#555">C005</text>
+<line x1="520" y1="230" x2="600" y2="230" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="545" y="224" width="30" height="12" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<line x1="545" y1="230" x2="575" y2="230" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="520" cy="230" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<circle cx="600" cy="230" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="520" y="221" font-size="11" text-anchor="middle">in</text>
+<text x="600" y="221" font-size="11" text-anchor="middle">out</text>
+<text x="560" y="256" font-size="12.5" text-anchor="middle" font-weight="bold">F11</text>
+<text x="560" y="271" font-size="11" text-anchor="middle" fill="#555">rating TBD</text>
+<text x="612" y="246" font-size="11" text-anchor="start" font-style="italic" fill="#555">C006</text>
+<circle cx="440" cy="330" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="440" y1="330" x2="520" y2="330" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="450" y="346" font-size="11" text-anchor="start" font-style="italic" fill="#555">C007</text>
+<line x1="520" y1="330" x2="600" y2="330" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="545" y="324" width="30" height="12" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<line x1="545" y1="330" x2="575" y2="330" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="520" cy="330" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<circle cx="600" cy="330" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="520" y="321" font-size="11" text-anchor="middle">in</text>
+<text x="600" y="321" font-size="11" text-anchor="middle">out</text>
+<text x="560" y="356" font-size="12.5" text-anchor="middle" font-weight="bold">F12</text>
+<text x="560" y="371" font-size="11" text-anchor="middle" fill="#555">rating TBD</text>
+<text x="612" y="346" font-size="11" text-anchor="start" font-style="italic" fill="#555">C008</text>
+<circle cx="440" cy="430" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="440" y1="430" x2="520" y2="430" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="450" y="446" font-size="11" text-anchor="start" font-style="italic" fill="#555">C009</text>
+<line x1="520" y1="430" x2="600" y2="430" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="545" y="424" width="30" height="12" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<line x1="545" y1="430" x2="575" y2="430" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="520" cy="430" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<circle cx="600" cy="430" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="520" y="421" font-size="11" text-anchor="middle">in</text>
+<text x="600" y="421" font-size="11" text-anchor="middle">out</text>
+<text x="560" y="456" font-size="12.5" text-anchor="middle" font-weight="bold">F13</text>
+<text x="560" y="471" font-size="11" text-anchor="middle" fill="#555">rating TBD</text>
+<text x="612" y="446" font-size="11" text-anchor="start" font-style="italic" fill="#555">C010</text>
+<line x1="600" y1="130" x2="1290" y2="130" stroke="#000" stroke-width="1.4" fill="none"/>
+<rect x="1290" y="104" width="210" height="66" stroke="#000" stroke-width="1.6" fill="none"/>
+<circle cx="1290" cy="130" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1298" y="134" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed">+ (הזנה)</text>
+<circle cx="1500" cy="155" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1492" y="159" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed">− (הזנה)</text>
+<text x="1419" y="96" font-size="12" text-anchor="middle" font-weight="bold">K1  Zelio SR3B261BD — supply</text>
+<text x="1282" y="122" font-size="11" text-anchor="end">PLC supply</text>
+<line x1="600" y1="230" x2="700" y2="230" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="700" cy="230" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="712" y="226" font-size="12" text-anchor="start" font-weight="bold">X2 : +24V_IN</text>
+<text x="712" y="244" font-size="11" text-anchor="start">→ dry-contact inputs S0–S3, F4 97, KM1 13, B1–B5, KA2 (sheet 07)</text>
+<line x1="600" y1="330" x2="700" y2="330" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="700" cy="330" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="712" y="334" font-size="12" text-anchor="start" font-weight="bold">K1</text>
+<text x="736" y="334" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed">COM יציאות</text>
+<text x="712" y="352" font-size="11" text-anchor="start" fill="#b00000">output COM — grouping TBD, verify on device (sheet 08)</text>
+<line x1="600" y1="430" x2="700" y2="430" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="700" cy="430" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="712" y="426" font-size="12" text-anchor="start" font-weight="bold">X2 : +24V_SENS</text>
+<line x1="704" y1="430" x2="760" y2="430" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="760" y1="430" x2="760" y2="540" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="760" cy="470" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<circle cx="760" cy="505" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="760" y1="470" x2="792" y2="470" stroke="#000" stroke-width="1.4" fill="none"/>
+<polygon points="800,470 792,473.6 792,466.4" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="808" y="474" font-size="11" text-anchor="start" font-style="italic" fill="#555">S001</text>
+<text x="850" y="474" font-size="11" text-anchor="start" font-weight="bold">→ B1–B4</text>
+<text x="912" y="474" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">+ הזנה (TBD)</text>
+<text x="1010" y="474" font-size="11" text-anchor="start">(sheet 09)</text>
+<line x1="760" y1="505" x2="792" y2="505" stroke="#000" stroke-width="1.4" fill="none" stroke-dasharray="2 4"/>
+<polygon points="800,505 792,508.6 792,501.4" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="808" y="509" font-size="11" text-anchor="start" font-style="italic" fill="#555">S003</text>
+<text x="850" y="509" font-size="11" text-anchor="start" font-weight="bold">→ KA1</text>
+<text x="900" y="509" font-size="11" text-anchor="start">11 (NC)</text>
+<text x="950" y="509" font-size="11" text-anchor="start">→ B5 (CONDITIONAL, sheet 10)</text>
+<line x1="760" y1="540" x2="760" y2="560" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="760" y1="560" x2="1000" y2="560" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="808" y="576" font-size="11" text-anchor="start" font-style="italic" fill="#555">S006</text>
+<rect x="1000" y="525" width="130" height="115" stroke="#000" stroke-width="1.6" fill="#fff"/>
+<circle cx="1000" cy="560" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<circle cx="1000" cy="615" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<circle cx="1130" cy="560" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<circle cx="1130" cy="615" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1007" y="564" font-size="11" text-anchor="start" font-weight="bold">IN+</text>
+<text x="1007" y="619" font-size="11" text-anchor="start" font-weight="bold">IN−</text>
+<text x="1123" y="564" font-size="11" text-anchor="end" font-weight="bold">OUT+</text>
+<text x="1123" y="619" font-size="11" text-anchor="end" font-weight="bold">OUT−</text>
+<text x="1065" y="586" font-size="12" text-anchor="middle" font-weight="bold">G2  LM2596</text>
+<text x="1065" y="600" font-size="11" text-anchor="middle">step-down → 5V</text>
+<polyline points="1000,615 970,615 970,700" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="970" cy="700" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="962" y="660" font-size="11" text-anchor="end" font-style="italic" fill="#555">S007</text>
+<polyline points="1130,560 1170,560 1170,505 1200,505" stroke="#000" stroke-width="1.4" fill="none"/>
+<polyline points="1130,615 1170,615 1170,665 1200,665" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1178" y="545" font-size="11" text-anchor="start" font-style="italic" fill="#555">E001</text>
+<text x="1178" y="640" font-size="11" text-anchor="start" font-style="italic" fill="#555">E002</text>
+<circle cx="1200" cy="505" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<circle cx="1200" cy="665" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1200" y="496" font-size="12" text-anchor="middle" font-weight="bold">X3 : +5V</text>
+<text x="1200" y="685" font-size="12" text-anchor="middle" font-weight="bold">X3 : 0V5</text>
+<line x1="1204" y1="505" x2="1540" y2="505" stroke="#000" stroke-width="1.8" fill="none"/>
+<line x1="1204" y1="665" x2="1540" y2="665" stroke="#000" stroke-width="1.8" fill="none"/>
+<rect x="1260" y="545" width="110" height="80" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<circle cx="1280" cy="505" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="1280" y1="505" x2="1280" y2="545" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1280" cy="665" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="1280" y1="625" x2="1280" y2="665" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1286" y="560" font-size="11" text-anchor="start" font-weight="bold">VCC</text>
+<text x="1286" y="619" font-size="11" text-anchor="start" font-weight="bold">GND</text>
+<text x="1325" y="584" font-size="12.5" text-anchor="middle" font-weight="bold">B6</text>
+<text x="1325" y="599" font-size="11" text-anchor="middle">MQ-2 module</text>
+<text x="1286" y="530" font-size="11" text-anchor="start" font-style="italic" fill="#555">E003</text>
+<text x="1286" y="650" font-size="11" text-anchor="start" font-style="italic" fill="#555">E004</text>
+<rect x="1410" y="545" width="120" height="80" stroke="#000" stroke-width="1.4" fill="#fff"/>
+<circle cx="1430" cy="505" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="1430" y1="505" x2="1430" y2="545" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1430" cy="665" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="1430" y1="625" x2="1430" y2="665" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1436" y="560" font-size="11" text-anchor="start" font-weight="bold">DC+ / VCC</text>
+<text x="1436" y="619" font-size="11" text-anchor="start" font-weight="bold">DC− / GND</text>
+<text x="1480" y="584" font-size="12.5" text-anchor="middle" font-weight="bold">KA2</text>
+<text x="1480" y="599" font-size="11" text-anchor="middle">5V relay module</text>
+<text x="1436" y="530" font-size="11" text-anchor="start" font-style="italic" fill="#555">E005</text>
+<text x="1436" y="650" font-size="11" text-anchor="start" font-style="italic" fill="#555">E006</text>
+<text x="1300" y="489" font-size="11" text-anchor="start">+5V rail → B6 / KA2 (sheet 10)</text>
+<circle cx="360" cy="280" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<polyline points="360,280 400,280 400,700" stroke="#000" stroke-width="1.8" fill="none"/>
+<line x1="400" y1="700" x2="1540" y2="700" stroke="#000" stroke-width="2.6" fill="none"/>
+<text x="408" y="500" font-size="11" text-anchor="start" font-style="italic" fill="#555">C003</text>
+<circle cx="480" cy="700" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="480" y="691" font-size="12" text-anchor="middle" font-weight="bold">X2 : 0V</text>
+<polyline points="1500,155 1540,155 1540,700" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1540" cy="700" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<text x="1532" y="300" font-size="11" text-anchor="end" font-style="italic" fill="#555">C004</text>
+<text x="420" y="806" font-size="11" text-anchor="start">0V returns: K1 −, KM1/KM2 A2, H1–H5 X2, HA1 −, KA1 A2,</text>
+<text x="420" y="822" font-size="11" text-anchor="start">B1–B5 −, G2 IN− (sheets 05, 07–10)</text>
+<line x1="440" y1="700" x2="440" y2="760" stroke="#1f8f3a" stroke-width="1.6" fill="none" stroke-dasharray="6 4"/>
+<circle cx="440" cy="700" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<circle cx="440" cy="764" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="448" y="745" font-size="11" text-anchor="start" font-style="italic" fill="#555">C011</text>
+<text x="452" y="768" font-size="11" text-anchor="start" fill="#b00000">→ PE-BAR : 0V–PE bridge (PELV) — decision TBD</text>
+<rect x="1000" y="735" width="545" height="92" stroke="#b00000" stroke-width="2" fill="none"/>
+<text x="1012" y="757" font-size="13" text-anchor="start" font-weight="bold" fill="#b00000">LM2596 is NOT isolated — 0V shared</text>
+<text x="1012" y="775" font-size="11" text-anchor="start">X3 0V5 = X2 0V through G2 (IN− / OUT− common). Adjust G2 to 5V</text>
+<text x="1012" y="790" font-size="11" text-anchor="start">and MEASURE before connecting B6 / KA2 (E001 note).</text>
+<text x="1533" y="815" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">הממיר LM2596 אינו מבודד — ה-0V משותף ל-24V</text>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">06 — 24V DC AND 5V CONTROL SUPPLY</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">ספק פיקוד 24V DC ו-5V</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">Fuse terminals F10–F13 (ADD_RECOMMENDED) give selectivity: a sensor short does not drop the PLC.</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">HDR-60 has overload protection but no separation between branches (BOM). Fuse values TBD.</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">Use dark blue for +24V and dark blue/white for 0V (CSV suggestion) — never light blue (= N).</text>
+<text x="1055" y="1015" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">ספק 24V — נתונים ממפיצים, לאמת בדף נתונים</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">C011 0V–PE (PELV) bridge: decision TBD — drawn dashed. G1 / K1 data from distributors — verify.</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">5V circuit is SELV only; keep exposed PCB modules (G2, B6, KA2) on carriers, insulated.</text>
+<text x="22" y="1075" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1075" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">24V DC AND 5V CONTROL SUPPLY</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">ספק פיקוד 24V DC ו-5V</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 06 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">06_power_supply_24v.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">G1 → F10–F13 → K1 supply, +24V_IN, output COM, +24V_SENS ; G2 LM2596 → X3 5V</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>

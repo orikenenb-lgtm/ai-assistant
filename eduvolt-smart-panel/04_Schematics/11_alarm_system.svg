@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1587 1123" width="1587" height="1123" font-family="Arial, 'Noto Sans Hebrew', sans-serif">
+<title>11 ALARM SYSTEM — LAMPS AND BUZZER</title>
+<desc>K1 outputs Q3–Q8 → H1–H5 indicator lamps and HA1 buzzer, with meaning table | DESIGN ONLY — NOT FOR CONSTRUCTION | לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</desc>
+<rect x="0" y="0" width="1587" height="1123" fill="#ffffff"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="120" y="92" width="1030" height="118" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="128" y="86" font-size="12" text-anchor="start" font-weight="bold">K1  Zelio SR3B261BD — relay outputs</text>
+<text x="70" y="112" font-size="11" text-anchor="end">F12</text>
+<text x="70" y="128" font-size="11" text-anchor="end" font-style="italic" fill="#555">C008</text>
+<line x1="76" y1="110" x2="120" y2="110" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="130" y="132" font-size="11" text-anchor="end" direction="rtl" unicode-bidi="embed">COM יציאות</text>
+<text x="130" y="147" font-size="11" text-anchor="start" fill="#b00000">(grouping TBD)</text>
+<line x1="120" y1="110" x2="1060" y2="110" stroke="#000" stroke-width="1.6" fill="none"/>
+<circle cx="270" cy="110" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="270" y1="110" x2="270" y2="147" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="270" y1="173" x2="270" y2="210" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="270" y1="173" x2="281" y2="144" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="270" cy="210" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="260" y="165" font-size="13" text-anchor="end" font-weight="bold">Q4</text>
+<line x1="270" y1="214" x2="270" y2="300" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="278" y="258" font-size="11" text-anchor="start" font-style="italic" fill="#555">O009</text>
+<circle cx="270" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="262" y="304" font-size="12" text-anchor="end">X1</text>
+<line x1="270" y1="300" x2="270" y2="324" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="270" y1="356" x2="270" y2="380" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="270" cy="340" r="16" stroke="#000" stroke-width="1.4" fill="#ffffff"/>
+<line x1="258.69" y1="328.69" x2="281.31" y2="351.31" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="258.69" y1="351.31" x2="281.31" y2="328.69" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="270" cy="380" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="262" y="384" font-size="12" text-anchor="end">X2</text>
+<text x="296" y="336" font-size="13" text-anchor="start" font-weight="bold">H2</text>
+<text x="296" y="352" font-size="11" text-anchor="start">WHITE</text>
+<line x1="270" y1="384" x2="270" y2="450" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="278" y="422" font-size="11" text-anchor="start" font-style="italic" fill="#555">O010</text>
+<circle cx="270" cy="450" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<circle cx="428" cy="110" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="428" y1="110" x2="428" y2="147" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="428" y1="173" x2="428" y2="210" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="428" y1="173" x2="439" y2="144" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="428" cy="210" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="418" y="165" font-size="13" text-anchor="end" font-weight="bold">Q3</text>
+<line x1="428" y1="214" x2="428" y2="300" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="436" y="258" font-size="11" text-anchor="start" font-style="italic" fill="#555">O007</text>
+<circle cx="428" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="420" y="304" font-size="12" text-anchor="end">X1</text>
+<line x1="428" y1="300" x2="428" y2="324" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="428" y1="356" x2="428" y2="380" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="428" cy="340" r="16" stroke="#000" stroke-width="1.4" fill="#bfeebf"/>
+<line x1="416.69" y1="328.69" x2="439.31" y2="351.31" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="416.69" y1="351.31" x2="439.31" y2="328.69" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="428" cy="380" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="420" y="384" font-size="12" text-anchor="end">X2</text>
+<text x="454" y="336" font-size="13" text-anchor="start" font-weight="bold">H1</text>
+<text x="454" y="352" font-size="11" text-anchor="start">GREEN</text>
+<line x1="428" y1="384" x2="428" y2="450" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="436" y="422" font-size="11" text-anchor="start" font-style="italic" fill="#555">O008</text>
+<circle cx="428" cy="450" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<circle cx="586" cy="110" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="586" y1="110" x2="586" y2="147" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="586" y1="173" x2="586" y2="210" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="586" y1="173" x2="597" y2="144" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="586" cy="210" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="576" y="165" font-size="13" text-anchor="end" font-weight="bold">Q5</text>
+<line x1="586" y1="214" x2="586" y2="300" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="594" y="258" font-size="11" text-anchor="start" font-style="italic" fill="#555">O011</text>
+<circle cx="586" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="578" y="304" font-size="12" text-anchor="end">X1</text>
+<line x1="586" y1="300" x2="586" y2="324" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="586" y1="356" x2="586" y2="380" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="586" cy="340" r="16" stroke="#000" stroke-width="1.4" fill="#fff29a"/>
+<line x1="574.69" y1="328.69" x2="597.31" y2="351.31" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="574.69" y1="351.31" x2="597.31" y2="328.69" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="586" cy="380" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="578" y="384" font-size="12" text-anchor="end">X2</text>
+<text x="612" y="336" font-size="13" text-anchor="start" font-weight="bold">H3</text>
+<text x="612" y="352" font-size="11" text-anchor="start">YELLOW</text>
+<line x1="586" y1="384" x2="586" y2="450" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="594" y="422" font-size="11" text-anchor="start" font-style="italic" fill="#555">O012</text>
+<circle cx="586" cy="450" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<circle cx="744" cy="110" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="744" y1="110" x2="744" y2="147" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="744" y1="173" x2="744" y2="210" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="744" y1="173" x2="755" y2="144" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="744" cy="210" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="734" y="165" font-size="13" text-anchor="end" font-weight="bold">Q6</text>
+<line x1="744" y1="214" x2="744" y2="300" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="752" y="258" font-size="11" text-anchor="start" font-style="italic" fill="#555">O013</text>
+<circle cx="744" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="736" y="304" font-size="12" text-anchor="end">X1</text>
+<line x1="744" y1="300" x2="744" y2="324" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="744" y1="356" x2="744" y2="380" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="744" cy="340" r="16" stroke="#000" stroke-width="1.4" fill="#ffc77a"/>
+<line x1="732.69" y1="328.69" x2="755.31" y2="351.31" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="732.69" y1="351.31" x2="755.31" y2="328.69" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="744" cy="380" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="736" y="384" font-size="12" text-anchor="end">X2</text>
+<text x="770" y="336" font-size="13" text-anchor="start" font-weight="bold">H4</text>
+<text x="770" y="352" font-size="11" text-anchor="start">AMBER</text>
+<line x1="744" y1="384" x2="744" y2="450" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="752" y="422" font-size="11" text-anchor="start" font-style="italic" fill="#555">O014</text>
+<circle cx="744" cy="450" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<circle cx="902" cy="110" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="902" y1="110" x2="902" y2="147" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="902" y1="173" x2="902" y2="210" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="902" y1="173" x2="913" y2="144" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="902" cy="210" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="892" y="165" font-size="13" text-anchor="end" font-weight="bold">Q7</text>
+<line x1="902" y1="214" x2="902" y2="300" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="910" y="258" font-size="11" text-anchor="start" font-style="italic" fill="#555">O015</text>
+<circle cx="902" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="894" y="304" font-size="12" text-anchor="end">X1</text>
+<line x1="902" y1="300" x2="902" y2="324" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="902" y1="356" x2="902" y2="380" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="902" cy="340" r="16" stroke="#000" stroke-width="1.4" fill="#ffaaaa"/>
+<line x1="890.69" y1="328.69" x2="913.31" y2="351.31" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="890.69" y1="351.31" x2="913.31" y2="328.69" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="902" cy="380" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="894" y="384" font-size="12" text-anchor="end">X2</text>
+<text x="928" y="336" font-size="13" text-anchor="start" font-weight="bold">H5</text>
+<text x="928" y="352" font-size="11" text-anchor="start">RED</text>
+<line x1="902" y1="384" x2="902" y2="450" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="910" y="422" font-size="11" text-anchor="start" font-style="italic" fill="#555">O016</text>
+<circle cx="902" cy="450" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<circle cx="1060" cy="110" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="1060" y1="110" x2="1060" y2="147" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="1060" y1="173" x2="1060" y2="210" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="1060" y1="173" x2="1071" y2="144" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1060" cy="210" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1050" y="165" font-size="13" text-anchor="end" font-weight="bold">Q8</text>
+<line x1="1060" y1="214" x2="1060" y2="300" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1068" y="258" font-size="11" text-anchor="start" font-style="italic" fill="#555">O017</text>
+<circle cx="1060" cy="300" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1052" y="304" font-size="12" text-anchor="end">+</text>
+<line x1="1060" y1="300" x2="1060" y2="324" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="1060" y1="356" x2="1060" y2="380" stroke="#000" stroke-width="1.4" fill="none"/>
+<polyline points="1060,324 1055.86,324.55 1052,326.14 1048.69,328.69 1046.14,332 1044.55,335.86 1044,340 1044.55,344.14 1046.14,348 1048.69,351.31 1052,353.86 1055.86,355.45 1060,356 1060,324" stroke="#000" stroke-width="1.4" fill="none"/>
+<circle cx="1060" cy="380" r="3.4" stroke="#000" stroke-width="1.2" fill="#fff"/>
+<text x="1052" y="384" font-size="12" text-anchor="end">−</text>
+<text x="1086" y="336" font-size="13" text-anchor="start" font-weight="bold">HA1</text>
+<text x="1086" y="352" font-size="11" text-anchor="start">BUZZER</text>
+<line x1="1060" y1="384" x2="1060" y2="450" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="1068" y="422" font-size="11" text-anchor="start" font-style="italic" fill="#555">O018</text>
+<circle cx="1060" cy="450" r="3.2" stroke="#000" stroke-width="1" fill="#000"/>
+<line x1="120" y1="450" x2="1100" y2="450" stroke="#000" stroke-width="2.2" fill="none"/>
+<text x="112" y="454" font-size="12" text-anchor="end" font-weight="bold">X2 : 0V</text>
+<rect x="1180" y="92" width="375" height="358" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="1192" y="114" font-size="12" text-anchor="start" font-weight="bold">Behaviour (design intent, IO_MAP)</text>
+<text x="1192" y="138" font-size="11.5" text-anchor="start">• Lamps are 24V DC, door-mounted (22 mm).</text>
+<text x="1192" y="156" font-size="11.5" text-anchor="start">• H2 blinks only during sensor warm-up</text>
+<text x="1192" y="174" font-size="11.5" text-anchor="start">  — limits wear of the output relay.</text>
+<text x="1192" y="192" font-size="11.5" text-anchor="start">• H1 lights only when KM1 feedback (I6)</text>
+<text x="1192" y="210" font-size="11.5" text-anchor="start">  confirms the contactor is closed.</text>
+<text x="1192" y="228" font-size="11.5" text-anchor="start">• RESET (S3) while a fault is still active</text>
+<text x="1192" y="246" font-size="11.5" text-anchor="start">  = acknowledge: silences HA1 only.</text>
+<text x="1192" y="264" font-size="11.5" text-anchor="start">• RESET is never a START command.</text>
+<text x="1192" y="282" font-size="11.5" text-anchor="start">• Lamp and buzzer polarity (X1/X2, +/−)</text>
+<text x="1192" y="300" font-size="11.5" text-anchor="start">  to be verified on the devices.</text>
+<text x="1543" y="422" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">איפוס כשהתקלה פעילה = אישור (השתקת זמזם)</text>
+<text x="30" y="488" font-size="13" text-anchor="start" font-weight="bold">Signal meaning table</text>
+<text x="1555" y="488" font-size="13" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">טבלת משמעות האותות</text>
+<rect x="30" y="500" width="1525" height="308" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="40" y="527" font-size="12" text-anchor="start" font-weight="bold">Device</text>
+<text x="130" y="527" font-size="12" text-anchor="start" font-weight="bold">Colour</text>
+<text x="265" y="527" font-size="12" text-anchor="start" font-weight="bold">K1 output</text>
+<text x="435" y="527" font-size="12" text-anchor="start" font-weight="bold">Meaning</text>
+<text x="1545" y="527" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">משמעות</text>
+<line x1="120" y1="500" x2="120" y2="808" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="255" y1="500" x2="255" y2="808" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="425" y1="500" x2="425" y2="808" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="850" y1="500" x2="850" y2="808" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="30" y1="544" x2="1555" y2="544" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="572" font-size="13" text-anchor="start" font-weight="bold">H2</text>
+<circle cx="148" cy="566" r="10" stroke="#000" stroke-width="1.4" fill="#ffffff"/>
+<text x="170" y="571" font-size="12" text-anchor="start">WHITE</text>
+<text x="265" y="571" font-size="12" text-anchor="start">Q4  LAMP_WHITE</text>
+<text x="435" y="571" font-size="12.5" text-anchor="start">READY / healthy (blinks during warm-up)</text>
+<text x="1545" y="571" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה לבנה — מערכת מוכנה ותקינה; מהבהבת בזמן חימום</text>
+<line x1="30" y1="588" x2="1555" y2="588" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="616" font-size="13" text-anchor="start" font-weight="bold">H1</text>
+<circle cx="148" cy="610" r="10" stroke="#000" stroke-width="1.4" fill="#bfeebf"/>
+<text x="170" y="615" font-size="12" text-anchor="start">GREEN</text>
+<text x="265" y="615" font-size="12" text-anchor="start">Q3  LAMP_GREEN</text>
+<text x="435" y="615" font-size="12.5" text-anchor="start">Motor running (feedback confirmed)</text>
+<text x="1545" y="615" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה ירוקה — מנוע פועל (משוב מאושר)</text>
+<line x1="30" y1="632" x2="1555" y2="632" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="660" font-size="13" text-anchor="start" font-weight="bold">H3</text>
+<circle cx="148" cy="654" r="10" stroke="#000" stroke-width="1.4" fill="#fff29a"/>
+<text x="170" y="659" font-size="12" text-anchor="start">YELLOW</text>
+<text x="265" y="659" font-size="12" text-anchor="start">Q5  LAMP_YELLOW</text>
+<text x="435" y="659" font-size="12.5" text-anchor="start">Temperature warning</text>
+<text x="1545" y="659" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה צהובה — אזהרת טמפרטורה (סף ראשון)</text>
+<line x1="30" y1="676" x2="1555" y2="676" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="704" font-size="13" text-anchor="start" font-weight="bold">H4</text>
+<circle cx="148" cy="698" r="10" stroke="#000" stroke-width="1.4" fill="#ffc77a"/>
+<text x="170" y="703" font-size="12" text-anchor="start">AMBER</text>
+<text x="265" y="703" font-size="12" text-anchor="start">Q6  LAMP_AMBER</text>
+<text x="435" y="703" font-size="12.5" text-anchor="start">Fault latched / reset required</text>
+<text x="1545" y="703" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה ענברית — תקלה נעולה / נדרש איפוס</text>
+<line x1="30" y1="720" x2="1555" y2="720" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="748" font-size="13" text-anchor="start" font-weight="bold">H5</text>
+<circle cx="148" cy="742" r="10" stroke="#000" stroke-width="1.4" fill="#ffaaaa"/>
+<text x="170" y="747" font-size="12" text-anchor="start">RED</text>
+<text x="265" y="747" font-size="12" text-anchor="start">Q7  LAMP_RED</text>
+<text x="435" y="747" font-size="12.5" text-anchor="start">Hazard active or E-stop pressed</text>
+<text x="1545" y="747" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">נורה אדומה — סכנה פעילה או עצירת חירום לחוצה</text>
+<line x1="30" y1="764" x2="1555" y2="764" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="40" y="792" font-size="13" text-anchor="start" font-weight="bold">HA1</text>
+<line x1="134" y1="790" x2="140" y2="790" stroke="#000" stroke-width="1.4" fill="none"/>
+<line x1="158" y1="790" x2="164" y2="790" stroke="#000" stroke-width="1.4" fill="none"/>
+<polyline points="140,790 140.31,787.67 141.21,785.5 142.64,783.64 144.5,782.21 146.67,781.31 149,781 151.33,781.31 153.5,782.21 155.36,783.64 156.79,785.5 157.69,787.67 158,790 140,790" stroke="#000" stroke-width="1.4" fill="none"/>
+<text x="170" y="791" font-size="12" text-anchor="start">BUZZER</text>
+<text x="265" y="791" font-size="12" text-anchor="start">Q8  BUZZER</text>
+<text x="435" y="791" font-size="12.5" text-anchor="start">New unacknowledged fault</text>
+<text x="1545" y="791" font-size="12.5" text-anchor="start" direction="rtl" unicode-bidi="embed">זמזם — תקלה חדשה שטרם אושרה</text>
+<rect x="10" y="10" width="1567" height="1103" stroke="#000" stroke-width="1.6" fill="none"/>
+<text x="24" y="36" font-size="16" text-anchor="start" font-weight="bold">11 — ALARM SYSTEM — LAMPS AND BUZZER</text>
+<text x="1563" y="36" font-size="16" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">מערכת התראה — נורות וזמזם</text>
+<text x="785.5" y="58" font-size="12" text-anchor="end" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="801.5" y="58" font-size="12" text-anchor="end" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+<line x1="10" y1="68" x2="1577" y2="68" stroke="#000" stroke-width="1.2" fill="none"/>
+<rect x="10" y="935" width="1057" height="178" stroke="#000" stroke-width="1.2" fill="none"/>
+<text x="22" y="953" font-size="12" text-anchor="start" font-weight="bold">NOTES</text>
+<text x="1055" y="953" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">הערות</text>
+<text x="22" y="975" font-size="11.5" text-anchor="start">Lamp colours follow IO_MAP / LAYOUT: H1 green, H2 white, H3 yellow, H4 amber, H5 red.</text>
+<text x="1055" y="975" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי הנורות לפי IO_MAP</text>
+<text x="22" y="995" font-size="11.5" text-anchor="start">Order left-to-right follows the DOOR rows of LAYOUT.csv (H2, H1, H3, H4, H5, HA1).</text>
+<text x="22" y="1015" font-size="11.5" text-anchor="start">Output COM grouping of the Zelio is TBD (C008) — one COM drawn.</text>
+<text x="22" y="1035" font-size="11.5" text-anchor="start">Fault latching, reset and buzzer logic live in the PLC program (06_PLC_Logic).</text>
+<text x="22" y="1055" font-size="11.5" text-anchor="start">Wire colours illustrative — see WIRE_COLORS.md</text>
+<text x="1055" y="1055" font-size="11.5" text-anchor="start" direction="rtl" unicode-bidi="embed">צבעי המוליכים להמחשה בלבד — ראו WIRE_COLORS.md</text>
+<rect x="1067" y="935" width="510" height="178" stroke="#000" stroke-width="1.6" fill="none"/>
+<line x1="1067" y1="959" x2="1577" y2="959" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="981" x2="1577" y2="981" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1003" x2="1577" y2="1003" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1025" x2="1577" y2="1025" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1047" x2="1577" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1069" x2="1577" y2="1069" stroke="#000" stroke-width="0.8" fill="none"/>
+<line x1="1067" y1="1091" x2="1577" y2="1091" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1075" y="952" font-size="12" text-anchor="start" font-weight="bold">SMART THREE-PHASE ELECTRICAL PANEL</text>
+<text x="1569" y="952" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">לוח חשמל חכם תלת־פאזי</text>
+<text x="1075" y="975" font-size="11" text-anchor="start">Monitoring, protection and alarm system</text>
+<text x="1569" y="975" font-size="11" text-anchor="start" direction="rtl" unicode-bidi="embed">מערכת ניטור, הגנה והתראה</text>
+<text x="1075" y="997" font-size="11" text-anchor="start">Drawing:</text>
+<text x="1131" y="997" font-size="12" text-anchor="start" font-weight="bold">ALARM SYSTEM — LAMPS AND BUZZER</text>
+<text x="1569" y="1019" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold">מערכת התראה — נורות וזמזם</text>
+<text x="1075" y="1019" font-size="11" text-anchor="start">Title (HE):</text>
+<text x="1074" y="1041" font-size="11" text-anchor="start" font-weight="bold">Page 11 / 20</text>
+<line x1="1185" y1="1025" x2="1185" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1192" y="1041" font-size="11" text-anchor="start">Date 2026-10-15</text>
+<line x1="1315" y1="1025" x2="1315" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1322" y="1041" font-size="11" text-anchor="start">Version v0.1</text>
+<line x1="1415" y1="1025" x2="1415" y2="1047" stroke="#000" stroke-width="0.8" fill="none"/>
+<text x="1422" y="1041" font-size="11" text-anchor="start">11_alarm_system.svg</text>
+<text x="1075" y="1063" font-size="11" text-anchor="start">K1 outputs Q3–Q8 → H1–H5 indicator lamps and HA1 buzzer, with meaning table</text>
+<text x="1075" y="1085" font-size="12" text-anchor="start" font-weight="bold" fill="#b00000">DESIGN ONLY — NOT FOR CONSTRUCTION</text>
+<text x="1569" y="1107" font-size="12" text-anchor="start" direction="rtl" unicode-bidi="embed" font-weight="bold" fill="#b00000">לתכנון ולימוד בלבד — טעון בדיקת מורה וחשמלאי מוסמך</text>
+</g>
+</svg>
