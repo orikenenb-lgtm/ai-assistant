@@ -12,3 +12,6 @@ docs
 supabase
 .github
 .git
+
+# סקילים ופקודות של Claude Code — לא נדרשים ל-build
+.claude
