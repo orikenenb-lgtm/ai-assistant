@@ -35,7 +35,7 @@ export default async function AdminOverviewPage() {
           hint={t("overview.mrrHint")}
         />
         <StatCard label={t("overview.users")} value={n(s.users.activeMembers)} icon={<Users />} hint={t("overview.usersHint", { active: s.users.active30d, total: s.users.total })} />
-        <StatCard label={t("overview.dbLatency")} value={`${s.dbLatencyMs} ms`} icon={<Database />} hint={t("overview.dbHint")} />
+        <StatCard label={t("overview.dbLatency")} value={<span dir="ltr">{`${s.dbLatencyMs} ms`}</span>} icon={<Database />} hint={t("overview.dbHint")} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Link href="/admin/jobs" className="block rounded-xl focus-visible:ring-2 focus-visible:ring-ring">
@@ -50,7 +50,7 @@ export default async function AdminOverviewPage() {
         />
         <StatCard label={t("overview.emailFailures")} value={n(s.emailFailures7d)} icon={<Mail />} hint={t("overview.supportActive", { n: s.activeSupportSessions })} />
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Card>
           <CardHeader>
             <CardTitle>{t("overview.byPlan")}</CardTitle>

@@ -36,12 +36,13 @@ real providers, and approvals.
 |---|---|
 | TypeScript strict (`next typegen && tsc`) | clean |
 | ESLint (incl. React Compiler rules) | clean |
-| Unit + integration tests (real PostgreSQL 16 with RLS) | **441 passed** across 39 files |
-| End-to-end (Playwright, production build, Hebrew UI) | **21 scenarios passed** (listed below) |
+| Unit + integration tests (real PostgreSQL 16 with RLS) | **442 passed** across 39 files |
+| End-to-end (Playwright, production build, Hebrew UI) | **22 scenarios passed** (listed below) |
 | `next build` | passes |
 | Schema drift (`db:check` against a freshly migrated database) | no drift |
 | GitHub Actions (`smart-crm.yml`: lint, typecheck, unit, integration, drift, build, E2E) | green on the PR branch |
 | Internal security review (2 independent reviewers) | all findings fixed or documented — see `SECURITY.md` |
+| Visual/functional QA sweep (every route, he/en, light/dark, desktop/mobile, owner/agent) | majors fixed (hydration, localized 404/error pages, mobile overflow, command palette, quote line errors, rate-limit message); remaining polish listed below |
 
 E2E scenarios: registration → email verification → login → organization → dashboard;
 password reset; MFA enrolment and sign-in; Hebrew validation and English switch;
@@ -52,7 +53,8 @@ quotes (items → totals → PDF → send → customer accepts via public link);
 calendar and notification preferences; analytics and CSV export; automations
 (build → publish → event → action → run history); developer settings (API key →
 REST call → revoke; webhooks with SSRF guard); team invitations and roles; billing
-plan change (mock) and platform admin with support mode.
+plan change (mock) and platform admin with support mode; localized 404 pages,
+command palette and hydration checks on chart pages.
 
 ## Outstanding approvals & credentials (owner action required)
 
@@ -84,6 +86,11 @@ plan change (mock) and platform admin with support mode.
 * Calendar: only Saturday shaded as weekend; DST-day hour rows follow wall-clock time.
 * Automation `call_webhook` requests are not signed (use outbound webhooks for signed delivery).
 * Residual security risks are listed in `SECURITY.md`.
+* UI polish still open from the QA sweep: access-denied states differ between sections
+  (redirect vs. alert vs. empty state); some settings pages use their own header style and
+  width; English mode aligns Hebrew record titles to the right; mobile dashboards stack all
+  KPI cards before content; the Kanban board has no horizontal-scroll hint; calendar month
+  view on phones truncates event chips; mock-AI fallback text shows raw stage/source values.
 
 ## Go-live checklist
 

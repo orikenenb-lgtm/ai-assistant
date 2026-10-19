@@ -25,6 +25,7 @@ export async function signInAction(input: unknown): Promise<ActionResult<{ statu
   return publicAction(input, signInSchema, async (data) => {
     const result = await auth().signIn({ email: data.email, password: data.password }, await requestInfo());
     if (result.status === "invalid_credentials") throw new AppError("UNAUTHENTICATED", "auth.invalidCredentials");
+    if (result.status === "rate_limited") throw new AppError("RATE_LIMITED", "errors.rateLimited");
     if (result.status === "email_not_verified") return { status: "email_not_verified" };
     if (result.status === "mfa_required") return { status: "mfa_required", redirectTo: `/mfa?next=${encodeURIComponent(safeNext(data.next))}` };
     return { status: "ok", redirectTo: safeNext(data.next) };

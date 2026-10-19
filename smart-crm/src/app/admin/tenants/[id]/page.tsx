@@ -38,9 +38,10 @@ export default async function AdminTenantPage({ params }: { params: Promise<{ id
   const isMember = d.members.some((m) => m.userId === actor.userId);
   const stripeManaged = Boolean(sub && sub.provider === "stripe" && sub.providerSubscriptionId && sub.status !== "canceled");
 
+  const breadcrumbLabel = (await getTranslations("common"))("breadcrumb");
   return (
     <div className="space-y-6">
-      <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+      <nav aria-label={breadcrumbLabel} className="text-sm text-muted-foreground">
         <Link href="/admin/tenants" className="hover:text-foreground">
           {t("tenants.title")}
         </Link>{" "}

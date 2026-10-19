@@ -1,13 +1,23 @@
 "use client";
 
 import "./viz.css";
-import { useId, useState } from "react";
+import { useId, useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatBucket, formatValue, type ValueFormat } from "../format";
 import type { Bucket } from "../range";
+
+const noopSubscribe = () => () => {};
+/**
+ * Charts measure their container, so the server cannot render the axis ticks
+ * the browser will (hydration mismatch). Plot after mount; the sized wrapper
+ * keeps the layout stable and the data-table view stays server-rendered.
+ */
+function useMounted() {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
+}
 
 export type Slot = 1 | 2 | 3 | 4 | 5 | 6;
 export type SeriesDef = { key: string; label: string; slot: Slot };
@@ -185,39 +195,42 @@ export function TimeBars({
 }) {
   const { rtl, locale } = useAxisDirection();
   const stacked = series.length > 1;
+  const mounted = useMounted();
   return (
     <div style={{ height }} role="img" aria-label={ariaLabel}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 4 }} barCategoryGap="28%">
-          <CartesianGrid vertical={false} stroke="var(--viz-grid)" />
-          <XAxis dataKey="bucket" {...axisProps} reversed={rtl} tickFormatter={(v) => formatBucket(String(v), bucket, locale)} minTickGap={12} interval="equidistantPreserveStart" />
-          <YAxis
-            {...axisProps}
-            orientation={rtl ? "right" : "left"}
-            width={56}
-            tickFormatter={(v) => formatValue(Number(v), format, locale, { compact: true })}
-            allowDecimals={format.kind !== "count"}
-          />
-          <Tooltip
-            cursor={{ fill: "var(--viz-cursor)" }}
-            content={(p) => <ChartTooltip active={p.active} payload={p.payload as ReadonlyArray<TooltipEntry>} label={p.label} format={format} labelFormatter={(l) => formatBucket(l, bucket, locale, { long: true })} />}
-          />
-          {series.map((s, i) => (
-            <Bar
-              key={s.key}
-              dataKey={s.key}
-              name={s.label}
-              stackId={stacked ? "stack" : undefined}
-              fill={color(s.slot)}
-              maxBarSize={24}
-              radius={!stacked || i === series.length - 1 ? [4, 4, 0, 0] : 0}
-              stroke={stacked ? "var(--viz-surface)" : undefined}
-              strokeWidth={stacked ? 2 : 0}
-              isAnimationActive={false}
+      {mounted && (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 4 }} barCategoryGap="28%">
+            <CartesianGrid vertical={false} stroke="var(--viz-grid)" />
+            <XAxis dataKey="bucket" {...axisProps} reversed={rtl} tickFormatter={(v) => formatBucket(String(v), bucket, locale)} minTickGap={12} interval="equidistantPreserveStart" />
+            <YAxis
+              {...axisProps}
+              orientation={rtl ? "right" : "left"}
+              width={56}
+              tickFormatter={(v) => formatValue(Number(v), format, locale, { compact: true })}
+              allowDecimals={format.kind !== "count"}
             />
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
+            <Tooltip
+              cursor={{ fill: "var(--viz-cursor)" }}
+              content={(p) => <ChartTooltip active={p.active} payload={p.payload as ReadonlyArray<TooltipEntry>} label={p.label} format={format} labelFormatter={(l) => formatBucket(l, bucket, locale, { long: true })} />}
+            />
+            {series.map((s, i) => (
+              <Bar
+                key={s.key}
+                dataKey={s.key}
+                name={s.label}
+                stackId={stacked ? "stack" : undefined}
+                fill={color(s.slot)}
+                maxBarSize={24}
+                radius={!stacked || i === series.length - 1 ? [4, 4, 0, 0] : 0}
+                stroke={stacked ? "var(--viz-surface)" : undefined}
+                strokeWidth={stacked ? 2 : 0}
+                isAnimationActive={false}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }
@@ -244,42 +257,45 @@ export function TrendArea({
 }) {
   const { rtl, locale } = useAxisDirection();
   const gradient = useId().replace(/:/g, "");
+  const mounted = useMounted();
   return (
     <div style={{ height }} role="img" aria-label={ariaLabel}>
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-          <defs>
-            <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color(slot)} stopOpacity={0.14} />
-              <stop offset="100%" stopColor={color(slot)} stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid vertical={false} stroke="var(--viz-grid)" />
-          <XAxis dataKey="bucket" {...axisProps} reversed={rtl} tickFormatter={(v) => formatBucket(String(v), bucket, locale)} minTickGap={12} interval="equidistantPreserveStart" />
-          <YAxis
-            {...axisProps}
-            orientation={rtl ? "right" : "left"}
-            width={48}
-            tickFormatter={(v) => formatValue(Number(v), format, locale, { compact: true })}
-            allowDecimals={format.kind !== "count"}
-          />
-          <Tooltip
-            cursor={{ stroke: "var(--viz-axis)", strokeWidth: 1 }}
-            content={(p) => <ChartTooltip active={p.active} payload={p.payload as ReadonlyArray<TooltipEntry>} label={p.label} format={format} labelFormatter={(l) => formatBucket(l, bucket, locale, { long: true })} />}
-          />
-          <Area
-            type="monotone"
-            dataKey={dataKey}
-            name={label}
-            stroke={color(slot)}
-            strokeWidth={2}
-            fill={`url(#${gradient})`}
-            dot={false}
-            activeDot={{ r: 4, stroke: "var(--viz-surface)", strokeWidth: 2, fill: color(slot) }}
-            isAnimationActive={false}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      {mounted && (
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+            <defs>
+              <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color(slot)} stopOpacity={0.14} />
+                <stop offset="100%" stopColor={color(slot)} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke="var(--viz-grid)" />
+            <XAxis dataKey="bucket" {...axisProps} reversed={rtl} tickFormatter={(v) => formatBucket(String(v), bucket, locale)} minTickGap={12} interval="equidistantPreserveStart" />
+            <YAxis
+              {...axisProps}
+              orientation={rtl ? "right" : "left"}
+              width={48}
+              tickFormatter={(v) => formatValue(Number(v), format, locale, { compact: true })}
+              allowDecimals={format.kind !== "count"}
+            />
+            <Tooltip
+              cursor={{ stroke: "var(--viz-axis)", strokeWidth: 1 }}
+              content={(p) => <ChartTooltip active={p.active} payload={p.payload as ReadonlyArray<TooltipEntry>} label={p.label} format={format} labelFormatter={(l) => formatBucket(l, bucket, locale, { long: true })} />}
+            />
+            <Area
+              type="monotone"
+              dataKey={dataKey}
+              name={label}
+              stroke={color(slot)}
+              strokeWidth={2}
+              fill={`url(#${gradient})`}
+              dot={false}
+              activeDot={{ r: 4, stroke: "var(--viz-surface)", strokeWidth: 2, fill: color(slot) }}
+              isAnimationActive={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }
@@ -305,15 +321,22 @@ export function CategoryBars({
   ariaLabel: string;
 }) {
   const locale = useLocale() as "he" | "en";
+  // Compact currency differs between the server's and the browser's ICU data:
+  // print values after mount so hydration sees identical text.
+  const mounted = useMounted();
   const max = Math.max(0, ...data.map((d) => d.value));
   if (!data.length) return null;
   return (
     <ul className="space-y-2.5 py-1" role="img" aria-label={ariaLabel}>
       {data.map((d, i) => {
         const pct = max > 0 ? Math.max(d.value > 0 ? 1.5 : 0, (d.value / max) * 100) : 0;
-        const formatted = formatValue(d.value, format, locale, { compact: true });
+        const formatted = mounted ? formatValue(d.value, format, locale, { compact: true }) : "\u00a0";
         return (
-          <li key={`${d.name}-${i}`} className="group grid grid-cols-[minmax(0,7.5rem)_1fr] items-center gap-3 text-sm" title={`${d.name} · ${label}: ${formatValue(d.value, format, locale)}`}>
+          <li
+            key={`${d.name}-${i}`}
+            className="group grid grid-cols-[minmax(0,7.5rem)_1fr] items-center gap-3 text-sm"
+            title={mounted ? `${d.name} · ${label}: ${formatValue(d.value, format, locale)}` : d.name}
+          >
             <span className="truncate text-muted-foreground" dir="auto">
               {d.name}
             </span>

@@ -9,6 +9,7 @@ import { sql } from "drizzle-orm";
 import { closeDb, db, schema, sqlClient } from "../src/server/db";
 import { hashPassword } from "../src/server/auth/password";
 import { createOrganization } from "../src/modules/org/service";
+import { syncSeatsNow } from "../src/modules/billing/seats";
 
 const url = process.env.DATABASE_URL ?? "";
 if (process.env.APP_ENV === "production" || !/(localhost|127\.0\.0\.1)/.test(url)) {
@@ -108,6 +109,7 @@ async function main() {
     { tenantId: t, type: "meeting", subject: "פגישה בחנות", contactId: contacts[1].id, actorId: managerId, occurredAt: daysAgo(5), durationMinutes: 45 },
   ]);
   await seedSalesHistory(t, [ownerId, managerId, agentId], contacts.map((c) => c.id), companies.map((c) => c.id));
+  await syncSeatsNow(t);
   console.log(`demo tenant ${tenant.name} created — sign in as owner@demo.test / ${PASSWORD}`);
 }
 
@@ -240,24 +242,26 @@ async function seedSalesHistory(t: string, users: string[], contactIds: string[]
       .returning();
     let ts = now - between(1, 25) * DAY;
     let last = ts;
+    let lastBody = "";
     for (let k = 0; k < 6; k++) {
       const inbound = k % 2 === 0;
       ts += inbound ? between(2, 30) * 3_600_000 : between(2, 95) * 60_000;
       if (ts > now) break;
       last = ts;
+      lastBody = inbound ? pick(["שלום, יש לכם במלאי?", "מה המחיר לסיטונאי?", "אפשר משלוח עד יום חמישי?"]) : pick(["היי! כן, יש במלאי 🙂", "שולחת הצעת מחיר עכשיו", "בטח, נתאם משלוח"]);
       await db().insert(schema.messages).values({
         tenantId: t,
         conversationId: conv.id,
         direction: inbound ? "inbound" : "outbound",
         type: "text",
-        body: inbound ? pick(["שלום, יש לכם במלאי?", "מה המחיר לסיטונאי?", "אפשר משלוח עד יום חמישי?"]) : pick(["היי! כן, יש במלאי 🙂", "שולחת הצעת מחיר עכשיו", "בטח, נתאם משלוח"]),
+        body: lastBody,
         status: inbound ? "received" : "read",
         senderType: inbound ? "contact" : "user",
         senderUserId: inbound ? null : (conv.assigneeId ?? users[0]),
         createdAt: new Date(ts),
       });
     }
-    await db().update(schema.conversations).set({ lastMessageAt: new Date(last), lastMessagePreview: "…" }).where(sql`id = ${conv.id}`);
+    await db().update(schema.conversations).set({ lastMessageAt: new Date(last), lastMessagePreview: lastBody || null }).where(sql`id = ${conv.id}`);
   }
 
   // Tasks: some done, some due today, some overdue.

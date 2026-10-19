@@ -99,9 +99,10 @@ export default async function CompanyPage({ params }: PageProps<"/companies/[id]
     </>
   );
 
+  const breadcrumbLabel = (await getTranslations("common"))("breadcrumb");
   return (
     <div className="space-y-6">
-      <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+      <nav aria-label={breadcrumbLabel} className="text-sm text-muted-foreground">
         <Link href="/companies" className="hover:text-foreground">
           {t("title")}
         </Link>{" "}
@@ -161,7 +162,7 @@ export default async function CompanyPage({ params }: PageProps<"/companies/[id]
         </div>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <div className="space-y-6">
           <Card>
             <CardHeader>

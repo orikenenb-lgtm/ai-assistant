@@ -28,7 +28,7 @@ export function formatDateTime(d: Date | string | null | undefined, locale: AppL
 
 export function formatTime(d: Date | string | null | undefined, locale: AppLocale, timeZone = "Asia/Jerusalem"): string {
   if (!d) return "";
-  return new Intl.DateTimeFormat(intlLocale(locale), { timeStyle: "short", timeZone }).format(new Date(d));
+  return new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }).format(new Date(d));
 }
 
 export function formatRelative(d: Date | string, locale: AppLocale, now = Date.now()): string {

@@ -60,6 +60,19 @@ describe("LocalAuthAdapter", () => {
     expect(await auth.signIn({ email: uniqueEmail("ghost"), password: PASSWORD }, req)).toEqual({ status: "invalid_credentials" });
   });
 
+  it("counts only failed sign-ins, reports rate limiting, and keys the limit per account+IP", async () => {
+    const email = uniqueEmail("limits");
+    await registerVerified(email);
+    const { auth } = newAdapter();
+    // Successful logins do not consume the budget.
+    for (let i = 0; i < 12; i++) expect((await auth.signIn({ email, password: PASSWORD }, req)).status).toBe("ok");
+    for (let i = 0; i < 10; i++) expect((await auth.signIn({ email, password: "wrong-pass-1" }, req)).status).toBe("invalid_credentials");
+    expect((await auth.signIn({ email, password: PASSWORD }, req)).status).toBe("rate_limited");
+    // The owner signing in from another address is not locked out by someone else's failures.
+    const other = { ip: `198.51.100.${Math.floor(Math.random() * 250) + 1}`, userAgent: "vitest" };
+    expect((await auth.signIn({ email, password: PASSWORD }, other)).status).toBe("ok");
+  });
+
   it("does not reveal existing accounts on sign-up", async () => {
     const email = uniqueEmail("dupe");
     await registerVerified(email);

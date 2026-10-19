@@ -16,7 +16,7 @@
     "provider": "ספק",
     "displayName": "שם תצוגה",
     "phoneNumber": "מספר הטלפון",
-    "phoneNumberId": "Phone number ID",
+    "phoneNumberId": "מזהה מספר טלפון (Phone number ID)",
     "wabaId": "WhatsApp Business Account ID",
     "accessToken": "Access token (קבוע)",
     "sendRate": "מגבלת שליחה לדקה"

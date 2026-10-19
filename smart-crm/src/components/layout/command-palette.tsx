@@ -43,6 +43,12 @@ export function CommandPalette({ open, onOpenChange, allowedNav }: { open: boole
     { key: "task", href: "/tasks?new=1", perm: "tasks" as NavKey },
   ].filter((c) => allowed.has(c.perm));
 
+  // Commands stay available while typing: match the query against their labels.
+  const needle = query.trim().toLocaleLowerCase();
+  const matches = (label: string) => !needle || label.toLocaleLowerCase().includes(needle);
+  const matchingCreate = createItems.map((c) => ({ ...c, label: tp(`new.${c.key}` as "new.contact") })).filter((c) => matches(c.label));
+  const matchingNav = navItems.map((i) => ({ ...i, label: t(i.key) })).filter((i) => matches(i.label));
+
   return (
     <D.Root open={open} onOpenChange={setOpen}>
       <D.Portal>
@@ -77,25 +83,25 @@ export function CommandPalette({ open, onOpenChange, allowedNav }: { open: boole
                   })}
                 </Command.Group>
               )}
-              {query.trim().length < 2 && (
-                <>
-                  <Command.Group heading={tp("create")} className="cmdk-group">
-                    {createItems.map((c) => (
-                      <Command.Item key={c.key} value={`create-${c.key}`} onSelect={() => go(c.href)} className="cmdk-item">
-                        <Plus className="size-4 text-muted-foreground" />
-                        {tp(`new.${c.key}` as "new.contact")}
-                      </Command.Item>
-                    ))}
-                  </Command.Group>
-                  <Command.Group heading={tp("navigate")} className="cmdk-group">
-                    {navItems.map((i) => (
-                      <Command.Item key={i.key} value={`nav-${i.key}`} onSelect={() => go(i.href)} className="cmdk-item">
-                        <CornerDownLeft className="size-4 text-muted-foreground rtl:-scale-x-100" />
-                        {t(i.key)}
-                      </Command.Item>
-                    ))}
-                  </Command.Group>
-                </>
+              {matchingCreate.length > 0 && (
+                <Command.Group heading={tp("create")} className="cmdk-group">
+                  {matchingCreate.map((c) => (
+                    <Command.Item key={c.key} value={`create-${c.key}`} onSelect={() => go(c.href)} className="cmdk-item">
+                      <Plus className="size-4 text-muted-foreground" />
+                      {c.label}
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )}
+              {matchingNav.length > 0 && (
+                <Command.Group heading={tp("navigate")} className="cmdk-group">
+                  {matchingNav.map((i) => (
+                    <Command.Item key={i.key} value={`nav-${i.key}`} onSelect={() => go(i.href)} className="cmdk-item">
+                      <CornerDownLeft className="size-4 text-muted-foreground rtl:-scale-x-100" />
+                      {i.label}
+                    </Command.Item>
+                  ))}
+                </Command.Group>
               )}
             </Command.List>
           </Command>

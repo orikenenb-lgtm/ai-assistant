@@ -267,7 +267,8 @@ function KanbanColumn({
             {stage.kind !== "open" && ` · ${t("closedColumnHint")}`}
           </p>
         </div>
-        <span className="tabular shrink-0 text-xs font-medium text-muted-foreground" data-testid="column-total">
+        {/* Compact currency can differ between server and browser ICU data; the client value wins. */}
+        <span className="tabular shrink-0 text-xs font-medium text-muted-foreground" data-testid="column-total" suppressHydrationWarning>
           {/* `total` is in cents: switch to compact notation from 1M major units. */}
           {formatMoney(total, currency, locale, { compact: total >= 100_000_000 })}
         </span>

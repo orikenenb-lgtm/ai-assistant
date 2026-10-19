@@ -62,5 +62,7 @@
   "comingFromIntegration": "Requires an integration",
   "selectPlaceholder": "Select…",
   "tags": "Tags",
-  "skipToContent": "Skip to main content"
+  "skipToContent": "Skip to main content",
+  "breadcrumb": "Breadcrumb",
+  "toastRegion": "Notifications"
 }

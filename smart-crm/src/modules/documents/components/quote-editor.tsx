@@ -54,7 +54,13 @@ export function QuoteEditor({ initial, templates }: { initial: QuoteEditorInitia
   const errors = action.fieldErrors;
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
-  const setRow = (key: number, patch: Partial<EditorItem>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  // Line errors appear once a line was edited or a save was attempted (not on a fresh line).
+  const [touched, setTouched] = useState<Set<number>>(() => new Set());
+  const [attempted, setAttempted] = useState(false);
+  const setRow = (key: number, patch: Partial<EditorItem>) => {
+    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+    setTouched((t) => (t.has(key) ? t : new Set(t).add(key)));
+  };
   const addRow = () => {
     const key = nextKey.current++;
     setRows((rs) => [...rs, { key, description: "", quantity: "1", unitPrice: "", discountPercent: "0" }]);
@@ -114,6 +120,7 @@ export function QuoteEditor({ initial, templates }: { initial: QuoteEditorInitia
       noValidate
       className="space-y-6"
       onSubmit={(e) => {
+        setAttempted(true);
         e.preventDefault();
         void submit();
       }}
@@ -177,7 +184,7 @@ export function QuoteEditor({ initial, templates }: { initial: QuoteEditorInitia
             {rows.map((row, i) => {
               const n = i + 1;
               const err = (k: string) => fieldError(`items.${i}.${k}`);
-              const lineInvalid = preview.invalid[i] && (row.quantity !== "" || row.unitPrice !== "");
+              const lineInvalid = preview.invalid[i] && (attempted || touched.has(row.key));
               return (
                 <li
                   key={row.key}
@@ -240,7 +247,7 @@ export function QuoteEditor({ initial, templates }: { initial: QuoteEditorInitia
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <Card>
           <CardContent className="space-y-4 p-5">
             {templates.length > 0 && (

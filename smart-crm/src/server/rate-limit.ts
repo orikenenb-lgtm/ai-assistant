@@ -24,6 +24,15 @@ export async function hitRateLimit(key: string, limit: number, windowSeconds: nu
   };
 }
 
+/** Reads the current window's count without incrementing it. */
+export async function peekRateLimit(key: string, limit: number, windowSeconds: number): Promise<RateLimitResult> {
+  const windowStart = new Date(Math.floor(Date.now() / (windowSeconds * 1000)) * windowSeconds * 1000);
+  const rows = await db().execute<{ count: number }>(sql`
+    select count from public.rate_limit_counters where key = ${key} and window_start = ${windowStart.toISOString()}::timestamptz`);
+  const count = Number(rows[0]?.count ?? 0);
+  return { allowed: count < limit, remaining: Math.max(0, limit - count), resetAt: new Date(windowStart.getTime() + windowSeconds * 1000) };
+}
+
 export async function enforceRateLimit(key: string, limit: number, windowSeconds: number) {
   const r = await hitRateLimit(key, limit, windowSeconds);
   if (!r.allowed) {

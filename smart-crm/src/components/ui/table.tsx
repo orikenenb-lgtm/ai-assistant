@@ -22,7 +22,7 @@ export function TH({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       scope="col"
-      className={cn("h-10 whitespace-nowrap px-4 text-start align-middle text-xs font-medium uppercase tracking-wide text-muted-foreground", className)}
+      className={cn("h-10 whitespace-nowrap px-4 text-start align-middle text-xs font-medium tracking-wide text-muted-foreground", className)}
       {...props}
     />
   );

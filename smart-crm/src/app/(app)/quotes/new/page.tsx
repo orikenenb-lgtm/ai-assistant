@@ -21,9 +21,10 @@ export default async function NewQuotePage({ searchParams }: PageProps<"/quotes/
   const sp = await searchParams;
   const [defaults, templates] = await Promise.all([quoteDefaults(ctx, { dealId: uuid(sp.deal), contactId: uuid(sp.contact) }), listTemplates(ctx)]);
 
+  const breadcrumbLabel = (await getTranslations("common"))("breadcrumb");
   return (
     <div className="space-y-6">
-      <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+      <nav aria-label={breadcrumbLabel} className="text-sm text-muted-foreground">
         <Link href="/quotes" className="hover:text-foreground">
           {t("title")}
         </Link>{" "}

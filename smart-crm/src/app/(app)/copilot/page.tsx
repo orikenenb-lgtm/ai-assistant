@@ -24,7 +24,7 @@ export default async function CopilotPage() {
   return (
     <>
       <PageHeader title="AI Copilot" description={t("pageSubtitle")} />
-      <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <CopilotChat mock={isMockAi()} canApprove={ctx.can("ai.approve") && !ctx.readOnly} />
         <div className="space-y-6">
           <ProposalsPanel initial={proposals} canApprove={ctx.can("ai.approve") && !ctx.readOnly} />

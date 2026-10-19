@@ -54,7 +54,11 @@ export function CopilotChat({ mock, canApprove }: { mock: boolean; canApprove: b
       return;
     }
     setTurns([...next, { role: "assistant", content: res.data.answer, toolsUsed: res.data.toolsUsed, proposals: res.data.proposals }]);
-    requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: "smooth" }));
+    // Scroll only the message list (scrollIntoView would also move the page header off-screen).
+    requestAnimationFrame(() => {
+      const list = endRef.current?.parentElement;
+      if (list) list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
+    });
   };
 
   const decide = async (turnIndex: number, proposalId: string, approve: boolean) => {

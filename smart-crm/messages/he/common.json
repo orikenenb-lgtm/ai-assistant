@@ -62,5 +62,7 @@
   "comingFromIntegration": "דורש חיבור אינטגרציה",
   "selectPlaceholder": "בחירה…",
   "tags": "תגיות",
-  "skipToContent": "דילוג לתוכן הראשי"
+  "skipToContent": "דילוג לתוכן הראשי",
+  "breadcrumb": "פירורי לחם",
+  "toastRegion": "התראות"
 }

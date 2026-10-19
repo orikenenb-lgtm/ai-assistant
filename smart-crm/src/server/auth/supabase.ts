@@ -9,6 +9,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../env";
 import { hitRateLimit } from "../rate-limit";
+import { loginBlocked, recordLoginFailure } from "./login-limits";
 import { verifyPayload } from "../crypto";
 import type { AuthAdapter, MfaFactor, RequestInfo, SessionUser, SignInResult } from "./types";
 
@@ -71,17 +72,12 @@ export class SupabaseAuthAdapter implements AuthAdapter {
   }
 
   async signIn(input: { email: string; password: string }, req: RequestInfo): Promise<SignInResult> {
-    // Per account+IP (tight) so a third party cannot lock the account owner out from elsewhere;
-    // per account (loose) against distributed guessing; per IP against spraying.
-    const email = input.email.toLowerCase();
-    const byAccountIp = await hitRateLimit(`login:${email}:${req.ip ?? "unknown"}`, 10, 900);
-    const byAccount = await hitRateLimit(`login:${email}`, 100, 900);
-    const byIp = await hitRateLimit(`login-ip:${req.ip ?? "unknown"}`, 50, 900);
-    if (!byAccountIp.allowed || !byAccount.allowed || !byIp.allowed) return { status: "invalid_credentials" };
+    if (await loginBlocked(input.email, req.ip)) return { status: "rate_limited" };
     const sb = await this.client();
     const { error } = await sb.auth.signInWithPassword({ email: input.email, password: input.password });
     if (error) {
       if (error.code === "email_not_confirmed") return { status: "email_not_verified" };
+      await recordLoginFailure(input.email, req.ip);
       return { status: "invalid_credentials" };
     }
     const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();

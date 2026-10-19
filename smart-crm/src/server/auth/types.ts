@@ -13,7 +13,8 @@ export type SignInResult =
   | { status: "ok" }
   | { status: "mfa_required" }
   | { status: "email_not_verified" }
-  | { status: "invalid_credentials" };
+  | { status: "invalid_credentials" }
+  | { status: "rate_limited" };
 
 export type MfaFactor = { id: string; status: "verified" | "unverified"; createdAt: Date | null };
 

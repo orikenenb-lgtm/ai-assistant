@@ -60,9 +60,10 @@ export default async function QuotePage({ params }: PageProps<"/quotes/[id]">) {
     ...(status === "canceled" || status === "expired" ? [{ key: status, label: t(`status.${status}`), at: q.updatedAt }] : []),
   ];
 
+  const breadcrumbLabel = (await getTranslations("common"))("breadcrumb");
   return (
     <div className="space-y-6">
-      <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+      <nav aria-label={breadcrumbLabel} className="text-sm text-muted-foreground">
         <Link href="/quotes" className="hover:text-foreground">
           {t("title")}
         </Link>{" "}
@@ -136,7 +137,7 @@ export default async function QuotePage({ params }: PageProps<"/quotes/[id]">) {
           }}
         />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <Card>
             <CardContent className="space-y-4 p-5">
               {status !== "draft" && <Alert tone="info">{t("readOnlyNotice")}</Alert>}

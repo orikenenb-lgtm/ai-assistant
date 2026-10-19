@@ -53,9 +53,10 @@ export default async function LeadPage({ params }: PageProps<"/leads/[id]">) {
   const converted = status === "converted";
   const aiEnabled = ctx.can("ai.use") && canEdit && (await getEntitlements(db(), ctx.tenantId)).features.has("ai");
 
+  const breadcrumbLabel = (await getTranslations("common"))("breadcrumb");
   return (
     <div className="space-y-6">
-      <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+      <nav aria-label={breadcrumbLabel} className="text-sm text-muted-foreground">
         <Link href="/leads" className="hover:text-foreground">
           {t("title")}
         </Link>{" "}
@@ -155,7 +156,7 @@ export default async function LeadPage({ params }: PageProps<"/leads/[id]">) {
         )}
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <div className="space-y-6">
           <Card>
             <CardHeader>

@@ -11,6 +11,7 @@ import { env } from "../env";
 import { randomToken, sha256Hex } from "../crypto";
 import { sendEmail } from "../email";
 import { hitRateLimit } from "../rate-limit";
+import { loginBlocked, recordLoginFailure } from "./login-limits";
 import { hashPassword, verifyPassword } from "./password";
 import { generateSecret, otpauthUri, verifyTotp } from "./totp";
 import type { AuthAdapter, MfaFactor, RequestInfo, SessionInfo, SessionUser, SignInResult } from "./types";
@@ -132,16 +133,13 @@ export class LocalAuthAdapter implements AuthAdapter {
   }
 
   async signIn(input: { email: string; password: string }, req: RequestInfo): Promise<SignInResult> {
-    // Per account+IP (tight) so a third party cannot lock the account owner out from elsewhere;
-    // per account (loose) against distributed guessing; per IP against spraying.
-    const email = input.email.toLowerCase();
-    const byAccountIp = await hitRateLimit(`login:${email}:${req.ip ?? "unknown"}`, 10, 900);
-    const byAccount = await hitRateLimit(`login:${email}`, 100, 900);
-    const byIp = await hitRateLimit(`login-ip:${req.ip ?? "unknown"}`, 50, 900);
-    if (!byAccountIp.allowed || !byAccount.allowed || !byIp.allowed) return { status: "invalid_credentials" };
+    if (await loginBlocked(input.email, req.ip)) return { status: "rate_limited" };
     const user = await this.findUserByEmail(input.email);
     const ok = await verifyPassword(input.password, user?.encrypted_password ?? null);
-    if (!user || !ok) return { status: "invalid_credentials" };
+    if (!user || !ok) {
+      await recordLoginFailure(input.email, req.ip);
+      return { status: "invalid_credentials" };
+    }
     if (!user.email_confirmed_at) return { status: "email_not_verified" };
     const [{ mfa }] = await this.sql()<{ mfa: boolean }[]>`
       select exists (select 1 from auth.local_mfa_factors where user_id = ${user.id} and status = 'verified') as mfa`;
