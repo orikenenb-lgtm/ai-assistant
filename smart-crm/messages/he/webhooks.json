@@ -1,0 +1,83 @@
+{
+  "title": "Webhooks",
+  "subtitle": "שליחת אירועים בזמן אמת למערכות שלכם (חתומים ב-HMAC-SHA256)",
+  "create": "Webhook חדש",
+  "edit": "עריכת Webhook",
+  "url": "כתובת URL (HTTPS)",
+  "description": "תיאור",
+  "events": "אירועים",
+  "selectAll": "בחירת הכל",
+  "secretTitle": "סוד החתימה",
+  "secretBody": "השתמשו בסוד לאימות הכותרת X-SmartCRM-Signature. הוא לא יוצג שוב.",
+  "rotate": "החלפת סוד",
+  "rotateConfirm": "להחליף את סוד החתימה? הסוד הישן יפסיק לעבוד מיד.",
+  "active": "פעיל",
+  "disabled": "מושבת",
+  "enable": "הפעלה",
+  "disable": "השבתה",
+  "failures": "{count} כשלונות ברצף",
+  "autoDisabled": "הושבת אוטומטית אחרי כשלונות חוזרים",
+  "deliveries": "היסטוריית משלוחים",
+  "noDeliveries": "עוד לא נשלחו אירועים",
+  "redeliver": "שליחה חוזרת",
+  "redelivered": "נשלח שוב לתור",
+  "deliveryStatus": {
+    "pending": "ממתין",
+    "succeeded": "הצליח",
+    "failed": "נכשל",
+    "dead": "נכשל סופית"
+  },
+  "attempts": "ניסיונות",
+  "response": "תגובה",
+  "emptyTitle": "אין Webhooks",
+  "emptyBody": "חברו את SMART CRM AI למערכות אחרות וקבלו אירועים בזמן אמת.",
+  "deleteConfirm": "למחוק את ה-Webhook? משלוחים עתידיים יופסקו.",
+  "tooMany": "הגעתם למספר המרבי של Webhooks",
+  "verifyDocs": "איך מאמתים חתימה?",
+  "urlErrors": {
+    "invalid_url": "כתובת לא תקינה",
+    "https_required": "נדרשת כתובת HTTPS",
+    "credentials_in_url": "אין לכלול שם משתמש/סיסמה בכתובת",
+    "private_address": "לא ניתן לשלוח לכתובת פנימית או פרטית"
+  },
+  "eventNames": {
+    "contact": {
+      "created": "איש קשר נוצר",
+      "updated": "איש קשר עודכן",
+      "tag_added": "תגית נוספה לאיש קשר"
+    },
+    "company": {
+      "created": "חברה נוצרה"
+    },
+    "lead": {
+      "created": "ליד נוצר",
+      "status_changed": "סטטוס ליד השתנה",
+      "converted": "ליד הומר"
+    },
+    "deal": {
+      "created": "עסקה נוצרה",
+      "updated": "עסקה עודכנה",
+      "stage_changed": "שלב עסקה השתנה",
+      "won": "עסקה נסגרה בהצלחה",
+      "lost": "עסקה אבדה"
+    },
+    "message": {
+      "received": "הודעה התקבלה",
+      "sent": "הודעה נשלחה",
+      "failed": "שליחת הודעה נכשלה"
+    },
+    "conversation": {
+      "assigned": "שיחה שויכה",
+      "closed": "שיחה נסגרה"
+    },
+    "task": {
+      "created": "משימה נוצרה",
+      "completed": "משימה הושלמה"
+    },
+    "quote": {
+      "sent": "הצעת מחיר נשלחה",
+      "accepted": "הצעת מחיר אושרה",
+      "rejected": "הצעת מחיר נדחתה"
+    }
+  }
+}

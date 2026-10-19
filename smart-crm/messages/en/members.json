@@ -32,5 +32,19 @@
     "owner": "Full access including billing, API keys and deleting the organization",
     "manager": "Manage team, settings, automations and reports",
     "agent": "Day-to-day work: contacts, deals, tasks and WhatsApp"
-  }
+  },
+  "seatUsage": "{used} of {limit} seats in use",
+  "seatUsageUnlimited": "{used} seats in use (unlimited)",
+  "pendingEmpty": "No pending invitations",
+  "invitedAt": "Sent",
+  "inviteTitle": "Invite a team member",
+  "inviteHelp": "We'll send a join link valid for 7 days.",
+  "roleChanged": "Role updated",
+  "removed": "Removed from the organization",
+  "resent": "Invitation resent",
+  "revoked": "Invitation revoked",
+  "joined": "Joined",
+  "member": "Member",
+  "status": "Status",
+  "actions": "Actions"
 }

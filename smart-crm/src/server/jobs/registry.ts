@@ -11,3 +11,4 @@ import "@/modules/whatsapp/jobs";
 import "@/modules/tasks/jobs";
 import "@/modules/billing/jobs";
 import "@/modules/documents/jobs";
+import "@/modules/settings/jobs";

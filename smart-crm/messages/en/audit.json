@@ -1,0 +1,26 @@
+{
+  "title": "Audit log",
+  "subtitle": "Every sensitive action in the organization is recorded here and cannot be altered",
+  "action": "Action",
+  "actionPlaceholder": "e.g. contact. or member.",
+  "actor": "Actor",
+  "entityType": "Record type",
+  "from": "From",
+  "to": "To",
+  "filter": "Filter",
+  "export": "Export CSV",
+  "exportPlan": "Log export is available on the Business plan",
+  "when": "When",
+  "details": "Details",
+  "ip": "IP",
+  "empty": "No entries match the filter",
+  "actorTypes": {
+    "user": "User",
+    "system": "System",
+    "api_key": "API key",
+    "ai": "AI",
+    "admin": "Platform admin",
+    "webhook": "Webhook",
+    "automation": "Automation"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "title": "Integrations",
+  "subtitle": "Status of connections to external systems",
+  "manage": "Manage",
+  "noTester": "This integration has no connection test",
+  "states": {
+    "connected": "Connected",
+    "mock": "Demo mode",
+    "not_configured": "Not configured",
+    "error": "Missing credentials",
+    "disabled": "Off"
+  },
+  "cards": {
+    "whatsapp": {
+      "title": "WhatsApp Business",
+      "body": "Official Meta Cloud API — shared team inbox"
+    },
+    "ai": {
+      "title": "Artificial intelligence",
+      "body": "Copilot for summaries, drafts and recommendations"
+    },
+    "email": {
+      "title": "Outgoing email",
+      "body": "System email: verification, invitations, reminders"
+    },
+    "calendar": {
+      "title": "External calendar",
+      "body": "Google / Microsoft sync (coming soon)"
+    },
+    "invoicing": {
+      "title": "Accounting",
+      "body": "Issue invoices via tools like Green Invoice / iCount"
+    },
+    "billing": {
+      "title": "Billing & payments",
+      "body": "Subscriptions and payments"
+    },
+    "storage": {
+      "title": "File storage",
+      "body": "Attachments and documents"
+    }
+  },
+  "detail": {
+    "provider": "Provider",
+    "accounts": "Accounts",
+    "activeAccounts": "Active",
+    "model": "Model",
+    "from": "Sender",
+    "featureFlag": "Feature flag",
+    "liveMode": "Live billing"
+  },
+  "mockNote": "Demo mode: no real calls are made to the provider. Configure server credentials to enable it in production."
+}
