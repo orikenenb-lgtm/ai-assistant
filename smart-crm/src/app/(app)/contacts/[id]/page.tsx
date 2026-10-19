@@ -13,6 +13,10 @@ import { ContactFormDialog } from "@/modules/crm/components/contact-form-dialog"
 import { ContactDetailTabs, ContactHeaderActions, ConsentCard, ContactTagsEditor } from "@/modules/crm/components/contact-detail";
 import { stageTone } from "@/modules/crm/components/stage-badge";
 import { Avatar, Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
+import { ContactAiPanel } from "@/modules/ai/components/contact-ai-panel";
+import { isMockAi } from "@/modules/ai/runtime";
+import { db } from "@/server/db";
+import { getEntitlements } from "@/modules/billing/entitlements";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatMoney } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -139,6 +143,7 @@ export default async function ContactPage({ params }: PageProps<"/contacts/[id]"
 
       <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
         <div className="space-y-6">
+          {ctx.can("ai.use") && (await getEntitlements(db(), ctx.tenantId)).features.has("ai") && <ContactAiPanel contactId={c.id} mock={isMockAi()} />}
           <Card>
             <CardHeader>
               <CardTitle>{t("details")}</CardTitle>

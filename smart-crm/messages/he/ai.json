@@ -1,0 +1,72 @@
+{
+  "pageSubtitle": "שאלו על לקוחות, עסקאות ומשימות — ה-AI רואה רק מה שמותר לכם לראות",
+  "chatHint": "מחובר לנתוני ה-CRM שלכם בהרשאות שלכם",
+  "mockBadge": "מצב הדגמה (AI מדומה)",
+  "emptyChat": "איך אפשר לעזור? אפשר לבקש חיפוש לקוחות, סיכום הצנרת, המשימות שלך או ניתוח מגמות.",
+  "suggestions": {
+    "search": "חפש רונית",
+    "tasks": "מה המשימות שלי?",
+    "pipeline": "איך נראית הצנרת?",
+    "trends": "מה מגמות המכירות?"
+  },
+  "placeholder": "כתבו שאלה…",
+  "send": "שליחה",
+  "thinking": "חושב…",
+  "tools": {
+    "search_crm": "חיפוש ב-CRM",
+    "get_contact": "קריאת איש קשר",
+    "pipeline_summary": "סיכום צנרת",
+    "my_open_tasks": "משימות",
+    "sales_stats": "נתוני מכירות",
+    "propose_action": "הצעת פעולה"
+  },
+  "proposalTypes": {
+    "create_task": "הצעה: יצירת משימה",
+    "update_deal_stage": "הצעה: שינוי שלב בעסקה",
+    "update_lead_status": "הצעה: עדכון סטטוס ליד",
+    "send_whatsapp_message": "הצעה: שליחת הודעת WhatsApp",
+    "assign_conversation": "הצעה: שיוך שיחה",
+    "add_note": "הצעה: הוספת הערה",
+    "add_tag": "הצעה: הוספת תגית"
+  },
+  "approve": "אישור וביצוע",
+  "reject": "דחייה",
+  "approved": "ההצעה אושרה ובוצעה",
+  "rejected": "ההצעה נדחתה",
+  "awaitingApproval": "ממתין לאישור מנהל",
+  "proposalsTitle": "פעולות שממתינות לאישור",
+  "proposalsHelp": "ה-AI לא משנה נתונים לבד — כל פעולה מחכה לאישור אנושי.",
+  "noProposals": "אין הצעות ממתינות",
+  "usageTitle": "שימוש ב-AI החודש",
+  "tokensUsed": "{used} מתוך {limit} טוקנים",
+  "features": {
+    "summarize": "סיכומים",
+    "draft_reply": "טיוטות תשובה",
+    "intent": "זיהוי כוונה",
+    "classify_lead": "סיווג לידים",
+    "next_actions": "פעולות מומלצות",
+    "generate_tasks": "יצירת משימות",
+    "search": "חיפוש",
+    "trends": "מגמות",
+    "chat": "צ׳אט"
+  },
+  "summarize": "סיכום AI",
+  "nextActions": "הצעדים הבאים",
+  "nextStep": "הצעד הבא",
+  "priority": {
+    "low": "נמוכה",
+    "medium": "בינונית",
+    "high": "גבוהה",
+    "urgent": "דחופה"
+  },
+  "proposeAsNote": "הצעה לשמירה כהערה",
+  "proposalCreated": "נוצרה הצעה לאישור",
+  "aiSuggestion": "הצעת AI",
+  "disclaimer": "תוכן שנוצר ב-AI עלול להכיל טעויות. בדקו לפני שימוש.",
+  "disabled": "תכונות ה-AI כבויות בארגון",
+  "providerError": "שירות ה-AI אינו זמין כרגע. נסו שוב.",
+  "badOutput": "התקבלה תשובה לא תקינה מה-AI",
+  "nothingToAnalyze": "אין עדיין תוכן לניתוח",
+  "unsupportedAction": "סוג הפעולה אינו נתמך",
+  "proposalNotPending": "ההצעה כבר טופלה או שפג תוקפה"
+}
