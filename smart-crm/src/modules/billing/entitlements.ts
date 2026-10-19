@@ -99,3 +99,44 @@ export function trialDaysLeft(ent: Pick<Entitlements, "status" | "trialEndsAt">,
   if (ent.status !== "trialing" || !ent.trialEndsAt) return null;
   return Math.max(0, Math.ceil((ent.trialEndsAt.getTime() - now) / 86400_000));
 }
+
+export type UsageMetric = "ai_tokens" | "ai_cost_micros" | "whatsapp_messages" | "automation_runs" | "storage_bytes" | "api_calls" | "contacts_imported";
+
+const LIMIT_FOR_METRIC: Partial<Record<UsageMetric, LimitKey>> = {
+  ai_tokens: "ai_tokens_monthly",
+  whatsapp_messages: "whatsapp_messages_monthly",
+};
+
+/** Throws QUOTA_EXCEEDED when adding `adding` units would pass the plan's monthly limit. */
+export async function assertMonthlyQuota(tx: Executor, tenantId: string, metric: UsageMetric, adding = 1) {
+  const limitKey = LIMIT_FOR_METRIC[metric];
+  if (!limitKey) return;
+  const ent = await getEntitlements(tx, tenantId);
+  const limit = ent.limits[limitKey];
+  if (limit === undefined) return;
+  if ((await monthlyUsage(tx, tenantId, metric)) + adding > limit) {
+    throw new AppError("QUOTA_EXCEEDED", "errors.quotaExceeded", undefined, { metric, limit });
+  }
+}
+
+/**
+ * Records metered usage (system context — usage rows are not writable by app
+ * users). Idempotent when `idempotencyKey` is given.
+ */
+export async function recordUsage(
+  tx: Executor,
+  input: { tenantId: string; metric: UsageMetric; quantity: number; refType?: string; refId?: string; idempotencyKey?: string },
+) {
+  if (input.quantity <= 0) return;
+  await tx
+    .insert(schema.usageEvents)
+    .values({
+      tenantId: input.tenantId,
+      metric: input.metric,
+      quantity: Math.round(input.quantity),
+      refType: input.refType ?? null,
+      refId: input.refId ?? null,
+      idempotencyKey: input.idempotencyKey ?? null,
+    })
+    .onConflictDoNothing({ target: schema.usageEvents.idempotencyKey });
+}
