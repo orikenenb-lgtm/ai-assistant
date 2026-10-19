@@ -15,7 +15,8 @@
     "mention": "אזכור שלי",
     "ai_proposal": "הצעת פעולה מה-AI ממתינה לאישור",
     "automation_failed": "אוטומציה נכשלה",
-    "invitation_accepted": "הזמנה לארגון התקבלה"
+    "invitation_accepted": "הזמנה לארגון התקבלה",
+    "quote_decision": "לקוח צפה בהצעת מחיר או החליט עליה"
   },
   "saved": "ההעדפה נשמרה",
   "readOnly": "במצב תמיכה אי אפשר לשנות העדפות",

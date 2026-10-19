@@ -2,12 +2,13 @@
 
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { Clock, Paperclip, Send, ShieldOff, StickyNote } from "lucide-react";
+import { Clock, Paperclip, Send, ShieldOff, Sparkles, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { addConversationNoteAction, sendMessageAction } from "../actions";
+import { draftReplyAction } from "@/modules/ai/actions";
 import { TemplateDialog, type TemplateOption } from "./template-dialog";
 
 type Props = {
@@ -18,10 +19,14 @@ type Props = {
   canReply: boolean;
   templates: TemplateOption[];
   onSent: () => void;
+  /** Shows the "draft with AI" button (ai.use permission + AI plan feature). */
+  aiDraft?: boolean;
 };
 
-export function Composer({ conversationId, window, consent, accountActive, canReply, templates, onSent }: Props) {
+export function Composer({ conversationId, window, consent, accountActive, canReply, templates, onSent, aiDraft }: Props) {
   const t = useTranslations("inbox.composer");
+  const tAi = useTranslations("ai");
+  const [drafting, setDrafting] = useState(false);
   const tErr = useTranslations("inbox");
   const [mode, setMode] = useState<"reply" | "note">("reply");
   const [text, setText] = useState("");
@@ -43,6 +48,16 @@ export function Composer({ conversationId, window, consent, accountActive, canRe
     if (!res.ok) return void toast.error(res.error.message);
     setText("");
     onSent();
+  };
+
+  // The draft only fills the textarea — the agent reviews and sends it themselves.
+  const draft = async () => {
+    setDrafting(true);
+    const res = await draftReplyAction({ conversationId });
+    setDrafting(false);
+    if (!res.ok) return void toast.error(res.error.message);
+    setText(res.data.reply);
+    toast.info(tAi("draftInserted"));
   };
 
   const sendTemplate = async (input: { templateId: string; headerParams: string[]; bodyParams: string[] }) => {
@@ -112,6 +127,11 @@ export function Composer({ conversationId, window, consent, accountActive, canRe
           {mode === "reply" && (
             <div className="flex shrink-0 gap-1 pb-0.5">
               <TemplateDialog templates={templates} onSend={sendTemplate} prominent={!window.open} />
+              {window.open && aiDraft && (
+                <Button type="button" variant="ghost" size="icon-sm" onClick={draft} loading={drafting} aria-label={tAi("draftReply")} title={tAi("draftReply")}>
+                  {!drafting && <Sparkles className="text-ai" />}
+                </Button>
+              )}
               {window.open && (
                 <>
                   <input

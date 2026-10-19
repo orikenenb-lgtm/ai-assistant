@@ -15,6 +15,7 @@ export const NOTIFICATION_EVENTS = [
   "ai_proposal",
   "automation_failed",
   "invitation_accepted",
+  "quote_decision",
 ] as const;
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
 

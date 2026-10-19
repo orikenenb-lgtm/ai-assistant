@@ -688,8 +688,7 @@ export async function publicQuotePdf(token: string): Promise<{ bytes: Uint8Array
   return { bytes: await render(prep), fileName: pdfFileName(found.quote) };
 }
 
-// Quote decisions reuse the notification pipeline with their own type name.
-const QUOTE_NOTIFICATION = "quote_decision" as NotificationType;
+const QUOTE_NOTIFICATION: NotificationType = "quote_decision";
 
 /** Records a customer view (first view moves sent → viewed and notifies the owner). */
 export async function recordPublicView(token: string, meta: RequestMeta = {}): Promise<void> {

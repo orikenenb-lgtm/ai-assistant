@@ -224,9 +224,11 @@ export function ContactDetailTabs({
           ) : (
             <ul className="divide-y divide-border rounded-xl border border-border">
               {tasks.map((x) => (
-                <li key={x.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <span className={x.status === "done" ? "text-muted-foreground line-through" : "font-medium"}>{x.title}</span>
-                  <span className="text-sm text-muted-foreground">{x.due ?? ""}</span>
+                <li key={x.id}>
+                  <Link href={`/tasks?task=${x.id}`} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-accent">
+                    <span className={x.status === "done" ? "text-muted-foreground line-through" : "font-medium"}>{x.title}</span>
+                    <span className="text-sm text-muted-foreground">{x.due ?? ""}</span>
+                  </Link>
                 </li>
               ))}
             </ul>

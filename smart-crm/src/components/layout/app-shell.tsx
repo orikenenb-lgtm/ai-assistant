@@ -47,6 +47,7 @@ import { CommandPalette } from "./command-palette";
 import { NotificationsBell } from "./notifications-bell";
 import { signOutAction } from "@/modules/auth/actions";
 import { switchTenantAction } from "@/modules/org/actions";
+import { endSupportSessionAction } from "@/modules/admin/actions";
 
 const ICONS: Record<NavKey, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -210,6 +211,28 @@ function UserMenu({ user }: { user: ShellProps["user"] }) {
   );
 }
 
+/** Ends the super admin's support session and returns to the admin console. */
+function EndSupportButton({ label }: { label: string }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={() =>
+        start(async () => {
+          await endSupportSessionAction({});
+          router.push("/admin/support");
+          router.refresh();
+        })
+      }
+      className="rounded-md border border-black/30 px-2 py-0.5 text-xs font-semibold hover:bg-black/10 disabled:opacity-60"
+    >
+      {label}
+    </button>
+  );
+}
+
 export function AppShell(props: ShellProps) {
   const t = useTranslations("nav");
   const tc = useTranslations("common");
@@ -272,8 +295,9 @@ export function AppShell(props: ShellProps) {
 
       <div className="flex min-w-0 flex-col">
         {props.supportMode && (
-          <div className="flex items-center justify-center gap-2 bg-warning px-4 py-1.5 text-sm font-medium text-black" role="status">
+          <div className="flex flex-wrap items-center justify-center gap-2 bg-warning px-4 py-1.5 text-sm font-medium text-black" role="status">
             <Eye className="size-4" /> {tsup("banner", { org: props.tenant.name })}
+            <EndSupportButton label={tsup("end")} />
           </div>
         )}
         {props.trialDaysLeft !== null && !props.supportMode && (

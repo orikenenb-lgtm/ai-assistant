@@ -11,6 +11,7 @@ import { listAssignableMembers } from "@/modules/org/members";
 import { listAccounts, listTemplates, mockAllowed } from "@/modules/whatsapp/accounts";
 import { openConversationForContact } from "@/modules/inbox/service";
 import { InboxApp } from "@/modules/inbox/components/inbox-app";
+import { isMockAi } from "@/modules/ai/runtime";
 import { Button } from "@/components/ui/button";
 import { Alert, EmptyState } from "@/components/ui/primitives";
 
@@ -109,6 +110,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
           .map((x) => ({ id: x.id, accountId: x.accountId, name: x.name, language: x.language, category: x.category, components: x.components }))}
         initialConversationId={conversationParam && UUID.test(conversationParam) ? conversationParam : null}
         devSimulator={mockAllowed() && ctx.can("inbox.reply") && !ctx.readOnly && accounts.some((a) => a.provider === "mock")}
+        ai={{ enabled: ctx.can("ai.use") && !ctx.readOnly && ent.features.has("ai"), mock: isMockAi() }}
       />
     </>
   );

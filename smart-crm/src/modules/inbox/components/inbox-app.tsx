@@ -28,6 +28,7 @@ import {
 } from "../actions";
 import type { ConversationListItem, ThreadMessage, ThreadNote } from "../service";
 import { Composer } from "./composer";
+import { ConversationAiPanel } from "@/modules/ai/components/conversation-ai-panel";
 import { MessageBubble, NoteBubble } from "./message-bubble";
 import type { TemplateOption } from "./template-dialog";
 import { useInboxLive } from "./use-inbox-live";
@@ -44,6 +45,8 @@ export type InboxBootstrap = {
   templates: (TemplateOption & { accountId: string })[];
   initialConversationId: string | null;
   devSimulator: boolean;
+  /** AI Copilot available to this user (permission + plan); `aiMock` labels the demo provider. */
+  ai: { enabled: boolean; mock: boolean };
 };
 
 type Filters = { assignee: "all" | "mine" | "unassigned"; status: "open" | "pending" | "closed" | "all"; attention: boolean; q: string };
@@ -386,6 +389,7 @@ export function InboxApp(props: InboxBootstrap) {
               canReply={props.canReply}
               templates={templates}
               onSent={refreshAll}
+              aiDraft={props.ai.enabled}
             />
           </>
         )}
@@ -438,6 +442,7 @@ export function InboxApp(props: InboxBootstrap) {
                 </dd>
               </div>
             </dl>
+            {props.ai.enabled && <ConversationAiPanel conversationId={thread.conversation.id} mock={props.ai.mock} />}
             {props.canReply && (
               <label className="flex items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm">
                 <span>{thread.conversation.handoffState === "human" ? t("handoff") : t("handoffBot")}</span>

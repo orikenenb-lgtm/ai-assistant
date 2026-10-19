@@ -14,6 +14,9 @@ import type { LeadStatus } from "@/modules/sales/schemas";
 import { listTags } from "@/modules/crm/tags";
 import { listAssignableMembers } from "@/modules/org/members";
 import { Alert, Avatar, Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
+import { LeadAiButton } from "@/modules/ai/components/lead-ai-button";
+import { getEntitlements } from "@/modules/billing/entitlements";
+import { db } from "@/server/db";
 import { Button } from "@/components/ui/button";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
@@ -48,6 +51,7 @@ export default async function LeadPage({ params }: PageProps<"/leads/[id]">) {
   const canEdit = ctx.can("leads.update") && !ctx.readOnly;
   const status = l.status as LeadStatus;
   const converted = status === "converted";
+  const aiEnabled = ctx.can("ai.use") && canEdit && (await getEntitlements(db(), ctx.tenantId)).features.has("ai");
 
   return (
     <div className="space-y-6">
@@ -195,6 +199,11 @@ export default async function LeadPage({ params }: PageProps<"/leads/[id]">) {
                   <p className="whitespace-pre-wrap text-sm" dir="auto">
                     {l.message}
                   </p>
+                </div>
+              )}
+              {aiEnabled && !converted && (
+                <div className="mt-4 border-t border-border pt-4">
+                  <LeadAiButton leadId={l.id} />
                 </div>
               )}
               {l.aiClassificationReason && (

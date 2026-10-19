@@ -14,7 +14,10 @@ export type NotificationType =
   | "mention"
   | "ai_proposal"
   | "automation_failed"
-  | "invitation_accepted";
+  | "invitation_accepted"
+  | "quote_decision"
+  /** Payment problems; always delivered (no opt-out). */
+  | "billing";
 
 type Localized = string | { he: string; en: string };
 

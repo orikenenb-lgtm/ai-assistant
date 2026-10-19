@@ -1,4 +1,5 @@
 {
   "banner": "Support mode (read-only) in {org} — all views are audit-logged",
-  "readOnly": "Read-only"
+  "readOnly": "Read-only",
+  "end": "End support session"
 }

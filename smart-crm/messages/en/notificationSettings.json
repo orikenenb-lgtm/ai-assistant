@@ -15,7 +15,8 @@
     "mention": "I'm mentioned",
     "ai_proposal": "AI action awaiting approval",
     "automation_failed": "An automation failed",
-    "invitation_accepted": "An invitation was accepted"
+    "invitation_accepted": "An invitation was accepted",
+    "quote_decision": "A customer viewed or decided on a quote"
   },
   "saved": "Preference saved",
   "readOnly": "Preferences can't be changed in support mode",

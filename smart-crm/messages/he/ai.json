@@ -68,5 +68,38 @@
   "badOutput": "התקבלה תשובה לא תקינה מה-AI",
   "nothingToAnalyze": "אין עדיין תוכן לניתוח",
   "unsupportedAction": "סוג הפעולה אינו נתמך",
-  "proposalNotPending": "ההצעה כבר טופלה או שפג תוקפה"
+  "proposalNotPending": "ההצעה כבר טופלה או שפג תוקפה",
+  "conversationTitle": "AI לשיחה",
+  "summarizeConversation": "סיכום שיחה",
+  "detectIntent": "זיהוי כוונה",
+  "draftReply": "טיוטת תשובה ב-AI",
+  "draftInserted": "הטיוטה הוכנסה לתיבת הכתיבה. בדקו לפני השליחה.",
+  "keyPoints": "נקודות עיקריות",
+  "openQuestions": "שאלות פתוחות",
+  "suspicious": "זוהה בשיחה טקסט שמנסה להשפיע על ה-AI. התייחסו לסיכום בזהירות.",
+  "needsHuman": "מומלץ מענה אנושי",
+  "confidence": "ביטחון {value}%",
+  "classifyLead": "סיווג ליד ב-AI",
+  "leadScore": "ציון {score}",
+  "sentiments": {
+    "positive": "חיובי",
+    "neutral": "ניטרלי",
+    "negative": "שלילי"
+  },
+  "intents": {
+    "purchase": "רכישה",
+    "pricing": "מחיר",
+    "support": "תמיכה",
+    "complaint": "תלונה",
+    "scheduling": "תיאום",
+    "information": "מידע",
+    "spam": "ספאם",
+    "other": "אחר"
+  },
+  "leadClasses": {
+    "hot": "חם",
+    "warm": "פושר",
+    "cold": "קר",
+    "spam": "ספאם"
+  }
 }

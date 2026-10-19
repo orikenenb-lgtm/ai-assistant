@@ -68,5 +68,38 @@
   "badOutput": "The AI returned an invalid response",
   "nothingToAnalyze": "Nothing to analyze yet",
   "unsupportedAction": "This action type is not supported",
-  "proposalNotPending": "This proposal was already handled or expired"
+  "proposalNotPending": "This proposal was already handled or expired",
+  "conversationTitle": "Conversation AI",
+  "summarizeConversation": "Summarize",
+  "detectIntent": "Detect intent",
+  "draftReply": "Draft reply with AI",
+  "draftInserted": "Draft inserted into the composer. Review before sending.",
+  "keyPoints": "Key points",
+  "openQuestions": "Open questions",
+  "suspicious": "The conversation contains text that tries to steer the AI. Treat the summary with care.",
+  "needsHuman": "Needs a human",
+  "confidence": "Confidence {value}%",
+  "classifyLead": "Score lead with AI",
+  "leadScore": "Score {score}",
+  "sentiments": {
+    "positive": "Positive",
+    "neutral": "Neutral",
+    "negative": "Negative"
+  },
+  "intents": {
+    "purchase": "Purchase",
+    "pricing": "Pricing",
+    "support": "Support",
+    "complaint": "Complaint",
+    "scheduling": "Scheduling",
+    "information": "Information",
+    "spam": "Spam",
+    "other": "Other"
+  },
+  "leadClasses": {
+    "hot": "Hot",
+    "warm": "Warm",
+    "cold": "Cold",
+    "spam": "Spam"
+  }
 }
