@@ -48,7 +48,16 @@ export function backoffMs(attempt: number): number {
   return Math.round(base * (0.8 + Math.random() * 0.4));
 }
 
-type JobRow = { id: string; tenant_id: string | null; type: string; payload: Record<string, unknown>; attempts: number; max_attempts: number };
+type JobRow = {
+  id: string;
+  tenant_id: string | null;
+  type: string;
+  payload: Record<string, unknown>;
+  attempts: number;
+  max_attempts: number;
+  priority: number;
+  run_at: Date | string;
+};
 
 /** Atomically claims up to `limit` due jobs. Safe with any number of workers. */
 export async function claimJobs(workerId: string, limit: number, types?: string[]): Promise<Job[]> {
@@ -62,8 +71,13 @@ export async function claimJobs(workerId: string, limit: number, types?: string[
         order by priority desc, run_at, id
         limit ${limit}
         for update skip locked)
-    returning j.id, j.tenant_id, j.type, j.payload, j.attempts, j.max_attempts`);
-  return rows.map((r) => ({
+    returning j.id, j.tenant_id, j.type, j.payload, j.attempts, j.max_attempts, j.priority, j.run_at`);
+  // RETURNING does not preserve the subquery's ORDER BY: restore FIFO order so
+  // e.g. outbound messages in one batch go out in the order they were queued.
+  const ordered = [...rows].sort(
+    (a, b) => b.priority - a.priority || new Date(a.run_at).getTime() - new Date(b.run_at).getTime() || Number(a.id) - Number(b.id),
+  );
+  return ordered.map((r) => ({
     id: Number(r.id),
     tenantId: r.tenant_id,
     type: r.type,
