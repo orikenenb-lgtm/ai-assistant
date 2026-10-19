@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { closeDb, withUserTx, schema } from "@/server/db";
 import { AppError } from "@/server/errors";
 import { systemCtx } from "@/server/context";
-import { listPreferences, savePreference } from "@/app/(app)/settings/notifications/preferences";
+import { listPreferences, NOTIFICATION_EVENTS, savePreference } from "@/app/(app)/settings/notifications/preferences";
 import { createTeam } from "../support/factories";
 
 afterAll(async () => {
@@ -14,7 +14,8 @@ describe("notification preferences", () => {
   it("defaults to in-app only and saves the user's own choices", async () => {
     const T = await createTeam("Prefs Co");
     const defaults = await listPreferences(T.agentCtx);
-    expect(defaults).toHaveLength(11);
+    expect(defaults).toHaveLength(NOTIFICATION_EVENTS.length);
+    expect(defaults.map((d) => d.eventType)).toContain("quote_decision");
     expect(defaults.every((p) => p.inApp && !p.email)).toBe(true);
 
     await savePreference(T.agentCtx, { eventType: "deal_won", inApp: false, email: true });
