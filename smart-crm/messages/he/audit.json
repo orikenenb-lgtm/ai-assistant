@@ -1,0 +1,26 @@
+{
+  "title": "יומן ביקורת",
+  "subtitle": "כל פעולה רגישה בארגון נרשמת כאן ואינה ניתנת לשינוי",
+  "action": "פעולה",
+  "actionPlaceholder": "למשל: contact. או member.",
+  "actor": "מבצע",
+  "entityType": "סוג רשומה",
+  "from": "מתאריך",
+  "to": "עד תאריך",
+  "filter": "סינון",
+  "export": "ייצוא CSV",
+  "exportPlan": "ייצוא היומן זמין בתוכנית Business",
+  "when": "מתי",
+  "details": "פרטים",
+  "ip": "IP",
+  "empty": "אין רשומות התואמות לסינון",
+  "actorTypes": {
+    "user": "משתמש",
+    "system": "מערכת",
+    "api_key": "מפתח API",
+    "ai": "AI",
+    "admin": "מנהל פלטפורמה",
+    "webhook": "Webhook",
+    "automation": "אוטומציה"
+  }
+}

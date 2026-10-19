@@ -88,7 +88,7 @@ function toApiError(e: unknown): ApiError {
       422,
       "VALIDATION",
       "Request validation failed",
-      e.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+      e.issues.map((i) => ({ path: i.path.join("."), message: englishMessage(i.message) })),
     );
   }
   if (isAppError(e)) {

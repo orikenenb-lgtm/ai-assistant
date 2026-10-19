@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, like, lt, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, isNotNull, like, lt, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "@/server/db";
 import { assertCan, type ServiceCtx } from "@/server/context";
@@ -120,4 +120,18 @@ export async function auditActors(ctx: ServiceCtx) {
       .innerJoin(schema.profiles, eq(schema.profiles.id, schema.memberships.userId))
       .where(eq(schema.memberships.tenantId, ctx.tenantId)),
   );
+}
+
+/** Record types present in this tenant's log (filter options; new modules appear automatically). */
+export async function auditEntityTypes(ctx: ServiceCtx): Promise<string[]> {
+  assertCan(ctx, "audit.view");
+  const rows = await ctx.run((tx) =>
+    tx
+      .selectDistinct({ entityType: schema.auditLogs.entityType })
+      .from(schema.auditLogs)
+      .where(and(eq(schema.auditLogs.tenantId, ctx.tenantId), isNotNull(schema.auditLogs.entityType)))
+      .orderBy(asc(schema.auditLogs.entityType))
+      .limit(200),
+  );
+  return rows.map((r) => r.entityType).filter((v): v is string => Boolean(v));
 }

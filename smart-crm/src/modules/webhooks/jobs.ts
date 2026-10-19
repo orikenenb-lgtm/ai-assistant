@@ -180,6 +180,7 @@ export async function deliverWebhook(job: Job) {
     "User-Agent": "SmartCRM-Webhooks/1.0",
     [SIGNATURE_HEADER]: signWebhookPayload(secret, body),
     "X-SmartCRM-Event": delivery.eventType,
+    "X-SmartCRM-Event-Id": delivery.eventId,
     "X-SmartCRM-Delivery": delivery.id,
   };
 
