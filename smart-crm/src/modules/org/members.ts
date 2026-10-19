@@ -5,6 +5,7 @@ import { audit } from "@/server/audit";
 import { AppError, pgErrorCode } from "@/server/errors";
 import { assignableRoles, canManageMember, type Role } from "@/server/rbac/permissions";
 import { assertSeatAvailable } from "@/modules/billing/entitlements";
+import { queueSeatSync } from "@/modules/billing/seats";
 
 export type MemberView = {
   userId: string;
@@ -86,6 +87,7 @@ export async function setMemberStatus(ctx: ServiceCtx, userId: string, status: "
       if (status === "active") await assertSeatAvailable(tx, ctx.tenantId);
       await tx.update(schema.memberships).set({ status }).where(eq(schema.memberships.id, m.id));
       await audit(tx, ctx, { action: status === "active" ? "member.enabled" : "member.disabled", entityType: "membership", entityId: userId });
+      await queueSeatSync(tx, ctx.tenantId);
     })
     .catch(mapOwnerError);
 }
@@ -99,6 +101,7 @@ export async function removeMember(ctx: ServiceCtx, userId: string) {
       // Owned records are unassigned automatically (ON DELETE SET NULL on the composite FKs).
       await tx.delete(schema.memberships).where(eq(schema.memberships.id, m.id));
       await audit(tx, ctx, { action: "member.removed", entityType: "membership", entityId: userId, metadata: { role: m.role } });
+      await queueSeatSync(tx, ctx.tenantId);
     })
     .catch(mapOwnerError);
 }

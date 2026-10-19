@@ -771,6 +771,7 @@ export const subscriptions = pgTable("subscriptions", {
   canceledAt: timestamp("canceled_at", { withTimezone: true, mode: "date" }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).default(sql`now()`).notNull(),
+  pastDueSince: timestamp("past_due_since", { withTimezone: true, mode: "date" }),
 });
 
 export const supportSessions = pgTable("support_sessions", {

@@ -9,3 +9,4 @@ import "@/modules/ai/proposals";
 import "@/modules/automation/engine";
 import "@/modules/whatsapp/jobs";
 import "@/modules/tasks/jobs";
+import "@/modules/billing/jobs";
