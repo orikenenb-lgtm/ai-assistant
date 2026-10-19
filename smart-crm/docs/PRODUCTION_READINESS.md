@@ -36,7 +36,7 @@ real providers, and approvals.
 |---|---|
 | TypeScript strict (`next typegen && tsc`) | clean |
 | ESLint (incl. React Compiler rules) | clean |
-| Unit + integration tests (real PostgreSQL 16 with RLS) | **442 passed** across 39 files |
+| Unit + integration tests (real PostgreSQL 16 with RLS) | **447 passed** across 40 files |
 | End-to-end (Playwright, production build, Hebrew UI) | **22 scenarios passed** (listed below) |
 | `next build` | passes |
 | Schema drift (`db:check` against a freshly migrated database) | no drift |

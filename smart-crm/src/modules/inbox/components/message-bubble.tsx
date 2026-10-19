@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { AlertCircle, Bot, Check, CheckCheck, Clock, FileText, StickyNote, Workflow } from "lucide-react";
 import { Tooltip } from "@/components/ui/menu";
-import { formatTime } from "@/lib/format";
+import { formatDayLabel, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ThreadMessage, ThreadNote } from "../service";
 
@@ -91,6 +91,16 @@ export function MessageBubble({ m }: { m: ThreadMessage }) {
           </Tooltip>
         )}
       </div>
+    </div>
+  );
+}
+
+export function DaySeparator({ date }: { date: Date | string }) {
+  const locale = useLocale() as "he" | "en";
+  const label = formatDayLabel(date, locale);
+  return (
+    <div role="separator" aria-label={label} className="flex justify-center py-1" data-testid="day-separator">
+      <span className="rounded-full border border-border bg-surface px-3 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs">{label}</span>
     </div>
   );
 }

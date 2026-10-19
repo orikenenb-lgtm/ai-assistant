@@ -31,6 +31,27 @@ export function formatTime(d: Date | string | null | undefined, locale: AppLocal
   return new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }).format(new Date(d));
 }
 
+/** Calendar day of `d` in `timeZone` as YYYY-MM-DD (for grouping by day). */
+export function dayKey(d: Date | string | number, timeZone = "Asia/Jerusalem"): string {
+  return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone }).format(new Date(d));
+}
+
+/** Day heading for chat-style lists: today, yesterday, a weekday within the last week, otherwise the date. */
+export function formatDayLabel(d: Date | string, locale: AppLocale, timeZone = "Asia/Jerusalem", now: Date | number = Date.now()): string {
+  const key = dayKey(d, timeZone);
+  const today = dayKey(now, timeZone);
+  const days = Math.round((Date.parse(today) - Date.parse(key)) / 86_400_000);
+  if (days === 0 || days === 1) {
+    const s = new Intl.RelativeTimeFormat(intlLocale(locale), { numeric: "auto" }).format(-days, "day");
+    return s.charAt(0).toLocaleUpperCase(intlLocale(locale)) + s.slice(1);
+  }
+  const opts: Intl.DateTimeFormatOptions =
+    days > 1 && days < 7
+      ? { weekday: "long", timeZone }
+      : { weekday: "long", day: "numeric", month: "long", timeZone, ...(key.slice(0, 4) !== today.slice(0, 4) && { year: "numeric" }) };
+  return new Intl.DateTimeFormat(intlLocale(locale), opts).format(new Date(d));
+}
+
 export function formatRelative(d: Date | string, locale: AppLocale, now = Date.now()): string {
   const diffSec = Math.round((new Date(d).getTime() - now) / 1000);
   const rtf = new Intl.RelativeTimeFormat(intlLocale(locale), { numeric: "auto" });

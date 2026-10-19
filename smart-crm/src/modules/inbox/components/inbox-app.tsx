@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowRight, Beaker, ExternalLink, Inbox, MessageCirclePlus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { AsyncCombobox, type ComboOption } from "@/components/data/async-combobox";
 import { useRemoteData } from "@/hooks/use-remote-data";
 import { formatPhone } from "@/lib/phone";
-import { formatRelative } from "@/lib/format";
+import { dayKey, formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { searchContactsAction } from "@/modules/crm/lookup-actions";
 import { simulateStatusAction } from "@/modules/whatsapp/actions";
@@ -29,7 +29,7 @@ import {
 import type { ConversationListItem, ThreadMessage, ThreadNote } from "../service";
 import { Composer } from "./composer";
 import { ConversationAiPanel } from "@/modules/ai/components/conversation-ai-panel";
-import { MessageBubble, NoteBubble } from "./message-bubble";
+import { DaySeparator, MessageBubble, NoteBubble } from "./message-bubble";
 import type { TemplateOption } from "./template-dialog";
 import { useInboxLive } from "./use-inbox-live";
 
@@ -378,7 +378,12 @@ export function InboxApp(props: InboxBootstrap) {
                   </Button>
                 </div>
               )}
-              {items.map((it) => (it.kind === "m" ? <MessageBubble key={it.id} m={it} /> : <NoteBubble key={it.id} n={it} />))}
+              {items.map((it, i) => (
+                <Fragment key={it.id}>
+                  {(i === 0 || dayKey(items[i - 1].createdAt) !== dayKey(it.createdAt)) && <DaySeparator date={it.createdAt} />}
+                  {it.kind === "m" ? <MessageBubble m={it} /> : <NoteBubble n={it} />}
+                </Fragment>
+              ))}
             </div>
 
             <Composer

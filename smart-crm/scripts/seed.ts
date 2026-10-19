@@ -113,6 +113,15 @@ async function main() {
   console.log(`demo tenant ${tenant.name} created — sign in as owner@demo.test / ${PASSWORD}`);
 }
 
+/** Demo WhatsApp dialogues: customer and team alternate, starting with the customer. */
+const CHAT_SCRIPTS = [
+  ["שלום, יש לכם במלאי בובות פרווה?", "היי! כן, יש במלאי 🙂 כמה יחידות צריך?", "בערך 100. מה המחיר לסיטונאי?", "שולחת הצעת מחיר עכשיו", "קיבלתי, תודה! אפשר משלוח עד יום חמישי?", "בטח, נתאם משלוח לחמישי בבוקר"],
+  ["היי, ראיתי את קטלוג החורף. יש גם ערכות יצירה?", "כן! יש 12 דגמים חדשים, אשלח תמונות", "מעולה. מה זמן האספקה?", "3–5 ימי עסקים מרגע ההזמנה", "אוקיי, נחזור אליכם עד סוף השבוע", "בשמחה, אני כאן לכל שאלה"],
+  ["בוקר טוב, ההזמנה שלנו כבר יצאה?", "בוקר טוב! היא יצאה אתמול ותגיע מחר", "יופי. אפשר לקבל גם את המסמכים להזמנה?", "כן, שלחתי למייל של הנהלת החשבונות", "תודה רבה!", "תמיד בשמחה 🙏"],
+  ["שלום, אנחנו חנות חדשה בבאר שבע. אפשר לקבל מחירון?", "שלום וברוכים הבאים! שולחת מחירון סיטונאי", "תודה. יש מינימום הזמנה?", "מינימום 1,500 ₪, ומשלוח חינם מעל 3,000 ₪", "מצוין, נכין הזמנה ראשונה", "נשמח! אפשר גם לתאם ביקור של סוכן"],
+  ["היי, בהזמנת הלגו חסרות 2 קופסאות", "סליחה על זה! בודקת מול המחסן", "תודה, מחכה לעדכון", "מצאנו — הן יוצאות היום במשלוח מיוחד", "מעולה, תודה על הטיפול המהיר", "בשמחה, ועמכם הסליחה"],
+];
+
 /** Deterministic PRNG so demo data looks the same on every reset. */
 function prng(seed: number) {
   return () => {
@@ -242,13 +251,15 @@ async function seedSalesHistory(t: string, users: string[], contactIds: string[]
       .returning();
     let ts = now - between(1, 25) * DAY;
     let last = ts;
+    let lastInbound: number | null = null;
     let lastBody = "";
     for (let k = 0; k < 6; k++) {
       const inbound = k % 2 === 0;
-      ts += inbound ? between(2, 30) * 3_600_000 : between(2, 95) * 60_000;
+      ts += inbound ? between(1, 8) * 3_600_000 : between(2, 95) * 60_000;
       if (ts > now) break;
       last = ts;
-      lastBody = inbound ? pick(["שלום, יש לכם במלאי?", "מה המחיר לסיטונאי?", "אפשר משלוח עד יום חמישי?"]) : pick(["היי! כן, יש במלאי 🙂", "שולחת הצעת מחיר עכשיו", "בטח, נתאם משלוח"]);
+      if (inbound) lastInbound = ts;
+      lastBody = CHAT_SCRIPTS[i % CHAT_SCRIPTS.length][k];
       await db().insert(schema.messages).values({
         tenantId: t,
         conversationId: conv.id,
@@ -261,7 +272,10 @@ async function seedSalesHistory(t: string, users: string[], contactIds: string[]
         createdAt: new Date(ts),
       });
     }
-    await db().update(schema.conversations).set({ lastMessageAt: new Date(last), lastMessagePreview: lastBody || null }).where(sql`id = ${conv.id}`);
+    await db()
+      .update(schema.conversations)
+      .set({ lastMessageAt: new Date(last), lastInboundAt: lastInbound ? new Date(lastInbound) : null, lastMessagePreview: lastBody || null })
+      .where(sql`id = ${conv.id}`);
   }
 
   // Tasks: some done, some due today, some overdue.
