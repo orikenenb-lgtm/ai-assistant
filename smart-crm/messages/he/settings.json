@@ -1,0 +1,26 @@
+{
+  "title": "הגדרות",
+  "groups": {
+    "org": "ארגון",
+    "crm": "CRM",
+    "channels": "ערוצים ואינטגרציות",
+    "developer": "מפתחים",
+    "account": "אישי"
+  },
+  "sections": {
+    "general": "פרופיל הארגון",
+    "team": "צוות והרשאות",
+    "billing": "חיוב ותוכנית",
+    "notifications": "התראות",
+    "pipelines": "צנרות מכירה",
+    "custom-fields": "שדות מותאמים",
+    "tags": "תגיות",
+    "documents": "תבניות מסמכים",
+    "whatsapp": "WhatsApp",
+    "integrations": "אינטגרציות",
+    "api-keys": "מפתחות API",
+    "webhooks": "Webhooks",
+    "privacy": "פרטיות ונתונים",
+    "audit": "יומן ביקורת"
+  }
+}

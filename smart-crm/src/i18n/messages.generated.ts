@@ -17,6 +17,7 @@ import he_nav from "../../messages/he/nav.json";
 import he_notifications from "../../messages/he/notifications.json";
 import he_onboarding from "../../messages/he/onboarding.json";
 import he_palette from "../../messages/he/palette.json";
+import he_settings from "../../messages/he/settings.json";
 import he_support from "../../messages/he/support.json";
 import he_tags from "../../messages/he/tags.json";
 import he_validation from "../../messages/he/validation.json";
@@ -37,6 +38,7 @@ import en_nav from "../../messages/en/nav.json";
 import en_notifications from "../../messages/en/notifications.json";
 import en_onboarding from "../../messages/en/onboarding.json";
 import en_palette from "../../messages/en/palette.json";
+import en_settings from "../../messages/en/settings.json";
 import en_support from "../../messages/en/support.json";
 import en_tags from "../../messages/en/tags.json";
 import en_validation from "../../messages/en/validation.json";
@@ -59,6 +61,7 @@ export const he = {
   "notifications": he_notifications,
   "onboarding": he_onboarding,
   "palette": he_palette,
+  "settings": he_settings,
   "support": he_support,
   "tags": he_tags,
   "validation": he_validation,
@@ -81,6 +84,7 @@ export const en = {
   "notifications": en_notifications,
   "onboarding": en_onboarding,
   "palette": en_palette,
+  "settings": en_settings,
   "support": en_support,
   "tags": en_tags,
   "validation": en_validation,
