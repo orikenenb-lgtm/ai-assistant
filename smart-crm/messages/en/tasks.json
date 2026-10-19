@@ -1,0 +1,96 @@
+{
+  "title": "Tasks",
+  "subtitle": "What needs doing, when, and who owns it",
+  "new": "New task",
+  "edit": "Edit task",
+  "created": "Task created",
+  "saved": "Task updated",
+  "deleted": "Task deleted",
+  "tabs": {
+    "mine": "My tasks",
+    "team": "Team",
+    "overdue": "Overdue",
+    "today": "Due today",
+    "done": "Completed"
+  },
+  "fields": {
+    "title": "Title",
+    "description": "Description",
+    "dueAt": "Due date & time",
+    "reminder": "Reminder",
+    "remindAt": "Reminder time",
+    "priority": "Priority",
+    "status": "Status",
+    "assignee": "Assignee",
+    "teamTask": "Team task (shared with everyone)",
+    "link": "Related to…",
+    "contact": "Contact",
+    "company": "Company",
+    "deal": "Deal",
+    "lead": "Lead"
+  },
+  "priorities": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "statuses": {
+    "open": "Open",
+    "in_progress": "In progress",
+    "done": "Done",
+    "canceled": "Canceled"
+  },
+  "reminders": {
+    "none": "No reminder",
+    "at_due": "At due time",
+    "15m": "15 minutes before",
+    "1h": "1 hour before",
+    "1d": "1 day before",
+    "custom": "Custom…"
+  },
+  "entityFilter": {
+    "label": "Related to",
+    "contact": "Contacts",
+    "company": "Companies",
+    "deal": "Deals",
+    "lead": "Leads",
+    "none": "Not linked"
+  },
+  "dueFrom": "Due from",
+  "dueTo": "Due to",
+  "noDue": "No due date",
+  "overdueBy": "Overdue",
+  "dueToday": "Today",
+  "complete": "Mark complete",
+  "reopen": "Reopen",
+  "start": "Start",
+  "completed": "Completed",
+  "reopened": "Task reopened",
+  "markedDone": "Nice! Task completed",
+  "teamBadge": "Team",
+  "searchPlaceholder": "Search tasks…",
+  "emptyTitle": "No tasks here",
+  "emptyBody": "Create a task or switch tabs.",
+  "emptyDone": "No completed tasks yet",
+  "allClear": "No open tasks — all caught up 🎉",
+  "deleteConfirm": "Delete the task \"{title}\"?",
+  "cannotAssignOthers": "You can't assign tasks to other people",
+  "reminderNeedsDue": "A relative reminder needs a due date",
+  "assignToMe": "Me",
+  "unassigned": "Unassigned",
+  "reminderSent": "Reminder sent",
+  "source": {
+    "manual": "Manual",
+    "ai": "AI",
+    "automation": "Automation",
+    "api": "API"
+  },
+  "createdBy": "Created by {name}",
+  "due": "Due: {date}",
+  "linkedTo": "Related to: {name}",
+  "counts": {
+    "overdue": "{count} overdue",
+    "today": "{count} due today"
+  }
+}

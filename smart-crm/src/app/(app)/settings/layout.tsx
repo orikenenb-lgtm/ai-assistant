@@ -13,8 +13,8 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     (s) => (!s.permission || ctx.can(s.permission)) && (!s.feature || ent.features.has(s.feature as Feature)),
   );
   return (
-    <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
-      <aside>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside className="min-w-0">
         <h1 className="mb-4 text-xl font-semibold tracking-tight">{t("title")}</h1>
         <SettingsNav sections={sections.map((s) => ({ key: s.key, group: s.group }))} />
       </aside>

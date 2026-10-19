@@ -5,6 +5,7 @@ import he_app from "../../messages/he/app.json";
 import he_auth from "../../messages/he/auth.json";
 import he_automation from "../../messages/he/automation.json";
 import he_billing from "../../messages/he/billing.json";
+import he_calendar from "../../messages/he/calendar.json";
 import he_common from "../../messages/he/common.json";
 import he_contacts from "../../messages/he/contacts.json";
 import he_crm from "../../messages/he/crm.json";
@@ -17,12 +18,14 @@ import he_inbox from "../../messages/he/inbox.json";
 import he_invite from "../../messages/he/invite.json";
 import he_members from "../../messages/he/members.json";
 import he_nav from "../../messages/he/nav.json";
+import he_notificationSettings from "../../messages/he/notificationSettings.json";
 import he_notifications from "../../messages/he/notifications.json";
 import he_onboarding from "../../messages/he/onboarding.json";
 import he_palette from "../../messages/he/palette.json";
 import he_settings from "../../messages/he/settings.json";
 import he_support from "../../messages/he/support.json";
 import he_tags from "../../messages/he/tags.json";
+import he_tasks from "../../messages/he/tasks.json";
 import he_validation from "../../messages/he/validation.json";
 import he_whatsapp from "../../messages/he/whatsapp.json";
 import en_ai from "../../messages/en/ai.json";
@@ -30,6 +33,7 @@ import en_app from "../../messages/en/app.json";
 import en_auth from "../../messages/en/auth.json";
 import en_automation from "../../messages/en/automation.json";
 import en_billing from "../../messages/en/billing.json";
+import en_calendar from "../../messages/en/calendar.json";
 import en_common from "../../messages/en/common.json";
 import en_contacts from "../../messages/en/contacts.json";
 import en_crm from "../../messages/en/crm.json";
@@ -42,12 +46,14 @@ import en_inbox from "../../messages/en/inbox.json";
 import en_invite from "../../messages/en/invite.json";
 import en_members from "../../messages/en/members.json";
 import en_nav from "../../messages/en/nav.json";
+import en_notificationSettings from "../../messages/en/notificationSettings.json";
 import en_notifications from "../../messages/en/notifications.json";
 import en_onboarding from "../../messages/en/onboarding.json";
 import en_palette from "../../messages/en/palette.json";
 import en_settings from "../../messages/en/settings.json";
 import en_support from "../../messages/en/support.json";
 import en_tags from "../../messages/en/tags.json";
+import en_tasks from "../../messages/en/tasks.json";
 import en_validation from "../../messages/en/validation.json";
 import en_whatsapp from "../../messages/en/whatsapp.json";
 
@@ -57,6 +63,7 @@ export const he = {
   "auth": he_auth,
   "automation": he_automation,
   "billing": he_billing,
+  "calendar": he_calendar,
   "common": he_common,
   "contacts": he_contacts,
   "crm": he_crm,
@@ -69,12 +76,14 @@ export const he = {
   "invite": he_invite,
   "members": he_members,
   "nav": he_nav,
+  "notificationSettings": he_notificationSettings,
   "notifications": he_notifications,
   "onboarding": he_onboarding,
   "palette": he_palette,
   "settings": he_settings,
   "support": he_support,
   "tags": he_tags,
+  "tasks": he_tasks,
   "validation": he_validation,
   "whatsapp": he_whatsapp,
 };
@@ -84,6 +93,7 @@ export const en = {
   "auth": en_auth,
   "automation": en_automation,
   "billing": en_billing,
+  "calendar": en_calendar,
   "common": en_common,
   "contacts": en_contacts,
   "crm": en_crm,
@@ -96,12 +106,14 @@ export const en = {
   "invite": en_invite,
   "members": en_members,
   "nav": en_nav,
+  "notificationSettings": en_notificationSettings,
   "notifications": en_notifications,
   "onboarding": en_onboarding,
   "palette": en_palette,
   "settings": en_settings,
   "support": en_support,
   "tags": en_tags,
+  "tasks": en_tasks,
   "validation": en_validation,
   "whatsapp": en_whatsapp,
 };
