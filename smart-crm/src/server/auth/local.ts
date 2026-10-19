@@ -120,7 +120,7 @@ export class LocalAuthAdapter implements AuthAdapter {
     const passwordHash = await hashPassword(input.password);
     const [user] = await this.sql()<{ id: string }[]>`
       insert into auth.users (email, encrypted_password, raw_user_meta_data)
-      values (${input.email.toLowerCase()}, ${passwordHash}, ${JSON.stringify({ full_name: input.fullName, locale: input.locale })}::jsonb)
+      values (${input.email.toLowerCase()}, ${passwordHash}, ${JSON.stringify({ full_name: input.fullName, locale: input.locale })}::text::jsonb)
       returning id`;
     const token = await this.createToken(user.id, "email_verification", VERIFY_TTL_SECONDS);
     await sendEmail({

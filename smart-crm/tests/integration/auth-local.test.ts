@@ -125,3 +125,14 @@ describe("LocalAuthAdapter", () => {
     expect(await b.auth.getSessionUser()).not.toBeNull();
   });
 });
+
+describe("profile bootstrap", () => {
+  it("stores user metadata as a JSON object so the profile trigger picks up the name", async () => {
+    const { createUser } = await import("../support/factories");
+    const u = await createUser({ fullName: "מיכל אברהם" });
+    const [row] = await sqlClient()`
+      select p.full_name, jsonb_typeof(u.raw_user_meta_data) as kind
+      from public.profiles p join auth.users u on u.id = p.id where p.id = ${u.id}`;
+    expect(row).toMatchObject({ full_name: "מיכל אברהם", kind: "object" });
+  });
+});

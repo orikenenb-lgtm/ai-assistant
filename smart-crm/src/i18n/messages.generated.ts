@@ -4,8 +4,13 @@ import he_app from "../../messages/he/app.json";
 import he_auth from "../../messages/he/auth.json";
 import he_billing from "../../messages/he/billing.json";
 import he_common from "../../messages/he/common.json";
+import he_contacts from "../../messages/he/contacts.json";
+import he_crm from "../../messages/he/crm.json";
+import he_customFields from "../../messages/he/customFields.json";
 import he_dashboard from "../../messages/he/dashboard.json";
 import he_errors from "../../messages/he/errors.json";
+import he_files from "../../messages/he/files.json";
+import he_import from "../../messages/he/import.json";
 import he_invite from "../../messages/he/invite.json";
 import he_members from "../../messages/he/members.json";
 import he_nav from "../../messages/he/nav.json";
@@ -13,13 +18,19 @@ import he_notifications from "../../messages/he/notifications.json";
 import he_onboarding from "../../messages/he/onboarding.json";
 import he_palette from "../../messages/he/palette.json";
 import he_support from "../../messages/he/support.json";
+import he_tags from "../../messages/he/tags.json";
 import he_validation from "../../messages/he/validation.json";
 import en_app from "../../messages/en/app.json";
 import en_auth from "../../messages/en/auth.json";
 import en_billing from "../../messages/en/billing.json";
 import en_common from "../../messages/en/common.json";
+import en_contacts from "../../messages/en/contacts.json";
+import en_crm from "../../messages/en/crm.json";
+import en_customFields from "../../messages/en/customFields.json";
 import en_dashboard from "../../messages/en/dashboard.json";
 import en_errors from "../../messages/en/errors.json";
+import en_files from "../../messages/en/files.json";
+import en_import from "../../messages/en/import.json";
 import en_invite from "../../messages/en/invite.json";
 import en_members from "../../messages/en/members.json";
 import en_nav from "../../messages/en/nav.json";
@@ -27,6 +38,7 @@ import en_notifications from "../../messages/en/notifications.json";
 import en_onboarding from "../../messages/en/onboarding.json";
 import en_palette from "../../messages/en/palette.json";
 import en_support from "../../messages/en/support.json";
+import en_tags from "../../messages/en/tags.json";
 import en_validation from "../../messages/en/validation.json";
 
 export const he = {
@@ -34,8 +46,13 @@ export const he = {
   "auth": he_auth,
   "billing": he_billing,
   "common": he_common,
+  "contacts": he_contacts,
+  "crm": he_crm,
+  "customFields": he_customFields,
   "dashboard": he_dashboard,
   "errors": he_errors,
+  "files": he_files,
+  "import": he_import,
   "invite": he_invite,
   "members": he_members,
   "nav": he_nav,
@@ -43,6 +60,7 @@ export const he = {
   "onboarding": he_onboarding,
   "palette": he_palette,
   "support": he_support,
+  "tags": he_tags,
   "validation": he_validation,
 };
 export const en = {
@@ -50,8 +68,13 @@ export const en = {
   "auth": en_auth,
   "billing": en_billing,
   "common": en_common,
+  "contacts": en_contacts,
+  "crm": en_crm,
+  "customFields": en_customFields,
   "dashboard": en_dashboard,
   "errors": en_errors,
+  "files": en_files,
+  "import": en_import,
   "invite": en_invite,
   "members": en_members,
   "nav": en_nav,
@@ -59,6 +82,7 @@ export const en = {
   "onboarding": en_onboarding,
   "palette": en_palette,
   "support": en_support,
+  "tags": en_tags,
   "validation": en_validation,
 };
 

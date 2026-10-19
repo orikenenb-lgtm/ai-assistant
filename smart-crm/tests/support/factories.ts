@@ -14,7 +14,7 @@ export async function createUser(opts: { email?: string; fullName?: string; veri
   const email = opts.email ?? uniqueEmail();
   const [row] = await sqlClient()<{ id: string }[]>`
     insert into auth.users (email, email_confirmed_at, raw_user_meta_data)
-    values (${email}, ${opts.verified === false ? null : new Date().toISOString()}, ${JSON.stringify({ full_name: opts.fullName ?? "Test User", locale: "he" })}::jsonb)
+    values (${email}, ${opts.verified === false ? null : new Date().toISOString()}, ${JSON.stringify({ full_name: opts.fullName ?? "Test User", locale: "he" })}::text::jsonb)
     returning id`;
   if (opts.superAdmin) await sqlClient()`update public.profiles set is_super_admin = true where id = ${row.id}`;
   return { id: row.id, email };

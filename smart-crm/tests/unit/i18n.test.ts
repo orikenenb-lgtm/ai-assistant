@@ -10,7 +10,7 @@ function keys(obj: unknown, prefix = ""): string[] {
 }
 
 function placeholders(s: string): string[] {
-  return [...s.matchAll(/\{(\w+)/g)].map((m) => m[1]).sort();
+  return [...s.matchAll(/\{(\w+)(?=[,}])/g)].map((m) => m[1]).sort();
 }
 
 describe("message catalogs", () => {

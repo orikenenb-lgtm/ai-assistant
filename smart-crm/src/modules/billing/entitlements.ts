@@ -93,3 +93,9 @@ export async function assertSeatAvailable(tx: Executor, tenantId: string, extra 
     throw new AppError("QUOTA_EXCEEDED", "errors.seatLimit", undefined, { limit: ent.seatLimit });
   }
 }
+
+/** Whole days left in a trial, or null when not trialing. */
+export function trialDaysLeft(ent: Pick<Entitlements, "status" | "trialEndsAt">, now = Date.now()): number | null {
+  if (ent.status !== "trialing" || !ent.trialEndsAt) return null;
+  return Math.max(0, Math.ceil((ent.trialEndsAt.getTime() - now) / 86400_000));
+}

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { Command } from "cmdk";
 import { Dialog as D } from "radix-ui";
 import { Building2, CornerDownLeft, Handshake, Plus, Search, Sparkles, Users } from "lucide-react";
@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { globalSearchAction } from "@/modules/search/actions";
 import type { SearchHit } from "@/modules/search/service";
 import { NAV, type NavKey } from "./nav";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 
 const HIT_ICONS = { contact: Users, company: Building2, deal: Handshake, lead: Sparkles } as const;
 
@@ -18,40 +19,19 @@ export function CommandPalette({ open, onOpenChange, allowedNav }: { open: boole
   const tc = useTranslations("common");
   const tp = useTranslations("palette");
   const router = useRouter();
-  const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
-  const [loading, setLoading] = useState(false);
+  const fetcher = useCallback(async (q: string) => {
+    const res = await globalSearchAction({ q });
+    return res.ok ? res.data : ([] as SearchHit[]);
+  }, []);
+  const { query, results: hits, loading, search, reset } = useDebouncedSearch(fetcher, { minLength: 2 });
 
-  useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setHits([]);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    const q = query.trim();
-    if (q.length < 2) {
-      setHits([]);
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
-    const handle = setTimeout(async () => {
-      const res = await globalSearchAction({ q });
-      if (!cancelled) {
-        setHits(res.ok ? res.data : []);
-        setLoading(false);
-      }
-    }, 200);
-    return () => {
-      cancelled = true;
-      clearTimeout(handle);
-    };
-  }, [query]);
+  const setOpen = (o: boolean) => {
+    if (!o) reset();
+    onOpenChange(o);
+  };
 
   const go = (href: string) => {
-    onOpenChange(false);
+    setOpen(false);
     router.push(href);
   };
   const allowed = new Set(allowedNav);
@@ -64,7 +44,7 @@ export function CommandPalette({ open, onOpenChange, allowedNav }: { open: boole
   ].filter((c) => allowed.has(c.perm));
 
   return (
-    <D.Root open={open} onOpenChange={onOpenChange}>
+    <D.Root open={open} onOpenChange={setOpen}>
       <D.Portal>
         <D.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] data-[state=open]:animate-fade-in" />
         <D.Content className="fixed inset-x-3 top-[12vh] z-50 mx-auto max-w-xl overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-lg outline-none data-[state=open]:animate-scale-in">
@@ -74,7 +54,7 @@ export function CommandPalette({ open, onOpenChange, allowedNav }: { open: boole
               <Search className="size-4 text-muted-foreground" />
               <Command.Input
                 value={query}
-                onValueChange={setQuery}
+                onValueChange={search}
                 placeholder={tp("placeholder")}
                 className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 data-testid="command-input"

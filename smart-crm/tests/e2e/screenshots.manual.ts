@@ -21,7 +21,8 @@ for (const scheme of ["light", "dark"] as const) {
     }
     for (const p of paths) {
       await page.goto(`${base}${p}`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(800);
       await page.screenshot({ path: `${out}/${p.replaceAll("/", "_") || "root"}-${vp.name}-${scheme}.png`, fullPage: false });
     }
     await ctx.close();

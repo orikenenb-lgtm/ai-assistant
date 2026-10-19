@@ -1,0 +1,72 @@
+{
+  "title": "אנשי קשר",
+  "subtitle": "{count, plural, =0 {אין אנשי קשר עדיין} one {איש קשר אחד} other {# אנשי קשר}}",
+  "new": "איש קשר חדש",
+  "edit": "עריכת איש קשר",
+  "created": "איש הקשר נוצר",
+  "searchPlaceholder": "חיפוש לפי שם, טלפון או אימייל…",
+  "firstName": "שם פרטי",
+  "lastName": "שם משפחה",
+  "company": "חברה",
+  "selectCompany": "בחירת חברה…",
+  "jobTitle": "תפקיד",
+  "stage": "שלב",
+  "stages": {
+    "subscriber": "מנוי",
+    "lead": "ליד",
+    "opportunity": "הזדמנות",
+    "customer": "לקוח",
+    "churned": "נטש",
+    "other": "אחר"
+  },
+  "source": "מקור",
+  "sourcePlaceholder": "למשל: אתר, הפניה, תערוכה",
+  "phoneHint": "אפשר להקליד 050-1234567 או מספר בינלאומי",
+  "possibleDuplicate": "ייתכן שקיים כבר איש קשר עם הפרטים האלה:",
+  "consent": "הסכמת WhatsApp",
+  "consentTitle": "הסכמה לקבלת WhatsApp",
+  "consentHelp": "הודעות שיווקיות נשלחות רק לאנשי קשר שנתנו הסכמה. בקשת הסרה נאכפת אוטומטית.",
+  "consentStatus": {
+    "unknown": "לא ידוע",
+    "opted_in": "מאושר",
+    "opted_out": "הוסר"
+  },
+  "consentSource": {
+    "manual": "ידני",
+    "import": "ייבוא",
+    "inbound_keyword": "מילת הסרה",
+    "form": "טופס",
+    "api": "API",
+    "automation": "אוטומציה"
+  },
+  "markOptedIn": "סימון הסכמה",
+  "markOptedOut": "סימון הסרה",
+  "optInEvidenceHelp": "תעדו איך ומתי ניתנה ההסכמה (למשל: טופס הרשמה באתר, 1.10.2026).",
+  "evidence": "תיעוד ההסכמה",
+  "sort": "מיון",
+  "sorts": {
+    "created_desc": "החדשים ביותר",
+    "created_asc": "הוותיקים ביותר",
+    "name_asc": "לפי שם",
+    "activity_desc": "פעילות אחרונה"
+  },
+  "lastActivity": "פעילות אחרונה",
+  "emptyTitle": "עוד אין אנשי קשר",
+  "emptyBody": "הוסיפו איש קשר ראשון או ייבאו רשימה מקובץ CSV.",
+  "details": "פרטים",
+  "deleteConfirm": "למחוק את {name}? אפשר לשחזר דרך התמיכה.",
+  "duplicates": "כפילויות",
+  "duplicatesSubtitle": "אנשי קשר עם אותו טלפון או אימייל. בחרו רשומה ראשית ומזגו.",
+  "noDuplicates": "לא נמצאו כפילויות",
+  "matchedOn": {
+    "email": "אותו אימייל",
+    "phone": "אותו טלפון"
+  },
+  "choosePrimary": "בחרו את הרשומה הראשית:",
+  "merge": "מיזוג",
+  "mergeTitle": "למזג אנשי קשר?",
+  "mergeBody": "{count, plural, one {רשומה אחת תמוזג} other {# רשומות ימוזגו}} לרשומה הראשית: עסקאות, משימות, הערות ושיחות יועברו אליה.",
+  "merged": "המיזוג הושלם",
+  "nameOrContactRequired": "יש למלא שם, טלפון או אימייל",
+  "mergeSame": "אי אפשר למזג רשומה עם עצמה"
+}
