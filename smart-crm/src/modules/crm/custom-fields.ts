@@ -207,3 +207,20 @@ export async function getCustomFieldDefs(ctx: ServiceCtx, entityType: CustomFiel
   assertCan(ctx, "org.view");
   return ctx.run((tx) => listCustomFields(tx, ctx.tenantId, entityType));
 }
+
+/** Rewrites the display order of one entity's active definitions in a single transaction. */
+export async function reorderCustomFields(ctx: ServiceCtx, entityType: CustomFieldEntity, orderedIds: string[]) {
+  assertCanWrite(ctx, "settings.manage");
+  await ctx.run(async (tx) => {
+    const current = await listCustomFields(tx, ctx.tenantId, entityType);
+    const ids = new Set(current.map((d) => d.id));
+    if (orderedIds.length !== ids.size || orderedIds.some((id) => !ids.has(id))) throw new AppError("VALIDATION", "errors.validation");
+    for (const [position, id] of orderedIds.entries()) {
+      await tx
+        .update(schema.customFieldDefinitions)
+        .set({ position })
+        .where(and(eq(schema.customFieldDefinitions.id, id), eq(schema.customFieldDefinitions.tenantId, ctx.tenantId)));
+    }
+    await audit(tx, ctx, { action: "custom_field.reordered", entityType: "custom_field", metadata: { entityType } });
+  });
+}
