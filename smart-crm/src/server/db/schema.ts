@@ -726,6 +726,11 @@ export const quotes = pgTable("quotes", {
   createdBy: uuid("created_by"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).default(sql`now()`).notNull(),
+  discountBp: integer("discount_bp").default(sql`0`).notNull(),
+  publicTokenHash: text("public_token_hash"),
+  viewCount: integer("view_count").default(sql`0`).notNull(),
+  lastViewedAt: timestamp("last_viewed_at", { withTimezone: true, mode: "date" }),
+  decidedByName: text("decided_by_name"),
 });
 
 export const rateLimitCounters = pgTable("rate_limit_counters", {
