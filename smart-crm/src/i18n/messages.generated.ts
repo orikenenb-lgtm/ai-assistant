@@ -4,19 +4,24 @@ import he_app from "../../messages/he/app.json";
 import he_auth from "../../messages/he/auth.json";
 import he_billing from "../../messages/he/billing.json";
 import he_common from "../../messages/he/common.json";
+import he_companies from "../../messages/he/companies.json";
 import he_contacts from "../../messages/he/contacts.json";
 import he_crm from "../../messages/he/crm.json";
+import he_crmSettings from "../../messages/he/crmSettings.json";
 import he_customFields from "../../messages/he/customFields.json";
 import he_dashboard from "../../messages/he/dashboard.json";
+import he_deals from "../../messages/he/deals.json";
 import he_errors from "../../messages/he/errors.json";
 import he_files from "../../messages/he/files.json";
 import he_import from "../../messages/he/import.json";
 import he_invite from "../../messages/he/invite.json";
+import he_leads from "../../messages/he/leads.json";
 import he_members from "../../messages/he/members.json";
 import he_nav from "../../messages/he/nav.json";
 import he_notifications from "../../messages/he/notifications.json";
 import he_onboarding from "../../messages/he/onboarding.json";
 import he_palette from "../../messages/he/palette.json";
+import he_pipelines from "../../messages/he/pipelines.json";
 import he_settings from "../../messages/he/settings.json";
 import he_support from "../../messages/he/support.json";
 import he_tags from "../../messages/he/tags.json";
@@ -25,19 +30,24 @@ import en_app from "../../messages/en/app.json";
 import en_auth from "../../messages/en/auth.json";
 import en_billing from "../../messages/en/billing.json";
 import en_common from "../../messages/en/common.json";
+import en_companies from "../../messages/en/companies.json";
 import en_contacts from "../../messages/en/contacts.json";
 import en_crm from "../../messages/en/crm.json";
+import en_crmSettings from "../../messages/en/crmSettings.json";
 import en_customFields from "../../messages/en/customFields.json";
 import en_dashboard from "../../messages/en/dashboard.json";
+import en_deals from "../../messages/en/deals.json";
 import en_errors from "../../messages/en/errors.json";
 import en_files from "../../messages/en/files.json";
 import en_import from "../../messages/en/import.json";
 import en_invite from "../../messages/en/invite.json";
+import en_leads from "../../messages/en/leads.json";
 import en_members from "../../messages/en/members.json";
 import en_nav from "../../messages/en/nav.json";
 import en_notifications from "../../messages/en/notifications.json";
 import en_onboarding from "../../messages/en/onboarding.json";
 import en_palette from "../../messages/en/palette.json";
+import en_pipelines from "../../messages/en/pipelines.json";
 import en_settings from "../../messages/en/settings.json";
 import en_support from "../../messages/en/support.json";
 import en_tags from "../../messages/en/tags.json";
@@ -48,19 +58,24 @@ export const he = {
   "auth": he_auth,
   "billing": he_billing,
   "common": he_common,
+  "companies": he_companies,
   "contacts": he_contacts,
   "crm": he_crm,
+  "crmSettings": he_crmSettings,
   "customFields": he_customFields,
   "dashboard": he_dashboard,
+  "deals": he_deals,
   "errors": he_errors,
   "files": he_files,
   "import": he_import,
   "invite": he_invite,
+  "leads": he_leads,
   "members": he_members,
   "nav": he_nav,
   "notifications": he_notifications,
   "onboarding": he_onboarding,
   "palette": he_palette,
+  "pipelines": he_pipelines,
   "settings": he_settings,
   "support": he_support,
   "tags": he_tags,
@@ -71,19 +86,24 @@ export const en = {
   "auth": en_auth,
   "billing": en_billing,
   "common": en_common,
+  "companies": en_companies,
   "contacts": en_contacts,
   "crm": en_crm,
+  "crmSettings": en_crmSettings,
   "customFields": en_customFields,
   "dashboard": en_dashboard,
+  "deals": en_deals,
   "errors": en_errors,
   "files": en_files,
   "import": en_import,
   "invite": en_invite,
+  "leads": en_leads,
   "members": en_members,
   "nav": en_nav,
   "notifications": en_notifications,
   "onboarding": en_onboarding,
   "palette": en_palette,
+  "pipelines": en_pipelines,
   "settings": en_settings,
   "support": en_support,
   "tags": en_tags,

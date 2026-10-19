@@ -1,0 +1,41 @@
+{
+  "title": "Companies",
+  "subtitle": "{count, plural, =0 {No companies yet} one {One company} other {# companies}}",
+  "new": "New company",
+  "edit": "Edit company",
+  "created": "Company created",
+  "searchPlaceholder": "Search by name, domain or phone…",
+  "name": "Company name",
+  "domain": "Domain",
+  "industry": "Industry",
+  "size": "Size",
+  "sizes": {
+    "1-10": "1–10 employees",
+    "11-50": "11–50 employees",
+    "51-200": "51–200 employees",
+    "201-1000": "201–1,000 employees",
+    "1000+": "1,000+ employees"
+  },
+  "website": "Website",
+  "address": "Address",
+  "city": "City",
+  "country": "Country (2-letter code)",
+  "sort": "Sort",
+  "sorts": {
+    "name_asc": "Name",
+    "created_desc": "Newest",
+    "activity_desc": "Recent activity"
+  },
+  "contactsCount": "Contacts",
+  "openDeals": "Open deals",
+  "lastActivity": "Last activity",
+  "emptyTitle": "No companies yet",
+  "emptyBody": "Add a company to group the contacts and deals of a business customer.",
+  "details": "Details",
+  "contacts": "Contacts at this company",
+  "noContacts": "No contacts linked to this company",
+  "deals": "Deals",
+  "noDeals": "No deals",
+  "newDeal": "+ New deal",
+  "deleteConfirm": "Delete {name}? Its contacts are kept but unlinked from the company."
+}

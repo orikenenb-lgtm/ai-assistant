@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { tenantAction, type ActionResult } from "@/server/action";
-import { archiveCustomField, createCustomField, customFieldDefSchema, updateCustomField } from "@/modules/crm/custom-fields";
-import { deleteTag, tagInputSchema, updateTag } from "@/modules/crm/tags";
+import { archiveCustomField, createCustomField, customFieldDefSchema, reorderCustomFields, updateCustomField } from "@/modules/crm/custom-fields";
+import { createTag, deleteTag, tagInputSchema, updateTag } from "@/modules/crm/tags";
 import { lostReasonInputSchema, pipelineInputSchema, stageInputSchema } from "./schemas";
 import {
   addStage,
@@ -151,6 +151,17 @@ export async function updateCustomFieldAction(input: unknown): Promise<ActionRes
   );
 }
 
+export async function reorderCustomFieldsAction(input: unknown): Promise<ActionResult> {
+  return tenantAction(
+    input,
+    { schema: z.object({ entityType: z.enum(["contact", "company", "deal", "lead"]), orderedIds: z.array(z.uuid()).min(1).max(100) }), permission: "settings.manage" },
+    async ({ entityType, orderedIds }, { ctx }) => {
+      await reorderCustomFields(ctx, entityType, orderedIds);
+      return done("/settings/custom-fields");
+    },
+  );
+}
+
 export async function archiveCustomFieldAction(input: unknown): Promise<ActionResult> {
   return tenantAction(input, { schema: id, permission: "settings.manage" }, async ({ id }, { ctx }) => {
     await archiveCustomField(ctx, id);
@@ -159,6 +170,13 @@ export async function archiveCustomFieldAction(input: unknown): Promise<ActionRe
 }
 
 /* ------------------------------------------------------------------ tags */
+
+export async function createTagSettingsAction(input: unknown): Promise<ActionResult> {
+  return tenantAction(input, { schema: tagInputSchema, permission: "settings.manage" }, async (data, { ctx }) => {
+    await createTag(ctx, data);
+    return done("/settings/tags");
+  });
+}
 
 export async function updateTagAction(input: unknown): Promise<ActionResult> {
   return tenantAction(input, { schema: id.extend(tagInputSchema.shape), permission: "settings.manage" }, async ({ id, ...data }, { ctx }) => {

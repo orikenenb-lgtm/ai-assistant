@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq, sql } from "drizzle-orm";
 import { closeDb, db, schema } from "@/server/db";
-import { dealInputSchema, dealListQuerySchema } from "@/modules/sales/schemas";
+import { dealInputSchema, dealListQuerySchema, leadInputSchema } from "@/modules/sales/schemas";
 import {
   createDeal,
   dealStageHistory,
@@ -50,6 +50,16 @@ describe("deal input", () => {
     expect(dealInputSchema.safeParse({ title: "", pipelineId: crypto.randomUUID(), stageId: crypto.randomUUID() }).success).toBe(false);
     expect(dealInputSchema.safeParse({ title: "x", value: "-5", pipelineId: crypto.randomUUID(), stageId: crypto.randomUUID() }).success).toBe(false);
     expect(dealInputSchema.safeParse({ title: "x", probability: 150, pipelineId: crypto.randomUUID(), stageId: crypto.randomUUID() }).success).toBe(false);
+  });
+
+  it("keeps an empty probability override empty (falls back to the stage probability)", () => {
+    const base = { title: "x", pipelineId: crypto.randomUUID(), stageId: crypto.randomUUID() };
+    expect(dealInputSchema.parse({ ...base, probability: "" }).probability).toBeNull();
+    expect(dealInputSchema.parse({ ...base, probability: null }).probability).toBeNull();
+    expect(dealInputSchema.parse(base).probability).toBeNull();
+    expect(dealInputSchema.parse({ ...base, probability: "0" }).probability).toBe(0);
+    expect(dealInputSchema.parse({ ...base, probability: "35" }).probability).toBe(35);
+    expect(leadInputSchema.parse({ fullName: "x", score: "" }).score).toBeNull();
   });
 });
 

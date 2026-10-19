@@ -30,10 +30,11 @@ const optionalDate = z
   .optional()
   .transform((v) => (v ? v : null));
 
-const optionalPercent = z
-  .union([z.coerce.number().int().min(0).max(100), z.literal(""), z.null()])
-  .optional()
-  .transform((v) => (v === "" || v === undefined ? null : v));
+// Empty input must stay null (z.coerce would turn "" and null into 0).
+const optionalPercent = z.preprocess(
+  (v) => (v === undefined || v === null || (typeof v === "string" && v.trim() === "") ? null : v),
+  z.coerce.number().int().min(0).max(100).nullable(),
+);
 
 /* ------------------------------------------------------------------ Leads */
 
