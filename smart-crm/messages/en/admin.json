@@ -226,5 +226,6 @@
     "tenant": "Organization",
     "details": "Details",
     "platform": "Platform"
-  }
+  },
+  "mfaRequired": "Platform admin actions require two-factor authentication. Enable MFA on your account and sign in again."
 }

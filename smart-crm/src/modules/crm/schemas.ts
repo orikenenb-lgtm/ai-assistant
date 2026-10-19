@@ -10,6 +10,20 @@ const optionalText = (max: number) =>
     .nullable()
     .transform((v) => (v ? v : null));
 
+/** Website: "example.co.il" becomes https://example.co.il; only http(s) URLs are accepted (no javascript:). */
+const optionalWebsite = optionalText(300).transform((v, ctx) => {
+  if (!v) return null;
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(v) ? v : `https://${v}`;
+  try {
+    const url = new URL(withScheme);
+    if (url.protocol === "http:" || url.protocol === "https:") return url.toString();
+  } catch {
+    // fall through
+  }
+  ctx.addIssue({ code: "custom", message: "validation.url" });
+  return z.NEVER;
+});
+
 export const optionalEmail = z
   .string()
   .trim()
@@ -71,7 +85,7 @@ export const companyInputSchema = z.object({
     .or(z.literal("").transform(() => null)),
   phone: optionalPhone,
   email: optionalEmail,
-  website: optionalText(300),
+  website: optionalWebsite,
   address: optionalText(300),
   city: optionalText(100),
   country: z

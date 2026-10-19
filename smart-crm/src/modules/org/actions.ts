@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { z } from "zod";
+import { isValidTimeZone } from "@/lib/timezone";
 import { requireUser } from "@/server/auth";
 import { publicAction, type ActionResult } from "@/server/action";
 import { AppError } from "@/server/errors";
@@ -12,7 +13,7 @@ const createOrgSchema = z.object({
   name: z.string().trim().min(2).max(120),
   locale: z.enum(["he", "en"]),
   currency: z.enum(["ILS", "USD", "EUR", "GBP"]).default("ILS"),
-  timezone: z.string().max(64).default("Asia/Jerusalem"),
+  timezone: z.string().trim().max(64).refine(isValidTimeZone, { message: "validation.invalid" }).default("Asia/Jerusalem"),
 });
 
 async function setTenantCookie(tenantId: string) {

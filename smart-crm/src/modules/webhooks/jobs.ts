@@ -14,6 +14,7 @@ import { webhookSigningSecret } from "./service";
 
 export const AUTO_DISABLE_AFTER = 20;
 const TIMEOUT_MS = 10_000;
+const MAX_RESPONSE_BYTES = 2048;
 const MAX_ATTEMPTS = 6;
 
 /** Public payload shape (documented in docs/API.md). */
@@ -80,6 +81,13 @@ export async function postPinned(target: URL, body: string, headers: Record<stri
   const testLoopback = loopbackAllowed() && (pinned.address === "127.0.0.1" || pinned.address === "::1");
   const transport = target.protocol === "http:" && testLoopback ? http : https;
   return new Promise<PostResult>((resolve, reject) => {
+    let settled = false;
+    const finish = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      fn();
+    };
     const req = transport.request(
       target,
       {
@@ -93,15 +101,25 @@ export async function postPinned(target: URL, body: string, headers: Record<stri
         const chunks: Buffer[] = [];
         let size = 0;
         res.on("data", (c: Buffer) => {
-          if (size < 2048) chunks.push(c);
           size += c.length;
+          if (size <= MAX_RESPONSE_BYTES) chunks.push(c);
+          // We only keep an excerpt: stop reading huge or endless responses.
+          else finish(() => {
+            req.destroy();
+            resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString("utf8").slice(0, 1000) });
+          });
         });
-        res.on("end", () => resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString("utf8").slice(0, 1000) }));
-        res.on("error", reject);
+        res.on("end", () => finish(() => resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString("utf8").slice(0, 1000) })));
+        res.on("error", (e) => finish(() => reject(e)));
       },
     );
-    req.on("timeout", () => req.destroy(new Error("timeout after 10s")));
-    req.on("error", reject);
+    // Overall deadline: the socket timeout alone does not stop a slow-drip server.
+    const deadline = setTimeout(() => finish(() => {
+      req.destroy();
+      reject(new Error(`timeout after ${TIMEOUT_MS / 1000}s`));
+    }), TIMEOUT_MS);
+    req.on("timeout", () => req.destroy(new Error(`timeout after ${TIMEOUT_MS / 1000}s`)));
+    req.on("error", (e) => finish(() => reject(e)));
     req.end(body);
   });
 }

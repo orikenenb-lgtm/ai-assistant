@@ -22,6 +22,21 @@ const REDACT = [
   "*.cookie",
   "headers.authorization",
   "headers.cookie",
+  // Header names arrive in either case; tokens under other common names.
+  "Authorization",
+  "Cookie",
+  "*.Authorization",
+  "*.Cookie",
+  "headers.Authorization",
+  "headers.Cookie",
+  "*.headers.authorization",
+  "*.headers.Authorization",
+  "refreshToken",
+  "refresh_token",
+  "*.refreshToken",
+  "*.refresh_token",
+  "ciphertext",
+  "*.ciphertext",
 ];
 
 type Globals = { __crmLogger?: pino.Logger };

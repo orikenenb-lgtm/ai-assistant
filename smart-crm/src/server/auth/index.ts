@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
+import { clientIp } from "../request-ip";
 import { redirect } from "next/navigation";
 import { env } from "../env";
 import { LocalAuthAdapter, type CookieJar } from "./local";
@@ -50,8 +51,7 @@ export async function requireUser(): Promise<SessionUser> {
 
 export async function requestInfo(): Promise<RequestInfo> {
   const h = await headers();
-  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return { ip: forwarded || h.get("x-real-ip") || null, userAgent: h.get("user-agent") };
+  return { ip: clientIp(h), userAgent: h.get("user-agent") };
 }
 
 export type { SessionUser } from "./types";

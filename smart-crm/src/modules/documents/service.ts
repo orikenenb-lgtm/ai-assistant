@@ -788,6 +788,7 @@ export async function expireDueQuotes(): Promise<number> {
     const rows = await tx.execute<{ id: string }>(sql`
       update public.quotes q set status = 'expired'
       from public.tenants t
+      join pg_timezone_names z on z.name = t.timezone -- an invalid zone must not break the job for everyone
       where t.id = q.tenant_id and q.status in ('sent', 'viewed') and q.valid_until is not null
         and q.valid_until < (now() at time zone t.timezone)::date
       returning q.id`);

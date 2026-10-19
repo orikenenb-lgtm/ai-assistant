@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth, getSessionUser, requestInfo } from "@/server/auth";
 import { publicAction, type ActionResult } from "@/server/action";
+import { hitRateLimit } from "@/server/rate-limit";
+import { RECOVERY_COOKIE } from "@/server/auth/recovery";
 import { AppError } from "@/server/errors";
 import { LOCALE_COOKIE } from "@/i18n/config";
 import { db, schema } from "@/server/db";
@@ -55,15 +57,20 @@ export async function requestPasswordResetAction(input: unknown): Promise<Action
 
 export async function completePasswordResetAction(input: unknown): Promise<ActionResult> {
   return publicAction(input, resetSchema, async (data) => {
-    const ok = await auth().completePasswordReset({ token: data.token, password: data.password });
+    const store = await cookies();
+    const ok = await auth().completePasswordReset({ token: data.token, password: data.password, recoveryProof: store.get(RECOVERY_COOKIE)?.value ?? null });
     if (!ok) throw new AppError("VALIDATION", "auth.invalidLink");
+    store.delete(RECOVERY_COOKIE);
     return null;
   });
 }
 
 export async function mfaChallengeAction(input: unknown): Promise<ActionResult> {
   return publicAction(input, mfaCodeSchema, async (data) => {
-    if (!(await getSessionUser())) throw new AppError("UNAUTHENTICATED", "errors.unauthenticated");
+    const user = await getSessionUser();
+    if (!user) throw new AppError("UNAUTHENTICATED", "errors.unauthenticated");
+    // ~1e6 codes: 5 tries per 5 minutes keeps guessing impractical for both adapters.
+    if (!(await hitRateLimit(`mfa-challenge:${user.userId}`, 5, 300)).allowed) throw new AppError("RATE_LIMITED", "errors.rateLimited");
     if (!(await auth().mfaChallenge(data.code))) throw new AppError("VALIDATION", "auth.mfaInvalid");
     return null;
   });
@@ -76,7 +83,10 @@ export async function signOutAction(): Promise<void> {
 
 export async function changePasswordAction(input: unknown): Promise<ActionResult> {
   return publicAction(input, changePasswordSchema, async (data) => {
-    if (!(await getSessionUser())) throw new AppError("UNAUTHENTICATED", "errors.unauthenticated");
+    const user = await getSessionUser();
+    // A session that has not completed MFA (aal1) must not be able to change the password.
+    if (!user || (user.mfaEnrolled && user.aal !== "aal2")) throw new AppError("UNAUTHENTICATED", "errors.unauthenticated");
+    if (!(await hitRateLimit(`pwchange:${user.userId}`, 5, 900)).allowed) throw new AppError("RATE_LIMITED", "errors.rateLimited");
     const ok = await auth().changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword });
     if (!ok) throw new AppError("VALIDATION", "auth.invalidCredentials", { currentPassword: ["auth.invalidCredentials"] });
     return null;

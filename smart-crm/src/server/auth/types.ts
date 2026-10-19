@@ -39,7 +39,8 @@ export interface AuthAdapter {
   confirm(input: { token: string; type: "email" | "recovery" }): Promise<{ userId: string } | null>;
   requestPasswordReset(email: string): Promise<void>;
   /** Local: needs the token from the email. Supabase: needs the recovery session. */
-  completePasswordReset(input: { token?: string; password: string }): Promise<boolean>;
+  /** `recoveryProof`: signed cookie set by /auth/confirm for recovery links (Supabase flow). */
+  completePasswordReset(input: { token?: string; password: string; recoveryProof?: string | null }): Promise<boolean>;
   changePassword(input: { currentPassword: string; newPassword: string }): Promise<boolean>;
   mfaEnroll(): Promise<{ factorId: string; secret: string; uri: string }>;
   mfaVerifyEnrollment(input: { factorId: string; code: string }): Promise<boolean>;

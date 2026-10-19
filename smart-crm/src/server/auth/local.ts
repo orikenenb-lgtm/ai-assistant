@@ -132,9 +132,13 @@ export class LocalAuthAdapter implements AuthAdapter {
   }
 
   async signIn(input: { email: string; password: string }, req: RequestInfo): Promise<SignInResult> {
-    const byAccount = await hitRateLimit(`login:${input.email.toLowerCase()}`, 10, 900);
+    // Per account+IP (tight) so a third party cannot lock the account owner out from elsewhere;
+    // per account (loose) against distributed guessing; per IP against spraying.
+    const email = input.email.toLowerCase();
+    const byAccountIp = await hitRateLimit(`login:${email}:${req.ip ?? "unknown"}`, 10, 900);
+    const byAccount = await hitRateLimit(`login:${email}`, 100, 900);
     const byIp = await hitRateLimit(`login-ip:${req.ip ?? "unknown"}`, 50, 900);
-    if (!byAccount.allowed || !byIp.allowed) return { status: "invalid_credentials" };
+    if (!byAccountIp.allowed || !byAccount.allowed || !byIp.allowed) return { status: "invalid_credentials" };
     const user = await this.findUserByEmail(input.email);
     const ok = await verifyPassword(input.password, user?.encrypted_password ?? null);
     if (!user || !ok) return { status: "invalid_credentials" };

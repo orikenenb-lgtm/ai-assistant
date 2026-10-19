@@ -252,4 +252,12 @@ describe("tighter per-table rules (L1, L3, L4)", () => {
   });
 });
 
+describe("tenant time zones", () => {
+  it("the database refuses an invalid zone, so tenant-wide jobs cannot be broken by one org", async () => {
+    await expectDbError(db().update(schema.tenants).set({ timezone: "Not/AZone" }).where(eq(schema.tenants.id, A.tenant.id)), /invalid time zone/);
+    await db().update(schema.tenants).set({ timezone: "Europe/London" }).where(eq(schema.tenants.id, A.tenant.id));
+    await db().update(schema.tenants).set({ timezone: "Asia/Jerusalem" }).where(eq(schema.tenants.id, A.tenant.id));
+  });
+});
+
 void systemCtx;

@@ -10,7 +10,7 @@ export const metadata = { title: "Dev mailbox" };
 /** Development only: shows emails the "log" provider recorded instead of sending. */
 export default async function DevMailboxPage() {
   // Shows every tenant's emails (incl. reset links): never reachable outside development and test.
-  if (!["development", "test"].includes(env().APP_ENV) || env().EMAIL_PROVIDER !== "log") notFound();
+  if (!["development", "test"].includes(env().APP_ENV) || env().EMAIL_PROVIDER !== "log" || process.env.VERCEL_ENV) notFound();
   const emails = await db().select().from(schema.emailOutbox).orderBy(desc(schema.emailOutbox.createdAt)).limit(30);
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6" dir="ltr">

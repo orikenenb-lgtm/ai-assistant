@@ -1,9 +1,19 @@
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/server/db";
 import { AppError } from "@/server/errors";
+import { env } from "@/server/env";
 
 /** The authenticated platform administrator performing an admin action. */
 export type AdminActor = { userId: string; ip: string | null; userAgent: string | null };
+
+/**
+ * Outside development/test, platform powers require a second factor: the admin
+ * must have MFA enrolled and the session must have passed it (aal2).
+ */
+export function adminMfaSatisfied(user: { mfaEnrolled: boolean; aal: string }): boolean {
+  if (env().APP_ENV === "development" || env().APP_ENV === "test") return true;
+  return user.mfaEnrolled && user.aal === "aal2";
+}
 
 /**
  * Every admin service function calls this first, so the console stays safe even

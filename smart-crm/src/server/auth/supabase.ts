@@ -9,6 +9,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../env";
 import { hitRateLimit } from "../rate-limit";
+import { verifyPayload } from "../crypto";
 import type { AuthAdapter, MfaFactor, RequestInfo, SessionUser, SignInResult } from "./types";
 
 export type SupabaseCookieStore = {
@@ -19,6 +20,7 @@ export type SupabaseCookieStore = {
 export function createSupabaseServerClient(store: SupabaseCookieStore): SupabaseClient {
   const e = env();
   return createServerClient(e.NEXT_PUBLIC_SUPABASE_URL!, e.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookieOptions: { sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 30 },
     cookies: {
       getAll: () => store.getAll(),
       setAll: (cookies) => {
@@ -69,9 +71,13 @@ export class SupabaseAuthAdapter implements AuthAdapter {
   }
 
   async signIn(input: { email: string; password: string }, req: RequestInfo): Promise<SignInResult> {
-    const byAccount = await hitRateLimit(`login:${input.email.toLowerCase()}`, 10, 900);
+    // Per account+IP (tight) so a third party cannot lock the account owner out from elsewhere;
+    // per account (loose) against distributed guessing; per IP against spraying.
+    const email = input.email.toLowerCase();
+    const byAccountIp = await hitRateLimit(`login:${email}:${req.ip ?? "unknown"}`, 10, 900);
+    const byAccount = await hitRateLimit(`login:${email}`, 100, 900);
     const byIp = await hitRateLimit(`login-ip:${req.ip ?? "unknown"}`, 50, 900);
-    if (!byAccount.allowed || !byIp.allowed) return { status: "invalid_credentials" };
+    if (!byAccountIp.allowed || !byAccount.allowed || !byIp.allowed) return { status: "invalid_credentials" };
     const sb = await this.client();
     const { error } = await sb.auth.signInWithPassword({ email: input.email, password: input.password });
     if (error) {
@@ -108,8 +114,12 @@ export class SupabaseAuthAdapter implements AuthAdapter {
     await sb.auth.resetPasswordForEmail(email, { redirectTo: `${env().APP_URL}/auth/confirm?next=/reset-password` });
   }
 
-  async completePasswordReset(input: { token?: string; password: string }) {
+  async completePasswordReset(input: { token?: string; password: string; recoveryProof?: string | null }) {
     const sb = await this.client();
+    // A session alone is not enough: the reset must follow a recovery link (signed proof set by /auth/confirm).
+    const { data } = await sb.auth.getUser();
+    const proof = input.recoveryProof ? verifyPayload<{ userId: string }>("pw-recovery", input.recoveryProof) : null;
+    if (!data.user || !proof || proof.userId !== data.user.id) return false;
     const { error } = await sb.auth.updateUser({ password: input.password });
     if (error) return false;
     await sb.auth.signOut({ scope: "others" });

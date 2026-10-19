@@ -34,6 +34,14 @@ export const changePasswordSchema = z
 
 /** Only same-site relative paths are allowed as post-login destinations (no open redirects). */
 export function safeNext(next: string | null | undefined, fallback = "/dashboard"): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;
-  return next;
+  // Browsers strip tabs/newlines and treat "\\" as "/", so "/\t/evil.com" would leave the site.
+  if (!next || !next.startsWith("/") || /[\u0000-\u001f\u007f\\]/.test(next)) return fallback;
+  let url: URL;
+  try {
+    url = new URL(next, "http://same.origin");
+  } catch {
+    return fallback;
+  }
+  if (url.origin !== "http://same.origin") return fallback;
+  return url.pathname + url.search + url.hash;
 }

@@ -90,10 +90,12 @@ const schema = z
       issue("BILLING_PROVIDER", "stripe requires STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET");
     }
     // Live charging is opt-in twice: an explicit flag AND a live key.
-    if (v.STRIPE_SECRET_KEY?.startsWith("sk_live_") && !v.BILLING_LIVE_MODE) {
+    if (/^(sk|rk)_live_/.test(v.STRIPE_SECRET_KEY ?? "") && !v.BILLING_LIVE_MODE) {
       issue("BILLING_LIVE_MODE", "a live Stripe key was provided without BILLING_LIVE_MODE=true");
     }
     if (v.APP_ENV === "production" && !v.CRON_SECRET) issue("CRON_SECRET", "required in production");
+    // Production must deliver real email (verification, resets, invitations).
+    if (v.APP_ENV === "production" && v.EMAIL_PROVIDER === "log") issue("EMAIL_PROVIDER", "the log provider is not allowed in production");
   });
 
 export type Env = z.infer<typeof schema>;

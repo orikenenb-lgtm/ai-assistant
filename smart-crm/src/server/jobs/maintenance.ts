@@ -11,6 +11,8 @@ registerJobHandler("maintenance.purge", async () => {
   await purgeRateLimitCounters();
   await db().execute(sql`delete from public.jobs where status in ('succeeded', 'canceled') and finished_at < now() - interval '7 days'`);
   await db().execute(sql`delete from public.webhook_events where status in ('processed', 'ignored') and received_at < now() - interval '30 days'`);
+  // Email bodies carry one-time links (invites, quotes, resets): keep them only briefly.
+  await db().execute(sql`delete from public.email_outbox where created_at < now() - interval '7 days'`);
   if (env().AUTH_PROVIDER === "local") {
     await db().execute(sql`delete from auth.local_sessions where expires_at < now() - interval '1 day' or revoked_at < now() - interval '7 days'`);
     await db().execute(sql`delete from auth.local_tokens where expires_at < now() - interval '1 day'`);

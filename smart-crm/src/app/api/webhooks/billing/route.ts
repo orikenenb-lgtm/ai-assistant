@@ -5,6 +5,7 @@ import { hitRateLimit } from "@/server/rate-limit";
 import { ingestBillingWebhook } from "@/modules/billing/webhooks";
 import { BillingProviderError } from "@/modules/billing/providers";
 import { StripeSignatureError } from "@/modules/billing/stripe-signature";
+import { clientIp } from "@/server/request-ip";
 
 export const maxDuration = 30;
 
@@ -15,7 +16,7 @@ export const maxDuration = 30;
  */
 export async function POST(request: NextRequest) {
   if (env().BILLING_PROVIDER !== "stripe") return NextResponse.json({ error: "not found" }, { status: 404 });
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = clientIp(request.headers) ?? "unknown";
   if (!(await hitRateLimit(`billing-webhook:${ip}`, 600, 60)).allowed) {
     return NextResponse.json({ error: "rate limited" }, { status: 429 });
   }

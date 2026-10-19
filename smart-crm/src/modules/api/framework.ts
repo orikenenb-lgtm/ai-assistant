@@ -10,6 +10,7 @@ import { errorFields, logger } from "@/server/logger";
 import { getEntitlements, recordUsage } from "@/modules/billing/entitlements";
 import { en } from "@/i18n/messages.generated";
 import { looksLikeApiKey, permissionsForScopes, type ApiScope } from "./keys";
+import { clientIp } from "@/server/request-ip";
 
 /**
  * Minimal framework for the public REST API (v1):
@@ -131,7 +132,7 @@ export function apiRoute<P = Record<string, never>>(
         apiKeyId: principal.keyId,
         permissions: permissionsForScopes(principal.scopes),
         meta: {
-          ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+          ip: clientIp(request.headers),
           userAgent: request.headers.get("user-agent"),
         },
       });

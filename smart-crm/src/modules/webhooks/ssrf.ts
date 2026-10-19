@@ -69,6 +69,11 @@ function classifyV6(ip: string): AddressClass {
   const embedded = `${h[6] >> 8}.${h[6] & 0xff}.${h[7] >> 8}.${h[7] & 0xff}`;
   if (h.slice(0, 5).every((x) => x === 0) && h[5] === 0xffff) return classifyV4(embedded);
   if (h[0] === 0x64 && h[1] === 0xff9b) return classifyV4(embedded);
+  // SIIT (::ffff:0:a.b.c.d) embeds IPv4 too.
+  if (h.slice(0, 4).every((x) => x === 0) && h[4] === 0xffff && h[5] === 0) return classifyV4(embedded);
+  // 6to4 (2002::/16) and Teredo (2001::/32) tunnel to arbitrary IPv4 hosts: never a legitimate webhook target.
+  if (h[0] === 0x2002) return "reserved";
+  if (h[0] === 0x2001 && h[1] === 0x0000) return "reserved";
   if ((h[0] & 0xfe00) === 0xfc00) return "private"; // fc00::/7 unique local
   if ((h[0] & 0xffc0) === 0xfe80) return "link-local"; // fe80::/10
   if ((h[0] & 0xffc0) === 0xfec0) return "private"; // fec0::/10 deprecated site-local

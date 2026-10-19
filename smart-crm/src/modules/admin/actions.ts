@@ -6,7 +6,8 @@ import { z } from "zod";
 import { requestInfo, requireUser } from "@/server/auth";
 import { publicAction, type ActionResult } from "@/server/action";
 import { TENANT_COOKIE } from "@/server/tenancy";
-import { assertSuperAdmin, type AdminActor } from "./guard";
+import { AppError } from "@/server/errors";
+import { adminMfaSatisfied, assertSuperAdmin, type AdminActor } from "./guard";
 import {
   adminChangePlan,
   cancelDeadJob,
@@ -31,6 +32,7 @@ import {
 async function currentAdmin(): Promise<AdminActor> {
   const user = await requireUser();
   await assertSuperAdmin(user.userId);
+  if (!adminMfaSatisfied(user)) throw new AppError("FORBIDDEN", "admin.mfaRequired");
   const info = await requestInfo();
   return { userId: user.userId, ip: info.ip, userAgent: info.userAgent };
 }

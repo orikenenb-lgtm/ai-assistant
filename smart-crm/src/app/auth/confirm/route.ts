@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/server/auth";
 import { safeNext } from "@/modules/auth/schemas";
+import { signPayload } from "@/server/crypto";
+import { RECOVERY_COOKIE } from "@/server/auth/recovery";
 
 /**
  * Landing route for email links.
@@ -18,6 +20,17 @@ export async function GET(request: NextRequest) {
   const kind = type === "recovery" ? "recovery" : "email";
   const result = await auth().confirm({ token, type: kind });
   if (!result) return to("/verify-email?status=invalid");
-  if (kind === "recovery") return to(next === "/dashboard" ? "/reset-password" : next);
+  if (kind === "recovery") {
+    const res = to(next === "/dashboard" ? "/reset-password" : next);
+    // Proof that this browser came through a recovery link; required to set a new password (15 minutes).
+    res.cookies.set(RECOVERY_COOKIE, signPayload("pw-recovery", { userId: result.userId }, 900), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 900,
+    });
+    return res;
+  }
   return to("/verify-email?status=verified");
 }

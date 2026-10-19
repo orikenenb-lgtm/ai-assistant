@@ -288,28 +288,39 @@ export async function runDueSchedules(now = new Date()) {
     );
   let started = 0;
   for (const { wf, timezone } of due) {
-    const def = await publishedDefinition(wf.id, wf.publishedVersion!);
-    const trigger = triggerOf(def).config;
-    if (trigger.kind !== "schedule") continue;
-    const slot = wf.nextScheduledAt!.toISOString();
-    const contacts = await db()
-      .select({ id: schema.contacts.id })
-      .from(schema.contacts)
-      .where(and(eq(schema.contacts.tenantId, wf.tenantId), isNull(schema.contacts.deletedAt)))
-      .limit(SEGMENT_BATCH);
-    for (const c of contacts) {
-      const seed: RunSeed = { entityType: "contact", entityId: c.id, payload: { scheduledAt: slot } };
-      if (trigger.segment.length) {
-        const ctx = await buildRunContext(wf.tenantId, seed);
-        if (!evaluateRules(trigger.segment, ctx.data)) continue;
-      }
-      if (await startRun(wf, { triggerKey: `sched:${slot}:${c.id}`, seed, depth: 0 })) started++;
+    // One broken workflow or tenant setting must not stop the others' schedules.
+    try {
+      started += await runScheduledWorkflow(wf, timezone, now);
+    } catch (e) {
+      logger().error({ workflowId: wf.id, ...errorFields(e) }, "automation schedule failed");
     }
-    await db()
-      .update(schema.automationWorkflows)
-      .set({ nextScheduledAt: nextSlot(now, trigger, timezone) })
-      .where(eq(schema.automationWorkflows.id, wf.id));
   }
+  return started;
+}
+
+async function runScheduledWorkflow(wf: WorkflowRow, timezone: string, now: Date): Promise<number> {
+  let started = 0;
+  const def = await publishedDefinition(wf.id, wf.publishedVersion!);
+  const trigger = triggerOf(def).config;
+  if (trigger.kind !== "schedule") return 0;
+  const slot = wf.nextScheduledAt!.toISOString();
+  const contacts = await db()
+    .select({ id: schema.contacts.id })
+    .from(schema.contacts)
+    .where(and(eq(schema.contacts.tenantId, wf.tenantId), isNull(schema.contacts.deletedAt)))
+    .limit(SEGMENT_BATCH);
+  for (const c of contacts) {
+    const seed: RunSeed = { entityType: "contact", entityId: c.id, payload: { scheduledAt: slot } };
+    if (trigger.segment.length) {
+      const ctx = await buildRunContext(wf.tenantId, seed);
+      if (!evaluateRules(trigger.segment, ctx.data)) continue;
+    }
+    if (await startRun(wf, { triggerKey: `sched:${slot}:${c.id}`, seed, depth: 0 })) started++;
+  }
+  await db()
+    .update(schema.automationWorkflows)
+    .set({ nextScheduledAt: nextSlot(now, trigger, timezone) })
+    .where(eq(schema.automationWorkflows.id, wf.id));
   return started;
 }
 
