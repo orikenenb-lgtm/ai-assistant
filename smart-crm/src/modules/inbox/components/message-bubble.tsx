@@ -33,7 +33,7 @@ function Media({ m }: { m: ThreadMessage }) {
   const t = useTranslations("inbox.message");
   if (!m.media) return null;
   if (m.media.tooLarge) return <p className="text-xs italic text-muted-foreground">{t("mediaTooLarge")}</p>;
-  if (!m.media.storageKey) return <p className="text-xs italic text-muted-foreground">{t("mediaPending")}</p>;
+  if (!m.media.available) return <p className="text-xs italic text-muted-foreground">{t("mediaPending")}</p>;
   const src = `/inbox/media/${m.id}`;
   if (m.type === "image" || m.type === "sticker") {
     // eslint-disable-next-line @next/next/no-img-element -- authorized private media, not optimizable

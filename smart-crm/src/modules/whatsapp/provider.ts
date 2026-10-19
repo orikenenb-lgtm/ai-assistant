@@ -42,6 +42,8 @@ export interface WhatsAppProvider {
   fetchTemplates(): Promise<ProviderTemplate[]>;
   downloadMedia(mediaId: string): Promise<{ bytes: Buffer; mimeType: string }>;
   testConnection(): Promise<ConnectionCheck>;
+  /** Proves the access token controls this phone number (it is listed under the WABA). */
+  verifyOwnership(): Promise<{ ok: true } | { ok: false; reason: string }>;
 }
 
 export type ProviderErrorKind = "permanent" | "retryable" | "rate_limited";

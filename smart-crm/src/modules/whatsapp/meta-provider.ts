@@ -132,6 +132,15 @@ export class MetaCloudWhatsAppProvider implements WhatsAppProvider {
     return { bytes: Buffer.from(await res.arrayBuffer()), mimeType: meta.mime_type ?? res.headers.get("content-type") ?? "application/octet-stream" };
   }
 
+  async verifyOwnership(): Promise<{ ok: true } | { ok: false; reason: string }> {
+    try {
+      const body = await this.request<{ data?: { id: string }[] }>(`/${this.account.wabaId}/phone_numbers?fields=id&limit=100`);
+      return (body.data ?? []).some((n) => n.id === this.account.phoneNumberId) ? { ok: true } : { ok: false, reason: "phone number is not part of this WhatsApp Business Account" };
+    } catch (e) {
+      return { ok: false, reason: e instanceof Error ? e.message : String(e) };
+    }
+  }
+
   async testConnection(): Promise<ConnectionCheck> {
     try {
       const body = await this.request<{ display_phone_number?: string; verified_name?: string; quality_rating?: string }>(

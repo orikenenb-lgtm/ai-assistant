@@ -160,9 +160,9 @@ export async function buildTenantExport(tx: Tx, tenantId: string) {
   return { exportedAt: new Date().toISOString(), subject: "tenant", tables: data };
 }
 
-export async function processExportRequest(requestId: string) {
+export async function processExportRequest(requestId: string, jobTenantId: string | null = null) {
   const [req] = await db().select().from(schema.dataRequests).where(eq(schema.dataRequests.id, requestId));
-  if (!req || req.status === "completed") return;
+  if (!req || req.status === "completed" || (jobTenantId && req.tenantId !== jobTenantId)) return;
   await db().update(schema.dataRequests).set({ status: "processing" }).where(eq(schema.dataRequests.id, req.id));
   try {
     const bundle: unknown = await withSystemTx((tx): Promise<unknown> =>
@@ -212,9 +212,9 @@ export async function eraseContact(ctx: ServiceCtx, contactId: string, confirmat
     ).map((r) => r.key);
     const mediaKeys = (
       await tx.execute<{ key: string | null }>(sql`
-        select m.media->>'storage_key' as key from public.messages m
+        select m.media->>'storageKey' as key from public.messages m
         join public.conversations c on c.id = m.conversation_id
-        where c.tenant_id = ${t} and c.contact_id = ${contactId} and m.media ? 'storage_key'`)
+        where c.tenant_id = ${t} and c.contact_id = ${contactId} and m.media ? 'storageKey'`)
     )
       .map((r) => r.key)
       .filter((k): k is string => Boolean(k));
@@ -320,7 +320,7 @@ export async function purgeDeletedTenants(now = new Date()): Promise<number> {
         union all select logo_path from public.tenants where id = ${t.id}
         union all select file_storage_key from public.data_requests where tenant_id = ${t.id}
         union all select pdf_storage_key from public.quotes where tenant_id = ${t.id}
-        union all select m.media->>'storage_key' from public.messages m where m.tenant_id = ${t.id}`);
+        union all select m.media->>'storageKey' from public.messages m where m.tenant_id = ${t.id}`);
       await tx.delete(schema.tenants).where(eq(schema.tenants.id, t.id));
       await tx.insert(schema.auditLogs).values({
         tenantId: null,
@@ -345,7 +345,7 @@ export async function applyRetention(): Promise<{ messages: number; aiLogs: numb
     where m.tenant_id = t.id
       and (t.settings #>> '{retention,messagesDays}') ~ '^[0-9]+$'
       and m.created_at < now() - make_interval(days => (t.settings #>> '{retention,messagesDays}')::int)
-    returning m.media->>'storage_key' as key`);
+    returning m.media->>'storageKey' as key`);
   for (const { key } of messages) if (key) await storage().delete(key).catch(() => undefined);
   const aiLogs = await db().execute(sql`
     delete from public.ai_interactions a using public.tenants t

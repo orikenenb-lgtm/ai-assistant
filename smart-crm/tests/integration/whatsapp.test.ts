@@ -325,6 +325,8 @@ describe("outbound messages", () => {
 describe("accounts and permissions", () => {
   it("encrypts access tokens at rest and never exposes them", async () => {
     const token = "EAAGtesttokenvalue1234567890";
+    // Ownership is verified against Meta on connect; a verified fake stands in for the Graph API.
+    __setProviderFactoryForTests(() => new MockWhatsAppProvider());
     const acc = await connectAccount(A.ownerCtx, { provider: "meta", displayName: "Meta", phoneNumber: "+972500000005", phoneNumberId: uniquePnid("pnM"), wabaId: "waba_m", accessToken: token, sendRatePerMinute: 60 });
     expect(acc.hasToken).toBe(true);
     expect(JSON.stringify(acc)).not.toContain(token);

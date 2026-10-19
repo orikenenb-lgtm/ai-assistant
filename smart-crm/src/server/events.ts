@@ -68,7 +68,7 @@ export function subscribeToEvents(sub: EventSubscriber) {
 /** Fans an event out to every subscriber; a failing subscriber fails the job (retried). */
 async function dispatch(job: Job) {
   const event = job.payload as unknown as DomainEvent;
-  if (!event?.type || !event.tenantId) throw new PermanentJobError("malformed event payload");
+  if (!event?.type || !event.tenantId || !job.tenantId || event.tenantId !== job.tenantId) throw new PermanentJobError("malformed event payload");
   const errors: string[] = [];
   for (const sub of subscribers) {
     try {

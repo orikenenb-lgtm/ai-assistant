@@ -5,7 +5,7 @@ import { applyRetention, processExportRequest, purgeDeletedTenants } from "./ser
 registerJobHandler("privacy.export", async (job) => {
   const requestId = job.payload.requestId;
   if (typeof requestId !== "string") throw new PermanentJobError("missing requestId");
-  await processExportRequest(requestId);
+  await processExportRequest(requestId, job.tenantId);
 });
 
 registerJobHandler("privacy.purge_tenants", async () => {

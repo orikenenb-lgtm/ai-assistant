@@ -28,7 +28,7 @@ registerJobHandler("whatsapp.process_webhook", async (job) => {
 });
 
 registerJobHandler("whatsapp.send", async (job) => {
-  await deliverOutboundMessage(requireString(job.payload, "messageId"), { finalAttempt: job.attempts >= job.maxAttempts });
+  await deliverOutboundMessage(requireString(job.payload, "messageId"), { finalAttempt: job.attempts >= job.maxAttempts, tenantId: job.tenantId });
 });
 
 registerJobHandler("whatsapp.download_media", async (job) => {
@@ -41,7 +41,7 @@ registerJobHandler("whatsapp.download_media", async (job) => {
       .innerJoin(schema.whatsappAccounts, eq(schema.whatsappAccounts.id, schema.conversations.whatsappAccountId))
       .where(eq(schema.messages.id, messageId)),
   );
-  if (!row) return;
+  if (!row || (job.tenantId && row.m.tenantId !== job.tenantId)) return;
   const media = (row.m.media ?? {}) as Record<string, unknown>;
   if (typeof media.mediaId !== "string" || media.storageKey) return;
   let file;
@@ -77,7 +77,7 @@ registerJobHandler("whatsapp.mark_read", async (job) => {
       .orderBy(desc(schema.messages.createdAt))
       .limit(1),
   );
-  if (!row?.waMessageId) return;
+  if (!row?.waMessageId || (job.tenantId && row.account.tenantId !== job.tenantId)) return;
   try {
     await (await providerForAccount(row.account)).markRead(row.waMessageId);
   } catch (e) {

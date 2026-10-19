@@ -36,7 +36,7 @@ const actorFor = (senderType: string): ActorType =>
  * the provider and records the outcome. Safe to retry: only queued/sending
  * messages are processed.
  */
-export async function deliverOutboundMessage(messageId: string, opts: { finalAttempt: boolean }) {
+export async function deliverOutboundMessage(messageId: string, opts: { finalAttempt: boolean; tenantId?: string | null }) {
   const [row] = await withSystemTx((tx) =>
     tx
       .select({ m: schema.messages, conv: schema.conversations, account: schema.whatsappAccounts, contact: schema.contacts })
@@ -46,7 +46,7 @@ export async function deliverOutboundMessage(messageId: string, opts: { finalAtt
       .innerJoin(schema.contacts, eq(schema.contacts.id, schema.conversations.contactId))
       .where(eq(schema.messages.id, messageId)),
   );
-  if (!row) throw new PermanentJobError("message not found");
+  if (!row || (opts.tenantId && row.m.tenantId !== opts.tenantId)) throw new PermanentJobError("message not found");
   const { m, conv, account, contact } = row;
   if (m.direction !== "outbound" || !["queued", "sending"].includes(m.status)) return;
 

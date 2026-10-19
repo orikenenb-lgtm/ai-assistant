@@ -11,7 +11,7 @@ import {
   inboxCounts,
   listConversations,
   openConversationForContact,
-  outboundSchema,
+  clientOutboundSchema,
   sendMessage,
   setConversationStatus,
   setHandoff,
@@ -39,7 +39,7 @@ export async function inboxCountsAction(): Promise<ActionResult<Awaited<ReturnTy
 export async function sendMessageAction(input: unknown): Promise<ActionResult<{ id: string }>> {
   return tenantAction(
     input,
-    { schema: conv.extend({ message: outboundSchema, clientKey: z.string().min(8).max(100).optional() }), permission: "inbox.reply" },
+    { schema: conv.extend({ message: clientOutboundSchema, clientKey: z.string().min(8).max(100).optional() }), permission: "inbox.reply" },
     async ({ conversationId, message, clientKey }, { ctx }) => {
       const r = await sendMessage(ctx, conversationId, message, { clientKey });
       await drainWhatsAppJobsInDev();

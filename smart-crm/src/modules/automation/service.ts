@@ -1,5 +1,5 @@
 import { and, count, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
-import { db, schema } from "@/server/db";
+import { db, schema, type Tx } from "@/server/db";
 import { assertCan, assertCanWrite, type ServiceCtx } from "@/server/context";
 import { audit } from "@/server/audit";
 import { AppError } from "@/server/errors";
@@ -117,6 +117,40 @@ export async function saveDraft(ctx: ServiceCtx, id: string, input: { name?: str
   });
 }
 
+/**
+ * Users, tags and stages referenced by action parameters must belong to this
+ * tenant (automations run with system privileges, so this is checked up front).
+ */
+async function assertReferencesBelong(tx: Tx, tenantId: string, def: WorkflowDefinition) {
+  const users = new Set<string>();
+  const tags = new Set<string>();
+  const stages = new Set<string>();
+  for (const n of def.nodes) {
+    if (n.type !== "action") continue;
+    const p = n.config.params as Record<string, unknown>;
+    if (typeof p.userId === "string") users.add(p.userId);
+    if (typeof p.tagId === "string") tags.add(p.tagId);
+    if (typeof p.stageId === "string") stages.add(p.stageId);
+  }
+  const missing = async (ids: Set<string>, query: (list: string[]) => Promise<{ id: string }[]>) => {
+    if (!ids.size) return false;
+    const found = new Set((await query([...ids])).map((r) => r.id));
+    return [...ids].some((id) => !found.has(id));
+  };
+  const bad =
+    (await missing(users, (l) =>
+      tx
+        .select({ id: schema.memberships.userId })
+        .from(schema.memberships)
+        .where(and(eq(schema.memberships.tenantId, tenantId), eq(schema.memberships.status, "active"), inArray(schema.memberships.userId, l))),
+    )) ||
+    (await missing(tags, (l) => tx.select({ id: schema.tags.id }).from(schema.tags).where(and(eq(schema.tags.tenantId, tenantId), inArray(schema.tags.id, l))))) ||
+    (await missing(stages, (l) =>
+      tx.select({ id: schema.pipelineStages.id }).from(schema.pipelineStages).where(and(eq(schema.pipelineStages.tenantId, tenantId), inArray(schema.pipelineStages.id, l))),
+    ));
+  if (bad) throw new AppError("VALIDATION", "automation.publishInvalid", { definition: ["automation.unknownReference"] });
+}
+
 /** Validates, snapshots a new version and activates it. Returns a webhook token once, when relevant. */
 export async function publishWorkflow(ctx: ServiceCtx, id: string): Promise<{ version: number; webhookToken: string | null }> {
   assertCanWrite(ctx, "automation.manage");
@@ -135,6 +169,7 @@ export async function publishWorkflow(ctx: ServiceCtx, id: string): Promise<{ ve
   return ctx.run(async (tx) => {
     const ent = await getEntitlements(tx, ctx.tenantId);
     assertFeature(ent, "automation");
+    await assertReferencesBelong(tx, ctx.tenantId, def);
     if (wf.status !== "active" && ent.limits.max_workflows !== undefined) {
       const [{ n }] = await tx
         .select({ n: count() })

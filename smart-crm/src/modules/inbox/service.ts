@@ -26,14 +26,23 @@ export const conversationFilterSchema = z.object({
 });
 export type ConversationFilter = z.infer<typeof conversationFilterSchema>;
 
+const textOutbound = z.object({ kind: z.literal("text"), text: z.string().trim().min(1).max(4096) });
+const templateOutbound = z.object({
+  kind: z.literal("template"),
+  templateId: z.uuid(),
+  headerParams: z.array(z.string().trim().min(1).max(1024)).max(10).default([]),
+  bodyParams: z.array(z.string().trim().min(1).max(1024)).max(20).default([]),
+});
+
+/**
+ * What a browser may send. Media is NOT accepted from clients: only the upload
+ * route builds media messages, from the key it just generated.
+ */
+export const clientOutboundSchema = z.discriminatedUnion("kind", [textOutbound, templateOutbound]);
+
 export const outboundSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("text"), text: z.string().trim().min(1).max(4096) }),
-  z.object({
-    kind: z.literal("template"),
-    templateId: z.uuid(),
-    headerParams: z.array(z.string().trim().min(1).max(1024)).max(10).default([]),
-    bodyParams: z.array(z.string().trim().min(1).max(1024)).max(20).default([]),
-  }),
+  textOutbound,
+  templateOutbound,
   z.object({
     kind: z.literal("media"),
     storageKey: z.string().min(1).max(500),
@@ -44,6 +53,8 @@ export const outboundSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 export type OutboundInput = z.infer<typeof outboundSchema>;
+
+const outboundMediaKey = (tenantId: string) => new RegExp(`^${tenantId}/whatsapp-out/[0-9a-f-]{36}/[^/\\\\]+$`);
 
 /* ------------------------------------------------------------------ list */
 
@@ -120,12 +131,19 @@ export async function listConversations(ctx: ServiceCtx, f: ConversationFilter):
 
 /* ---------------------------------------------------------------- thread */
 
+function publicMedia(raw: unknown): ThreadMessage["media"] {
+  if (!raw || typeof raw !== "object") return null;
+  const m = raw as { mimeType?: string; fileName?: string; size?: number; tooLarge?: boolean; storageKey?: string };
+  return { mimeType: m.mimeType, fileName: m.fileName, size: m.size, tooLarge: m.tooLarge, available: Boolean(m.storageKey) };
+}
+
 export type ThreadMessage = {
   id: string;
   direction: "inbound" | "outbound";
   type: string;
   body: string | null;
-  media: { mimeType?: string; fileName?: string; storageKey?: string; size?: number; tooLarge?: boolean } | null;
+  /** Storage keys never leave the server; `available` says whether the file can be fetched via /inbox/media/<id>. */
+  media: { mimeType?: string; fileName?: string; size?: number; tooLarge?: boolean; available: boolean } | null;
   templateName: string | null;
   status: string;
   errorCode: string | null;
@@ -211,7 +229,7 @@ export async function getThread(ctx: ServiceCtx, conversationId: string, opts: {
             direction: r.m.direction as ThreadMessage["direction"],
             type: r.m.type,
             body: r.m.body,
-            media: (r.m.media as ThreadMessage["media"]) ?? null,
+            media: publicMedia(r.m.media),
             templateName: (r.m.template as { name?: string } | null)?.name ?? null,
             status: r.m.status,
             errorCode: r.m.errorCode,
@@ -330,7 +348,8 @@ export async function sendMessage(ctx: ServiceCtx, conversationId: string, input
         type = "text";
         body = input.text;
       } else {
-        if (!input.storageKey.startsWith(`${ctx.tenantId}/`)) throw new AppError("FORBIDDEN", "errors.forbidden");
+        // Exactly the shape storageKey(tenant, "whatsapp-out", name) produces — no traversal, no other tenant.
+        if (!outboundMediaKey(ctx.tenantId).test(input.storageKey)) throw new AppError("FORBIDDEN", "errors.forbidden");
         type = input.mimeType.startsWith("image/") ? "image" : input.mimeType.startsWith("audio/") ? "audio" : input.mimeType.startsWith("video/") ? "video" : "document";
         body = input.caption ?? null;
         media = { storageKey: input.storageKey, mimeType: input.mimeType, fileName: input.fileName, size: input.sizeBytes };

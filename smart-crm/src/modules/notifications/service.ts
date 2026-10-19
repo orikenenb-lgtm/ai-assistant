@@ -43,7 +43,9 @@ export async function notify(tx: Executor, input: NotifyInput) {
     from public.profiles p
     left join public.notification_preferences np
       on np.user_id = p.id and np.tenant_id = ${input.tenantId} and np.event_type = ${input.type}
-    where p.id = ${input.userId}`);
+    where p.id = ${input.userId}
+      -- Only active members of the tenant can be notified (never arbitrary platform users).
+      and exists (select 1 from public.memberships m where m.tenant_id = ${input.tenantId} and m.user_id = p.id and m.status = 'active')`);
   if (!row) return;
   const locale = row.locale === "en" ? "en" : "he";
   const inApp = row.in_app ?? true;

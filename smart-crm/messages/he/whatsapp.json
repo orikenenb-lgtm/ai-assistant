@@ -27,9 +27,16 @@
     "tokenKeep": "השאירו ריק כדי לשמור את הטוקן הקיים",
     "sendRate": "הגנה מפני שליחה מהירה מדי (Meta מגבילה לפי דרגת המספר)"
   },
-  "providers": { "meta": "Meta Cloud API (רשמי)", "mock": "מצב הדגמה — לפיתוח בלבד" },
+  "providers": {
+    "meta": "Meta Cloud API (רשמי)",
+    "mock": "מצב הדגמה — לפיתוח בלבד"
+  },
   "mockBadge": "הדגמה — לא נשלח באמת",
-  "status": { "active": "פעיל", "disabled": "מושבת", "error": "שגיאה" },
+  "status": {
+    "active": "פעיל",
+    "disabled": "מושבת",
+    "error": "שגיאה"
+  },
   "quality": "איכות",
   "lastSync": "סנכרון אחרון",
   "test": "בדיקת חיבור",
@@ -44,7 +51,12 @@
   "sync": "סנכרון מ-Meta",
   "synced": "סונכרנו {count} תבניות",
   "noTemplates": "אין תבניות. לחצו על סנכרון כדי למשוך אותן מ-Meta.",
-  "templateCols": { "name": "שם", "language": "שפה", "category": "סוג", "status": "סטטוס" },
+  "templateCols": {
+    "name": "שם",
+    "language": "שפה",
+    "category": "סוג",
+    "status": "סטטוס"
+  },
   "webhook": {
     "title": "הגדרת Webhook ב-Meta",
     "body": "בלוח הבקרה של האפליקציה ב-Meta (WhatsApp ← Configuration) הגדירו את כתובת ה-Callback ואת ה-Verify token שמוגדר בשרת.",
@@ -64,7 +76,11 @@
     "name": "שם השולח",
     "text": "טקסט",
     "kind": "סוג",
-    "kinds": { "text": "טקסט", "image": "תמונה", "document": "מסמך" },
+    "kinds": {
+      "text": "טקסט",
+      "image": "תמונה",
+      "document": "מסמך"
+    },
     "send": "הדמיית הודעה נכנסת",
     "done": "ההודעה הנכנסת התקבלה",
     "openInbox": "מעבר לתיבה",
@@ -76,5 +92,6 @@
   "syncFailed": "סנכרון התבניות נכשל",
   "simulatorDisabled": "הסימולטור זמין רק בסביבת פיתוח",
   "simulatorFailed": "שליחת ה-Webhook המדומה נכשלה",
-  "simulatorNoMessage": "אין הודעה יוצאת שנשלחה בשיחה הזו"
+  "simulatorNoMessage": "אין הודעה יוצאת שנשלחה בשיחה הזו",
+  "ownershipFailed": "לא הצלחנו לאמת שהטוקן שולט במספר הזה. בדקו את מזהה המספר, מזהה חשבון ה-WhatsApp Business וההרשאות של הטוקן."
 }

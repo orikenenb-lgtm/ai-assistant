@@ -337,6 +337,11 @@ export async function processWebhookEvent(eventId: string) {
           logger().info({ phoneNumberId: pnid }, "whatsapp webhook for unknown phone number id ignored");
           continue;
         }
+        // The event must come from the WABA the account was verified against, and the account must be live.
+        if (entry.id !== account.wabaId || account.status !== "active") {
+          logger().warn({ phoneNumberId: pnid, entryId: entry.id, status: account.status }, "whatsapp webhook ignored: WABA mismatch or inactive account");
+          continue;
+        }
         matchedTenant = account.tenantId;
         const names = new Map((value.contacts ?? []).map((c) => [c.wa_id ?? "", c.profile?.name]));
         for (const msg of value.messages ?? []) await processInboundMessage(account, msg, names.get(msg.from));

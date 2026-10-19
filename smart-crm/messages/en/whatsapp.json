@@ -27,9 +27,16 @@
     "tokenKeep": "Leave empty to keep the current token",
     "sendRate": "Protects against sending too fast (Meta limits by number tier)"
   },
-  "providers": { "meta": "Meta Cloud API (official)", "mock": "Demo mode — development only" },
+  "providers": {
+    "meta": "Meta Cloud API (official)",
+    "mock": "Demo mode — development only"
+  },
   "mockBadge": "Demo — nothing is really sent",
-  "status": { "active": "Active", "disabled": "Disabled", "error": "Error" },
+  "status": {
+    "active": "Active",
+    "disabled": "Disabled",
+    "error": "Error"
+  },
   "quality": "Quality",
   "lastSync": "Last sync",
   "test": "Test connection",
@@ -44,7 +51,12 @@
   "sync": "Sync from Meta",
   "synced": "Synced {count} templates",
   "noTemplates": "No templates. Click sync to pull them from Meta.",
-  "templateCols": { "name": "Name", "language": "Language", "category": "Category", "status": "Status" },
+  "templateCols": {
+    "name": "Name",
+    "language": "Language",
+    "category": "Category",
+    "status": "Status"
+  },
   "webhook": {
     "title": "Webhook setup in Meta",
     "body": "In the Meta app dashboard → WhatsApp → Configuration, set this callback URL and the verify token configured on the server.",
@@ -64,7 +76,11 @@
     "name": "Sender name",
     "text": "Text",
     "kind": "Type",
-    "kinds": { "text": "Text", "image": "Image", "document": "Document" },
+    "kinds": {
+      "text": "Text",
+      "image": "Image",
+      "document": "Document"
+    },
     "send": "Simulate inbound message",
     "done": "Inbound message received",
     "openInbox": "Open inbox",
@@ -76,5 +92,6 @@
   "syncFailed": "Template sync failed",
   "simulatorDisabled": "The simulator is only available in development",
   "simulatorFailed": "Sending the simulated webhook failed",
-  "simulatorNoMessage": "No sent outbound message in this conversation"
+  "simulatorNoMessage": "No sent outbound message in this conversation",
+  "ownershipFailed": "We couldn't verify that this token controls the number. Check the phone number ID, the WhatsApp Business Account ID and the token's permissions."
 }

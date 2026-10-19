@@ -70,14 +70,42 @@ class SupabaseStorage implements StorageProvider {
   }
 }
 
+/**
+ * Every key must look like `<tenant uuid>/<area>/…` with plain segments. Rejects
+ * traversal (`..`), absolute paths, backslashes, empty segments and control
+ * characters, so a key can never address another tenant's (or bucket's) objects
+ * even after URL/path normalisation.
+ */
+export function assertSafeStorageKey(key: string): void {
+  const segments = key.split("/");
+  const ok =
+    key.length <= 1024 &&
+    /^[0-9a-f-]{36}$/.test(segments[0] ?? "") &&
+    segments.length >= 3 &&
+    segments.every((s) => s.length > 0 && s !== "." && s !== ".." && !/[\\\u0000-\u001f\u007f%]/.test(s));
+  if (!ok) throw new AppError("VALIDATION", "files.invalidKey");
+}
+
+function guarded(p: StorageProvider): StorageProvider {
+  return {
+    kind: p.kind,
+    // async: a rejected key surfaces as a rejected promise, like any storage failure.
+    put: async (key, body, type) => (assertSafeStorageKey(key), p.put(key, body, type)),
+    get: async (key) => (assertSafeStorageKey(key), p.get(key)),
+    delete: async (key) => (assertSafeStorageKey(key), p.delete(key)),
+    signedUrl: async (key, ttl, name) => (assertSafeStorageKey(key), p.signedUrl(key, ttl, name)),
+  };
+}
+
 let provider: StorageProvider | undefined;
 export function storage(): StorageProvider {
   if (!provider) {
     const e = env();
-    provider =
+    provider = guarded(
       e.STORAGE_PROVIDER === "supabase"
         ? new SupabaseStorage(e.NEXT_PUBLIC_SUPABASE_URL!, e.SUPABASE_SERVICE_ROLE_KEY!, e.SUPABASE_STORAGE_BUCKET)
-        : new LocalDiskStorage(path.resolve(e.LOCAL_STORAGE_DIR));
+        : new LocalDiskStorage(path.resolve(e.LOCAL_STORAGE_DIR)),
+    );
   }
   return provider;
 }
@@ -118,5 +146,6 @@ export function validateUpload(file: { name: string; type: string; size: number 
 }
 
 export function storageKey(tenantId: string, area: string, fileName: string): string {
-  return `${tenantId}/${area}/${randomUUID()}/${sanitizeFileName(fileName).replace(/\s+/g, "_")}`;
+  const name = sanitizeFileName(fileName).replace(/\s+/g, "_").replace(/%/g, "_");
+  return `${tenantId}/${area}/${randomUUID()}/${name === "." || name === ".." ? "file" : name}`;
 }

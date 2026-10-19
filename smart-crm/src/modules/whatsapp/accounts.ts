@@ -6,6 +6,7 @@ import { audit } from "@/server/audit";
 import { decryptSecret, encryptSecret } from "@/server/crypto";
 import { env } from "@/server/env";
 import { AppError, isUniqueViolation } from "@/server/errors";
+import { logger } from "@/server/logger";
 import { assertFeature, getEntitlements } from "@/modules/billing/entitlements";
 import type { ConnectAccountInput } from "./schemas";
 import { MetaCloudWhatsAppProvider } from "./meta-provider";
@@ -73,6 +74,10 @@ export async function providerForAccount(account: AccountRow, tx?: Executor): Pr
     };
     token = tx ? await load(tx) : await withSystemTx(load);
   }
+  return buildProvider(account, token);
+}
+
+function buildProvider(account: AccountRow, token: string | null): WhatsAppProvider {
   if (factoryOverride) return factoryOverride(account, token);
   if (account.provider === "mock") {
     if (!mockAllowed()) throw new WhatsAppProviderError("mock WhatsApp accounts are disabled in this environment", "permanent");
@@ -105,6 +110,15 @@ async function loadAccount(tx: Executor, tenantId: string, id: string): Promise<
   return a;
 }
 
+async function assertOwnership(account: AccountRow, token: string | null) {
+  if (!token) throw new AppError("VALIDATION", "whatsapp.ownershipFailed");
+  const result = await buildProvider(account, token).verifyOwnership();
+  if (!result.ok) {
+    logger().warn({ phoneNumberId: account.phoneNumberId, reason: result.reason }, "whatsapp ownership check failed");
+    throw new AppError("VALIDATION", "whatsapp.ownershipFailed");
+  }
+}
+
 /**
  * Connects a WhatsApp Business phone number. The access token is encrypted into
  * public.secrets (unreadable by app roles) and never returned to the client.
@@ -114,6 +128,10 @@ export async function connectAccount(ctx: ServiceCtx, input: ConnectAccountInput
   if (input.provider === "mock" && !mockAllowed()) throw new AppError("VALIDATION", "whatsapp.mockDisabled");
   await ctx.run(async (tx) => assertFeature(await getEntitlements(tx, ctx.tenantId), "whatsapp"));
   const accountId = randomUUID();
+  // Without this, any tenant could register someone else's phone number id and receive its messages.
+  if (input.provider === "meta") {
+    await assertOwnership({ id: accountId, provider: "meta", phoneNumberId: input.phoneNumberId, wabaId: input.wabaId } as AccountRow, input.accessToken ?? null);
+  }
   try {
     return await withSystemTx(async (tx) => {
       let secretId: string | null = null;
@@ -165,6 +183,7 @@ export async function updateAccount(
     if (input.displayName) patch.displayName = input.displayName;
     if (input.sendRatePerMinute) patch.sendRatePerMinute = input.sendRatePerMinute;
     if (input.accessToken) {
+      if (account.provider === "meta") await assertOwnership(account, input.accessToken);
       const ciphertext = encryptSecret(input.accessToken, tokenAad(account.id));
       if (account.accessTokenSecretId) {
         await tx.update(schema.secrets).set({ ciphertext, rotatedAt: new Date() }).where(eq(schema.secrets.id, account.accessTokenSecretId));

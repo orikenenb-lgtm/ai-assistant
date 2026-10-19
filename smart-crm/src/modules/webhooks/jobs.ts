@@ -8,6 +8,7 @@ import { PermanentJobError, registerJobHandler, type Job } from "@/server/jobs/r
 import { subscribeToEvents, type DomainEvent } from "@/server/events";
 import { logger } from "@/server/logger";
 import { loopbackAllowed, resolvePublicTarget, validateWebhookUrl } from "./ssrf";
+import { isTenantLive } from "@/server/rbac/membership";
 import { SIGNATURE_HEADER, signWebhookPayload } from "./sign";
 import { webhookSigningSecret } from "./service";
 
@@ -37,7 +38,7 @@ export async function fanOutEvent(event: DomainEvent) {
         sql`${event.type} = any(${schema.outboundWebhooks.events})`,
       ),
     );
-  if (!hooks.length) return;
+  if (!hooks.length || !(await isTenantLive(event.tenantId))) return;
   await withSystemTx(async (tx) => {
     for (const h of hooks) {
       const [d] = await tx
@@ -153,7 +154,7 @@ async function recordFailure(
 export async function deliverWebhook(job: Job) {
   const deliveryId = String(job.payload.deliveryId ?? "");
   const [delivery] = await db().select().from(schema.outboundWebhookDeliveries).where(eq(schema.outboundWebhookDeliveries.id, deliveryId));
-  if (!delivery) throw new PermanentJobError("delivery not found");
+  if (!delivery || (job.tenantId && delivery.tenantId !== job.tenantId)) throw new PermanentJobError("delivery not found");
   if (delivery.status === "succeeded") return;
   const [hook] = await db().select().from(schema.outboundWebhooks).where(eq(schema.outboundWebhooks.id, delivery.webhookId));
   if (!hook || !hook.active) {

@@ -73,7 +73,8 @@ export async function summarizeConversation(ctx: ServiceCtx, conversationId: str
         { role: "system", content: systemPreamble(locale) },
         {
           role: "user",
-          content: `Summarize this WhatsApp conversation with customer "${conv.contactName}" for a sales agent. Return JSON.\n${untrusted("whatsapp_conversation", transcript, 12000)}`,
+          // The display name comes from the customer's WhatsApp profile: untrusted like the messages.
+          content: `Summarize this WhatsApp conversation for a sales agent. Return JSON.\nCustomer display name:\n${untrusted("customer_name", conv.contactName, 200)}\n${untrusted("whatsapp_conversation", transcript, 12000)}`,
         },
       ],
       jsonSchema: {
@@ -211,9 +212,8 @@ export function heuristicLeadScore(lead: { email: string | null; phone: string |
 /** Classifies and scores a lead; persists the result when the user may edit leads. */
 export async function classifyLead(ctx: ServiceCtx, leadId: string, locale: Locale) {
   const { lead, activities } = await loadLead(ctx, leadId);
+  // Name and company are typed by the lead (web forms): passed as untrusted data, not facts.
   const facts = {
-    name: lead.fullName,
-    company: lead.companyName,
     source: lead.source,
     hasPhone: Boolean(lead.phone),
     hasEmail: Boolean(lead.email),
@@ -230,7 +230,7 @@ export async function classifyLead(ctx: ServiceCtx, leadId: string, locale: Loca
         { role: "system", content: systemPreamble(locale) },
         {
           role: "user",
-          content: `Classify this sales lead as hot, warm, cold or spam and give a 0-100 score with a one-sentence reason (in ${locale === "he" ? "Hebrew" : "English"}). Facts (trusted): ${JSON.stringify(facts)}\nThe lead's own message:\n${untrusted("lead_form", lead.message ?? "", 2000)}`,
+          content: `Classify this sales lead as hot, warm, cold or spam and give a 0-100 score with a one-sentence reason (in ${locale === "he" ? "Hebrew" : "English"}). Facts (trusted): ${JSON.stringify(facts)}\nWhat the lead submitted (name, company, message):\n${untrusted("lead_form", `${lead.fullName}\n${lead.companyName ?? ""}\n${lead.message ?? ""}`, 2400)}`,
         },
       ],
       jsonSchema: {

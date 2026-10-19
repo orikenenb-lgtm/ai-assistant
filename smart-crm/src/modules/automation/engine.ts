@@ -8,6 +8,7 @@ import { PermanentJobError, RetryJobLater, registerJobHandler, type Job } from "
 import { registerSchedule } from "@/server/jobs/scheduler";
 import { errorFields, logger } from "@/server/logger";
 import { isAppError, type ErrorCode } from "@/server/errors";
+import { isTenantLive } from "@/server/rbac/membership";
 import { notify } from "@/modules/notifications/service";
 import { recordUsage } from "@/modules/billing/entitlements";
 import { definitionSchema, nextNodes, triggerOf, type WorkflowDefinition } from "./definition";
@@ -41,6 +42,7 @@ export async function startRun(
   input: { triggerKey: string; seed: RunSeed; depth: number; ignoreDailyCap?: boolean },
 ): Promise<string | null> {
   if (!wf.publishedVersion) return null;
+  if (!(await isTenantLive(wf.tenantId))) return null;
   const def = await publishedDefinition(wf.id, wf.publishedVersion);
   if (input.seed.entityId && !input.ignoreDailyCap) {
     const [{ n }] = await db().execute<{ n: number }>(sql`
@@ -150,7 +152,7 @@ async function runStep(job: Job) {
   const { runId, nodeId, delayed } = job.payload as { runId?: string; nodeId?: string; delayed?: boolean };
   if (!runId || !nodeId) throw new PermanentJobError("invalid step payload");
   const [run] = await db().select().from(schema.automationRuns).where(eq(schema.automationRuns.id, runId));
-  if (!run || ["completed", "failed", "canceled", "skipped"].includes(run.status)) return;
+  if (!run || (job.tenantId && run.tenantId !== job.tenantId) || ["completed", "failed", "canceled", "skipped"].includes(run.status)) return;
   const [wf] = await db().select().from(schema.automationWorkflows).where(eq(schema.automationWorkflows.id, run.workflowId));
   if (!wf || wf.status === "archived") {
     await db().update(schema.automationRuns).set({ status: "canceled", finishedAt: new Date() }).where(eq(schema.automationRuns.id, runId));

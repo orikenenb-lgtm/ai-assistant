@@ -5,6 +5,7 @@ import { env } from "../env";
 import { purgeRateLimitCounters } from "../rate-limit";
 import { registerJobHandler, PermanentJobError } from "./runner";
 import { registerSchedule } from "./scheduler";
+import { isActiveMember } from "../rbac/membership";
 
 registerJobHandler("maintenance.purge", async () => {
   await purgeRateLimitCounters();
@@ -21,7 +22,7 @@ registerJobHandler("email.notification", async (job) => {
   const p = job.payload as { userId?: string; title?: string; body?: string; link?: string };
   if (!p.userId || !p.title) throw new PermanentJobError("invalid payload");
   const [profile] = await db().select().from(schema.profiles).where(eq(schema.profiles.id, p.userId));
-  if (!profile) return;
+  if (!profile || !job.tenantId || !(await isActiveMember(job.tenantId, p.userId))) return;
   await sendEmail({
     to: profile.email,
     template: "notification",

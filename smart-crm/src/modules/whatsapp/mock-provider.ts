@@ -100,6 +100,10 @@ export class MockWhatsAppProvider implements WhatsAppProvider {
     return { bytes: mediaId.startsWith("doc") ? Buffer.from("%PDF-1.4\n% mock\n") : png, mimeType: mediaId.startsWith("doc") ? "application/pdf" : "image/png" };
   }
 
+  async verifyOwnership(): Promise<{ ok: true }> {
+    return { ok: true };
+  }
+
   async testConnection(): Promise<ConnectionCheck> {
     return { ok: true, displayPhoneNumber: "MOCK", verifiedName: "Mock account (development)", qualityRating: "GREEN" };
   }

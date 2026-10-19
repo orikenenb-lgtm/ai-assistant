@@ -123,6 +123,11 @@ async function fail(job: Job, error: unknown) {
 export async function runJob(job: Job): Promise<"succeeded" | "retry" | "dead" | "rescheduled"> {
   const handler = handlers.get(job.type);
   if (!handler) return fail(job, new PermanentJobError(`no handler registered for job type "${job.type}"`));
+  // Defence in depth: a job may only act for the tenant it was enqueued under.
+  const payloadTenant = (job.payload as { tenantId?: unknown }).tenantId;
+  if (job.tenantId && typeof payloadTenant === "string" && payloadTenant !== job.tenantId) {
+    return fail(job, new PermanentJobError("payload tenant does not match job tenant"));
+  }
   const started = Date.now();
   try {
     await handler(job);
