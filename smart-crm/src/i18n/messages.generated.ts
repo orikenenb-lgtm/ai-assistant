@@ -13,6 +13,7 @@ import he_dashboard from "../../messages/he/dashboard.json";
 import he_errors from "../../messages/he/errors.json";
 import he_files from "../../messages/he/files.json";
 import he_import from "../../messages/he/import.json";
+import he_inbox from "../../messages/he/inbox.json";
 import he_invite from "../../messages/he/invite.json";
 import he_members from "../../messages/he/members.json";
 import he_nav from "../../messages/he/nav.json";
@@ -23,6 +24,7 @@ import he_settings from "../../messages/he/settings.json";
 import he_support from "../../messages/he/support.json";
 import he_tags from "../../messages/he/tags.json";
 import he_validation from "../../messages/he/validation.json";
+import he_whatsapp from "../../messages/he/whatsapp.json";
 import en_ai from "../../messages/en/ai.json";
 import en_app from "../../messages/en/app.json";
 import en_auth from "../../messages/en/auth.json";
@@ -36,6 +38,7 @@ import en_dashboard from "../../messages/en/dashboard.json";
 import en_errors from "../../messages/en/errors.json";
 import en_files from "../../messages/en/files.json";
 import en_import from "../../messages/en/import.json";
+import en_inbox from "../../messages/en/inbox.json";
 import en_invite from "../../messages/en/invite.json";
 import en_members from "../../messages/en/members.json";
 import en_nav from "../../messages/en/nav.json";
@@ -46,6 +49,7 @@ import en_settings from "../../messages/en/settings.json";
 import en_support from "../../messages/en/support.json";
 import en_tags from "../../messages/en/tags.json";
 import en_validation from "../../messages/en/validation.json";
+import en_whatsapp from "../../messages/en/whatsapp.json";
 
 export const he = {
   "ai": he_ai,
@@ -61,6 +65,7 @@ export const he = {
   "errors": he_errors,
   "files": he_files,
   "import": he_import,
+  "inbox": he_inbox,
   "invite": he_invite,
   "members": he_members,
   "nav": he_nav,
@@ -71,6 +76,7 @@ export const he = {
   "support": he_support,
   "tags": he_tags,
   "validation": he_validation,
+  "whatsapp": he_whatsapp,
 };
 export const en = {
   "ai": en_ai,
@@ -86,6 +92,7 @@ export const en = {
   "errors": en_errors,
   "files": en_files,
   "import": en_import,
+  "inbox": en_inbox,
   "invite": en_invite,
   "members": en_members,
   "nav": en_nav,
@@ -96,6 +103,7 @@ export const en = {
   "support": en_support,
   "tags": en_tags,
   "validation": en_validation,
+  "whatsapp": en_whatsapp,
 };
 
 export const messagesByLocale = { he, en };
