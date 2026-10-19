@@ -266,3 +266,14 @@
     background: var(--accent);
   }
 }
+
+/* Automation builder: colour the condition branches. */
+.react-flow__edge.wf-edge-true .react-flow__edge-path {
+  stroke: var(--color-success);
+}
+.react-flow__edge.wf-edge-false .react-flow__edge-path {
+  stroke: var(--color-danger);
+}
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 2.5;
+}

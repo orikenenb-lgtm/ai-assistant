@@ -3,6 +3,7 @@
 import he_ai from "../../messages/he/ai.json";
 import he_app from "../../messages/he/app.json";
 import he_auth from "../../messages/he/auth.json";
+import he_automation from "../../messages/he/automation.json";
 import he_billing from "../../messages/he/billing.json";
 import he_common from "../../messages/he/common.json";
 import he_contacts from "../../messages/he/contacts.json";
@@ -25,6 +26,7 @@ import he_validation from "../../messages/he/validation.json";
 import en_ai from "../../messages/en/ai.json";
 import en_app from "../../messages/en/app.json";
 import en_auth from "../../messages/en/auth.json";
+import en_automation from "../../messages/en/automation.json";
 import en_billing from "../../messages/en/billing.json";
 import en_common from "../../messages/en/common.json";
 import en_contacts from "../../messages/en/contacts.json";
@@ -49,6 +51,7 @@ export const he = {
   "ai": he_ai,
   "app": he_app,
   "auth": he_auth,
+  "automation": he_automation,
   "billing": he_billing,
   "common": he_common,
   "contacts": he_contacts,
@@ -73,6 +76,7 @@ export const en = {
   "ai": en_ai,
   "app": en_app,
   "auth": en_auth,
+  "automation": en_automation,
   "billing": en_billing,
   "common": en_common,
   "contacts": en_contacts,

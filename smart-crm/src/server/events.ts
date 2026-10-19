@@ -5,31 +5,8 @@ import { enqueueJob } from "./jobs/queue";
 import { registerJobHandler, PermanentJobError, type Job } from "./jobs/runner";
 import { logger, errorFields } from "./logger";
 
-export const DOMAIN_EVENTS = [
-  "contact.created",
-  "contact.updated",
-  "contact.tag_added",
-  "company.created",
-  "lead.created",
-  "lead.status_changed",
-  "lead.converted",
-  "deal.created",
-  "deal.updated",
-  "deal.stage_changed",
-  "deal.won",
-  "deal.lost",
-  "message.received",
-  "message.sent",
-  "message.failed",
-  "conversation.assigned",
-  "conversation.closed",
-  "task.created",
-  "task.completed",
-  "quote.sent",
-  "quote.accepted",
-  "quote.rejected",
-] as const;
-export type DomainEventType = (typeof DOMAIN_EVENTS)[number];
+import { DOMAIN_EVENTS, type DomainEventType } from "@/lib/domain-events";
+export { DOMAIN_EVENTS, type DomainEventType };
 
 export type DomainEvent = {
   id: string;
