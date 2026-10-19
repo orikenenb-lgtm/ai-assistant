@@ -97,6 +97,17 @@ export const getTenantContext = cache(async (): Promise<TenantContext | null> =>
     if (!memberships.some((m) => m.id === wanted)) {
       const t = await activeSupportTenant(session.userId, wanted);
       if (t) {
+        // Every support-mode request is audit-logged under the tenant (memoized: once per request).
+        await db().insert(schema.auditLogs).values({
+          tenantId: t.id,
+          actorUserId: session.userId,
+          actorType: "admin",
+          action: "admin.support_view",
+          entityType: "tenant",
+          entityId: t.id,
+          ip: meta.ip ?? null,
+          userAgent: meta.userAgent?.slice(0, 300) ?? null,
+        });
         return {
           user,
           tenant: toSummary(t),

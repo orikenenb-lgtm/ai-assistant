@@ -9,6 +9,7 @@ import { sendEmail } from "@/server/email";
 import { assignableRoles, type Role } from "@/server/rbac/permissions";
 import { assertSeatAvailable } from "@/modules/billing/entitlements";
 import { notify } from "@/modules/notifications/service";
+import { queueSeatSync } from "@/modules/billing/seats";
 
 const INVITE_TTL_DAYS = 7;
 
@@ -193,6 +194,7 @@ export async function acceptInvitation(user: { userId: string; email: string }, 
       await tx.insert(schema.memberships).values({ tenantId: inv.tenantId, userId: user.userId, role: inv.role });
     }
     await tx.update(schema.invitations).set({ acceptedAt: new Date(), acceptedBy: user.userId }).where(eq(schema.invitations.id, inv.id));
+    await queueSeatSync(tx, inv.tenantId);
     await tx.update(schema.profiles).set({ lastTenantId: inv.tenantId }).where(eq(schema.profiles.id, user.userId));
     await tx.insert(schema.auditLogs).values({
       tenantId: inv.tenantId,
