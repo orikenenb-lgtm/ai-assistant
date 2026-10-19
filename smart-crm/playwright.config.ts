@@ -41,6 +41,8 @@ export default defineConfig({
       ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
       CRON_SECRET: "e2e-cron-secret",
       AUTH_PROVIDER: "local",
+      // Every spec registers fresh users from 127.0.0.1; keep the production default (10/h) elsewhere.
+      AUTH_SIGNUP_LIMIT_PER_HOUR: "500",
       EMAIL_PROVIDER: "log",
       AI_PROVIDER: "mock",
       WHATSAPP_PROVIDER: "mock",

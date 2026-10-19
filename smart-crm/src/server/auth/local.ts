@@ -104,7 +104,7 @@ export class LocalAuthAdapter implements AuthAdapter {
   }
 
   async signUp(input: { email: string; password: string; fullName: string; locale: "he" | "en" }, req: RequestInfo) {
-    const limit = await hitRateLimit(`signup:${req.ip ?? "unknown"}`, 10, 3600);
+    const limit = await hitRateLimit(`signup:${req.ip ?? "unknown"}`, env().AUTH_SIGNUP_LIMIT_PER_HOUR, 3600);
     if (!limit.allowed) return; // silently drop; response is identical either way
     const existing = await this.findUserByEmail(input.email);
     const base = env().APP_URL;

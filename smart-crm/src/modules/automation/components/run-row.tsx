@@ -43,6 +43,9 @@ const ENTITY_HREF: Record<string, string> = { contact: "/contacts", deal: "/deal
 
 export function RunRow({ run, canManage, timeZone }: { run: RunView; canManage: boolean; timeZone: string }) {
   const t = useTranslations("automation");
+  const root = useTranslations() as unknown as { has: (k: string) => boolean; (k: string): string };
+  // Service errors are translation keys ("inbox.optedOut"); show them in the user's language.
+  const message = (e: string | null) => (e && /^[a-zA-Z]+\.[a-zA-Z_.]+$/.test(e) && root.has(e) ? root(e) : e);
   const locale = useLocale() as "he" | "en";
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -79,8 +82,8 @@ export function RunRow({ run, canManage, timeZone }: { run: RunView; canManage: 
           )}
         </TD>
         <TD className="tabular text-end text-sm">{run.stepsExecuted}</TD>
-        <TD className="max-w-xs truncate text-xs text-danger-foreground" title={run.error ?? undefined}>
-          {run.error}
+        <TD className="max-w-xs truncate text-xs text-danger-foreground" title={message(run.error) ?? undefined}>
+          {message(run.error)}
         </TD>
         <TD className="text-end">
           {canManage && run.status === "failed" && (
@@ -111,7 +114,7 @@ export function RunRow({ run, canManage, timeZone }: { run: RunView; canManage: 
                     </code>
                     {s.attempt > 1 && <span className="text-muted-foreground">{t("attempt", { n: s.attempt })}</span>}
                     <span className="text-muted-foreground">{formatDateTime(s.startedAt, locale, timeZone)}</span>
-                    {s.error && <span className="text-danger-foreground">{s.error}</span>}
+                    {s.error && <span className="text-danger-foreground">{message(s.error)}</span>}
                   </li>
                 ))}
               </ol>

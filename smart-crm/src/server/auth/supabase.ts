@@ -57,7 +57,7 @@ export class SupabaseAuthAdapter implements AuthAdapter {
   }
 
   async signUp(input: { email: string; password: string; fullName: string; locale: "he" | "en" }, req: RequestInfo) {
-    const limit = await hitRateLimit(`signup:${req.ip ?? "unknown"}`, 10, 3600);
+    const limit = await hitRateLimit(`signup:${req.ip ?? "unknown"}`, env().AUTH_SIGNUP_LIMIT_PER_HOUR, 3600);
     if (!limit.allowed) return;
     const sb = await this.client();
     // Supabase hides whether the address already exists (no enumeration).

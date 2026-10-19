@@ -23,8 +23,11 @@ export type AutomationAction<S extends z.ZodType = z.ZodType> = {
   params: S;
   /** Entities the action needs in the run context. */
   requires?: ("contact" | "deal" | "lead" | "conversation")[];
-  run: (ctx: ServiceCtx, params: z.infer<S>, run: RunContext) => Promise<Record<string, unknown>>;
+  run: (ctx: ServiceCtx, params: z.infer<S>, run: RunContext, step: StepMeta) => Promise<Record<string, unknown>>;
 };
+
+/** Identifies the step being executed; `idempotencyKey` is stable across retries of the same step. */
+export type StepMeta = { runId: string; nodeId: string; idempotencyKey: string };
 
 const registry = new Map<ActionType, AutomationAction>();
 
@@ -40,7 +43,7 @@ export function availableActionTypes(): ActionType[] {
   return [...registry.keys()];
 }
 
-function needContact(run: RunContext) {
+export function needContact(run: RunContext) {
   if (!run.contact) throw new PermanentJobError("this action needs a contact in the trigger");
   return run.contact;
 }
@@ -99,7 +102,7 @@ registerAutomationAction("add_note", {
 });
 
 /** Resolves "owner of the triggering record" (deal → lead → contact). */
-function recordOwner(run: RunContext): string | null {
+export function recordOwner(run: RunContext): string | null {
   return run.deal?.ownerId ?? run.lead?.ownerId ?? run.contact?.ownerId ?? null;
 }
 

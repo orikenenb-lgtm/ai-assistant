@@ -24,6 +24,8 @@ const schema = z
     CRON_SECRET: optionalString,
 
     AUTH_PROVIDER: z.enum(["local", "supabase"]).default("local"),
+    /** Sign-ups allowed per client IP per hour (abuse protection; raised only for E2E suites). */
+    AUTH_SIGNUP_LIMIT_PER_HOUR: z.coerce.number().int().min(1).max(10_000).default(10),
     NEXT_PUBLIC_SUPABASE_URL: optionalString,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalString,
     SUPABASE_SERVICE_ROLE_KEY: optionalString,

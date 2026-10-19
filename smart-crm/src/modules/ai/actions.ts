@@ -6,6 +6,7 @@ import { tenantAction, type ActionResult } from "@/server/action";
 import { analyzeTrends, classifyLead, detectIntent, draftReply, recommendNextActions, summarizeContact, summarizeConversation } from "./features";
 import { copilotChat, type ChatResult } from "./chat";
 import { approveProposal, createProposal, listProposals, rejectProposal, PROPOSAL_TYPES, type ProposalView } from "./proposals";
+import "./executors";
 import { aiUsageSummary } from "./usage";
 
 const locale = async () => ((await getLocale()) === "en" ? "en" : "he") as "he" | "en";

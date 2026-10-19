@@ -7,6 +7,7 @@ import { randomToken, sha256Hex } from "@/server/crypto";
 import { assertFeature, getEntitlements } from "@/modules/billing/entitlements";
 import { definitionSchema, segmentRulesSchema, triggerOf, triggerType, type WorkflowDefinition } from "./definition";
 import { availableActionTypes, getAutomationAction } from "./actions-registry";
+import "./integrations";
 import { nextSlot, retryRun, startManualRun } from "./engine";
 import { WORKFLOW_TEMPLATES } from "./templates";
 import { evaluateRules } from "./rules";

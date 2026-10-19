@@ -7,16 +7,19 @@ import { enqueueJob } from "@/server/jobs/queue";
 import { PermanentJobError, RetryJobLater, registerJobHandler, type Job } from "@/server/jobs/runner";
 import { registerSchedule } from "@/server/jobs/scheduler";
 import { errorFields, logger } from "@/server/logger";
+import { isAppError, type ErrorCode } from "@/server/errors";
 import { notify } from "@/modules/notifications/service";
 import { recordUsage } from "@/modules/billing/entitlements";
 import { definitionSchema, nextNodes, triggerOf, type WorkflowDefinition } from "./definition";
 import { evaluateRules } from "./rules";
 import { buildRunContext, type RunSeed } from "./run-context";
 import { getAutomationAction } from "./actions-registry";
+import "./integrations";
 
 export const MAX_STEPS_PER_RUN = 50;
 export const STEP_MAX_ATTEMPTS = 3;
 const PAUSED_RECHECK_MS = 10 * 60_000;
+const PERMANENT_CODES = new Set<ErrorCode>(["FORBIDDEN", "NOT_FOUND", "VALIDATION", "PRECONDITION", "PLAN_REQUIRED", "QUOTA_EXCEEDED", "READ_ONLY"]);
 
 type WorkflowRow = typeof schema.automationWorkflows.$inferSelect;
 
@@ -207,7 +210,7 @@ async function runStep(job: Job) {
       if (!params.success) throw new PermanentJobError(`invalid parameters for ${node.config.action}`);
       const ctx = await buildRunContext(run.tenantId, seed);
       const actorCtx = systemCtx(run.tenantId, { actorType: "automation", eventDepth: run.depth + 1 });
-      output = await action.run(actorCtx, params.data, ctx);
+      output = await action.run(actorCtx, params.data, ctx, { runId: run.id, nodeId: node.id, idempotencyKey: `auto:${run.id}:${node.id}` });
       next = nextNodes(def, node.id);
     } else {
       next = nextNodes(def, node.id);
@@ -235,7 +238,8 @@ async function runStep(job: Job) {
     if (e instanceof RetryJobLater) throw e;
     const message = e instanceof Error ? e.message : String(e);
     await db().update(schema.automationRunSteps).set({ status: "failed", error: message.slice(0, 1000), finishedAt: new Date() }).where(eq(schema.automationRunSteps.id, step.id));
-    const final = e instanceof PermanentJobError || job.attempts >= job.maxAttempts;
+    // Business-rule refusals (opted out, closed window, missing record…) will not change on retry.
+    const final = e instanceof PermanentJobError || (isAppError(e) && PERMANENT_CODES.has(e.code)) || job.attempts >= job.maxAttempts;
     if (final) {
       await failRun(runId, run.tenantId, wf, message);
       throw e instanceof PermanentJobError ? e : new PermanentJobError(message);

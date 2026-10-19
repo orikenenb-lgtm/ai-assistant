@@ -8,6 +8,7 @@ import { looksLikeInjection, sanitizeDraft, systemPreamble } from "./guard";
 import { runAi } from "./runtime";
 import { salesStats } from "./data";
 import { createProposal, PROPOSAL_TYPES, hasExecutor, type ProposalType } from "./proposals";
+import "./executors";
 import type { ChatMessage, ToolCall, ToolDef } from "./provider";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
