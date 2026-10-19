@@ -80,7 +80,9 @@ export async function createProposal(
   assertCan(ctx, "ai.use");
   const exec = executors.get(input.actionType);
   if (!exec) throw new AppError("VALIDATION", "ai.unsupportedAction");
-  const payload = exec.payload.parse(input.payload);
+  const parsed = exec.payload.safeParse(input.payload);
+  if (!parsed.success) throw new AppError("VALIDATION", "errors.validation");
+  const payload = parsed.data;
   return ctx.run(async (tx) => {
     const [row] = await tx
       .insert(schema.aiActionProposals)

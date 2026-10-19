@@ -258,5 +258,6 @@ describe("action proposals", () => {
   it("rejects malformed payloads and unknown action types", async () => {
     await expect(createProposal(T.agentCtx, { actionType: "add_note", payload: { entityType: "contact", entityId: "x", body: "" } })).rejects.toThrow();
     await expectAppError(createProposal(T.agentCtx, { actionType: "send_whatsapp_message", payload: {} }), "VALIDATION");
+    await expectAppError(createProposal(T.agentCtx, { actionType: "drop_database" as never, payload: {} }), "VALIDATION");
   });
 });
