@@ -1,0 +1,152 @@
+{
+  "title": "Reports & analytics",
+  "reports": "Reports",
+  "tabs": {
+    "revenue": "Revenue",
+    "pipeline": "Pipeline",
+    "leads": "Leads",
+    "team": "Team performance",
+    "customers": "Customers"
+  },
+  "presets": {
+    "7d": "Last 7 days",
+    "30d": "Last 30 days",
+    "90d": "Last 90 days",
+    "this_month": "This month",
+    "last_month": "Last month",
+    "this_quarter": "This quarter",
+    "this_year": "This year",
+    "custom": "Custom range…"
+  },
+  "intervals": {
+    "auto": "Auto",
+    "day": "Daily",
+    "week": "Weekly",
+    "month": "Monthly"
+  },
+  "filters": {
+    "range": "Date range",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "interval": "Group by",
+    "owner": "Owner",
+    "allTeam": "Whole team",
+    "pipeline": "Pipeline",
+    "allPipelines": "All pipelines"
+  },
+  "exportCsv": "Export CSV",
+  "showTable": "Table",
+  "showChart": "Chart",
+  "legend": "Legend",
+  "vsPrevious": "vs previous period",
+  "median": "Median",
+  "myDataOnly": "My data only",
+  "noDataTitle": "Nothing to show yet",
+  "noDataRange": "No data found for {range}. Try another range.",
+  "forbidden": "You don't have permission to view reports",
+  "planTitle": "Advanced reports are available on paid plans",
+  "planBody": "Upgrade to get revenue, pipeline, lead and team performance analytics.",
+  "upgrade": "Choose a plan",
+  "table": {
+    "period": "Period",
+    "month": "Month",
+    "stage": "Stage",
+    "deals": "Deals",
+    "reason": "Reason",
+    "status": "Status",
+    "leads": "Leads",
+    "class": "Class",
+    "member": "Team member",
+    "contacts": "Contacts"
+  },
+  "revenue": {
+    "won": "Won revenue",
+    "wonDeals": "Won deals",
+    "avgDeal": "Average deal size",
+    "winRate": "Win rate",
+    "wonLost": "{won} won · {lost} lost",
+    "overTime": "Revenue over time",
+    "lostReasons": "Lost reasons",
+    "lostReasonsHint": "Deals lost in the selected range",
+    "noReason": "No reason",
+    "noLost": "No lost deals in this range 🎉",
+    "otherCurrency": "{count, plural, one {One deal} other {# deals}} in other currencies are not included in totals ({currency})."
+  },
+  "pipeline": {
+    "none": "No sales pipeline yet",
+    "openValue": "Open deal value",
+    "weighted": "Weighted forecast",
+    "weightedHint": "Value × close probability",
+    "openDeals": "Open deals",
+    "created": "New deals",
+    "createdHint": "Created in the selected range",
+    "byStage": "Value by stage",
+    "byStageHint": "Current open deals",
+    "avgDays": "Avg. days in stage",
+    "funnel": "Conversion funnel",
+    "funnelHint": "How many deals created in the range reached each stage",
+    "reached": "Deals that reached the stage",
+    "forecast": "Forecast by expected close month",
+    "forecastHint": "Next 6 months, weighted by probability",
+    "overdue": "{count, plural, one {One deal} other {# deals}} past the expected close date ({value}).",
+    "noDate": "{count, plural, one {One deal} other {# deals}} without a close date ({value})."
+  },
+  "leads": {
+    "new": "New leads",
+    "conversion": "Conversion rate",
+    "conversionHint": "Of leads created in the range",
+    "converted": "Converted leads",
+    "timeToConvert": "Time to convert",
+    "bySourceOverTime": "New leads by source",
+    "byStatus": "Leads by status",
+    "aiClasses": "AI classification",
+    "aiClassesHint": "Lead temperature assigned by the copilot"
+  },
+  "sources": {
+    "manual": "Manual",
+    "website": "Website",
+    "whatsapp": "WhatsApp",
+    "referral": "Referral",
+    "import": "Import",
+    "api": "API",
+    "campaign": "Campaign",
+    "event": "Event",
+    "other": "Other",
+    "other_sources": "Other sources"
+  },
+  "statuses": {
+    "new": "New",
+    "contacted": "Contacted",
+    "qualified": "Qualified",
+    "unqualified": "Unqualified",
+    "converted": "Converted"
+  },
+  "classes": {
+    "hot": "Hot",
+    "warm": "Warm",
+    "cold": "Cold",
+    "spam": "Spam",
+    "unclassified": "Unclassified"
+  },
+  "team": {
+    "wonByMember": "Revenue by team member",
+    "won": "Won deals",
+    "activities": "Activities",
+    "activityBreakdown": "{calls} calls · {meetings} meetings · {emails} emails · {notes} notes",
+    "tasksDone": "Tasks completed",
+    "conversations": "WhatsApp conversations",
+    "firstResponse": "First response time",
+    "responses": "{count, plural, one {one response} other {# responses}}",
+    "firstResponseHint": "Median time from a customer message to an agent's first reply."
+  },
+  "customers": {
+    "total": "Total contacts",
+    "new": "New contacts",
+    "active": "Active contacts",
+    "activeHint": "With activity in the range",
+    "newOverTime": "New contacts over time",
+    "lifecycle": "Lifecycle distribution",
+    "lifecycleHint": "Current state"
+  }
+}

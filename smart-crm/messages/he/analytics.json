@@ -1,0 +1,152 @@
+{
+  "title": "דוחות וניתוח",
+  "reports": "דוחות",
+  "tabs": {
+    "revenue": "הכנסות",
+    "pipeline": "צנרת מכירות",
+    "leads": "לידים",
+    "team": "ביצועי צוות",
+    "customers": "לקוחות"
+  },
+  "presets": {
+    "7d": "7 ימים אחרונים",
+    "30d": "30 ימים אחרונים",
+    "90d": "90 ימים אחרונים",
+    "this_month": "החודש",
+    "last_month": "החודש שעבר",
+    "this_quarter": "הרבעון",
+    "this_year": "השנה",
+    "custom": "טווח מותאם…"
+  },
+  "intervals": {
+    "auto": "אוטומטי",
+    "day": "יומי",
+    "week": "שבועי",
+    "month": "חודשי"
+  },
+  "filters": {
+    "range": "טווח תאריכים",
+    "from": "מתאריך",
+    "to": "עד תאריך",
+    "apply": "החלה",
+    "interval": "פילוח",
+    "owner": "אחראי",
+    "allTeam": "כל הצוות",
+    "pipeline": "צנרת",
+    "allPipelines": "כל הצנרות"
+  },
+  "exportCsv": "ייצוא CSV",
+  "showTable": "טבלה",
+  "showChart": "גרף",
+  "legend": "מקרא",
+  "vsPrevious": "לעומת התקופה הקודמת",
+  "median": "חציון",
+  "myDataOnly": "הנתונים שלי בלבד",
+  "noDataTitle": "אין נתונים להצגה",
+  "noDataRange": "לא נמצאו נתונים בטווח {range}. נסו טווח אחר.",
+  "forbidden": "אין לכם הרשאה לצפות בדוחות",
+  "planTitle": "דוחות מתקדמים זמינים בתוכנית בתשלום",
+  "planBody": "שדרגו את התוכנית כדי לקבל ניתוח הכנסות, צנרת, לידים וביצועי צוות.",
+  "upgrade": "לבחירת תוכנית",
+  "table": {
+    "period": "תקופה",
+    "month": "חודש",
+    "stage": "שלב",
+    "deals": "עסקאות",
+    "reason": "סיבה",
+    "status": "סטטוס",
+    "leads": "לידים",
+    "class": "סיווג",
+    "member": "חבר צוות",
+    "contacts": "אנשי קשר"
+  },
+  "revenue": {
+    "won": "הכנסות מעסקאות שנסגרו",
+    "wonDeals": "עסקאות שנסגרו",
+    "avgDeal": "גודל עסקה ממוצע",
+    "winRate": "שיעור הצלחה",
+    "wonLost": "{won} נסגרו · {lost} אבדו",
+    "overTime": "הכנסות לאורך זמן",
+    "lostReasons": "סיבות להפסד",
+    "lostReasonsHint": "עסקאות שאבדו בטווח שנבחר",
+    "noReason": "ללא סיבה",
+    "noLost": "אין עסקאות שאבדו בטווח הזה 🎉",
+    "otherCurrency": "{count, plural, one {עסקה אחת} other {# עסקאות}} במטבע אחר לא נכללו בסכומים ({currency})."
+  },
+  "pipeline": {
+    "none": "אין עדיין צנרת מכירות",
+    "openValue": "שווי עסקאות פתוחות",
+    "weighted": "תחזית משוקללת",
+    "weightedHint": "שווי × הסתברות סגירה",
+    "openDeals": "עסקאות פתוחות",
+    "created": "עסקאות חדשות",
+    "createdHint": "נוצרו בטווח שנבחר",
+    "byStage": "שווי לפי שלב",
+    "byStageHint": "מצב נוכחי של העסקאות הפתוחות",
+    "avgDays": "ימים בממוצע בשלב",
+    "funnel": "משפך המרה",
+    "funnelHint": "כמה מהעסקאות שנוצרו בטווח הגיעו לכל שלב",
+    "reached": "עסקאות שהגיעו לשלב",
+    "forecast": "תחזית לפי חודש סגירה צפוי",
+    "forecastHint": "6 החודשים הקרובים, משוקלל לפי הסתברות",
+    "overdue": "{count, plural, one {עסקה אחת} other {# עסקאות}} עם תאריך סגירה שעבר ({value}).",
+    "noDate": "{count, plural, one {עסקה אחת} other {# עסקאות}} ללא תאריך סגירה ({value})."
+  },
+  "leads": {
+    "new": "לידים חדשים",
+    "conversion": "שיעור המרה",
+    "conversionHint": "מתוך הלידים שנוצרו בטווח",
+    "converted": "לידים שהומרו",
+    "timeToConvert": "זמן עד המרה",
+    "bySourceOverTime": "לידים חדשים לפי מקור",
+    "byStatus": "לידים לפי סטטוס",
+    "aiClasses": "סיווג AI",
+    "aiClassesHint": "דירוג חום הליד שה-Copilot נתן"
+  },
+  "sources": {
+    "manual": "ידני",
+    "website": "אתר",
+    "whatsapp": "WhatsApp",
+    "referral": "הפניה",
+    "import": "ייבוא",
+    "api": "API",
+    "campaign": "קמפיין",
+    "event": "אירוע",
+    "other": "אחר",
+    "other_sources": "מקורות נוספים"
+  },
+  "statuses": {
+    "new": "חדש",
+    "contacted": "נוצר קשר",
+    "qualified": "מתאים",
+    "unqualified": "לא מתאים",
+    "converted": "הומר"
+  },
+  "classes": {
+    "hot": "חם",
+    "warm": "פושר",
+    "cold": "קר",
+    "spam": "ספאם",
+    "unclassified": "לא סווג"
+  },
+  "team": {
+    "wonByMember": "הכנסות לפי חבר צוות",
+    "won": "עסקאות שנסגרו",
+    "activities": "פעילויות",
+    "activityBreakdown": "{calls} שיחות · {meetings} פגישות · {emails} מיילים · {notes} הערות",
+    "tasksDone": "משימות שהושלמו",
+    "conversations": "שיחות WhatsApp",
+    "firstResponse": "זמן תגובה ראשונה",
+    "responses": "{count, plural, one {תגובה אחת} other {# תגובות}}",
+    "firstResponseHint": "חציון הזמן מהודעת לקוח ועד התגובה הראשונה של נציג."
+  },
+  "customers": {
+    "total": "סה״כ אנשי קשר",
+    "new": "אנשי קשר חדשים",
+    "active": "אנשי קשר פעילים",
+    "activeHint": "עם פעילות בטווח",
+    "newOverTime": "אנשי קשר חדשים לאורך זמן",
+    "lifecycle": "התפלגות לפי שלב",
+    "lifecycleHint": "מצב נוכחי"
+  }
+}
