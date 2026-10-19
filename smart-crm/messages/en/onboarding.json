@@ -1,0 +1,13 @@
+{
+  "title": "Let's set up your organization",
+  "subtitle": "You can change everything later in settings",
+  "orgName": "Organization / business name",
+  "orgNamePlaceholder": "e.g. Kerem Toys",
+  "language": "Default language",
+  "currency": "Currency",
+  "timezone": "Time zone",
+  "create": "Create organization",
+  "trialNote": "You get a 14-day Pro trial, no charge.",
+  "pendingInvites": "You have pending invitations",
+  "accept": "Join"
+}

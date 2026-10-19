@@ -1,0 +1,36 @@
+{
+  "title": "Team",
+  "subtitle": "Manage team members, roles and invitations",
+  "invite": "Invite member",
+  "inviteEmail": "Email",
+  "role": "Role",
+  "sendInvite": "Send invitation",
+  "invited": "Invitation sent",
+  "pending": "Pending invitations",
+  "expires": "Valid until {date}",
+  "resend": "Resend",
+  "revoke": "Revoke",
+  "remove": "Remove from organization",
+  "disable": "Disable",
+  "enable": "Enable",
+  "disabled": "Disabled",
+  "active": "Active",
+  "changeRole": "Change role",
+  "you": "(you)",
+  "seats": "{used} of {limit} seats in use",
+  "seatsUnlimited": "{used} seats in use",
+  "alreadyMember": "This user is already a member",
+  "lastOwner": "At least one active owner must remain",
+  "cannotChangeSelf": "You can't change yourself here",
+  "confirmRemove": "Remove {name} from the organization? Records they own will become unassigned.",
+  "roles": {
+    "owner": "Owner",
+    "manager": "Manager",
+    "agent": "Agent"
+  },
+  "roleDescriptions": {
+    "owner": "Full access including billing, API keys and deleting the organization",
+    "manager": "Manage team, settings, automations and reports",
+    "agent": "Day-to-day work: contacts, deals, tasks and WhatsApp"
+  }
+}

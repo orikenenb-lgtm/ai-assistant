@@ -20,6 +20,8 @@ export interface ServiceCtx {
   readOnly: boolean;
   apiKeyId?: string;
   meta?: RequestMeta;
+  /** Domain-event chain depth (automation loop prevention). */
+  eventDepth?: number;
   /** Runs in a transaction; RLS-enforced for user contexts. */
   run<T>(fn: (tx: Tx) => Promise<T>): Promise<T>;
   can(permission: Permission): boolean;
@@ -69,7 +71,14 @@ export function supportCtx(args: { tenantId: string; userId: string; meta?: Requ
  */
 export function systemCtx(
   tenantId: string,
-  opts: { actorType?: ActorType; userId?: string | null; permissions?: Permission[]; apiKeyId?: string; meta?: RequestMeta } = {},
+  opts: {
+    actorType?: ActorType;
+    userId?: string | null;
+    permissions?: Permission[];
+    apiKeyId?: string;
+    meta?: RequestMeta;
+    eventDepth?: number;
+  } = {},
 ): ServiceCtx {
   const allowed = opts.permissions ? new Set(opts.permissions) : null;
   return {
@@ -80,6 +89,7 @@ export function systemCtx(
     readOnly: false,
     apiKeyId: opts.apiKeyId,
     meta: opts.meta,
+    eventDepth: opts.eventDepth,
     run: (fn) => withSystemTx(fn),
     can: (p) => (allowed ? allowed.has(p) : true),
   };

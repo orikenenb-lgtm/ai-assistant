@@ -1,0 +1,19 @@
+{
+  "validation": "Please fix the highlighted fields",
+  "notFound": "Record not found",
+  "forbidden": "You don't have permission to do this",
+  "conflict": "This record already exists or was changed meanwhile",
+  "rateLimited": "Too many attempts. Try again in a few minutes.",
+  "readOnly": "This organization is read-only",
+  "internal": "Something went wrong. Please try again.",
+  "relatedMissing": "A linked record was not found",
+  "planRequired": "This feature isn't included in your plan",
+  "quotaExceeded": "You've reached your plan's quota",
+  "seatLimit": "You've reached the seat limit of your plan",
+  "pageErrorTitle": "Something went wrong",
+  "pageErrorBody": "We couldn't load this page. You can try again.",
+  "notFoundTitle": "Page not found",
+  "notFoundBody": "The link may be wrong or the record was deleted.",
+  "goHome": "Back to dashboard",
+  "unauthenticated": "Please sign in again"
+}

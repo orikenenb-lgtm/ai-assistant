@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocale, type Locale } from "./config";
+import { messagesByLocale } from "./messages.generated";
 
 export async function resolveLocale(): Promise<Locale> {
   const fromCookie = (await cookies()).get(LOCALE_COOKIE)?.value;
@@ -15,6 +16,6 @@ export default getRequestConfig(async () => {
   return {
     locale,
     timeZone: "Asia/Jerusalem",
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    messages: messagesByLocale[locale],
   };
 });

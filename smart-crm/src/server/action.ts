@@ -11,7 +11,8 @@ import type { Permission } from "./rbac/permissions";
 export type ActionError = { code: ErrorCode; message: string; fieldErrors?: Record<string, string[]> };
 export type ActionResult<T = null> = { ok: true; data: T } | { ok: false; error: ActionError };
 
-type Translator = Awaited<ReturnType<typeof getTranslations>>;
+/** Error keys are dynamic strings, so use an untyped view of the translator. */
+type Translator = ((key: string, values?: Record<string, string | number>) => string) & { has(key: string): boolean };
 
 function issueMessage(t: Translator, issue: z.core.$ZodIssue): string {
   // Custom refinements carry a translation key as their message.
@@ -40,7 +41,7 @@ function issueMessage(t: Translator, issue: z.core.$ZodIssue): string {
 }
 
 async function toActionError(e: unknown): Promise<ActionError> {
-  const t = await getTranslations();
+  const t = (await getTranslations()) as unknown as Translator;
   if (e instanceof z.ZodError) {
     const fieldErrors: Record<string, string[]> = {};
     for (const issue of e.issues) {
