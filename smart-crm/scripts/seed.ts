@@ -107,7 +107,191 @@ async function main() {
     { tenantId: t, type: "call", subject: "שיחת היכרות", body: "דיברנו על קטלוג החורף", contactId: contacts[0].id, actorId: agentId, occurredAt: daysAgo(2), durationMinutes: 15 },
     { tenantId: t, type: "meeting", subject: "פגישה בחנות", contactId: contacts[1].id, actorId: managerId, occurredAt: daysAgo(5), durationMinutes: 45 },
   ]);
+  await seedSalesHistory(t, [ownerId, managerId, agentId], contacts.map((c) => c.id), companies.map((c) => c.id));
   console.log(`demo tenant ${tenant.name} created — sign in as owner@demo.test / ${PASSWORD}`);
+}
+
+/** Deterministic PRNG so demo data looks the same on every reset. */
+function prng(seed: number) {
+  return () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * A year of sales history for the analytics screens: deals with realistic
+ * stage paths, leads by source, WhatsApp conversations with response times,
+ * tasks and logged activities.
+ */
+async function seedSalesHistory(t: string, users: string[], contactIds: string[], companyIds: string[]) {
+  const rnd = prng(42);
+  const pick = <T,>(xs: T[]) => xs[Math.floor(rnd() * xs.length)];
+  const between = (a: number, b: number) => a + Math.floor(rnd() * (b - a + 1));
+  const DAY = 86_400_000;
+  const now = Date.now();
+  const at = (ms: number) => new Date(Math.min(ms, now - 60_000));
+
+  const [pipeline] = await db().select().from(schema.pipelines).where(sql`tenant_id = ${t}`);
+  const stages = await db().select().from(schema.pipelineStages).where(sql`pipeline_id = ${pipeline.id}`).orderBy(schema.pipelineStages.position);
+  const open = stages.filter((s) => s.kind === "open");
+  const wonStage = stages.find((s) => s.kind === "won")!;
+  const lostStage = stages.find((s) => s.kind === "lost")!;
+  const reasons = await db().select().from(schema.lostReasons).where(sql`tenant_id = ${t}`);
+
+  // More contacts spread over the year so growth charts have a shape.
+  const firstNames = ["אורית", "גיל", "הדס", "עומר", "ליאת", "רועי", "מאיה", "איתי", "שני", "בועז", "ענבל", "ניר", "דנה", "יואב", "קרן", "אלון"];
+  const lastNames = ["שפירא", "אוחיון", "ברק", "חדד", "זילבר", "נחום", "רוזן", "סויסה"];
+  for (let i = 0; i < 24; i++) {
+    const [c] = await db()
+      .insert(schema.contacts)
+      .values({
+        tenantId: t,
+        firstName: pick(firstNames),
+        lastName: pick(lastNames),
+        phone: `+97250${String(1_000_000 + i * 7919).slice(0, 7)}`,
+        lifecycleStage: pick(["lead", "lead", "customer", "opportunity", "subscriber", "churned"]),
+        ownerId: pick(users),
+        companyId: rnd() < 0.5 ? pick(companyIds) : null,
+        createdAt: at(now - between(5, 360) * DAY),
+      })
+      .returning({ id: schema.contacts.id });
+    contactIds.push(c.id);
+  }
+
+  // Deals: closed ones carry a full stage path; open ones sit in an open stage.
+  for (let i = 0; i < 44; i++) {
+    const created = now - (365 - i * 8) * DAY + between(0, 3) * DAY;
+    const age = (now - created) / DAY;
+    const roll = rnd();
+    const outcome = age > 45 ? (roll < 0.58 ? "won" : roll < 0.9 ? "lost" : "open") : "open";
+    const closeAfter = between(8, 40);
+    const finalOpen = outcome === "open" ? pick(open) : outcome === "lost" ? open[between(0, open.length - 1)] : open[open.length - 1];
+    const stage = outcome === "won" ? wonStage : outcome === "lost" ? lostStage : finalOpen;
+    const closedAt = at(created + closeAfter * DAY);
+    const [deal] = await db()
+      .insert(schema.deals)
+      .values({
+        tenantId: t,
+        pipelineId: pipeline.id,
+        stageId: stage.id,
+        title: `${pick(["הזמנת חורף", "מלאי חגים", "קולקציית קיץ", "הזמנה חוזרת", "פתיחת סניף", "מבצע סוף עונה"])} #${i + 1}`,
+        valueCents: between(20, 600) * 10_000,
+        status: outcome,
+        contactId: pick(contactIds),
+        companyId: rnd() < 0.6 ? pick(companyIds) : null,
+        ownerId: pick(users),
+        createdAt: new Date(created),
+        wonAt: outcome === "won" ? closedAt : null,
+        lostAt: outcome === "lost" ? closedAt : null,
+        lostReasonId: outcome === "lost" ? pick(reasons).id : null,
+        expectedCloseDate: outcome === "open" ? new Date(now + between(-10, 75) * DAY).toISOString().slice(0, 10) : null,
+      })
+      .returning();
+    // Replace the trigger's single "now" row with a realistic path.
+    await db().delete(schema.dealStageHistory).where(sql`deal_id = ${deal.id}`);
+    const path = [...open.filter((s) => s.position <= finalOpen.position), ...(outcome === "open" ? [] : [stage])];
+    const span = outcome === "open" ? Math.max(1, Math.min(age, 40)) : closeAfter;
+    let prev: (typeof stages)[number] | null = null;
+    for (const [step, s] of path.entries()) {
+      await db().insert(schema.dealStageHistory).values({
+        tenantId: t,
+        dealId: deal.id,
+        fromStageId: prev?.id ?? null,
+        toStageId: s.id,
+        fromStatus: prev ? "open" : null,
+        toStatus: s.kind === "won" ? "won" : s.kind === "lost" ? "lost" : "open",
+        changedBy: deal.ownerId,
+        changedAt: at(created + (span * step * DAY) / Math.max(1, path.length - 1)),
+      });
+      prev = s;
+    }
+  }
+
+  // Leads by source, about a third converted.
+  const sources = ["website", "website", "whatsapp", "whatsapp", "referral", "campaign", "event", "manual"] as const;
+  for (let i = 0; i < 70; i++) {
+    const created = now - between(0, 150) * DAY - between(0, 20) * 3_600_000;
+    const converted = rnd() < 0.35 && now - created > 3 * DAY;
+    await db().insert(schema.leads).values({
+      tenantId: t,
+      fullName: `${pick(firstNames)} ${pick(lastNames)}`,
+      source: pick([...sources]),
+      status: converted ? "converted" : pick(["new", "new", "contacted", "qualified", "unqualified"]),
+      ownerId: pick(users),
+      createdAt: new Date(created),
+      convertedAt: converted ? at(created + between(1, 12) * DAY) : null,
+      aiClassification: rnd() < 0.5 ? pick(["hot", "warm", "warm", "cold", "spam"]) : null,
+    });
+  }
+
+  // WhatsApp conversations (mock account — nothing is sent).
+  const [wa] = await db()
+    .insert(schema.whatsappAccounts)
+    .values({ tenantId: t, provider: "mock", displayName: "כרם טויס", phoneNumber: "+972500000123", phoneNumberId: `demo_${t.slice(0, 8)}`, wabaId: "demo_waba" })
+    .returning();
+  for (const [i, contactId] of contactIds.slice(0, 10).entries()) {
+    const [conv] = await db()
+      .insert(schema.conversations)
+      .values({ tenantId: t, whatsappAccountId: wa.id, contactId, assigneeId: i % 4 === 3 ? null : users[i % 3], unreadCount: i < 3 ? between(1, 4) : 0, status: i > 7 ? "closed" : "open" })
+      .returning();
+    let ts = now - between(1, 25) * DAY;
+    let last = ts;
+    for (let k = 0; k < 6; k++) {
+      const inbound = k % 2 === 0;
+      ts += inbound ? between(2, 30) * 3_600_000 : between(2, 95) * 60_000;
+      if (ts > now) break;
+      last = ts;
+      await db().insert(schema.messages).values({
+        tenantId: t,
+        conversationId: conv.id,
+        direction: inbound ? "inbound" : "outbound",
+        type: "text",
+        body: inbound ? pick(["שלום, יש לכם במלאי?", "מה המחיר לסיטונאי?", "אפשר משלוח עד יום חמישי?"]) : pick(["היי! כן, יש במלאי 🙂", "שולחת הצעת מחיר עכשיו", "בטח, נתאם משלוח"]),
+        status: inbound ? "received" : "read",
+        senderType: inbound ? "contact" : "user",
+        senderUserId: inbound ? null : (conv.assigneeId ?? users[0]),
+        createdAt: new Date(ts),
+      });
+    }
+    await db().update(schema.conversations).set({ lastMessageAt: new Date(last), lastMessagePreview: "…" }).where(sql`id = ${conv.id}`);
+  }
+
+  // Tasks: some done, some due today, some overdue.
+  const dayStart = new Date();
+  dayStart.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 18; i++) {
+    const assignee = users[i % 3];
+    const done = i % 3 === 0;
+    await db().insert(schema.tasks).values({
+      tenantId: t,
+      title: pick(["לחזור ללקוח", "לשלוח הצעת מחיר", "לתאם פגישה", "בדיקת מלאי", "מעקב תשלום"]),
+      assigneeId: assignee,
+      contactId: pick(contactIds),
+      priority: pick(["low", "medium", "medium", "high", "urgent"]),
+      status: done ? "done" : "open",
+      completedAt: done ? at(now - between(0, 28) * DAY) : null,
+      completedBy: done ? assignee : null,
+      dueAt: done ? null : new Date(dayStart.getTime() + between(-4, 6) * DAY + between(9, 17) * 3_600_000),
+      createdBy: users[0],
+    });
+  }
+
+  // Logged sales activities by the team.
+  for (let i = 0; i < 45; i++) {
+    await db().insert(schema.activities).values({
+      tenantId: t,
+      type: pick(["call", "call", "meeting", "email", "note"]),
+      subject: pick(["שיחת מעקב", "פגישה בחנות", "שליחת קטלוג", "עדכון מחירים"]),
+      contactId: pick(contactIds),
+      actorId: pick(users),
+      occurredAt: at(now - between(0, 60) * DAY - between(0, 10) * 3_600_000),
+      durationMinutes: between(5, 60),
+    });
+  }
 }
 
 main()

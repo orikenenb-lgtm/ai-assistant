@@ -1,0 +1,57 @@
+/*
+ * Chart palette for analytics. Categorical slots validated with the dataviz
+ * validator (adjacent CVD ΔE ≥ 8.4, normal-vision ΔE ≥ 19.3, all six checks pass)
+ * against the app's surfaces: light #ffffff, dark #12151b. Slot 1 is the brand
+ * indigo. Light slots 3–5 are below 3:1 contrast → every multi-series chart ships
+ * a legend and a table view (relief rule).
+ * Order is the CVD-safety mechanism: assign slots in this order, never cycle.
+ */
+.viz-root {
+  --viz-1: #4d51de;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+  --viz-6: #008300;
+  --viz-muted: #a6a9b6;
+  --viz-grid: var(--border);
+  --viz-axis: var(--muted-foreground);
+  --viz-surface: var(--surface);
+  --viz-cursor: color-mix(in oklab, var(--muted) 70%, transparent);
+}
+
+.dark .viz-root {
+  --viz-1: #717fff;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-5: #d55181;
+  --viz-6: #008300;
+  --viz-muted: #5b6070;
+}
+
+.viz-root .recharts-cartesian-axis-tick-value {
+  fill: var(--viz-axis);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * SVG text inherits the page direction; in RTL a start-anchored y tick would grow
+ * back into the plot. Recharts renders tick labels in a z-index layer outside the
+ * axis group, so match on the orientation attribute it stamps on each label.
+ */
+.viz-root .recharts-cartesian-axis-tick-value[orientation="right"],
+.viz-root .recharts-cartesian-axis-tick-value[orientation="left"] {
+  direction: ltr;
+}
+
+.viz-root .recharts-surface:focus {
+  outline: none;
+}
+
+.viz-root .recharts-wrapper:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
