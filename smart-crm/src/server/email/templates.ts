@@ -8,6 +8,7 @@ export type TemplateData = {
   task_reminder: { name: string; taskTitle: string; dueAt: string; url: string };
   notification: { name: string; title: string; body: string; url: string };
   automation_email: { subject: string; body: string };
+  quote_sent: { orgName: string; contactName: string; quoteNumber: number; title: string; total: string; validUntil: string | null; url: string };
 };
 export type EmailTemplate = keyof TemplateData;
 
@@ -90,6 +91,28 @@ const COPY: { [K in EmailTemplate]: (d: TemplateData[K], locale: "he" | "en") =>
     cta: { label: l === "he" ? "פתיחה" : "Open", url: d.url },
   }),
   automation_email: (d) => ({ subject: d.subject, heading: d.subject, paragraphs: d.body.split(/\n{2,}/) }),
+  quote_sent: (d, l) =>
+    l === "he"
+      ? {
+          subject: `הצעת מחיר מס׳ ${d.quoteNumber} מ-${d.orgName}`,
+          heading: `שלום ${d.contactName}`.trim(),
+          paragraphs: [
+            `מצורפת הצעת מחיר "${d.title}" על סך ${d.total}.`,
+            ...(d.validUntil ? [`ההצעה בתוקף עד ${d.validUntil}.`] : []),
+            "אפשר לצפות בהצעה, להוריד אותה כ-PDF ולאשר אותה בקישור. מסמך זה אינו חשבונית מס.",
+          ],
+          cta: { label: "צפייה בהצעה", url: d.url },
+        }
+      : {
+          subject: `Quote #${d.quoteNumber} from ${d.orgName}`,
+          heading: `Hello ${d.contactName}`.trim(),
+          paragraphs: [
+            `Please find our quote "${d.title}" for ${d.total}.`,
+            ...(d.validUntil ? [`It is valid until ${d.validUntil}.`] : []),
+            "You can view it, download the PDF and accept it online. This document is not a tax invoice.",
+          ],
+          cta: { label: "View quote", url: d.url },
+        },
 };
 
 export function renderEmail<T extends EmailTemplate>(
