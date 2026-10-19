@@ -4,6 +4,7 @@ import { TASK_PRIORITIES, taskInputSchema } from "@/modules/tasks/schemas";
 import { assignConversation, sendMessage } from "@/modules/inbox/service";
 import { moveDeal } from "@/modules/sales/deals";
 import { setLeadStatus } from "@/modules/sales/leads";
+import { toLocalInput } from "@/modules/calendar/tz";
 import { registerProposalExecutor } from "./proposals";
 
 /**
@@ -11,15 +12,6 @@ import { registerProposalExecutor } from "./proposals";
  * user through each module's normal service (RBAC, RLS, compliance checks).
  */
 
-/** ISO instant → "YYYY-MM-DDTHH:mm" wall clock in the tenant zone (the task form format). */
-function toLocalInput(iso: string, timeZone: string): string | null {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  const p = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
-    .formatToParts(d)
-    .reduce<Record<string, string>>((acc, x) => ({ ...acc, [x.type]: x.value }), {});
-  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
-}
 
 registerProposalExecutor("create_task", {
   permission: "tasks.create",
@@ -40,7 +32,7 @@ registerProposalExecutor("create_task", {
         title: p.title,
         description: p.description ?? null,
         priority: p.priority ?? "medium",
-        dueAt: p.dueAt ? toLocalInput(p.dueAt, timeZone) : null,
+        dueAt: p.dueAt && !Number.isNaN(Date.parse(p.dueAt)) ? toLocalInput(new Date(p.dueAt), timeZone) : null,
         contactId: p.contactId ?? null,
         dealId: p.dealId ?? null,
         leadId: p.leadId ?? null,

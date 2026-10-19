@@ -1,6 +1,6 @@
 # SMART CRM AI — REST API v1
 
-> **בעברית בקצרה:** ה-API הציבורי מאפשר למערכות חיצוניות (אתר, חנות, Zapier, מערכת הנהלת חשבונות) לקרוא ולכתוב אנשי קשר וחברות, ולקבל אירועים בזמן אמת דרך Webhooks חתומים. מפתחות API נוצרים ע"י בעל/ת הארגון בלבד ב־**הגדרות ← מפתחות API**, מוצגים פעם אחת בלבד, ונשמרים במערכת רק כ־hash. כל קריאה מוגבלת להרשאות (scopes) של המפתח, לארגון של המפתח ול־600 בקשות לדקה.
+> **בעברית בקצרה:** ה-API הציבורי מאפשר למערכות חיצוניות (אתר, חנות, Zapier, מערכת הנהלת חשבונות) לקרוא ולכתוב אנשי קשר, חברות, עסקאות ומשימות, ולקבל אירועים בזמן אמת דרך Webhooks חתומים. מפתחות API נוצרים ע"י בעל/ת הארגון בלבד ב־**הגדרות ← מפתחות API**, מוצגים פעם אחת בלבד, ונשמרים במערכת רק כ־hash. כל קריאה מוגבלת להרשאות (scopes) של המפתח, לארגון של המפתח ול־600 בקשות לדקה.
 
 The machine-readable contract is [`openapi.json`](./openapi.json) (OpenAPI 3.1).
 
@@ -33,7 +33,11 @@ Keys can have an expiry date and can be revoked at any time; a revoked or expire
 | `contacts:read` | `GET /contacts`, `GET /contacts/{id}` |
 | `contacts:write` | `POST /contacts`, `PATCH /contacts/{id}`, `DELETE /contacts/{id}` |
 | `companies:read` | `GET /companies`, `GET /companies/{id}` |
-| `deals:read`, `deals:write`, `tasks:read`, `tasks:write`, `webhooks:manage` | Reserved for upcoming endpoints (can already be granted) |
+| `deals:read` | `GET /deals`, `GET /deals/{id}` |
+| `deals:write` | `POST /deals`, `PATCH /deals/{id}`, `DELETE /deals/{id}` |
+| `tasks:read` | `GET /tasks`, `GET /tasks/{id}` |
+| `tasks:write` | `POST /tasks`, `PATCH /tasks/{id}`, `DELETE /tasks/{id}` (may assign tasks to any member) |
+| `webhooks:manage` | Reserved for upcoming endpoints (can already be granted) |
 
 A request without the needed scope gets `403 FORBIDDEN`.
 
@@ -115,6 +119,43 @@ Contact fields: `firstName`, `lastName`, `email`, `phone` (normalized to E.164),
 curl "https://crm.example.com/api/v1/companies?q=acme" -H "Authorization: Bearer $SMARTCRM_API_KEY"
 curl https://crm.example.com/api/v1/companies/<id> -H "Authorization: Bearer $SMARTCRM_API_KEY"
 ```
+
+### Deals
+
+```bash
+# List (filters: q, status=open|won|lost, pipelineId, stageId, ownerId, contactId)
+curl "https://crm.example.com/api/v1/deals?status=open&pipelineId=<id>" -H "Authorization: Bearer $SMARTCRM_API_KEY"
+
+# Create — money is in minor units (agorot/cents)
+curl -X POST https://crm.example.com/api/v1/deals \
+  -H "Authorization: Bearer $SMARTCRM_API_KEY" -H "Content-Type: application/json" \
+  -d '{"title":"Winter order","valueCents":1250000,"pipelineId":"<id>","stageId":"<id>","contactId":"<id>"}'
+
+# Move to another stage / update fields (omitted fields keep their value)
+curl -X PATCH https://crm.example.com/api/v1/deals/<id> \
+  -H "Authorization: Bearer $SMARTCRM_API_KEY" -H "Content-Type: application/json" \
+  -d '{"stageId":"<id>","probability":60}'
+```
+
+Deal fields: `title`, `valueCents`, `currency` (ISO 4217, default `ILS`), `pipelineId`, `stageId` (must belong to the pipeline), `probability` (0–100), `expectedCloseDate` (`YYYY-MM-DD`), `contactId`, `companyId`, `ownerId`, `customFields`. Pipeline and stage ids are visible in the app (Settings → Pipelines) and on every deal returned by the API. Moving a deal to a *won* or *lost* stage closes it (`status`, `wonAt`/`lostAt`); a lost reason can be added in the app.
+
+### Tasks
+
+```bash
+# List (filters: status, assigneeId, contactId, dealId, dueBefore, dueAfter — ISO 8601)
+curl "https://crm.example.com/api/v1/tasks?status=open&dueBefore=2026-11-01T00:00:00Z" -H "Authorization: Bearer $SMARTCRM_API_KEY"
+
+# Create (a reminder is scheduled at dueAt; the assignee is notified)
+curl -X POST https://crm.example.com/api/v1/tasks \
+  -H "Authorization: Bearer $SMARTCRM_API_KEY" -H "Content-Type: application/json" \
+  -d '{"title":"Call back","dueAt":"2026-10-21T09:00:00+03:00","priority":"high","assigneeId":"<user id>","contactId":"<id>"}'
+
+# Complete
+curl -X PATCH https://crm.example.com/api/v1/tasks/<id> \
+  -H "Authorization: Bearer $SMARTCRM_API_KEY" -H "Content-Type: application/json" -d '{"status":"done"}'
+```
+
+Task fields: `title`, `description`, `priority` (`low|medium|high|urgent`), `status` (`open|in_progress` on create; `done|canceled` too on update), `dueAt` (stored at minute precision), `assigneeId` (a member of the organization), `isTeamTask`, `contactId`, `companyId`, `dealId`, `leadId`. Tasks created through the API have `source: "api"`. Unknown fields are rejected with `422`.
 
 ## Auditing
 

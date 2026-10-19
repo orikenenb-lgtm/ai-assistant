@@ -3,6 +3,7 @@ import { schema } from "@/server/db";
 import { PermanentJobError } from "@/server/jobs/runner";
 import { createTask, tenantTimezone } from "@/modules/tasks/service";
 import { taskInputSchema } from "@/modules/tasks/schemas";
+import { toLocalInput } from "@/modules/calendar/tz";
 import { openConversationForContact, sendMessage } from "@/modules/inbox/service";
 import { moveDeal } from "@/modules/sales/deals";
 import { setLeadStatus } from "@/modules/sales/leads";
@@ -19,13 +20,6 @@ import type { RunContext } from "./run-context";
  * human user — automations get no shortcuts.
  */
 
-/** Wall-clock "YYYY-MM-DDTHH:mm" in the tenant zone, `days` from now. */
-function localInputInDays(days: number, timeZone: string): string {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
-    .formatToParts(new Date(Date.now() + days * 86_400_000))
-    .reduce<Record<string, string>>((acc, p) => ({ ...acc, [p.type]: p.value }), {});
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-}
 
 registerAutomationAction("create_task", {
   params: ACTION_PARAMS.create_task,
@@ -38,7 +32,7 @@ registerAutomationAction("create_task", {
         title: interpolate(p.title, run.data).slice(0, 300),
         description: interpolate(p.description, run.data).slice(0, 5000),
         priority: p.priority,
-        dueAt: localInputInDays(p.dueInDays, timeZone),
+        dueAt: toLocalInput(new Date(Date.now() + p.dueInDays * 86_400_000), timeZone),
         reminder: "at_due",
         assigneeId,
         contactId: run.contact?.id ?? null,
