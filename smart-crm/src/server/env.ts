@@ -50,6 +50,10 @@ const schema = z
     META_WEBHOOK_VERIFY_TOKEN: optionalString,
     META_GRAPH_VERSION: z.string().regex(/^v\d+\.\d+$/).default("v23.0"),
 
+    /** Google Calendar sync (feature flag calendar.sync must also be enabled). */
+    GOOGLE_CLIENT_ID: optionalString,
+    GOOGLE_CLIENT_SECRET: optionalString,
+
     BILLING_PROVIDER: z.enum(["mock", "stripe"]).default("mock"),
     STRIPE_SECRET_KEY: optionalString,
     STRIPE_WEBHOOK_SECRET: optionalString,

@@ -1,0 +1,111 @@
+# Deployment (staging / production)
+
+> **Nothing in this document has been executed against a real cloud account.**
+> No Supabase project, Vercel project, Meta app, OpenAI key, Stripe account,
+> Resend domain or Google OAuth app was available while building. Every step below
+> that needs one is marked **[approval / credentials]**. Production deployment
+> itself requires an explicit go-ahead from the owner.
+
+## Topology
+
+| Piece | Where | Notes |
+|---|---|---|
+| Web app (Next.js 16, Node runtime) | Vercel project, **Root Directory = `smart-crm`** | `vercel.json` sets the region and the per-minute job cron |
+| Database, Auth, Storage, Realtime | Supabase project | Migrations in `supabase/migrations` |
+| Background worker | Any Node 22 host that can run `npm run worker` (Railway, Fly.io, Render, a VM) | Long-running; replicas are safe (SKIP LOCKED). Optional if Vercel Cron alone is enough for your volume |
+| Email | Resend | Verified sending domain |
+| WhatsApp | Meta WhatsApp Cloud API (official) | Webhook → `/api/webhooks/whatsapp` |
+| AI | OpenAI | Per-tenant token quotas enforced in-app |
+| Billing | Stripe (test mode first) | Live charging is blocked unless `BILLING_LIVE_MODE=true` **and** a live key |
+
+## 1. Supabase **[credentials]**
+
+1. Create a project (region close to users, e.g. `eu-central-1`).
+2. Apply migrations with the app's runner (it records them in `supabase_migrations.schema_migrations`, the same table the Supabase CLI uses):
+   ```bash
+   DATABASE_URL="postgres://postgres:<password>@db.<ref>.supabase.co:5432/postgres" APP_ENV=production npm run db:migrate
+   ```
+   Do **not** apply `supabase/local/00_supabase_stub.sql` — it only exists for plain Postgres.
+3. Auth → URL configuration: Site URL = `APP_URL`; redirect URLs include `${APP_URL}/auth/confirm`.
+   Auth → Email templates: point confirmation / recovery links at `${APP_URL}/auth/confirm?token_hash={{ .TokenHash }}&type=…`.
+   Enable MFA (TOTP).
+4. Storage: the finalize migration creates the private bucket `crm-files` when the storage schema exists. Verify it is **private**.
+5. Realtime: the finalize migration adds `conversations`, `messages`, `notifications` to the `supabase_realtime` publication (RLS-filtered).
+6. Promote the first platform super admin (one-off, audited manually):
+   ```sql
+   update public.profiles set is_super_admin = true where email = 'you@company.com';
+   ```
+
+Runtime connection string for the app and worker: the **transaction pooler** (port 6543); the code already disables prepared statements for it.
+
+## 2. Vercel **[credentials / approval]**
+
+1. Import the GitHub repository, set **Root Directory** to `smart-crm`, framework Next.js.
+2. Environment variables (Production and Preview) — see `.env.example` for the full list:
+   * `APP_ENV=production` (or `staging`), `APP_URL=https://…`
+   * `DATABASE_URL` (pooler), `ENCRYPTION_KEY` (32 random bytes, base64 — **back it up**; it encrypts stored tokens), `CRON_SECRET`
+   * `AUTH_PROVIDER=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+   * `STORAGE_PROVIDER=supabase`, `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`
+   * `AI_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_MODEL`
+   * `WHATSAPP_PROVIDER=meta`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`
+   * `BILLING_PROVIDER=stripe`, `STRIPE_SECRET_KEY` (test key), `STRIPE_WEBHOOK_SECRET`, `BILLING_LIVE_MODE=false`
+   * optional: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+   The app validates configuration at startup and refuses `AUTH_PROVIDER=local` in production.
+3. Cron: `vercel.json` schedules `GET /api/cron/jobs` every minute. Vercel sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set. Per-minute crons need a paid Vercel plan; on Hobby, run the worker instead.
+4. Deploy a **Preview** first, run the smoke checklist below, then promote. **Production promotion requires the owner's approval.**
+
+## 3. Worker (recommended) **[credentials]**
+
+```bash
+cd smart-crm && npm ci && npm run worker
+```
+Same environment variables as the web app. Scale horizontally if the queue backs up.
+The worker handles the 1-minute scheduler (reminders, automation schedules, billing
+lifecycle, retention, quote expiry) and drains all jobs.
+
+## 4. WhatsApp (Meta Cloud API) **[credentials / Meta approval]**
+
+1. Meta developer app with the WhatsApp product; a verified business and phone number.
+2. A **System User** permanent token with `whatsapp_business_messaging` and `whatsapp_business_management`.
+3. App → WhatsApp → Configuration: Callback URL `${APP_URL}/api/webhooks/whatsapp`, Verify token = `META_WEBHOOK_VERIFY_TOKEN`; subscribe to the `messages` field.
+4. In the app: Settings → WhatsApp → connect the number (phone number ID, WABA ID, token — stored encrypted), test the connection, sync templates.
+5. Message templates must be approved by Meta before use outside the 24-hour window.
+6. No live message has ever been sent by this codebase; the first real send should be a test to an internal number.
+
+## 5. Stripe **[credentials; live mode needs explicit approval]**
+
+1. Products/prices for Starter, Pro, Business (monthly + yearly). Put the price IDs in /admin/plans.
+2. Webhook endpoint `${APP_URL}/api/webhooks/billing` with: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`.
+3. Keep `BILLING_LIVE_MODE=false` and a `sk_test_…` key until the owner approves going live.
+
+## 6. Email (Resend) **[credentials]**
+
+Verify the sending domain (SPF/DKIM), set `RESEND_API_KEY` and `EMAIL_FROM`.
+
+## 7. Google Calendar sync (optional) **[Google OAuth verification]**
+
+OAuth client (web) with redirect `${APP_URL}/calendar/oauth/google/callback`, scopes
+`calendar.events openid email`; then enable the `calendar.sync` feature flag in /admin/flags.
+
+## 8. Invoicing providers (optional) **[credentials & legal approval]**
+
+Morning (Green Invoice) / iCount adapters are mapped but inactive. Quotes are never
+presented as tax invoices; issuing real tax documents requires connecting a licensed
+provider and the owner's approval.
+
+## Smoke checklist after each deploy
+
+* `GET /api/health` → `200 {"status":"ok"}`; with `Authorization: Bearer $CRON_SECRET` the `queue.oldest_due_seconds` stays low.
+* Register → verify email (real inbox) → create org → invite a teammate.
+* Contacts CRUD, deal board drag, quote PDF download.
+* WhatsApp: inbound test message appears; reply within 24h; template outside it.
+* Automations: publish a simple workflow, trigger it, check run history.
+* /admin reachable only for the super admin.
+
+## Monitoring & operations
+
+* **Logs**: structured JSON (pino) with secret redaction; ship Vercel + worker logs to a drain (Datadog, Axiom, Better Stack).
+* **Uptime**: monitor `/api/health` (public) and alert on non-200.
+* **Queue**: poll `/api/health` with the cron secret; alert when `oldest_due_seconds` > 300 or `dead` grows. Dead jobs can be retried from /admin/jobs.
+* **Backups**: Supabase daily backups / PITR (paid plan). Keep `ENCRYPTION_KEY` in a secret manager — without it, stored WhatsApp/calendar tokens cannot be decrypted.
+* **Key rotation**: `CRON_SECRET`, webhook secrets and API keys can be rotated without downtime; rotating `ENCRYPTION_KEY` requires re-encrypting stored secrets (planned tooling).

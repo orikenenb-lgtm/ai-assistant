@@ -8,6 +8,8 @@
  * an in-memory stand-in for tests and local development.
  */
 
+import { env } from "@/server/env";
+
 export type CalendarTokens = { accessToken: string; refreshToken: string | null; expiresAt: number; scope: string; accountEmail: string | null };
 
 export type ExternalEvent = {
@@ -199,13 +201,13 @@ export type ProviderStatus = { provider: "google" | "microsoft"; configured: boo
 /** Google is available only with OAuth credentials; Microsoft is planned. */
 export function calendarProviderStatus(): ProviderStatus[] {
   return [
-    { provider: "google", configured: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) },
+    { provider: "google", configured: Boolean(env().GOOGLE_CLIENT_ID && env().GOOGLE_CLIENT_SECRET) },
     { provider: "microsoft", configured: false },
   ];
 }
 
 export function googleProvider(): GoogleCalendarProvider | null {
-  const id = process.env.GOOGLE_CLIENT_ID;
-  const secret = process.env.GOOGLE_CLIENT_SECRET;
+  const id = env().GOOGLE_CLIENT_ID;
+  const secret = env().GOOGLE_CLIENT_SECRET;
   return id && secret ? new GoogleCalendarProvider(id, secret) : null;
 }

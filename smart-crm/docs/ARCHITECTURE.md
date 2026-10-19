@@ -79,8 +79,9 @@ email). Modules:
 
 ### 3.1 Data access & tenant isolation
 * **Single source of truth for schema:** hand-written SQL migrations in
-  `supabase/migrations/` (Supabase-CLI compatible). `src/server/db/schema/` mirrors them in
-  Drizzle for typed queries; a drift test compares both against the live database.
+  `supabase/migrations/` (Supabase-CLI compatible). `src/server/db/schema.ts` is *generated*
+  from the migrated database (`npm run db:generate`) for typed Drizzle queries; CI fails on drift
+  (`npm run db:check`).
 * **Every tenant-owned row has `tenant_id`.** Relationships between tenant rows use
   **composite foreign keys** `(tenant_id, x_id) → x(tenant_id, id)`, so a deal can never point
   at another tenant's contact even if application code is wrong.
@@ -95,9 +96,10 @@ email). Modules:
     code paths that use it must filter by `tenant_id` explicitly and are few and audited.
 * **RLS helper functions** (`app` schema, `SECURITY DEFINER`, fixed `search_path`):
   `app.current_user_id()`, `app.readable_tenant_ids()`, `app.writable_tenant_ids()`,
-  `app.has_tenant_role(tenant, roles[])`. Policies are written as
-  `tenant_id = ANY ((SELECT app.readable_tenant_ids()))` so the helper is evaluated once per
-  statement (initPlan), not per row.
+  `app.has_tenant_role(tenant, roles[])`. The id helpers return `setof uuid`; policies are
+  written as `tenant_id IN (SELECT app.readable_tenant_ids())` so the helper is evaluated once
+  per statement, not per row. `app.enable_tenant_rls(table, manage_roles)` applies the standard
+  policy set to a table.
 * Support-mode (platform admin) sessions add a tenant to *readable* ids only — never writable.
 
 ### 3.2 Authentication
@@ -115,13 +117,18 @@ Both adapters resolve to the same `auth.users.id`, so all downstream code is ide
 ### 3.3 Authorization (RBAC)
 Roles: `super_admin` (platform flag on profile), `owner`, `manager`, `agent` (per membership).
 `src/server/rbac/permissions.ts` defines the permission matrix (e.g. `deals.delete`,
-`settings.billing`, `inbox.assign`). Every server action and route handler calls
-`requireTenant({ permission })`, which (1) authenticates, (2) loads the active membership,
-(3) checks the permission, (4) blocks mutations in read-only support mode. RLS is the second,
-independent wall.
+`settings.billing`, `inbox.assign`). Server actions go through `tenantAction({ schema, permission })`
+(`src/server/action.ts`), which (1) authenticates, (2) loads the active membership,
+(3) validates input with zod, (4) checks the permission and (5) blocks mutations in read-only
+support mode. Service functions re-check with `assertCan` / `assertCanWrite`, so jobs, the public
+API (API-key scopes) and AI tools get the same rules. RLS is the second, independent wall.
+Platform-admin actions use a separate `adminAction` guard (super admins only, 404 otherwise,
+every call audited).
 
 ### 3.4 Durable jobs
-`jobs` table: `queued → running → succeeded | failed(retry) → dead`.
+`jobs` table: `queued → running → succeeded`; a failure re-queues with backoff until
+`max_attempts`, then `dead` (`canceled` for jobs stopped by an admin). Enqueueing happens in the
+same transaction as the business write (transactional outbox).
 Workers claim with `FOR UPDATE SKIP LOCKED`, exponential backoff with jitter, `max_attempts`,
 stale-lock recovery, and a unique `idempotency_key`. Dead jobs are visible and re-queueable in
 the admin console (dead-letter queue). Runs as a long-lived `npm run worker` process, or in
@@ -155,7 +162,12 @@ Workflows are versioned JSON graphs (`trigger → condition/action/delay nodes`)
 React Flow canvas and validated with zod. Domain events create `automation_runs`
 (unique on `(workflow_id, trigger_key)` → idempotent). The worker executes nodes step by step,
 persisting each step; delays become scheduled jobs. Loop prevention: event chain depth limit,
-per-workflow per-entity rate cap, max steps per run. Failed steps retry, then dead-letter.
+per-workflow per-entity rate cap, max steps per run. Failed steps retry, then dead-letter;
+business-rule refusals (opted-out contact, closed WhatsApp window, missing record) fail at once.
+Triggers: 22 domain events (with filters), schedules in the tenant's time zone (DST-aware) with
+segment rules, an authenticated webhook URL (token stored hashed, rate-limited), and manual runs.
+Actions (13) delegate to the owning module's service, so automations get no shortcuts around
+validation, consent or the 24-hour window; `call_webhook` uses the outbound-webhook SSRF guard.
 
 ### 3.8 Billing
 `BillingProvider` interface → `MockBillingProvider` (default) and `StripeBillingProvider`
@@ -173,8 +185,9 @@ authorizes the user against the attachment's tenant before issuing a URL.
 * Indexes on every `(tenant_id, …)` access path, trigram + full-text search for contacts.
 * Stateless web tier (Vercel), horizontally scalable worker (SKIP LOCKED is safe with N workers).
 * Rate limits backed by Postgres (works across serverless instances).
-* Health: `/api/health` (DB round-trip, queue depth, dead jobs), admin health page.
-* Structured JSON logs (pino) with request ids; secrets redacted by key name.
+* Health: `/api/health` (public: DB round-trip; with `CRON_SECRET`: queue depth, oldest due job,
+  dead jobs), platform stats and failed-job management in `/admin`.
+* Structured JSON logs (pino); secrets redacted by key name.
 
 ## 5. Trade-offs
 | Decision | Why | Revisit when |
