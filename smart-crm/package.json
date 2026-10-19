@@ -17,6 +17,7 @@
     "db:status": "tsx scripts/db.ts status",
     "db:generate": "tsx scripts/gen-schema.ts",
     "db:check": "tsx scripts/gen-schema.ts --check",
+    "db:bundle": "tsx scripts/bundle-migrations.ts",
     "db:seed": "tsx scripts/seed.ts",
     "worker": "tsx src/worker/main.ts",
     "test": "vitest run",

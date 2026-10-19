@@ -27,6 +27,7 @@ npm run worker                   # בטרמינל נוסף: משימות רקע
 
 | מסמך | תוכן |
 |---|---|
+| [docs/GO_LIVE_HE.md](docs/GO_LIVE_HE.md) | **מדריך העלאה לאוויר צעד-אחר-צעד (Supabase, Vercel, Railway, Resend, OpenAI, WhatsApp)** |
 | [docs/SETUP.md](docs/SETUP.md) | התקנה מקומית, סקריפטים, בדיקות |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | ארכיטקטורה, מודל נתונים, אבטחה ובידוד בין ארגונים |
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | איך כותבים מודולים, גישה לנתונים, UI ובדיקות |
