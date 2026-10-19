@@ -37,7 +37,7 @@ real providers, and approvals.
 | TypeScript strict (`next typegen && tsc`) | clean |
 | ESLint (incl. React Compiler rules) | clean |
 | Unit + integration tests (real PostgreSQL 16 with RLS) | **441 passed** across 39 files |
-| End-to-end (Playwright, production build, Hebrew UI) | see "E2E" below |
+| End-to-end (Playwright, production build, Hebrew UI) | **21 scenarios passed** (listed below) |
 | `next build` | passes |
 | Schema drift (`db:check` against a freshly migrated database) | no drift |
 | GitHub Actions (`smart-crm.yml`: lint, typecheck, unit, integration, drift, build, E2E) | green on the PR branch |
