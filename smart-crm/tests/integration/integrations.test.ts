@@ -13,6 +13,11 @@ import { createWorkflow, getWorkflow, publishWorkflow, saveDraft } from "@/modul
 import type { WorkflowDefinition } from "@/modules/automation/definition";
 import { approveProposal, createProposal } from "@/modules/ai/proposals";
 import "@/modules/ai/executors";
+import { createDeal } from "@/modules/sales/deals";
+import { createLead } from "@/modules/sales/leads";
+import { listPipelines } from "@/modules/sales/pipelines";
+import { dealInputSchema, leadInputSchema } from "@/modules/sales/schemas";
+import { runManually } from "@/modules/automation/service";
 import { createTeam } from "../support/factories";
 
 /** Cross-module wiring: automations and AI proposals acting through the tasks and inbox services. */
@@ -124,7 +129,6 @@ describe("automation → WhatsApp", () => {
     await inbound(phone, "הסר");
     const [contact] = await db().select().from(schema.contacts).where(and(eq(schema.contacts.tenantId, T.tenant.id), eq(schema.contacts.phone, phone)));
     expect(contact.whatsappConsent).toBe("opted_out");
-    const { runManually } = await import("@/modules/automation/service");
     const runId = await runManually(T.ownerCtx, wfId, contact.id);
     await drain();
     const [run] = await db().select().from(schema.automationRuns).where(eq(schema.automationRuns.id, runId!));
@@ -168,6 +172,71 @@ describe("AI proposals → modules (executed as the approver)", () => {
     await approveProposal(T.managerCtx, p.id);
     const [after] = await db().select({ assigneeId: schema.conversations.assigneeId }).from(schema.conversations).where(eq(schema.conversations.id, conv.id));
     expect(after.assigneeId).toBe(T.agent.id);
+  });
+});
+
+describe("automation → sales and outbound HTTP", () => {
+  it("move_deal_stage moves a newly created deal; update_lead_status follows the lead transitions", async () => {
+    const [P] = await listPipelines(T.ownerCtx);
+    const target = P.stages.find((s) => s.kind === "open" && s.position > 0)!;
+    await publish("qualify deals", {
+      nodes: [
+        { id: "t", type: "trigger", config: { kind: "event", event: "deal.created", filters: [] }, position: pos },
+        { id: "a", type: "action", config: { action: "move_deal_stage", params: { stageId: target.id } }, position: pos },
+      ],
+      edges: [{ id: "e", source: "t", target: "a" }],
+    });
+    await publish("contact leads", {
+      nodes: [
+        { id: "t", type: "trigger", config: { kind: "event", event: "lead.created", filters: [] }, position: pos },
+        { id: "a", type: "action", config: { action: "update_lead_status", params: { status: "contacted" } }, position: pos },
+      ],
+      edges: [{ id: "e", source: "t", target: "a" }],
+    });
+    const deal = await createDeal(T.ownerCtx, dealInputSchema.parse({ title: "הזמנת חורף", value: 1000, pipelineId: P.id, stageId: P.stages[0].id }));
+    const lead = await createLead(T.ownerCtx, leadInputSchema.parse({ fullName: "ליד בדיקה" }));
+    await drain();
+    const [d] = await db().select().from(schema.deals).where(eq(schema.deals.id, deal.id));
+    expect(d.stageId).toBe(target.id);
+    const history = await db().select().from(schema.dealStageHistory).where(eq(schema.dealStageHistory.dealId, deal.id));
+    expect(history.some((h) => h.toStageId === target.id)).toBe(true);
+    const [l] = await db().select().from(schema.leads).where(eq(schema.leads.id, lead.id));
+    expect(l.status).toBe("contacted");
+  });
+
+  it("call_webhook refuses private/loopback targets (SSRF) and fails the run without retries", async () => {
+    const wfId = await publish("ssrf", {
+      nodes: [
+        { id: "t", type: "trigger", config: { kind: "manual" }, position: pos },
+        { id: "a", type: "action", config: { action: "call_webhook", params: { url: "https://169.254.169.254/latest/meta-data" } }, position: pos },
+      ],
+      edges: [{ id: "e", source: "t", target: "a" }],
+    });
+    const [c] = await db().insert(schema.contacts).values({ tenantId: T.tenant.id, firstName: "SSRF" }).returning();
+    const runId = await runManually(T.ownerCtx, wfId, c.id);
+    await drain();
+    const [run] = await db().select().from(schema.automationRuns).where(eq(schema.automationRuns.id, runId!));
+    expect(run.status).toBe("failed");
+    expect(run.error).toContain("private_address");
+  });
+});
+
+describe("AI proposals → sales", () => {
+  it("update_deal_stage runs as the approver and is refused for a stage in another pipeline", async () => {
+    const [P] = await listPipelines(T.ownerCtx);
+    const deal = await createDeal(T.ownerCtx, dealInputSchema.parse({ title: "AI deal", value: 500, pipelineId: P.id, stageId: P.stages[0].id }));
+    const target = P.stages.find((s) => s.kind === "open" && s.id !== P.stages[0].id)!;
+    const ok = await createProposal(T.agentCtx, { actionType: "update_deal_stage", payload: { dealId: deal.id, stageId: target.id } });
+    expect((await approveProposal(T.managerCtx, ok.id)).status).toBe("executed");
+    const [d] = await db().select().from(schema.deals).where(eq(schema.deals.id, deal.id));
+    expect(d.stageId).toBe(target.id);
+
+    const Other = await createTeam("Other pipelines");
+    const [foreign] = await listPipelines(Other.ownerCtx);
+    const bad = await createProposal(T.agentCtx, { actionType: "update_deal_stage", payload: { dealId: deal.id, stageId: foreign.stages[1].id } });
+    await expect(approveProposal(T.managerCtx, bad.id)).rejects.toThrow();
+    const [after] = await db().select().from(schema.deals).where(eq(schema.deals.id, deal.id));
+    expect(after.stageId).toBe(target.id);
   });
 });
 

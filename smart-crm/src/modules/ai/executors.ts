@@ -2,6 +2,8 @@ import { z } from "zod";
 import { createTask, tenantTimezone } from "@/modules/tasks/service";
 import { TASK_PRIORITIES, taskInputSchema } from "@/modules/tasks/schemas";
 import { assignConversation, sendMessage } from "@/modules/inbox/service";
+import { moveDeal } from "@/modules/sales/deals";
+import { setLeadStatus } from "@/modules/sales/leads";
 import { registerProposalExecutor } from "./proposals";
 
 /**
@@ -64,5 +66,23 @@ registerProposalExecutor("send_whatsapp_message", {
   execute: async (ctx, p) => {
     const r = await sendMessage(ctx, p.conversationId, { kind: "text", text: p.text });
     return { messageId: r.id };
+  },
+});
+
+registerProposalExecutor("update_deal_stage", {
+  permission: "deals.update",
+  payload: z.object({ dealId: z.uuid(), stageId: z.uuid() }),
+  execute: async (ctx, p) => {
+    const after = await moveDeal(ctx, { id: p.dealId, stageId: p.stageId });
+    return { dealId: after.id, stageId: after.stageId };
+  },
+});
+
+registerProposalExecutor("update_lead_status", {
+  permission: "leads.update",
+  payload: z.object({ leadId: z.uuid(), status: z.enum(["new", "contacted", "qualified", "unqualified"]), reason: z.string().trim().max(500).optional() }),
+  execute: async (ctx, p) => {
+    await setLeadStatus(ctx, p.leadId, p.status, p.reason ?? null);
+    return { leadId: p.leadId, status: p.status };
   },
 });

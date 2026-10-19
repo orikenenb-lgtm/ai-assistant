@@ -66,7 +66,7 @@ export async function fanOutEvent(event: DomainEvent) {
 type PostResult = { status: number; body: string };
 
 /** POSTs with the destination IP pinned to the address that passed the SSRF check. */
-async function postPinned(target: URL, body: string, headers: Record<string, string>): Promise<PostResult> {
+export async function postPinned(target: URL, body: string, headers: Record<string, string>): Promise<PostResult> {
   const pinned = await resolvePublicTarget(target.hostname);
   const lookupPinned: LookupFunction = (_host, options, cb) => {
     if ((options as { all?: boolean }).all) {
