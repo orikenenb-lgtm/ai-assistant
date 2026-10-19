@@ -1,0 +1,23 @@
+{
+  "title": "התראות",
+  "subtitle": "בחרו איך לקבל עדכונים על מה שקורה בארגון",
+  "event": "אירוע",
+  "inApp": "באפליקציה",
+  "email": "באימייל",
+  "events": {
+    "conversation_assigned": "שיחה שויכה אליי",
+    "message_received": "הודעה חדשה בשיחה שלי",
+    "task_assigned": "משימה שויכה אליי",
+    "task_reminder": "תזכורות למשימות",
+    "deal_won": "עסקה נסגרה בהצלחה",
+    "deal_lost": "עסקה אבדה",
+    "lead_assigned": "ליד שויך אליי",
+    "mention": "אזכור שלי",
+    "ai_proposal": "הצעת פעולה מה-AI ממתינה לאישור",
+    "automation_failed": "אוטומציה נכשלה",
+    "invitation_accepted": "הזמנה לארגון התקבלה"
+  },
+  "saved": "ההעדפה נשמרה",
+  "readOnly": "במצב תמיכה אי אפשר לשנות העדפות",
+  "emailNote": "מיילים נשלחים לכתובת {email}"
+}

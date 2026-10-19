@@ -1,0 +1,23 @@
+{
+  "title": "Notifications",
+  "subtitle": "Choose how you hear about what happens in your organization",
+  "event": "Event",
+  "inApp": "In app",
+  "email": "Email",
+  "events": {
+    "conversation_assigned": "A conversation is assigned to me",
+    "message_received": "New message in my conversation",
+    "task_assigned": "A task is assigned to me",
+    "task_reminder": "Task reminders",
+    "deal_won": "Deal won",
+    "deal_lost": "Deal lost",
+    "lead_assigned": "A lead is assigned to me",
+    "mention": "I'm mentioned",
+    "ai_proposal": "AI action awaiting approval",
+    "automation_failed": "An automation failed",
+    "invitation_accepted": "An invitation was accepted"
+  },
+  "saved": "Preference saved",
+  "readOnly": "Preferences can't be changed in support mode",
+  "emailNote": "Emails are sent to {email}"
+}

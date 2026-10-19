@@ -5,3 +5,4 @@
  */
 import "../events";
 import "./maintenance";
+import "../../modules/tasks/jobs";
