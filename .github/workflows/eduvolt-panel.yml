@@ -1,0 +1,39 @@
+# בדיקות פרויקט לוח החשמל החכם — רץ רק כשמשהו בתיקייה שלו משתנה
+name: EduVolt panel logic
+
+on:
+  push:
+    paths:
+      - "eduvolt-smart-panel/**"
+      - ".github/workflows/eduvolt-panel.yml"
+  pull_request:
+    paths:
+      - "eduvolt-smart-panel/**"
+      - ".github/workflows/eduvolt-panel.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  logic:
+    name: סימולציית לוגיקה + בדיקות
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: eduvolt-smart-panel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: בדיקות יחידה
+        working-directory: eduvolt-smart-panel/07_Simulation
+        run: python -m unittest -v test_logic
+      - name: הדוחות והמסמכים שנוצרים מהקוד מעודכנים
+        run: |
+          python 07_Simulation/run_simulation.py
+          python tools/render_ladder_doc.py
+          python tools/generate_drawings.py
+          git diff --exit-code -- 08_Test_Reports/SIMULATION_RESULTS.md 06_PLC_Logic/ZELIO_LADDER.md 04_Schematics 05_Panel_Layout
