@@ -1,0 +1,45 @@
+{
+  "greeting": "Hi {name} 👋",
+  "subtitle": "Here's what's happening in your business today",
+  "emptyTitle": "Let's get started",
+  "emptyBody": "The dashboard fills up once you have contacts, leads and deals. Start with any of these steps:",
+  "start": {
+    "contact": "Add a contact",
+    "import": "Import contacts from CSV",
+    "deal": "Create your first deal",
+    "whatsapp": "Connect WhatsApp"
+  },
+  "kpi": {
+    "openPipeline": "Open pipeline",
+    "openDeals": "{count, plural, one {one open deal} other {# open deals}}",
+    "weighted": "Weighted forecast",
+    "weightedHint": "By each stage's close probability",
+    "wonThisMonth": "Won this month",
+    "vsLastMonth": "vs last month",
+    "newLeads": "New leads this week",
+    "conversion90d": "90-day conversion: {rate}",
+    "noLeads90d": "No leads in the last 90 days",
+    "openConversations": "Open conversations",
+    "myConversations": "My conversations",
+    "unread": "{count, plural, =0 {No unread messages} one {One unread message} other {# unread messages}}",
+    "myTasks": "My tasks",
+    "tasksValue": "{today} today · {overdue} overdue",
+    "overdueHint": "{count, plural, one {One overdue task} other {# overdue tasks}}",
+    "noOverdue": "No overdue tasks"
+  },
+  "charts": {
+    "wonByMonth": "Revenue by month",
+    "last12": "Last 12 months",
+    "pipelineByStage": "Pipeline by stage"
+  },
+  "lists": {
+    "myTasks": "Due today",
+    "all": "All tasks",
+    "noTasks": "Nothing due today",
+    "overdue": "Overdue",
+    "closingSoon": "Closing in the next 14 days",
+    "noClosing": "No deals closing soon",
+    "activity": "Recent activity",
+    "noActivity": "No activity yet"
+  }
+}

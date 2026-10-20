@@ -1,0 +1,96 @@
+{
+  "title": "משימות",
+  "subtitle": "מה צריך לעשות, מתי ומי אחראי",
+  "new": "משימה חדשה",
+  "edit": "עריכת משימה",
+  "created": "המשימה נוצרה",
+  "saved": "המשימה עודכנה",
+  "deleted": "המשימה נמחקה",
+  "tabs": {
+    "mine": "המשימות שלי",
+    "team": "כל הצוות",
+    "overdue": "באיחור",
+    "today": "להיום",
+    "done": "הושלמו"
+  },
+  "fields": {
+    "title": "כותרת",
+    "description": "תיאור",
+    "dueAt": "תאריך ושעת יעד",
+    "reminder": "תזכורת",
+    "remindAt": "מועד התזכורת",
+    "priority": "עדיפות",
+    "status": "סטטוס",
+    "assignee": "אחראי",
+    "teamTask": "משימת צוות (גלויה ומשותפת לכולם)",
+    "link": "קשור ל…",
+    "contact": "איש קשר",
+    "company": "חברה",
+    "deal": "עסקה",
+    "lead": "ליד"
+  },
+  "priorities": {
+    "low": "נמוכה",
+    "medium": "בינונית",
+    "high": "גבוהה",
+    "urgent": "דחופה"
+  },
+  "statuses": {
+    "open": "פתוחה",
+    "in_progress": "בטיפול",
+    "done": "הושלמה",
+    "canceled": "בוטלה"
+  },
+  "reminders": {
+    "none": "ללא תזכורת",
+    "at_due": "במועד היעד",
+    "15m": "15 דקות לפני",
+    "1h": "שעה לפני",
+    "1d": "יום לפני",
+    "custom": "מועד אחר…"
+  },
+  "entityFilter": {
+    "label": "קשור ל",
+    "contact": "אנשי קשר",
+    "company": "חברות",
+    "deal": "עסקאות",
+    "lead": "לידים",
+    "none": "ללא קישור"
+  },
+  "dueFrom": "יעד מתאריך",
+  "dueTo": "עד תאריך",
+  "noDue": "ללא תאריך יעד",
+  "overdueBy": "באיחור",
+  "dueToday": "היום",
+  "complete": "סימון כהושלמה",
+  "reopen": "פתיחה מחדש",
+  "start": "התחלת טיפול",
+  "completed": "הושלמה",
+  "reopened": "המשימה נפתחה מחדש",
+  "markedDone": "כל הכבוד! המשימה הושלמה",
+  "teamBadge": "צוות",
+  "searchPlaceholder": "חיפוש משימה…",
+  "emptyTitle": "אין משימות כאן",
+  "emptyBody": "צרו משימה חדשה או החליפו לשונית.",
+  "emptyDone": "עוד לא הושלמו משימות",
+  "allClear": "אין משימות פתוחות — הכל מטופל 🎉",
+  "deleteConfirm": "למחוק את המשימה \"{title}\"?",
+  "cannotAssignOthers": "אין לך הרשאה לשייך משימות לאחרים",
+  "reminderNeedsDue": "תזכורת יחסית דורשת תאריך יעד",
+  "assignToMe": "אני",
+  "unassigned": "ללא אחראי",
+  "reminderSent": "התזכורת נשלחה",
+  "source": {
+    "manual": "ידני",
+    "ai": "AI",
+    "automation": "אוטומציה",
+    "api": "API"
+  },
+  "createdBy": "נוצר על ידי {name}",
+  "due": "יעד: {date}",
+  "linkedTo": "קשור ל: {name}",
+  "counts": {
+    "overdue": "{count} באיחור",
+    "today": "{count} להיום"
+  }
+}

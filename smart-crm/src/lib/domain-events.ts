@@ -1,0 +1,26 @@
+/** Domain event names (client-safe; the dispatcher lives in src/server/events.ts). */
+export const DOMAIN_EVENTS = [
+  "contact.created",
+  "contact.updated",
+  "contact.tag_added",
+  "company.created",
+  "lead.created",
+  "lead.status_changed",
+  "lead.converted",
+  "deal.created",
+  "deal.updated",
+  "deal.stage_changed",
+  "deal.won",
+  "deal.lost",
+  "message.received",
+  "message.sent",
+  "message.failed",
+  "conversation.assigned",
+  "conversation.closed",
+  "task.created",
+  "task.completed",
+  "quote.sent",
+  "quote.accepted",
+  "quote.rejected",
+] as const;
+export type DomainEventType = (typeof DOMAIN_EVENTS)[number];

@@ -1,0 +1,97 @@
+{
+  "title": "WhatsApp Business",
+  "subtitle": "חיבור מספרים דרך ה-Cloud API הרשמי של Meta, תבניות והגדרות Webhook",
+  "official": "משתמשים אך ורק ב-WhatsApp Cloud API הרשמי של Meta. אין אוטומציה לא רשמית.",
+  "accounts": "מספרים מחוברים",
+  "noAccounts": "עדיין לא חובר מספר",
+  "noAccountsBody": "חברו מספר WhatsApp Business כדי לקבל ולשלוח הודעות מהתיבה המשותפת.",
+  "connect": "חיבור מספר",
+  "connected": "המספר חובר",
+  "mockNotice": "מצב הדגמה שומר הכל מקומית ולא שולח דבר ל-WhatsApp. לשימוש בפיתוח ובבדיקות בלבד.",
+  "tokenStored": "ה-Access token שמור מוצפן",
+  "tokenMissing": "אין Access token — השליחה תיכשל עד שתוסיפו אחד",
+  "lastError": "שגיאה אחרונה",
+  "connectTitle": "חיבור מספר WhatsApp Business",
+  "fields": {
+    "provider": "ספק",
+    "displayName": "שם תצוגה",
+    "phoneNumber": "מספר הטלפון",
+    "phoneNumberId": "מזהה מספר טלפון (Phone number ID)",
+    "wabaId": "WhatsApp Business Account ID",
+    "accessToken": "Access token (קבוע)",
+    "sendRate": "מגבלת שליחה לדקה"
+  },
+  "hints": {
+    "phoneNumberId": "מתוך Meta → WhatsApp → API Setup",
+    "accessToken": "נשמר מוצפן ואינו מוצג שוב. מומלץ System User token קבוע.",
+    "tokenKeep": "השאירו ריק כדי לשמור את הטוקן הקיים",
+    "sendRate": "הגנה מפני שליחה מהירה מדי (Meta מגבילה לפי דרגת המספר)"
+  },
+  "providers": {
+    "meta": "Meta Cloud API (רשמי)",
+    "mock": "מצב הדגמה — לפיתוח בלבד"
+  },
+  "mockBadge": "הדגמה — לא נשלח באמת",
+  "status": {
+    "active": "פעיל",
+    "disabled": "מושבת",
+    "error": "שגיאה"
+  },
+  "quality": "איכות",
+  "lastSync": "סנכרון אחרון",
+  "test": "בדיקת חיבור",
+  "testOk": "החיבור תקין",
+  "testFailed": "החיבור נכשל: {error}",
+  "enable": "הפעלה",
+  "disable": "השבתה",
+  "edit": "עריכה",
+  "save": "שמירה",
+  "rotateToken": "החלפת טוקן",
+  "templates": "תבניות הודעה",
+  "sync": "סנכרון מ-Meta",
+  "synced": "סונכרנו {count} תבניות",
+  "noTemplates": "אין תבניות. לחצו על סנכרון כדי למשוך אותן מ-Meta.",
+  "templateCols": {
+    "name": "שם",
+    "language": "שפה",
+    "category": "סוג",
+    "status": "סטטוס"
+  },
+  "webhook": {
+    "title": "הגדרת Webhook ב-Meta",
+    "body": "בלוח הבקרה של האפליקציה ב-Meta (WhatsApp ← Configuration) הגדירו את כתובת ה-Callback ואת ה-Verify token שמוגדר בשרת.",
+    "callback": "Callback URL",
+    "verifyToken": "Verify token",
+    "configured": "מוגדר בשרת",
+    "notConfigured": "לא מוגדר — יש להגדיר את משתנה הסביבה בשרת",
+    "appSecret": "App secret לאימות חתימות",
+    "fields": "יש להירשם לשדה messages",
+    "copy": "העתקה"
+  },
+  "simulator": {
+    "title": "סימולטור הודעות נכנסות (פיתוח)",
+    "body": "שולח Webhook חתום אמיתי לשרת — בדיוק כמו Meta. זמין רק במצב הדגמה.",
+    "account": "מספר",
+    "from": "מטלפון",
+    "name": "שם השולח",
+    "text": "טקסט",
+    "kind": "סוג",
+    "kinds": {
+      "text": "טקסט",
+      "image": "תמונה",
+      "document": "מסמך"
+    },
+    "send": "הדמיית הודעה נכנסת",
+    "done": "ההודעה הנכנסת התקבלה",
+    "openInbox": "מעבר לתיבה",
+    "noSecret": "יש להגדיר META_APP_SECRET בשרת כדי לחתום על Webhooks מדומים."
+  },
+  "tokenRequired": "נדרש Access token תקין (לפחות 20 תווים)",
+  "mockDisabled": "מצב הדגמה מושבת בסביבה זו",
+  "accountExists": "המספר הזה כבר מחובר",
+  "syncFailed": "סנכרון התבניות נכשל",
+  "simulatorDisabled": "הסימולטור זמין רק בסביבת פיתוח",
+  "simulatorFailed": "שליחת ה-Webhook המדומה נכשלה",
+  "simulatorNoMessage": "אין הודעה יוצאת שנשלחה בשיחה הזו",
+  "ownershipFailed": "לא הצלחנו לאמת שהטוקן שולט במספר הזה. בדקו את מזהה המספר, מזהה חשבון ה-WhatsApp Business וההרשאות של הטוקן."
+}

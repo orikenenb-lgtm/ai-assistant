@@ -1,0 +1,11 @@
+{
+  "title": "Organization invitation",
+  "joinTitle": "Join {org}",
+  "asRole": "as",
+  "accept": "Accept invitation",
+  "invalid": "This invitation is not valid",
+  "invalidBody": "It may have expired, been revoked or already used. Ask for a new invitation.",
+  "signInToAccept": "This invitation was sent to {email}. Sign in or sign up with that address to join.",
+  "wrongEmail": "This invitation is for a different address",
+  "wrongEmailBody": "The invitation was sent to {email} but you are signed in as {current}. Sign in with the right account."
+}

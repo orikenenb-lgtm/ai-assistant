@@ -1,0 +1,16 @@
+{
+  "required": "Required",
+  "invalid": "Invalid value",
+  "tooShort": "At least {min} characters",
+  "tooLong": "At most {max} characters",
+  "tooSmall": "Minimum value is {min}",
+  "tooBig": "Maximum value is {max}",
+  "email": "Invalid email address",
+  "url": "Invalid URL",
+  "invalidOption": "Choose an option from the list",
+  "selectAtLeast": "Select at least {min}",
+  "phone": "Invalid phone number (e.g. +1 555 123 4567)",
+  "passwordWeak": "At least 10 characters, including a letter and a digit",
+  "passwordMismatch": "Passwords don't match",
+  "color": "Invalid color"
+}

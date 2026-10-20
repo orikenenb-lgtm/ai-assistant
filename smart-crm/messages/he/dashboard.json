@@ -1,0 +1,45 @@
+{
+  "greeting": "שלום {name} 👋",
+  "subtitle": "זה מה שקורה היום בעסק שלך",
+  "emptyTitle": "בואו נתחיל",
+  "emptyBody": "לוח הבקרה יתמלא ברגע שיהיו אנשי קשר, לידים ועסקאות. אפשר להתחיל מכל אחד מהצעדים האלה:",
+  "start": {
+    "contact": "הוספת איש קשר",
+    "import": "ייבוא אנשי קשר מ-CSV",
+    "deal": "יצירת עסקה ראשונה",
+    "whatsapp": "חיבור WhatsApp"
+  },
+  "kpi": {
+    "openPipeline": "צנרת פתוחה",
+    "openDeals": "{count, plural, one {עסקה פתוחה אחת} other {# עסקאות פתוחות}}",
+    "weighted": "תחזית משוקללת",
+    "weightedHint": "לפי הסתברות הסגירה בכל שלב",
+    "wonThisMonth": "נסגר החודש",
+    "vsLastMonth": "לעומת החודש שעבר",
+    "newLeads": "לידים חדשים השבוע",
+    "conversion90d": "שיעור המרה 90 יום: {rate}",
+    "noLeads90d": "אין לידים ב-90 הימים האחרונים",
+    "openConversations": "שיחות פתוחות",
+    "myConversations": "השיחות שלי",
+    "unread": "{count, plural, =0 {אין הודעות שלא נקראו} one {הודעה אחת שלא נקראה} other {# הודעות שלא נקראו}}",
+    "myTasks": "המשימות שלי",
+    "tasksValue": "{today} להיום · {overdue} באיחור",
+    "overdueHint": "{count, plural, one {משימה אחת באיחור} other {# משימות באיחור}}",
+    "noOverdue": "אין משימות באיחור"
+  },
+  "charts": {
+    "wonByMonth": "הכנסות לפי חודש",
+    "last12": "12 החודשים האחרונים",
+    "pipelineByStage": "צנרת לפי שלב"
+  },
+  "lists": {
+    "myTasks": "משימות להיום",
+    "all": "לכל המשימות",
+    "noTasks": "אין משימות להיום",
+    "overdue": "באיחור",
+    "closingSoon": "עסקאות שנסגרות ב-14 הימים הקרובים",
+    "noClosing": "אין עסקאות עם תאריך סגירה קרוב",
+    "activity": "פעילות אחרונה",
+    "noActivity": "אין פעילות עדיין"
+  }
+}

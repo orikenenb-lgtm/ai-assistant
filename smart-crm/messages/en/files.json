@@ -1,0 +1,5 @@
+{
+  "tooLarge": "File too large (max 25MB)",
+  "typeNotAllowed": "File type not supported",
+  "invalidKey": "Invalid file key"
+}

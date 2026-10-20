@@ -1,0 +1,43 @@
+{
+  "title": "Privacy & data",
+  "subtitle": "Export and delete personal data for customer requests and compliance",
+  "contactSection": "Contact requests",
+  "contactHelp": "Export everything about a contact (access request) or erase them permanently (\"right to be forgotten\").",
+  "selectContact": "Select contact",
+  "exportContact": "Export data",
+  "eraseContact": "Erase permanently",
+  "eraseTitle": "Permanently erase {name}",
+  "eraseBody": "The contact and their notes, tasks, conversations, messages and files will be deleted. Deals remain without the link. This cannot be undone.",
+  "typeToConfirm": "Type \"{name}\" to confirm",
+  "erase": "Erase permanently",
+  "erased": "Contact erased permanently",
+  "exportRequested": "Request received — the file will be ready in a moment",
+  "tenantSection": "Organization data",
+  "exportTenant": "Export all organization data",
+  "requests": "Recent requests",
+  "download": "Download",
+  "noRequests": "No requests",
+  "type": {
+    "export": "Export",
+    "delete": "Deletion"
+  },
+  "subject": {
+    "contact": "Contact",
+    "tenant": "Organization"
+  },
+  "status": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "canceled": "Canceled"
+  },
+  "danger": "Danger zone",
+  "deleteTenant": "Delete organization",
+  "deleteTenantBody": "All data will be permanently deleted after {days} days. Access is blocked meanwhile, and support can cancel.",
+  "deleteTenantConfirm": "Type the organization name \"{name}\" to confirm",
+  "deleteTenantButton": "Delete organization",
+  "confirmMismatch": "The text you typed doesn't match",
+  "kind": "Request",
+  "requestedBy": "Requested by"
+}

@@ -1,0 +1,10 @@
+# Background job worker (npm run worker): WhatsApp sends, automations,
+# reminders, outbound webhooks, billing lifecycle, retention. Stateless —
+# run one or more replicas; jobs are claimed with SKIP LOCKED.
+FROM node:22-slim
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY . .
+ENV NODE_ENV=production
+CMD ["npm", "run", "worker"]

@@ -1,0 +1,12 @@
+{
+  "placeholder": "Search contacts, companies, deals… or type a command",
+  "results": "Results",
+  "create": "Quick create",
+  "navigate": "Go to",
+  "new": {
+    "contact": "New contact",
+    "deal": "New deal",
+    "lead": "New lead",
+    "task": "New task"
+  }
+}

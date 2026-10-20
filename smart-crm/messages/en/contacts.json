@@ -1,0 +1,72 @@
+{
+  "title": "Contacts",
+  "subtitle": "{count, plural, =0 {No contacts yet} one {One contact} other {# contacts}}",
+  "new": "New contact",
+  "edit": "Edit contact",
+  "created": "Contact created",
+  "searchPlaceholder": "Search by name, phone or email…",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "company": "Company",
+  "selectCompany": "Select company…",
+  "jobTitle": "Job title",
+  "stage": "Stage",
+  "stages": {
+    "subscriber": "Subscriber",
+    "lead": "Lead",
+    "opportunity": "Opportunity",
+    "customer": "Customer",
+    "churned": "Churned",
+    "other": "Other"
+  },
+  "source": "Source",
+  "sourcePlaceholder": "e.g. website, referral, trade show",
+  "phoneHint": "Local or international format",
+  "possibleDuplicate": "A contact with these details may already exist:",
+  "consent": "WhatsApp consent",
+  "consentTitle": "WhatsApp consent",
+  "consentHelp": "Marketing messages are sent only to contacts who opted in. Opt-out requests are enforced automatically.",
+  "consentStatus": {
+    "unknown": "Unknown",
+    "opted_in": "Opted in",
+    "opted_out": "Opted out"
+  },
+  "consentSource": {
+    "manual": "Manual",
+    "import": "Import",
+    "inbound_keyword": "Opt-out keyword",
+    "form": "Form",
+    "api": "API",
+    "automation": "Automation"
+  },
+  "markOptedIn": "Mark opted in",
+  "markOptedOut": "Mark opted out",
+  "optInEvidenceHelp": "Record how and when consent was given (e.g. website signup form, 2026-10-01).",
+  "evidence": "Consent evidence",
+  "sort": "Sort",
+  "sorts": {
+    "created_desc": "Newest",
+    "created_asc": "Oldest",
+    "name_asc": "Name",
+    "activity_desc": "Recent activity"
+  },
+  "lastActivity": "Last activity",
+  "emptyTitle": "No contacts yet",
+  "emptyBody": "Add your first contact or import a list from a CSV file.",
+  "details": "Details",
+  "deleteConfirm": "Delete {name}? Support can restore it.",
+  "duplicates": "Duplicates",
+  "duplicatesSubtitle": "Contacts sharing a phone number or email. Pick the primary record and merge.",
+  "noDuplicates": "No duplicates found",
+  "matchedOn": {
+    "email": "Same email",
+    "phone": "Same phone"
+  },
+  "choosePrimary": "Choose the primary record:",
+  "merge": "Merge",
+  "mergeTitle": "Merge contacts?",
+  "mergeBody": "{count, plural, one {One record} other {# records}} will be merged into the primary: deals, tasks, notes and conversations move to it.",
+  "merged": "Merge complete",
+  "nameOrContactRequired": "Enter a name, phone or email",
+  "mergeSame": "Cannot merge a record with itself"
+}

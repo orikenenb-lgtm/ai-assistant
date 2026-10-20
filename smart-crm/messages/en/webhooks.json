@@ -1,0 +1,83 @@
+{
+  "title": "Webhooks",
+  "subtitle": "Send real-time events to your systems (signed with HMAC-SHA256)",
+  "create": "New webhook",
+  "edit": "Edit webhook",
+  "url": "URL (HTTPS)",
+  "description": "Description",
+  "events": "Events",
+  "selectAll": "Select all",
+  "secretTitle": "Signing secret",
+  "secretBody": "Use this secret to verify the X-SmartCRM-Signature header. It won't be shown again.",
+  "rotate": "Rotate secret",
+  "rotateConfirm": "Rotate the signing secret? The old secret stops working immediately.",
+  "active": "Active",
+  "disabled": "Disabled",
+  "enable": "Enable",
+  "disable": "Disable",
+  "failures": "{count} consecutive failures",
+  "autoDisabled": "Disabled automatically after repeated failures",
+  "deliveries": "Delivery history",
+  "noDeliveries": "No events sent yet",
+  "redeliver": "Redeliver",
+  "redelivered": "Queued for redelivery",
+  "deliveryStatus": {
+    "pending": "Pending",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "dead": "Failed permanently"
+  },
+  "attempts": "Attempts",
+  "response": "Response",
+  "emptyTitle": "No webhooks",
+  "emptyBody": "Connect SMART CRM AI to other systems and receive events in real time.",
+  "deleteConfirm": "Delete this webhook? Future deliveries will stop.",
+  "tooMany": "You've reached the maximum number of webhooks",
+  "verifyDocs": "How to verify signatures",
+  "urlErrors": {
+    "invalid_url": "Invalid URL",
+    "https_required": "An HTTPS URL is required",
+    "credentials_in_url": "Don't include a username/password in the URL",
+    "private_address": "Internal or private addresses are not allowed"
+  },
+  "eventNames": {
+    "contact": {
+      "created": "Contact created",
+      "updated": "Contact updated",
+      "tag_added": "Tag added to contact"
+    },
+    "company": {
+      "created": "Company created"
+    },
+    "lead": {
+      "created": "Lead created",
+      "status_changed": "Lead status changed",
+      "converted": "Lead converted"
+    },
+    "deal": {
+      "created": "Deal created",
+      "updated": "Deal updated",
+      "stage_changed": "Deal stage changed",
+      "won": "Deal won",
+      "lost": "Deal lost"
+    },
+    "message": {
+      "received": "Message received",
+      "sent": "Message sent",
+      "failed": "Message failed"
+    },
+    "conversation": {
+      "assigned": "Conversation assigned",
+      "closed": "Conversation closed"
+    },
+    "task": {
+      "created": "Task created",
+      "completed": "Task completed"
+    },
+    "quote": {
+      "sent": "Quote sent",
+      "accepted": "Quote accepted",
+      "rejected": "Quote rejected"
+    }
+  }
+}

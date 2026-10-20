@@ -1,0 +1,26 @@
+{
+  "title": "Settings",
+  "groups": {
+    "org": "Organization",
+    "crm": "CRM",
+    "channels": "Channels & integrations",
+    "developer": "Developers",
+    "account": "Personal"
+  },
+  "sections": {
+    "general": "Organization profile",
+    "team": "Team & roles",
+    "billing": "Billing & plan",
+    "notifications": "Notifications",
+    "pipelines": "Sales pipelines",
+    "custom-fields": "Custom fields",
+    "tags": "Tags",
+    "documents": "Document templates",
+    "whatsapp": "WhatsApp",
+    "integrations": "Integrations",
+    "api-keys": "API keys",
+    "webhooks": "Webhooks",
+    "privacy": "Privacy & data",
+    "audit": "Audit log"
+  }
+}
