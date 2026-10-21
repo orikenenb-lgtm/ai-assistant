@@ -10,6 +10,7 @@
 ```
 ├── backend/    # FastAPI + Supabase + Rivhit (Python 3.11)
 ├── frontend/   # React 19 + TypeScript + Vite + Tailwind v4 (עברית RTL)
+├── nail-studio/ # פרויקט נפרד: אתר Nail Studio (Next.js) — ראו nail-studio/README.md
 ├── docs/       # ארכיטקטורה והחלטות
 └── .claude/    # הגדרות תת-הסוכנים
 ```

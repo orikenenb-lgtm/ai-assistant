@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Design tokens — "Rose Aura" ─────────────────────────
+   Soft blush-white paper, deep plum ink, rose as the lead accent.
+   Lilac and ice appear only as light: glows, gradients and hairlines. */
+@theme {
+  /* Surfaces */
+  --color-paper: #fff8fa; /* page background */
+  --color-blush: #fbeff3; /* raised / alternate surfaces */
+  --color-blush-2: #f6e3ea;
+  --color-line: rgb(58 34 51 / 0.1);
+
+  /* Accents */
+  --color-rose: #c93a76; /* lead — 4.6:1 on paper, white text on it 4.8:1 */
+  --color-rose-deep: #b8336b;
+  --color-rose-soft: #f4b6cf;
+  --color-lilac: #6e55c9; /* 5.3:1 on paper */
+  --color-lilac-soft: #cdbff7;
+  --color-ice: #2f86b0; /* large text / decoration only */
+  --color-ice-soft: #bfe6f7;
+
+  /* Text */
+  --color-ink: #3a2233; /* deep plum, 13.8:1 */
+  --color-muted: #7a6272; /* 5.2:1 */
+
+  /* Typography */
+  --font-sans: var(--font-body), "Heebo", system-ui, sans-serif;
+  --font-display: var(--font-heading), "Noto Serif Hebrew", Georgia, serif;
+
+  --shadow-lift: 0 40px 80px -40px rgb(201 58 118 / 0.35);
+
+  /* Motion — slow and quiet */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-rise: rise 1.1s var(--ease-premium) both;
+  --animate-fade: fade 0.4s var(--ease-premium) both;
+  --animate-aura: aura 18s ease-in-out infinite alternate;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes aura {
+    from { transform: translate(-4%, -3%) rotate(0deg) scale(1); }
+    to { transform: translate(4%, 3%) rotate(12deg) scale(1.08); }
+  }
+}
+
+/* The signature gradient — rose leads, lilac and ice as undertones */
+@utility text-iridescent {
+  background: linear-gradient(100deg, var(--color-rose) 0%, var(--color-rose) 45%, var(--color-lilac) 80%, var(--color-ice));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-iridescent {
+  background: linear-gradient(100deg, var(--color-rose) 0%, var(--color-rose) 45%, var(--color-lilac) 80%, var(--color-ice));
+}
+
+/* ───────────────────────── Base ───────────────────────── */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    color-scheme: light;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-paper font-sans font-light text-ink antialiased;
+    overflow-x: clip;
+  }
+
+  [id] {
+    scroll-margin-top: 5rem;
+  }
+
+  ::selection {
+    background: var(--color-rose-soft);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 1.5px solid var(--color-rose);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

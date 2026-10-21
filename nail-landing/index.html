@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>[שם המעצבת] · עיצוב ציפורניים ב[עיר/אזור]</title>
+<meta name="description" content="עיצוב ציפורניים מקצועי ב[עיר/אזור] — לק ג׳ל, בניית ציפורניים, מניקור ועיצובים מיוחדים. לקביעת תור השאירי פרטים.">
+<meta name="theme-color" content="#FAF6F1">
+<meta property="og:title" content="[שם המעצבת] · עיצוב ציפורניים">
+<meta property="og:description" content="ציפורניים שמספרות מי את. לקביעת תור השאירי פרטים.">
+<meta property="og:locale" content="he_IL">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23F2E9E1'/%3E%3Cpath d='M32 12c9 0 15 12 15 25v15H17V37c0-13 6-25 15-25z' fill='%239A5B63'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600&family=Frank+Ruhl+Libre:wght@300;400;500&display=swap">
+<style>
+/* ─────────────── Tokens ─────────────── */
+:root {
+  --cream: #FAF6F1;        /* page */
+  --sand: #F2E9E1;         /* alternate sections */
+  --nude: #E6D5C7;         /* soft fills */
+  --nude-deep: #D8C0AD;
+  --rose: #9A5B63;         /* antique rose — buttons & accents (AA: 4.8 on cream, white on it 5.2) */
+  --rose-deep: #83474F;
+  --rose-soft: #D9B3B3;
+  --gold: #B8925A;         /* hairlines & ornaments only */
+  --gold-text: #8A6A3C;    /* gold that is readable as text (AA) */
+  --ink: #3B2A2C;          /* text, 12.6:1 */
+  --muted: #6E5D5C;        /* secondary text, 5.8:1 */
+  --line: rgba(59, 42, 44, .12);
+  --error: #A33A3A;
+  --wa: #1E8C57;
+
+  --serif: "Frank Ruhl Libre", "Times New Roman", Georgia, serif;
+  --sans: "Assistant", "Segoe UI", Arial, sans-serif;
+
+  --radius: 18px;
+  --gutter: clamp(20px, 5vw, 48px);
+  --max: 1160px;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --shadow: 0 30px 60px -35px rgba(154, 91, 99, .45);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+img { max-width: 100%; display: block; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 300; line-height: 1.15; margin: 0; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+[id] { scroll-margin-top: 84px; }
+:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; border-radius: 6px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.wrap { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
+section { padding-block: clamp(72px, 10vw, 128px); }
+.alt { background: var(--sand); }
+
+/* Skip link */
+.skip { position: absolute; inset-inline-start: 12px; top: -60px; z-index: 100; background: var(--ink); color: var(--cream); padding: 10px 18px; border-radius: 999px; text-decoration: none; }
+.skip:focus { top: 12px; }
+
+/* ─────────────── Buttons ─────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 30px; border-radius: 999px;
+  font: 600 16px/1 var(--sans); letter-spacing: .01em; text-decoration: none; cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease), transform .2s var(--ease), box-shadow .3s var(--ease);
+}
+.btn:active { transform: scale(.98); }
+.btn-primary { background: var(--rose); color: #fff; box-shadow: var(--shadow); }
+.btn-primary:hover { background: var(--rose-deep); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: rgba(59, 42, 44, .22); }
+.btn-ghost:hover { border-color: var(--ink); }
+.btn svg { width: 16px; height: 16px; flex: none; }
+
+/* Eyebrow + section heads */
+.eyebrow { display: inline-flex; align-items: center; gap: 12px; color: var(--gold-text); font-size: 15px; font-weight: 600; }
+.eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--gold); }
+.head { display: grid; gap: 14px; max-width: 620px; margin-bottom: clamp(40px, 6vw, 64px); }
+.head h2 { font-size: clamp(36px, 5.2vw, 56px); }
+.head p { color: var(--muted); font-size: 18px; }
+.head.center { margin-inline: auto; text-align: center; justify-items: center; }
+
+/* ─────────────── Header ─────────────── */
+.site-header {
+  position: sticky; top: 0; z-index: 40;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: rgba(250, 246, 241, .86);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color .3s;
+}
+.site-header.scrolled { border-bottom-color: var(--line); }
+.site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 72px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; min-height: 44px; }
+.brand-mark { width: 9px; height: 9px; background: var(--gold); transform: rotate(45deg); }
+.brand-name { font-family: var(--serif); font-size: 22px; font-weight: 400; }
+.nav { display: none; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 15px; padding: 10px 14px; border-radius: 999px; transition: color .2s; }
+.nav a:hover { color: var(--ink); }
+.site-header .btn { min-height: 44px; padding: 0 22px; font-size: 15px; box-shadow: none; }
+@media (min-width: 900px) { .nav { display: flex; } }
+
+/* ─────────────── Hero ─────────────── */
+.hero { position: relative; padding-block: clamp(40px, 7vw, 96px) clamp(72px, 9vw, 120px); overflow: hidden; }
+.hero::before {
+  content: ""; position: absolute; inset-block-start: -20%; inset-inline-end: -15%;
+  width: 70vmax; height: 70vmax; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(217, 179, 179, .45), transparent);
+  pointer-events: none;
+}
+.hero .wrap { position: relative; display: grid; gap: 48px; align-items: center; }
+.hero-copy { display: grid; gap: 24px; justify-items: start; }
+.hero h1 { font-size: clamp(44px, 8.4vw, 88px); line-height: 1.04; }
+.hero h1 em { font-style: normal; color: var(--rose); }
+.hero-lead { font-size: clamp(18px, 2.2vw, 21px); color: var(--muted); max-width: 460px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-note { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); font-size: 15px; }
+.hero-note span { display: inline-flex; align-items: center; gap: 8px; }
+.hero-note span::before { content: ""; width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); }
+
+.hero-visual { position: relative; width: min(100%, 440px); margin-inline: auto; }
+.hero-frame {
+  position: relative; aspect-ratio: 4 / 5; max-width: 100%;
+  border-radius: 220px 220px var(--radius) var(--radius); overflow: hidden;
+  background:
+    radial-gradient(60% 50% at 70% 25%, rgba(255, 255, 255, .75), transparent 70%),
+    radial-gradient(70% 60% at 25% 80%, #D9B3B3, transparent 70%),
+    linear-gradient(160deg, #F2E4DA, #DCC3B4);
+  box-shadow: var(--shadow);
+}
+.hero-frame img { width: 100%; height: 100%; object-fit: cover; }
+.hero-visual::after {
+  content: ""; position: absolute; inset: -14px; border: 1px solid rgba(184, 146, 90, .55);
+  border-radius: 234px 234px 26px 26px; pointer-events: none;
+}
+.slot-label {
+  position: absolute; inset-inline: 0; bottom: 22px; text-align: center;
+  font-size: 14px; color: rgba(59, 42, 44, .6);
+}
+
+@media (min-width: 900px) {
+  .hero .wrap { grid-template-columns: 1.15fr 1fr; gap: 72px; }
+  .hero-visual { margin-inline: 0 auto; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise .9s var(--ease) both; }
+  .rise.d1 { animation-delay: .08s; } .rise.d2 { animation-delay: .16s; } .rise.d3 { animation-delay: .24s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+}
+
+/* ─────────────── Gallery ─────────────── */
+.gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.shot {
+  position: relative; margin: 0; aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden;
+  background: var(--nude);
+}
+.shot img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+.shot:hover img { transform: scale(1.04); }
+.shot figcaption {
+  position: absolute; inset-inline: 12px; bottom: 10px;
+  font-size: 13px; color: var(--ink); opacity: .75;
+}
+/* Placeholder surfaces — soft, varied, never flat */
+.shot.ph { background:
+  radial-gradient(55% 45% at var(--x, 70%) var(--y, 25%), rgba(255,255,255,.7), transparent 70%),
+  linear-gradient(160deg, var(--a, #F0E2D7), var(--b, #D8C0AD)); }
+.shot.ph:nth-child(3n+2) { --a: #F3E3E1; --b: #D9B3B3; --x: 30%; }
+.shot.ph:nth-child(3n) { --a: #F6EEE6; --b: #E2CDBD; --y: 70%; }
+.shot.ph:nth-child(4n) { --a: #EAD9CF; --b: #C9A28F; }
+@media (max-width: 699px) {
+  .shot:first-child { grid-column: 1 / -1; aspect-ratio: 16 / 11; }
+}
+@media (min-width: 700px) {
+  .gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .shot:nth-child(1), .shot:nth-child(5) { grid-row: span 2; aspect-ratio: auto; }
+}
+.gallery-foot { margin-top: 28px; display: flex; justify-content: center; }
+
+/* ─────────────── Services ─────────────── */
+.services { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.service {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 24px; align-items: baseline;
+  padding: 26px 0; border-bottom: 1px solid var(--line);
+}
+.service h3 { font-size: clamp(24px, 3vw, 30px); }
+.service p { grid-column: 1 / -1; color: var(--muted); }
+.price { font-family: var(--serif); font-size: 22px; color: var(--rose); white-space: nowrap; }
+@media (min-width: 800px) {
+  .service { grid-template-columns: 220px minmax(0, 1fr) auto; }
+  .service p { grid-column: auto; }
+}
+.after-cta { margin-top: 40px; display: flex; justify-content: center; }
+
+/* ─────────────── About ─────────────── */
+.about { display: grid; gap: 40px; align-items: center; }
+.about-photo {
+  position: relative; aspect-ratio: 1; max-width: 360px; width: 100%; margin-inline: auto;
+  border-radius: 50%; overflow: hidden;
+  background: radial-gradient(60% 50% at 35% 30%, rgba(255,255,255,.7), transparent 70%), linear-gradient(160deg, #EFE0D5, #D9B3B3);
+  outline: 1px solid rgba(184, 146, 90, .55); outline-offset: 12px;
+}
+.about-photo img { width: 100%; height: 100%; object-fit: cover; }
+.about-copy { display: grid; gap: 18px; }
+.about-copy h2 { font-size: clamp(34px, 4.6vw, 50px); }
+.about-copy p { color: var(--muted); font-size: 18px; max-width: 560px; }
+.signature { font-family: var(--serif); font-size: 26px; color: var(--rose); }
+@media (min-width: 850px) { .about { grid-template-columns: 1fr 1.2fr; gap: 80px; } }
+
+/* ─────────────── Testimonials ─────────────── */
+.quotes { display: grid; gap: 18px; }
+.quote {
+  margin: 0; background: var(--cream); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 28px; display: grid; gap: 18px; align-content: start;
+}
+.quote blockquote { margin: 0; font-family: var(--serif); font-size: 21px; line-height: 1.5; font-weight: 300; }
+.quote figcaption { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted); font-size: 15px; }
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 14px; }
+.demo-tag { display: inline-block; justify-self: start; font-size: 12px; font-weight: 600; color: var(--gold-text); border: 1px dashed var(--gold); border-radius: 999px; padding: 3px 12px; }
+@media (min-width: 800px) { .quotes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ─────────────── Booking form ─────────────── */
+.booking-card {
+  max-width: 560px; margin-inline: auto; background: #fff; border-radius: 28px;
+  padding: clamp(28px, 5vw, 48px); box-shadow: 0 40px 80px -50px rgba(59, 42, 44, .35);
+  border: 1px solid var(--line);
+}
+.booking-card .head { margin-bottom: 28px; }
+.field { display: grid; gap: 8px; margin-bottom: 18px; }
+.field label { font-weight: 600; font-size: 15px; }
+.field input {
+  width: 100%; min-height: 54px; padding: 0 18px; border-radius: 14px;
+  border: 1px solid rgba(59, 42, 44, .2); background: var(--cream);
+  font: 400 17px var(--sans); color: var(--ink);
+  transition: border-color .2s, box-shadow .2s, background-color .2s;
+}
+.field input:focus { outline: none; border-color: var(--rose); background: #fff; box-shadow: 0 0 0 4px rgba(154, 91, 99, .15); }
+.field input[aria-invalid="true"] { border-color: var(--error); }
+.field input[type="tel"] { direction: ltr; text-align: right; }
+.error { color: var(--error); font-size: 14px; min-height: 1em; }
+.form-note { color: var(--muted); font-size: 14px; margin-top: 14px; text-align: center; }
+.booking-card .btn { width: 100%; margin-top: 6px; }
+.btn[aria-busy="true"] { opacity: .7; pointer-events: none; }
+.success { text-align: center; display: grid; gap: 14px; justify-items: center; padding-block: 12px; }
+.success-icon { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--sand); color: var(--rose); }
+.success h3 { font-size: 32px; }
+.success p { color: var(--muted); }
+.form-alert { margin-top: 14px; color: var(--error); font-size: 15px; text-align: center; }
+
+/* ─────────────── Footer ─────────────── */
+footer { padding-block: 40px calc(40px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
+footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 15px; }
+footer a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* ─────────────── Floating WhatsApp ─────────────── */
+.wa-float {
+  position: fixed; z-index: 50; inset-inline-end: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--wa); color: #fff; box-shadow: 0 16px 34px -12px rgba(30, 140, 87, .6);
+  transition: transform .25s var(--ease);
+}
+.wa-float:hover { transform: scale(1.06); }
+.wa-float svg { width: 30px; height: 30px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">דילוג לתוכן</a>
+
+<header class="site-header" id="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="לראש העמוד">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name" data-cfg="name">[שם המעצבת]</span>
+    </a>
+    <nav class="nav" aria-label="ניווט ראשי">
+      <a href="#gallery">עבודות</a>
+      <a href="#services">שירותים ומחירים</a>
+      <a href="#about">עליי</a>
+      <a href="#reviews">המלצות</a>
+    </nav>
+    <a class="btn btn-primary" href="#booking">לקביעת תור</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- 1. פתיחה -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="hero-copy">
+        <p class="eyebrow rise">עיצוב ציפורניים · <span data-cfg="city">[עיר/אזור]</span></p>
+        <h1 id="hero-title" class="rise d1">ציפורניים שמספרות <em>מי את</em></h1>
+        <p class="hero-lead rise d2">כל סט מתחיל בהקשבה — לסגנון שלך, לקצב שלך ולמה שגורם לך להרגיש יפה. תוצאה נקייה, מדויקת ומחזיקה.</p>
+        <div class="hero-actions rise d3">
+          <a class="btn btn-primary" href="#booking">לקביעת תור
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#gallery">לצפייה בעבודות</a>
+        </div>
+        <p class="hero-note rise d3"><span>יחס אישי</span><span>חומרים איכותיים</span><span>הקפדה על היגיינה</span></p>
+      </div>
+      <div class="hero-visual rise d2">
+        <div class="hero-frame">
+          <!-- החליפי בתמונה אמיתית: <img src="images/hero.jpg" alt="עיצוב ציפורניים של [שם המעצבת]" fetchpriority="high"> -->
+          <span class="slot-label">מקום לתמונת פתיחה</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. גלריה -->
+  <section class="alt" id="gallery" aria-labelledby="gallery-title">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">העבודות שלי</p>
+        <h2 id="gallery-title">כל סט — סיפור אחר</h2>
+        <p>טעימה מהעיצובים האחרונים. עוד עבודות מחכות לך באינסטגרם.</p>
+      </div>
+      <!-- להחלפה: בכל figure מחקי את class="ph" והכניסי <img src="images/work-1.jpg" alt="תיאור העיצוב" loading="lazy"> -->
+      <div class="gallery">
+        <figure class="shot ph"><figcaption>מקום לתמונה 1</figcaption></figure>
+        <figure class="shot ph"><figcaption>מקום לתמונה 2</figcaption></figure>
+        <figure class="shot ph"><figcaption>מקום לתמונה 3</figcaption></figure>
+        <figure class="shot ph"><figcaption>מקום לתמונה 4</figcaption></figure>
+        <figure class="shot ph"><figcaption>מקום לתמונה 5</figcaption></figure>
+        <figure class="shot ph"><figcaption>מקום לתמונה 6</figcaption></figure>
+        <figure class="shot ph"><figcaption>מקום לתמונה 7</figcaption></figure>
+      </div>
+      <div class="gallery-foot">
+        <a class="btn btn-primary" href="#booking">אהבת? לקביעת תור</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. שירותים ומחירים -->
+  <section id="services" aria-labelledby="services-title">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">שירותים ומחירים</p>
+        <h2 id="services-title">מה נעשה הפעם?</h2>
+        <p>לא בטוחה מה מתאים לך? נחליט יחד בתחילת התור.</p>
+      </div>
+      <div class="services">
+        <article class="service">
+          <h3>לק ג׳ל</h3>
+          <p>גימור מבריק שמחזיק עד 4 שבועות.</p>
+          <span class="price">₪ [להשלמה]</span>
+        </article>
+        <article class="service">
+          <h3>בניית ציפורניים</h3>
+          <p>אורך וצורה בדיוק כמו שחלמת, במראה טבעי ועדין.</p>
+          <span class="price">₪ [להשלמה]</span>
+        </article>
+        <article class="service">
+          <h3>מניקור</h3>
+          <p>טיפוח עדין לציפורן ולעור, לידיים נקיות ומטופחות.</p>
+          <span class="price">₪ [להשלמה]</span>
+        </article>
+        <article class="service">
+          <h3>עיצובים מיוחדים</h3>
+          <p>פרנץ׳, כרום, ציורים ופרטים קטנים — בהתאמה אישית לך.</p>
+          <span class="price">₪ [להשלמה]</span>
+        </article>
+      </div>
+      <div class="after-cta">
+        <a class="btn btn-primary" href="#booking">לקביעת תור</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. קצת עליי -->
+  <section class="alt" id="about" aria-labelledby="about-title">
+    <div class="wrap about">
+      <div class="about-photo">
+        <!-- החליפי בתמונה: <img src="images/me.jpg" alt="[שם המעצבת]" loading="lazy"> -->
+      </div>
+      <div class="about-copy">
+        <p class="eyebrow">נעים להכיר</p>
+        <h2 id="about-title">היי, אני <span data-cfg="name">[שם המעצבת]</span></h2>
+        <p>אצלי כל תור מתחיל בשיחה קצרה: מה את אוהבת, איך נראה היום שלך ומה יחמיא לידיים שלך. אני עובדת בקצב רגוע, בלי לחץ, עם תשומת לב לכל פרט.</p>
+        <p>המטרה שלי פשוטה — שתצאי מרוצה, ותחכי כבר לתור הבא.</p>
+        <p class="signature" data-cfg="name">[שם המעצבת]</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. המלצות -->
+  <section id="reviews" aria-labelledby="reviews-title">
+    <div class="wrap">
+      <div class="head center">
+        <p class="eyebrow">המלצות</p>
+        <h2 id="reviews-title">מה הלקוחות אומרות</h2>
+      </div>
+      <div class="quotes">
+        <figure class="quote">
+          <span class="demo-tag">טקסט לדוגמה — להחלפה</span>
+          <blockquote><p>״יצאתי עם הציפורניים הכי יפות שהיו לי, והן החזיקו מושלם.״</p></blockquote>
+          <figcaption><span>שם הלקוחה</span><span class="stars" aria-label="5 מתוך 5">★★★★★</span></figcaption>
+        </figure>
+        <figure class="quote">
+          <span class="demo-tag">טקסט לדוגמה — להחלפה</span>
+          <blockquote><p>״אווירה רגועה, יחס אישי ותוצאה בדיוק כמו שביקשתי.״</p></blockquote>
+          <figcaption><span>שם הלקוחה</span><span class="stars" aria-label="5 מתוך 5">★★★★★</span></figcaption>
+        </figure>
+        <figure class="quote">
+          <span class="demo-tag">טקסט לדוגמה — להחלפה</span>
+          <blockquote><p>״סוף סוף מצאתי מישהי שמבינה מה אני רוצה. כבר קבעתי את הבא.״</p></blockquote>
+          <figcaption><span>שם הלקוחה</span><span class="stars" aria-label="5 מתוך 5">★★★★★</span></figcaption>
+        </figure>
+      </div>
+      <div class="after-cta">
+        <a class="btn btn-primary" href="#booking">גם אני רוצה — לקביעת תור</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. טופס -->
+  <section class="alt" id="booking" aria-labelledby="booking-title">
+    <div class="wrap">
+      <div class="booking-card">
+        <div id="form-view">
+          <div class="head center">
+            <p class="eyebrow">קביעת תור</p>
+            <h2 id="booking-title">בואי נקבע את התור הבא שלך</h2>
+            <p>השאירי שם וטלפון, ואחזור אלייך לתיאום.</p>
+          </div>
+          <form id="booking-form" novalidate>
+            <div class="field">
+              <label for="fullname">שם מלא</label>
+              <input id="fullname" name="fullname" type="text" autocomplete="name" required aria-describedby="fullname-error">
+              <span class="error" id="fullname-error" aria-live="polite"></span>
+            </div>
+            <div class="field">
+              <label for="phone">טלפון</label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="050-000-0000" required aria-describedby="phone-error">
+              <span class="error" id="phone-error" aria-live="polite"></span>
+            </div>
+            <button class="btn btn-primary" type="submit">שלחי לי תור</button>
+            <p class="form-alert" id="form-alert" role="alert" hidden></p>
+            <p class="form-note">הפרטים משמשים רק לתיאום התור.</p>
+          </form>
+        </div>
+        <div id="success-view" class="success" hidden tabindex="-1">
+          <span class="success-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+          </span>
+          <h3>תודה, <span id="success-name"></span>!</h3>
+          <p id="success-text">קיבלתי את הפרטים. אחזור אלייך בהקדם לתיאום התור.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year"></span> <span data-cfg="name">[שם המעצבת]</span> · עיצוב ציפורניים</span>
+    <a href="#top">חזרה למעלה ↑</a>
+  </div>
+</footer>
+
+<a class="wa-float" id="wa-float" href="#booking" aria-label="שליחת הודעה בוואטסאפ" target="_blank" rel="noopener noreferrer">
+  <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16.02 3C8.84 3 3 8.8 3 15.95c0 2.29.6 4.52 1.75 6.49L3 29l6.75-1.75a13.1 13.1 0 0 0 6.27 1.6h.01C23.2 28.85 29 23.05 29 15.9 29 8.8 23.2 3 16.02 3Zm0 23.65h-.01c-1.95 0-3.86-.52-5.53-1.51l-.4-.24-4 1.04 1.07-3.9-.26-.4a10.7 10.7 0 0 1-1.65-5.7c0-5.94 4.84-10.77 10.8-10.77 2.88 0 5.59 1.12 7.62 3.16a10.7 10.7 0 0 1 3.15 7.62c0 5.94-4.84 10.7-10.79 10.7Zm5.92-8.03c-.32-.16-1.92-.95-2.22-1.05-.3-.11-.51-.16-.73.16-.21.32-.84 1.05-1.03 1.27-.19.21-.38.24-.7.08-.32-.16-1.37-.5-2.6-1.6-.96-.86-1.61-1.91-1.8-2.23-.19-.32-.02-.5.14-.66.15-.14.32-.37.48-.56.16-.19.21-.32.32-.53.1-.21.05-.4-.03-.56-.08-.16-.73-1.75-1-2.4-.26-.63-.53-.54-.73-.55h-.62c-.21 0-.56.08-.86.4-.3.32-1.13 1.1-1.13 2.69 0 1.58 1.16 3.12 1.32 3.33.16.21 2.28 3.47 5.52 4.87.77.33 1.37.53 1.84.68.77.24 1.48.21 2.03.13.62-.09 1.92-.78 2.19-1.54.27-.76.27-1.41.19-1.54-.08-.14-.3-.22-.62-.38Z"/></svg>
+</a>
+
+<script>
+/* ═══════════════ CONFIG — כל הפרטים להחלפה נמצאים כאן ═══════════════ */
+const CONFIG = {
+  name: "",            // שם המעצבת, למשל "נועה כהן"
+  city: "",            // עיר / אזור, למשל "רמת גן"
+  whatsapp: "",        // מספר וואטסאפ בפורמט בינלאומי בלי + ובלי מקפים, למשל "972501234567"
+  formEndpoint: "",    // כתובת לשליחת הטופס (Formspree / Make / Zapier / שרת), למשל "https://formspree.io/f/xxxx"
+};
+/* ═══════════════════════════════════════════════════════════════════ */
+
+(function () {
+  "use strict";
+
+  // Fill brand placeholders (only when a real value is set)
+  const fills = { name: CONFIG.name.trim(), city: CONFIG.city.trim() };
+  document.querySelectorAll("[data-cfg]").forEach((el) => {
+    const value = fills[el.dataset.cfg];
+    if (value) el.textContent = value;
+  });
+  if (fills.name) document.title = document.title.replace("[שם המעצבת]", fills.name).replace("[עיר/אזור]", fills.city || "[עיר/אזור]");
+  if (fills.city) document.title = document.title.replace("[עיר/אזור]", fills.city);
+
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // Header hairline on scroll
+  const header = document.querySelector(".site-header");
+  const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // WhatsApp
+  const waDigits = CONFIG.whatsapp.replace(/\D/g, "");
+  const waLink = (text) => "https://wa.me/" + waDigits + (text ? "?text=" + encodeURIComponent(text) : "");
+  const waFloat = document.getElementById("wa-float");
+  if (waDigits.length >= 11) {
+    waFloat.href = waLink("היי" + (fills.name ? " " + fills.name : "") + ", אשמח לקבוע תור 💅");
+  } else {
+    // Not configured yet: the button leads to the booking form instead of a broken link
+    waFloat.removeAttribute("target");
+    waFloat.setAttribute("aria-label", "לקביעת תור");
+  }
+
+  // ── Israeli phone validation ──
+  // Accepts 05X / 07X mobile (10 digits), landlines 02/03/04/08/09 (9 digits),
+  // with spaces, dashes, parentheses or a +972 / 972 prefix.
+  function normalizePhone(raw) {
+    let d = raw.replace(/[\s\-().]/g, "");
+    if (d.startsWith("+972")) d = "0" + d.slice(4);
+    else if (d.startsWith("972")) d = "0" + d.slice(3);
+    return d;
+  }
+  function isValidIsraeliPhone(raw) {
+    const d = normalizePhone(raw);
+    return /^0(5\d|7[2-9])\d{7}$/.test(d) || /^0[23489]\d{7}$/.test(d);
+  }
+
+  const form = document.getElementById("booking-form");
+  const nameInput = document.getElementById("fullname");
+  const phoneInput = document.getElementById("phone");
+  const alertBox = document.getElementById("form-alert");
+
+  function setError(input, message) {
+    const el = document.getElementById(input.id + "-error");
+    el.textContent = message || "";
+    input.setAttribute("aria-invalid", message ? "true" : "false");
+  }
+  function validate() {
+    let ok = true;
+    const name = nameInput.value.trim();
+    if (name.length < 2) { setError(nameInput, "נשמח לדעת איך קוראים לך"); ok = false; }
+    else setError(nameInput, "");
+    const phone = phoneInput.value.trim();
+    if (!phone) { setError(phoneInput, "צריך מספר טלפון כדי שאוכל לחזור אלייך"); ok = false; }
+    else if (!isValidIsraeliPhone(phone)) { setError(phoneInput, "המספר לא נראה תקין — למשל 050-123-4567"); ok = false; }
+    else setError(phoneInput, "");
+    return ok;
+  }
+  // Clear an error as soon as the field becomes valid
+  [nameInput, phoneInput].forEach((input) =>
+    input.addEventListener("input", () => { if (input.getAttribute("aria-invalid") === "true") validate(); })
+  );
+
+  function showSuccess(name, text) {
+    document.getElementById("form-view").hidden = true;
+    const view = document.getElementById("success-view");
+    document.getElementById("success-name").textContent = name.split(" ")[0];
+    if (text) document.getElementById("success-text").textContent = text;
+    view.hidden = false;
+    view.focus();
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    alertBox.hidden = true;
+    if (!validate()) {
+      form.querySelector('[aria-invalid="true"]').focus();
+      return;
+    }
+    const payload = { name: nameInput.value.trim(), phone: normalizePhone(phoneInput.value.trim()), source: "landing-page" };
+    const button = form.querySelector('button[type="submit"]');
+
+    // 1) Real endpoint configured → send it
+    if (CONFIG.formEndpoint) {
+      button.setAttribute("aria-busy", "true");
+      button.textContent = "שולחת...";
+      try {
+        const res = await fetch(CONFIG.formEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        showSuccess(payload.name);
+      } catch (err) {
+        alertBox.textContent = "משהו השתבש בשליחה. נסי שוב בעוד רגע" + (waDigits.length >= 11 ? " או כתבי לי בוואטסאפ." : ".");
+        alertBox.hidden = false;
+      } finally {
+        button.removeAttribute("aria-busy");
+        button.textContent = "שלחי לי תור";
+      }
+      return;
+    }
+
+    // 2) No endpoint but WhatsApp configured → hand the details over to WhatsApp
+    if (waDigits.length >= 11) {
+      window.open(waLink("היי, אני " + payload.name + " ואשמח לקבוע תור. הטלפון שלי: " + payload.phone), "_blank", "noopener");
+      showSuccess(payload.name, "פתחנו לך את וואטסאפ עם הפרטים — רק ללחוץ שליחה.");
+      return;
+    }
+
+    // 3) Nothing configured yet (preview mode) — be honest about it
+    showSuccess(payload.name, "זו תצוגה מקדימה: הטופס עוד לא מחובר, ולכן הפרטים לא נשלחו לאף אחד.");
+  });
+})();
+</script>
+
+<!--
+═══════════════════════════════════════════════════════════════
+  מה צריך להחליף בפרטים אמיתיים
+═══════════════════════════════════════════════════════════════
+  1. CONFIG.name          — שם המעצבת (מתעדכן אוטומטית בכותרת, בלוגו, באודות ובתחתית)
+  2. CONFIG.city          — עיר / אזור (שורת הפתיחה)
+  3. CONFIG.whatsapp      — מספר וואטסאפ, למשל 972501234567 (כפתור צף + גיבוי לטופס)
+  4. CONFIG.formEndpoint  — לאן נשלח הטופס (למשל Formspree). בלי זה, ואם יש וואטסאפ,
+                            הפרטים נשלחים דרך וואטסאפ. בלי שניהם — מצב תצוגה בלבד.
+  5. <title> ו-meta description/og — שם המעצבת ועיר (לשיתוף בוואטסאפ/אינסטגרם ולגוגל)
+  6. תמונת פתיחה          — hero-frame: להכניס <img src="images/hero.jpg" ...>
+  7. גלריה                — 7 תמונות: בכל figure למחוק class="ph" ולהכניס <img ... loading="lazy">
+                            (אפשר להוסיף עד 9 — הגריד מסתדר לבד)
+  8. תמונת פרופיל         — about-photo: <img src="images/me.jpg" ...>
+  9. מחירים               — 4 פעמים "₪ [להשלמה]" בסקשן השירותים
+ 10. תיאורי שירותים       — לוודא שמתאימים (למשל משך החזקה של לק ג׳ל)
+ 11. טקסט "קצת עליי"      — לערוך למילים שלה
+ 12. המלצות               — 3 המלצות אמיתיות + שמות, ולמחוק את התגית "טקסט לדוגמה"
+═══════════════════════════════════════════════════════════════
+-->
+</body>
+</html>
