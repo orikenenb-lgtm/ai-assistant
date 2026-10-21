@@ -1,0 +1,138 @@
+/* דיאלוגים: אישור פעולה (ענבר) ובחירת מסך. */
+.modal-backdrop {
+  -webkit-app-region: no-drag;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: auto;
+  background: rgba(2, 5, 9, 0.74);
+  backdrop-filter: blur(3px);
+  animation: fade-in 0.18s var(--ease);
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.modal {
+  inline-size: min(540px, 100%);
+  padding: 18px 20px 16px;
+  background: linear-gradient(180deg, rgba(14, 20, 26, 0.98), rgba(6, 12, 18, 0.98));
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+.approval {
+  --bracket: var(--amber);
+  border-color: rgba(255, 176, 32, 0.45);
+  display: grid;
+  gap: 12px;
+}
+.approval:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+.approval-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--amber);
+}
+.approval-head h2 {
+  font-size: 17px;
+  font-weight: 600;
+  text-shadow: var(--glow-amber);
+}
+.approval-queue {
+  margin-inline-start: auto;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.approval-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  font-size: 14px;
+}
+.approval-grid dt {
+  color: var(--text-faint);
+  font-size: 12.5px;
+  padding-top: 1px;
+}
+.approval-grid dd {
+  overflow-wrap: anywhere;
+}
+.approval-warning {
+  padding: 8px 12px;
+  color: var(--amber);
+  border: 1px solid rgba(255, 176, 32, 0.5);
+  border-inline-start-width: 3px;
+  background: var(--amber-12);
+  border-radius: var(--radius);
+}
+.approval-displays {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 6px 8px 8px;
+  margin: 0;
+}
+.approval-displays legend {
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.approval-displays .radio-row input {
+  accent-color: var(--amber);
+}
+.approval-countdown {
+  font-size: 13px;
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+.approval-countdown[data-expired='on'] {
+  color: var(--red);
+}
+.approval-hint {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+.approval-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.approval-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.approval-actions .btn {
+  min-inline-size: 96px;
+  min-block-size: 36px;
+}
+
+/* ---------- בחירת מסך (חלונית קופצת מעל כפתור המצלמה) ---------- */
+.popover {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  z-index: 30;
+  inset-block-end: calc(100% + 10px);
+  inset-inline-end: 0;
+  inline-size: 300px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  background: rgba(5, 15, 25, 0.98);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+.popover-title {
+  font-size: 13px;
+  color: var(--cyan);
+}
+.popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

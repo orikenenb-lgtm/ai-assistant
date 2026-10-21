@@ -51,3 +51,8 @@ cd frontend && npm run build
 - Dry-run תמיד לפני כתיבה ל-Rivhit; כתיבת production רק באישור מפורש.
 
 פירוט מלא: [docs/architecture.md](docs/architecture.md) · [מדריך deploy](docs/deployment.md) · [סיכום אבטחה](docs/security.md)
+
+## פרויקט נוסף בריפו: JARVIS Desktop
+
+עוזר אישי קולי בעברית ל-Windows 11 (Electron + React + TypeScript) נמצא בתיקייה [`jarvis-desktop/`](jarvis-desktop/README.md).
+הוא עצמאי לחלוטין ואינו משפיע על Kerem Orders (בנייה, CI ו-Docker נפרדים).

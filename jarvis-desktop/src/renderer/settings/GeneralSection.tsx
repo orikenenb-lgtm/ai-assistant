@@ -1,0 +1,100 @@
+/**
+ * מקטע "כללי": שם, תצוגה, תמיד מעל, סגירה למגש, הפעלה מוסתרת, הפעלה עם Windows, הפחתת תנועה,
+ * וחלון החסד של תזכורות שהוחמצו.
+ */
+import { he } from '../i18n/he';
+import { useController } from '../state/controller';
+import { RadioGroup, Select, TextInput, Toggle, type SectionProps } from './fields';
+import { parseIntInRange, rangeError } from './helpers';
+
+/** הטווח של reminders.graceMinutes ב-SettingsSchema. */
+const GRACE_MIN = 0;
+const GRACE_MAX = 60;
+
+export function GeneralSection({ settings, saver }: SectionProps) {
+  const controller = useController();
+  const t = he.settings.general;
+  const { ui, profile, reminders } = settings;
+
+  return (
+    <div className="section">
+      <TextInput
+        key={profile.userName}
+        label={t.userName}
+        value={profile.userName}
+        maxLength={40}
+        validate={(v) => (v.trim().length === 0 ? t.userNameEmpty : null)}
+        onCommit={(v) => void saver.save('userName', { profile: { userName: v.trim() } })}
+        status={saver.status.userName}
+      />
+      <Select
+        label={t.mode}
+        value={ui.mode}
+        options={[
+          { value: 'full', label: t.modeFull },
+          { value: 'compact', label: t.modeCompact },
+        ]}
+        // מעבר לקומפקטי סוגר את ההגדרות ומקטין את החלון; הבקר שומר את הבחירה
+        onChange={(mode) => void controller.setViewMode(mode)}
+      />
+      <Toggle
+        label={t.alwaysOnTop}
+        checked={ui.alwaysOnTop}
+        onChange={async (v) => {
+          const res = await controller.setAlwaysOnTop(v);
+          saver.setError('alwaysOnTop', res.ok ? null : res.message_he);
+        }}
+        status={saver.status.alwaysOnTop}
+      />
+      <Toggle
+        label={t.closeToTray}
+        checked={ui.closeToTray}
+        hint={t.closeToTrayHint}
+        onChange={(v) => void saver.save('closeToTray', { ui: { closeToTray: v } })}
+        status={saver.status.closeToTray}
+      />
+      <Toggle
+        label={t.startHidden}
+        checked={ui.startHidden}
+        onChange={(v) => void saver.save('startHidden', { ui: { startHidden: v } })}
+        status={saver.status.startHidden}
+      />
+      <Toggle
+        label={t.openAtLogin}
+        checked={ui.openAtLogin}
+        hint={t.openAtLoginHint}
+        onChange={(v) => void saver.save('openAtLogin', { ui: { openAtLogin: v } })}
+        status={saver.status.openAtLogin}
+      />
+      <RadioGroup
+        label={t.reducedMotion}
+        value={ui.reducedMotion}
+        options={[
+          { value: 'system', label: t.motionSystem },
+          { value: 'on', label: t.motionOn },
+          { value: 'off', label: t.motionOff },
+        ]}
+        onChange={(v) => void saver.save('reducedMotion', { ui: { reducedMotion: v } })}
+        status={saver.status.reducedMotion}
+      />
+
+      <h3 className="section-head">{t.remindersTitle}</h3>
+      <TextInput
+        key={`grace-${reminders.graceMinutes}`}
+        label={t.graceMinutes}
+        value={String(reminders.graceMinutes)}
+        hint={t.graceMinutesHint}
+        ltr
+        inputMode="numeric"
+        maxLength={2}
+        validate={(v) => (parseIntInRange(v, GRACE_MIN, GRACE_MAX) === null ? rangeError(GRACE_MIN, GRACE_MAX) : null)}
+        onCommit={(v) =>
+          void saver.save('graceMinutes', {
+            reminders: { graceMinutes: parseIntInRange(v, GRACE_MIN, GRACE_MAX) ?? reminders.graceMinutes },
+          })
+        }
+        status={saver.status.graceMinutes}
+      />
+    </div>
+  );
+}

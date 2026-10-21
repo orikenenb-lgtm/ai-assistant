@@ -1,0 +1,76 @@
+/* משתני עיצוב: צבעים, גופנים ומדידות. אין framework — רק משתני CSS. */
+:root {
+  --bg-0: #03070c;
+  --bg-1: #071a2b;
+  --bg-2: #0a2238;
+  --panel: rgba(6, 20, 34, 0.66);
+  --panel-solid: #06131f;
+  --panel-raised: rgba(9, 30, 50, 0.82);
+  --line: rgba(0, 229, 255, 0.2);
+  --line-soft: rgba(0, 229, 255, 0.1);
+  --line-strong: rgba(0, 229, 255, 0.48);
+
+  --cyan: #00e5ff;
+  --cyan-08: rgba(0, 229, 255, 0.08);
+  --cyan-14: rgba(0, 229, 255, 0.14);
+  --blue: #1f6fff;
+  --amber: #ffb020;
+  --amber-12: rgba(255, 176, 32, 0.12);
+  --red: #ff4d5e;
+  --red-12: rgba(255, 77, 94, 0.12);
+  --green: #2ee6a6;
+  --green-12: rgba(46, 230, 166, 0.12);
+
+  --text: #dff6ff;
+  --text-dim: rgba(198, 232, 246, 0.7);
+  --text-faint: rgba(198, 232, 246, 0.52);
+
+  --glow: 0 0 12px rgba(0, 229, 255, 0.35);
+  --glow-soft: 0 0 8px rgba(0, 229, 255, 0.2);
+  --glow-amber: 0 0 12px rgba(255, 176, 32, 0.35);
+  --glow-red: 0 0 12px rgba(255, 77, 94, 0.35);
+  --glow-green: 0 0 10px rgba(46, 230, 166, 0.3);
+
+  --font-he: 'Heebo Variable', 'Segoe UI', 'Arial Hebrew', system-ui, sans-serif;
+  --font-hud: 'Orbitron', 'Heebo Variable', 'Segoe UI', sans-serif;
+  --font-mono: 'Cascadia Mono', 'Consolas', ui-monospace, monospace;
+
+  --radius: 3px;
+  --titlebar-h: 36px;
+  --gutter: 14px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --core-color: var(--cyan);
+}
+
+/* צבע הליבה וצורת הגל לפי המצב האמיתי */
+[data-state='IDLE'] {
+  --core-color: #00e5ff;
+}
+[data-state='LISTENING'] {
+  --core-color: #3defff;
+}
+[data-state='THINKING'] {
+  --core-color: #3fb6ff;
+}
+[data-state='EXECUTING'] {
+  --core-color: #2f7dff;
+}
+[data-state='SPEAKING'] {
+  --core-color: #63f1ff;
+}
+[data-state='AWAITING_APPROVAL'] {
+  --core-color: #ffb020;
+}
+[data-state='ERROR'] {
+  --core-color: #ff4d5e;
+}
+
+/* הפחתת תנועה: בלי אנימציות CSS ובלי מעברים */
+:root[data-reduced-motion='on'] *,
+:root[data-reduced-motion='on'] *::before,
+:root[data-reduced-motion='on'] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}

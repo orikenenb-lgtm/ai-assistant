@@ -1,0 +1,100 @@
+/* תצוגה קומפקטית (~420x150): כל המשטח גורר את החלון, חוץ מהכפתורים. */
+.compact {
+  block-size: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  -webkit-app-region: drag;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(7, 24, 40, 0.92), rgba(3, 10, 18, 0.95));
+}
+.compact-info {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.compact-state {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--core-color);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--core-color) 40%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.compact-sub {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-shadow: none;
+}
+.compact-line {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.compact-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-block-size: 0;
+}
+.compact-actions {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, auto);
+  gap: 4px 6px;
+  align-items: center;
+  justify-items: center;
+  -webkit-app-region: no-drag;
+}
+.compact-actions .mic-btn {
+  grid-row: span 3;
+}
+.compact-actions .icon-btn[data-size='small'] {
+  inline-size: 30px;
+  block-size: 30px;
+}
+
+/* הודעה בתצוגה הקומפקטית: פס דק בשורה אחת במקום שורת השיחה — לא מכסה את הכפתורים */
+.compact-toast {
+  --tone: var(--cyan);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  font-size: 12px;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  border-inline-start: 3px solid var(--tone);
+  border-radius: var(--radius);
+  background: rgba(4, 13, 22, 0.9);
+  -webkit-app-region: no-drag;
+}
+.compact-toast[data-kind='success'] {
+  --tone: var(--green);
+}
+.compact-toast[data-kind='warning'] {
+  --tone: var(--amber);
+}
+.compact-toast[data-kind='error'] {
+  --tone: var(--red);
+}
+.compact-toast-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.compact-toast .toast-close {
+  inline-size: 18px;
+  block-size: 18px;
+}

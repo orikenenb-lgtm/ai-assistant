@@ -1,0 +1,406 @@
+/* מסך ההגדרות: שכבת-על מתחת לשורת הכותרת, ניווט מקטעים אנכי ותוכן נגלל. */
+.settings-overlay {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  z-index: 20;
+  inset: var(--titlebar-h) 0 0 0;
+  padding: 12px var(--gutter) var(--gutter);
+  background: rgba(2, 6, 11, 0.82);
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.16s var(--ease);
+}
+.settings {
+  block-size: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(7, 22, 36, 0.97), rgba(4, 12, 21, 0.97));
+}
+.settings-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.settings-head h2 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--cyan);
+}
+.settings-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+}
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  border-inline-end: 1px solid var(--line-soft);
+  overflow: auto;
+}
+.settings-nav .tab {
+  text-align: start;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+}
+.settings-nav .tab[aria-selected='true'] {
+  background: var(--cyan-08);
+}
+.settings-nav .tab[aria-selected='true']::after {
+  inset-inline: auto 0;
+  inset-inline-start: 0;
+  inset-block: 6px;
+  inline-size: 2px;
+  block-size: auto;
+}
+.settings-panel {
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 20px 24px;
+}
+.settings-panel:focus-visible {
+  outline-offset: -2px;
+}
+.panel-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.section {
+  display: grid;
+  gap: 14px;
+  max-inline-size: 720px;
+}
+.section-head {
+  margin-top: 8px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--cyan);
+  border-bottom: 1px solid var(--line-soft);
+}
+.group {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.group legend {
+  padding: 0 6px;
+  color: var(--cyan);
+  font-size: 12.5px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+.field-label {
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.field-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.field-control > .input {
+  flex: 1;
+  min-inline-size: 180px;
+}
+.field-hint {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+.field > .btn,
+.field > .wake-status {
+  justify-self: start;
+}
+.field-error {
+  font-size: 12px;
+  color: var(--red);
+}
+.save-status {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+.save-status[data-tone='green'] {
+  color: var(--green);
+}
+.privacy-note {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-inline-start: 3px solid var(--cyan);
+  border-radius: var(--radius);
+  background: var(--cyan-08);
+}
+
+/* ---------- מפתחות ---------- */
+.secret-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  inline-size: 100%;
+}
+.secret-row .input {
+  flex: 1;
+  min-inline-size: 180px;
+}
+.secret-status {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+.secret-status[data-configured='on'] {
+  color: var(--green);
+}
+.confirm-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.confirm-text {
+  font-size: 12.5px;
+  color: var(--amber);
+}
+
+/* ---------- בדיקות קול ---------- */
+.meter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  inline-size: 100%;
+}
+.level-bar {
+  flex: 1;
+  block-size: 8px;
+}
+.level-bar > span {
+  transition: none;
+}
+.test-transcript {
+  font-size: 13px;
+}
+.wake-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.wake-status .chip-dot {
+  background: var(--text-faint);
+}
+.wake-status[data-status='listening'] .chip-dot {
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+.wake-status[data-status='error'] .chip-dot {
+  background: var(--red);
+}
+.wake-status[data-status='paused'] .chip-dot,
+.wake-status[data-status='loading'] .chip-dot {
+  background: var(--amber);
+}
+
+/* ---------- תוכנות ופרויקטים ---------- */
+.entries {
+  display: grid;
+  gap: 10px;
+}
+.entry {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: rgba(3, 12, 21, 0.55);
+}
+.entry[data-disabled='on'] {
+  opacity: 0.72;
+}
+.entry-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: end;
+  gap: 12px;
+}
+.entry-grid {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 12px;
+}
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.default-radio {
+  grid-template-columns: auto auto;
+  font-size: 12.5px;
+}
+.check-line {
+  font-size: 12.5px;
+  color: var(--green);
+}
+.check-line.field-error {
+  color: var(--red);
+}
+.check-mark {
+  font-weight: 700;
+}
+.alias-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(2, 10, 18, 0.8);
+}
+.alias-box:focus-within {
+  border-color: var(--line-strong);
+  box-shadow: var(--glow-soft);
+}
+.alias-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 4px 1px 8px;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--cyan-08);
+}
+.alias-remove {
+  display: grid;
+  place-items: center;
+  inline-size: 18px;
+  block-size: 18px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 14px;
+  line-height: 1;
+}
+.alias-remove:hover {
+  color: var(--red);
+  background: var(--red-12);
+}
+.alias-input {
+  flex: 1;
+  min-inline-size: 140px;
+  border: 0;
+  background: transparent;
+  padding: 3px 4px;
+}
+.alias-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.suggestions {
+  inline-size: 100%;
+  margin-top: 6px;
+}
+.detect {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+}
+
+/* ---------- שימוש ---------- */
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+}
+.usage-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.usage-table th,
+.usage-table td {
+  padding: 6px 10px;
+  text-align: start;
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+.usage-table th {
+  font-weight: 500;
+  color: var(--text-faint);
+  background: rgba(0, 229, 255, 0.04);
+}
+.usage-table td.num {
+  font-variant-numeric: tabular-nums;
+}
+.dashboards {
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+}
+.dashboards li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.dash-name {
+  min-inline-size: 76px;
+  color: var(--text-dim);
+}
+.dash-url {
+  color: var(--cyan);
+}
+
+/* ---------- אודות ---------- */
+.about p {
+  color: var(--text-dim);
+  max-inline-size: 640px;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+}
+.about-grid dt {
+  color: var(--text-faint);
+}
+.shortcuts {
+  display: grid;
+  gap: 6px;
+}
+.shortcut-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.shortcut-row dd {
+  color: var(--text-dim);
+}
+
+@media (max-width: 860px) {
+  .settings-body {
+    grid-template-columns: 136px minmax(0, 1fr);
+  }
+  .entry-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
