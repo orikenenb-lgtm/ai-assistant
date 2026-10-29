@@ -1,0 +1,60 @@
+# CI for the SMART Voice marketing site (voice-site/). Independent from the other workflows.
+name: Voice site
+
+on:
+  push:
+    paths:
+      - "voice-site/**"
+      - ".github/workflows/voice-site.yml"
+  pull_request:
+    paths:
+      - "voice-site/**"
+      - ".github/workflows/voice-site.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: voice-site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: lint · typecheck · unit · build · e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: voice-site
+    env:
+      CI: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: voice-site/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voice-site-playwright-report
+          path: voice-site/playwright-report
+          retention-days: 7
