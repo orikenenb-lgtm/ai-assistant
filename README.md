@@ -10,6 +10,7 @@
 ```
 ├── backend/    # FastAPI + Supabase + Rivhit (Python 3.11)
 ├── frontend/   # React 19 + TypeScript + Vite + Tailwind v4 (עברית RTL)
+├── voice-site/ # אתר שיווקי לנציג טלפוני AI (Next.js 16) — ראו voice-site/README.md
 ├── docs/       # ארכיטקטורה והחלטות
 └── .claude/    # הגדרות תת-הסוכנים
 ```

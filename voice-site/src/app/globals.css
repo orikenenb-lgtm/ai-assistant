@@ -1,0 +1,327 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------- Design tokens ---------- */
+:root {
+  color-scheme: light;
+  --bg: #f6f5f0;
+  --bg-soft: #efeee6;
+  --surface: #ffffff;
+  --surface-2: #f2f3ec;
+  --tint: #e9efe1;
+  --ink: #132019;
+  --ink-2: #3d473f;
+  --ink-3: #5a6359;
+  --line: #e1e2d8;
+  --line-strong: #cdd0c3;
+  --brand: #2c6a43;
+  --brand-hover: #245a38;
+  --brand-ink: #ffffff;
+  --brand-soft: #e1ecd8;
+  --accent: #bfe08f;
+  --accent-hover: #cde9a5;
+  --accent-ink: #12210f;
+  --forest: #12221a;
+  --forest-2: #1a2f23;
+  --forest-3: #24402f;
+  --on-forest: #eef3ea;
+  --on-forest-2: #b8c6b5;
+  --on-forest-line: rgba(255, 255, 255, 0.1);
+  --danger: #c0392b;
+  --warn: #b7791f;
+  --wa: #25d366;
+  --wa-dark: #128c7e;
+  --wa-ink: #0a6b52;
+  --shadow-sm: 0 1px 2px rgba(19, 32, 25, 0.06), 0 1px 1px rgba(19, 32, 25, 0.04);
+  --shadow-md: 0 10px 30px -12px rgba(19, 32, 25, 0.18), 0 2px 6px rgba(19, 32, 25, 0.05);
+  --shadow-lg: 0 30px 60px -20px rgba(10, 25, 15, 0.35), 0 8px 20px -8px rgba(10, 25, 15, 0.15);
+  --font-scale: 1;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c130f;
+  --bg-soft: #101914;
+  --surface: #141e18;
+  --surface-2: #18241d;
+  --tint: #1a2a20;
+  --ink: #e8eee5;
+  --ink-2: #c3ccbf;
+  --ink-3: #9aa596;
+  --line: #233128;
+  --line-strong: #2f3f34;
+  --brand: #8fcf74;
+  --brand-hover: #a3db8b;
+  --brand-ink: #0b170f;
+  --brand-soft: #1c3223;
+  --forest: #0f1b14;
+  --forest-2: #152519;
+  --forest-3: #1f3727;
+  --on-forest-line: rgba(255, 255, 255, 0.08);
+  --wa-ink: #25d366;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-tint: var(--tint);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-forest: var(--forest);
+  --color-forest-2: var(--forest-2);
+  --color-forest-3: var(--forest-3);
+  --color-on-forest: var(--on-forest);
+  --color-on-forest-2: var(--on-forest-2);
+  --color-on-forest-line: var(--on-forest-line);
+  --color-danger: var(--danger);
+  --color-wa: var(--wa);
+  --color-wa-dark: var(--wa-dark);
+  --color-wa-ink: var(--wa-ink);
+  --font-sans: "Heebo Variable", "Heebo", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --shadow-soft: var(--shadow-sm);
+  --shadow-card: var(--shadow-md);
+  --shadow-float: var(--shadow-lg);
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.5rem;
+  --animate-pulse-ring: pulse-ring 2.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 40s linear infinite;
+}
+
+/* ---------- Base ---------- */
+html {
+  font-size: calc(100% * var(--font-scale));
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "kern";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.on-forest :focus-visible {
+  outline-color: var(--accent);
+}
+
+/* LTR snippets (phone numbers, URLs, prices) inside RTL text */
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Motion ---------- */
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  80%, 100% { transform: scale(1.9); opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(50%); }
+}
+
+@keyframes bar {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Scroll reveal: content is visible by default; only hidden once JS is on. */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.animate-in {
+  animation: fade-up 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.voice-bar {
+  transform-origin: center;
+  animation: bar 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .js [data-reveal] { opacity: 1; transform: none; }
+}
+
+/* Accessibility menu toggles (see AccessibilityMenu) */
+[data-a11y-motion="off"] *, [data-a11y-motion="off"] *::before, [data-a11y-motion="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+[data-a11y-motion="off"] [data-reveal] { opacity: 1 !important; transform: none !important; }
+[data-a11y-links="on"] a { text-decoration: underline !important; text-underline-offset: 3px; }
+[data-a11y-contrast="high"] {
+  --ink-2: var(--ink);
+  --ink-3: var(--ink);
+  --line: var(--ink-3);
+  --on-forest-2: var(--on-forest);
+}
+
+/* ---------- Utilities ---------- */
+@utility container-page {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility text-pretty {
+  text-wrap: pretty;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Soft grain + glow used on dark panels */
+.forest-panel {
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, rgba(191, 224, 143, 0.14), transparent 60%),
+    radial-gradient(40rem 24rem at 0% 110%, rgba(143, 207, 116, 0.1), transparent 60%),
+    var(--forest);
+  color: var(--on-forest);
+}
+
+.dotted-bg {
+  background-image: radial-gradient(var(--line-strong) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* ROI calculator range sliders (RTL: the track fills from the right) */
+.roi-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to left, var(--accent) var(--pct), rgba(255, 255, 255, 0.16) var(--pct));
+  cursor: pointer;
+}
+[dir="ltr"] .roi-range {
+  background: linear-gradient(to right, var(--accent) var(--pct), rgba(255, 255, 255, 0.16) var(--pct));
+}
+.roi-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s;
+}
+.roi-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.roi-range::-moz-range-track {
+  background: transparent;
+}
+.roi-range:active::-webkit-slider-thumb {
+  transform: scale(1.12);
+}
+.roi-range:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 6px;
+}
+
+/* Long-form legal pages */
+.legal h2 {
+  margin-top: 2.25rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+.legal ul {
+  list-style: disc;
+  padding-inline-start: 1.4rem;
+}
+.legal li + li {
+  margin-top: 0.35rem;
+}
+.legal a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
