@@ -38,3 +38,14 @@ describe("spoken digits", () => {
     expect(extractPhone("יש לנו 2 סניפים ו-15 עובדים")).toBeNull();
   });
 });
+
+describe("spoken numbers, grouped", () => {
+  it("understands tens the way Israelis read numbers aloud", () => {
+    expect(extractPhone("אפס חמש ארבע, שבע שש חמש, ארבעים ושלוש עשרים ואחת")?.e164).toBe("+972547654321");
+    expect(spokenDigitsToNumbers("עשרים").trim()).toBe("20");
+  });
+
+  it("accepts digits separated by dashes", () => {
+    expect(extractPhone("אפס - חמש - אפס - אחת - שתיים - שלוש - ארבע - חמש - שש - שבע")?.e164).toBe("+972501234567");
+  });
+});

@@ -127,4 +127,18 @@ describe("deliverLead", () => {
     expect(taskUrl).toBe("https://crm.example/api/v1/tasks");
     expect(JSON.parse(taskInit!.body as string)).toMatchObject({ contactId: "c-1", priority: "high" });
   });
+
+  it("treats a returning CRM contact as delivered only if the call-back task was created", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const env = { SMART_CRM_API_URL: "https://crm.example/api/v1", SMART_CRM_API_KEY: "sck_abc" };
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response("conflict", { status: 409 }))
+      .mockResolvedValueOnce(new Response("bad", { status: 422 }));
+    expect((await deliverLead(lead(), env)).status).toBe("failed");
+
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response("conflict", { status: 409 }))
+      .mockResolvedValueOnce(Response.json({ data: { id: "t" } }, { status: 201 }));
+    expect((await deliverLead(lead(), env)).status).toBe("delivered");
+  });
 });

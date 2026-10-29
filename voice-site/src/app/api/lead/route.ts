@@ -1,9 +1,7 @@
 import { parseLead } from "@/lib/lead";
 import { deliverLead } from "@/lib/leads/deliver";
 import { json, readBody } from "@/lib/http";
-import { clientIp, isSameOrigin, rateLimit } from "@/lib/rate-limit";
-
-const HOUR = 60 * 60 * 1000;
+import { clientIp, isSameOrigin, leadRateLimit } from "@/lib/rate-limit";
 
 function redirect(request: Request, path: string): Response {
   return Response.redirect(new URL(path, request.url), 303);
@@ -12,7 +10,7 @@ function redirect(request: Request, path: string): Response {
 export async function POST(request: Request): Promise<Response> {
   if (!isSameOrigin(request)) return json({ ok: false, error: "forbidden" }, { status: 403 });
 
-  const limited = rateLimit(`lead:${clientIp(request)}`, 6, HOUR);
+  const limited = leadRateLimit(clientIp(request));
   if (!limited.ok) {
     return json(
       { ok: false, error: "rate_limited" },

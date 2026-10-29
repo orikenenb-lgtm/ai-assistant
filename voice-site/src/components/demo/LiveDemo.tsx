@@ -6,9 +6,9 @@ import { clsx } from "clsx";
 import { brand } from "@/config/site";
 import { answers } from "@/lib/agent/knowledge";
 import { leadFailedReply, respond } from "@/lib/agent/rules";
-import { initialDemoState, type AgentResponse, type ChatMessage, type DemoState } from "@/lib/agent/types";
+import { MAX_MESSAGES, initialDemoState, type AgentResponse, type ChatMessage, type DemoState } from "@/lib/agent/types";
 import { formatMinutes } from "@/lib/format";
-import { canRecognize, hebrewVoice, listenOnce, speak, stopSpeaking } from "@/components/demo/speech";
+import { canRecognize, hebrewVoice, listenOnce, setVoiceCallActive, speak, stopSpeaking } from "@/components/demo/speech";
 
 type Status = "idle" | "live" | "ended";
 type Phase = "idle" | "speaking" | "listening" | "thinking";
@@ -21,7 +21,7 @@ async function askAgent(messages: ChatMessage[], state: DemoState): Promise<Agen
     const res = await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: messages.slice(-30), state }),
+      body: JSON.stringify({ messages: messages.slice(-MAX_MESSAGES), state }),
     });
     if (res.ok) return (await res.json()) as AgentResponse;
     if (res.status === 429) {
@@ -76,14 +76,26 @@ export function LiveDemo() {
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const abortListenRef = useRef<(() => void) | null>(null);
   const silenceRef = useRef(0);
+  /** Bumped on every start / end / unmount: async work from an older call must not touch the new one. */
+  const callRef = useRef(0);
+  /** Bumped whenever listening starts or is cancelled, so only one listen loop is ever alive. */
+  const loopRef = useRef(0);
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // listenLoop and send call each other; the ref breaks the declaration cycle.
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
 
+  const isCurrent = (call: number) => callRef.current === call && statusRef.current === "live";
+
   const pushMessage = useCallback((m: ChatMessage) => {
     messagesRef.current = [...messagesRef.current, m];
     setMessages(messagesRef.current);
+  }, []);
+
+  const stopListening = useCallback(() => {
+    loopRef.current += 1;
+    abortListenRef.current?.();
+    abortListenRef.current = null;
   }, []);
 
   // Call timer
@@ -99,58 +111,74 @@ export function LiveDemo() {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages, interim, phase]);
 
-  // Hang up if the visitor leaves the tab mid-call.
+  // Pause the microphone when the tab is hidden; tear everything down on unmount.
   useEffect(() => {
     const onHide = () => {
-      if (document.hidden && statusRef.current === "live" && modeRef.current === "voice") {
-        abortListenRef.current?.();
-        stopSpeaking();
-        setPhase("idle");
-      }
+      if (!document.hidden || statusRef.current !== "live" || modeRef.current !== "voice") return;
+      stopListening();
+      stopSpeaking();
+      mutedRef.current = true;
+      setMuted(true);
+      if (!busyRef.current) setPhase("idle");
+      setNotice("השיחה הושהתה כשעברתם לכרטיסייה אחרת. לחצו על המיקרופון כדי להמשיך.");
     };
     document.addEventListener("visibilitychange", onHide);
     return () => {
       document.removeEventListener("visibilitychange", onHide);
-      abortListenRef.current?.();
+      callRef.current += 1;
+      statusRef.current = "ended";
+      stopListening();
       stopSpeaking();
+      setVoiceCallActive(false);
     };
-  }, []);
+  }, [stopListening]);
 
   const endCall = useCallback(() => {
+    callRef.current += 1;
     statusRef.current = "ended";
+    busyRef.current = false;
     setStatus("ended");
     setPhase("idle");
     setInterim("");
-    abortListenRef.current?.();
+    stopListening();
     stopSpeaking();
-  }, []);
+    setVoiceCallActive(false);
+  }, [stopListening]);
 
-  const say = useCallback(async (text: string) => {
-    if (modeRef.current !== "voice" || !voiceRef.current) return;
+  const say = useCallback(async (text: string, call: number) => {
+    if (modeRef.current !== "voice" || !voiceRef.current || !isCurrent(call)) return;
     setPhase("speaking");
     await speak(text, voiceRef.current);
   }, []);
 
   const listenLoop = useCallback(async () => {
-    while (statusRef.current === "live" && modeRef.current === "voice" && !mutedRef.current && !busyRef.current) {
+    const call = callRef.current;
+    stopListening(); // supersede any loop that is still running
+    const loop = loopRef.current;
+    const mine = () => loopRef.current === loop && isCurrent(call);
+
+    while (mine() && modeRef.current === "voice" && !mutedRef.current && !busyRef.current && !document.hidden) {
       setPhase("listening");
       setInterim("");
-      const handle = listenOnce(setInterim);
+      const handle = listenOnce((t) => {
+        if (mine()) setInterim(t);
+      });
       abortListenRef.current = handle.abort;
       const outcome = await handle.promise;
-      abortListenRef.current = null;
+      if (abortListenRef.current === handle.abort) abortListenRef.current = null;
+      if (!mine()) return;
       setInterim("");
-      if (statusRef.current !== "live") return;
 
       if (outcome.kind === "text") {
         silenceRef.current = 0;
         await sendRef.current(outcome.text);
         return;
       }
-      if (outcome.kind === "aborted") return;
+      if (outcome.kind === "aborted") break;
       if (outcome.kind === "denied" || outcome.kind === "unavailable") {
         modeRef.current = "text";
         setMode("text");
+        setVoiceCallActive(false);
         setPhase("idle");
         setNotice(
           outcome.kind === "denied"
@@ -169,37 +197,39 @@ export function LiveDemo() {
         return;
       }
     }
-    if (statusRef.current === "live") setPhase("idle");
-  }, []);
+    if (mine() && !busyRef.current) setPhase("idle");
+  }, [stopListening]);
 
   const send = useCallback(
     async (raw: string) => {
+      const call = callRef.current;
       const text = raw.trim().slice(0, 500);
-      if (!text || statusRef.current !== "live" || busyRef.current) return;
+      if (!text || !isCurrent(call) || busyRef.current) return;
       busyRef.current = true;
-      abortListenRef.current?.();
+      stopListening();
       stopSpeaking();
       setNotice(null);
       pushMessage({ role: "user", content: text });
       setPhase("thinking");
 
       const result = await askAgent(messagesRef.current, stateRef.current);
+      // The call was ended or restarted meanwhile: drop the stale reply.
+      if (!isCurrent(call)) return;
       busyRef.current = false;
-      if (statusRef.current !== "live") return;
       stateRef.current = result.state;
       if (result.lead === "saved") setLeadSaved(true);
       pushMessage({ role: "assistant", content: result.reply });
 
-      await say(result.reply);
-      if (statusRef.current !== "live") return;
+      await say(result.reply, call);
+      if (!isCurrent(call)) return;
       if (result.end) {
         endCall();
         return;
       }
       setPhase("idle");
-      if (modeRef.current === "voice" && !mutedRef.current) void listenLoop();
+      if (modeRef.current === "voice" && !mutedRef.current && !document.hidden) void listenLoop();
     },
-    [endCall, listenLoop, pushMessage, say],
+    [endCall, listenLoop, pushMessage, say, stopListening],
   );
 
   useEffect(() => {
@@ -208,11 +238,19 @@ export function LiveDemo() {
 
   const start = useCallback(
     async (wanted: "voice" | "text") => {
+      callRef.current += 1;
+      const call = callRef.current;
+      busyRef.current = false;
+      stopListening();
+      stopSpeaking();
+
       const voiceMode = wanted === "voice" && canRecognize();
       modeRef.current = voiceMode ? "voice" : "text";
       setMode(modeRef.current);
+      setVoiceCallActive(voiceMode);
       statusRef.current = "live";
       setStatus("live");
+      setPhase("idle");
       setSeconds(0);
       setLeadSaved(false);
       setNotice(wanted === "voice" && !voiceMode ? "זיהוי דיבור לא נתמך בדפדפן הזה (נסו Chrome או Edge). אפשר לכתוב לי כאן." : null);
@@ -225,14 +263,15 @@ export function LiveDemo() {
 
       if (voiceMode) {
         voiceRef.current = await hebrewVoice();
+        if (!isCurrent(call)) return;
         if (!voiceRef.current) setNotice("אין קול עברי מותקן בדפדפן הזה, אז התשובות שלי יופיעו בכתב. אני עדיין שומעת אתכם.");
-        await say(GREETING);
-        if (statusRef.current === "live") void listenLoop();
+        await say(GREETING, call);
+        if (isCurrent(call) && !busyRef.current && modeRef.current === "voice") void listenLoop();
       } else {
         setTimeout(() => inputRef.current?.focus(), 50);
       }
     },
-    [listenLoop, say],
+    [listenLoop, say, stopListening],
   );
 
   // Other components (header CTA, final CTA) can start the demo.
@@ -250,8 +289,8 @@ export function LiveDemo() {
     mutedRef.current = next;
     setMuted(next);
     if (next) {
-      abortListenRef.current?.();
-      setPhase("idle");
+      stopListening();
+      if (!busyRef.current) setPhase("idle");
     } else {
       silenceRef.current = 0;
       setNotice(null);
@@ -261,12 +300,31 @@ export function LiveDemo() {
   };
 
   const switchToText = () => {
-    abortListenRef.current?.();
+    stopListening();
     stopSpeaking();
     modeRef.current = "text";
     setMode("text");
-    setPhase("idle");
+    setVoiceCallActive(false);
+    if (!busyRef.current) setPhase("idle");
     setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const switchToVoice = () => {
+    if (!canRecognize()) {
+      setNotice("זיהוי דיבור לא נתמך בדפדפן הזה. נסו Chrome, Edge או Safari.");
+      return;
+    }
+    const call = callRef.current;
+    modeRef.current = "voice";
+    setMode("voice");
+    setVoiceCallActive(true);
+    mutedRef.current = false;
+    setMuted(false);
+    setNotice(null);
+    void hebrewVoice().then((v) => {
+      voiceRef.current = v;
+      if (isCurrent(call) && !busyRef.current && modeRef.current === "voice") void listenLoop();
+    });
   };
 
   const live = status === "live";
@@ -444,7 +502,16 @@ export function LiveDemo() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onFocus={() => {
-                if (mode === "voice" && phase === "listening") abortListenRef.current?.();
+                // Typing pauses the microphone so the two don't fight.
+                if (modeRef.current === "voice" && !busyRef.current) {
+                  stopListening();
+                  setPhase("idle");
+                }
+              }}
+              onBlur={() => {
+                if (modeRef.current === "voice" && !mutedRef.current && !busyRef.current && statusRef.current === "live" && !draft.trim()) {
+                  void listenLoop();
+                }
               }}
               maxLength={500}
               autoComplete="off"
@@ -482,21 +549,7 @@ export function LiveDemo() {
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  if (!canRecognize()) {
-                    setNotice("זיהוי דיבור לא נתמך בדפדפן הזה. נסו Chrome, Edge או Safari.");
-                    return;
-                  }
-                  modeRef.current = "voice";
-                  setMode("voice");
-                  mutedRef.current = false;
-                  setMuted(false);
-                  setNotice(null);
-                  void hebrewVoice().then((v) => {
-                    voiceRef.current = v;
-                    void listenLoop();
-                  });
-                }}
+                onClick={switchToVoice}
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-sm font-semibold text-on-forest transition hover:bg-white/15"
               >
                 <Mic className="size-4" /> מעבר לדיבור

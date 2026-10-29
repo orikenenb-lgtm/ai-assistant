@@ -4,6 +4,7 @@ import { brand } from "@/config/site";
 import { knowledgeText } from "@/lib/agent/knowledge";
 import type { ChatMessage, DemoState, PendingLead } from "@/lib/agent/types";
 import { parsePhone } from "@/lib/phone";
+import { leadSavedReply } from "@/lib/agent/rules";
 
 /**
  * Claude-powered demo agent. Used only when ANTHROPIC_API_KEY is set; the route
@@ -66,39 +67,66 @@ export type LlmResult = {
 
 type SaveLead = (lead: PendingLead) => Promise<boolean>;
 
+/** Whole-turn budget, kept under the route's 30s maxDuration so the rule-engine fallback can still answer. */
+const TURN_BUDGET_MS = 20_000;
+const CALL_TIMEOUT_MS = 10_000;
+
 export async function respondWithClaude(
   messages: ChatMessage[],
   state: DemoState,
   saveLead: SaveLead,
 ): Promise<LlmResult> {
-  const client = new Anthropic({ timeout: 25_000, maxRetries: 1 });
+  const client = new Anthropic({ maxRetries: 0 });
   const model = process.env.AGENT_MODEL || DEFAULT_AGENT_MODEL;
+  const deadline = Date.now() + TURN_BUDGET_MS;
 
   const convo: Anthropic.Beta.BetaMessageParam[] = messages.map((m) => ({ role: m.role, content: m.content }));
   // The API requires the conversation to start with a user turn; the client's
   // canned greeting is an assistant message, so drop leading assistant turns.
   while (convo.length && convo[0].role === "assistant") convo.shift();
+
+  // A second system block (after the cached one) works on every model, unlike mid-conversation system messages.
+  const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }];
   if (state.leadSaved) {
-    convo.push({ role: "system", content: "The visitor's lead was already saved in this conversation; do not collect it again." } as never);
+    system.push({ type: "text", text: "The visitor's lead was already saved in this conversation; do not collect it again." });
   }
 
   let leadOutcome: LlmResult["lead"];
   let nextState = state;
 
   for (let i = 0; i < 3; i++) {
-    const response = await client.beta.messages.create({
-      model,
-      max_tokens: 2048,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "low" },
-      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-      tools: [saveLeadTool],
-      messages: convo,
-    });
+    const remaining = deadline - Date.now();
+    let response: Anthropic.Beta.BetaMessage;
+    try {
+      if (remaining < 2_000) throw new Error("turn budget exhausted");
+      response = await client.beta.messages.create(
+        {
+          model,
+          max_tokens: 2048,
+          betas: ["server-side-fallback-2026-07-01"],
+          fallbacks: "default",
+          output_config: { effort: "low" },
+          system,
+          tools: [saveLeadTool],
+          messages: convo,
+        },
+        { timeout: Math.min(CALL_TIMEOUT_MS, remaining) },
+      );
+    } catch (err) {
+      // Once a lead is saved, never hand the turn to the rule engine: it would
+      // see the stale client state and ask for the details again.
+      if (leadOutcome === "saved") {
+        return { reply: leadSavedReply(nextState.name ?? ""), state: nextState, lead: leadOutcome };
+      }
+      throw err;
+    }
 
     if (response.stop_reason === "refusal") {
-      return { reply: "על זה אני לא יכולה לענות כאן. אפשר לשאול אותי על השירות, המחירים או החיבורים.", state: nextState };
+      return {
+        reply: "על זה אני לא יכולה לענות כאן. אפשר לשאול אותי על השירות, המחירים או החיבורים.",
+        state: nextState,
+        lead: leadOutcome,
+      };
     }
 
     const toolUses = response.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");

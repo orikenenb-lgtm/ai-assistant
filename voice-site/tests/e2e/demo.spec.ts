@@ -66,3 +66,64 @@ test("conversation player reveals the transcript and the system steps", async ({
   await expect(section.getByText("טופל")).toBeVisible({ timeout: 20_000 });
   await expect(section.getByText("נשלח אישור בוואטסאפ עם כתובת והנחיות")).toBeVisible();
 });
+
+test("live demo: voice loop listens once at a time, answers, and pauses after silence", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown> & { __queue: string[]; __active: number; __maxActive: number };
+    w.__queue = ["כמה זה עולה"];
+    w.__active = 0;
+    w.__maxActive = 0;
+    class FakeRecognition {
+      lang = "";
+      continuous = false;
+      interimResults = false;
+      maxAlternatives = 1;
+      onresult: ((e: unknown) => void) | null = null;
+      onerror: ((e: unknown) => void) | null = null;
+      onend: (() => void) | null = null;
+      private timer: ReturnType<typeof setTimeout> | undefined;
+      private done = false;
+      start() {
+        w.__active += 1;
+        w.__maxActive = Math.max(w.__maxActive, w.__active);
+        this.timer = setTimeout(() => {
+          const text = w.__queue.shift();
+          if (text) this.onresult?.({ resultIndex: 0, results: [{ isFinal: true, 0: { transcript: text } }] });
+          else this.onerror?.({ error: "no-speech" });
+          this.finish();
+        }, 250);
+      }
+      private finish() {
+        if (this.done) return;
+        this.done = true;
+        w.__active -= 1;
+        this.onend?.();
+      }
+      stop() {
+        this.finish();
+      }
+      abort() {
+        clearTimeout(this.timer);
+        this.onerror?.({ error: "aborted" });
+        this.finish();
+      }
+    }
+    Object.defineProperty(window, "SpeechRecognition", { value: FakeRecognition, configurable: true });
+  });
+  await page.goto("/");
+  const demo = page.locator("#demo");
+  await demo.getByRole("button", { name: "התחילו שיחה" }).click();
+
+  await expect(demo.getByRole("log")).toContainText("שלוש חבילות", { timeout: 15_000 });
+  await expect(demo.getByText("לא שמעתי כלום")).toBeVisible({ timeout: 15_000 });
+  await expect(demo.getByRole("button", { name: "המיקרופון כבוי" })).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { __maxActive: number }).__maxActive)).toBe(1);
+
+  // End and start again: the new call starts clean, with no recognizer left running.
+  await demo.getByRole("button", { name: "סיום" }).click();
+  expect(await page.evaluate(() => (window as unknown as { __active: number }).__active)).toBe(0);
+  await demo.getByRole("button", { name: "שיחה חדשה" }).click();
+  await expect(demo.getByRole("log").locator("p")).toHaveCount(1);
+  await demo.getByRole("button", { name: "סיום" }).click();
+  expect(await page.evaluate(() => (window as unknown as { __active: number }).__active)).toBe(0);
+});

@@ -134,3 +134,45 @@ describe("limits", () => {
     expect(r.reply).toBe(answers.turnLimit);
   });
 });
+
+describe("review regressions", () => {
+  it("treats 'זהו' as goodbye only when it is the whole message", () => {
+    expect(isGoodbye("זהו")).toBe(true);
+    expect(isGoodbye("זהו מוסך ברמת גן")).toBe(false);
+    expect(isGoodbye("זהו?")).toBe(false);
+    expect(respond([user("זהו, כמה זה עולה?")]).end).toBeUndefined();
+  });
+
+  it("matches whole words, not substrings", () => {
+    expect(respond([user("מעולה, וזה עובד גם בוואטסאפ?")]).reply).toBe(answers.whatsapp);
+    expect(respond([user("יש לי בוטיק בגדים")]).reply).not.toBe(answers.robot);
+    expect(respond([user("קליניקה להורדה במשקל")]).reply).not.toBe(answers.price);
+    expect(respond([user("וכמה זה עולה?")]).reply).toBe(answers.price);
+    expect(respond([user("צריך טיפול לרכב")]).reply).toContain("למוסכים");
+  });
+
+  it("does not save when 'yes' comes with a correction", () => {
+    const r = converse(["רוצה סוכן", "דני", "מוסך", "0501234567", "כן אבל השם לא נכון"]);
+    expect(r.saveLead).toBeUndefined();
+    expect(r.state.stage).toBe("ask_name");
+  });
+
+  it("strips lead-in words from names and rejects non-names", () => {
+    expect(extractName("כן, קוראים לי דני")).toBe("דני");
+    expect(extractName("היי, אני דני")).toBe("דני");
+    expect(extractName("לא")).toBeUndefined();
+    expect(extractName("נעים מאוד, שמי רונית")).toBe("רונית");
+  });
+
+  it("keeps spoken phone digits out of the business name", () => {
+    const r = converse(["מעוניין", "אבי", "מוסך אפס חמש אפס אחת שתיים שלוש ארבע חמש שש שבע"]);
+    expect(r.state.business).toBe("מוסך");
+    expect(r.state.phone).toBe("+972501234567");
+  });
+
+  it("restarts the flow when the confirm state is incomplete (forged client state)", () => {
+    const r = respond([user("כן")], { ...initialDemoState, stage: "confirm", phone: "+972501234567" });
+    expect(r.saveLead).toBeUndefined();
+    expect(r.state.stage).toBe("ask_name");
+  });
+});

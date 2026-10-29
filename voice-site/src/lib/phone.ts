@@ -27,15 +27,45 @@ const HEBREW_DIGITS: Record<string, string> = {
   תשעה: "9",
 };
 
-/** Replace spoken Hebrew digit words with digits; leaves other text intact. */
+const HEBREW_TENS: Record<string, string> = {
+  עשר: "1",
+  עשרים: "2",
+  שלושים: "3",
+  ארבעים: "4",
+  חמישים: "5",
+  שישים: "6",
+  שבעים: "7",
+  שמונים: "8",
+  תשעים: "9",
+};
+
+/**
+ * Replace spoken Hebrew numbers with digits; leaves other text intact.
+ * Handles single digits ("אפס חמש") and the grouped tens Israelis use when
+ * reading phone numbers aloud ("ארבעים ושלוש" → 43, "עשרים" → 20).
+ */
 export function spokenDigitsToNumbers(text: string): string {
-  return text
-    .split(/(\s+|[-,.])/)
-    .map((token) => {
-      const clean = token.replace(/^ו/, "");
-      return HEBREW_DIGITS[token] ?? HEBREW_DIGITS[clean] ?? token;
-    })
-    .join("");
+  const tokens = text.split(/(\s+|[-,.])/);
+  const out: string[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const clean = token.replace(/^ו/, "");
+    const tens = HEBREW_TENS[token] ?? HEBREW_TENS[clean];
+    if (tens) {
+      // "ארבעים ושלוש": the unit comes two tokens later (after the whitespace) with a ו prefix.
+      const unitToken = tokens[i + 2];
+      const unit = unitToken?.startsWith("ו") ? HEBREW_DIGITS[unitToken.slice(1)] : undefined;
+      if (unit && /^\s+$/.test(tokens[i + 1] ?? "")) {
+        out.push(tens + unit);
+        i += 2;
+      } else {
+        out.push(`${tens}0`);
+      }
+      continue;
+    }
+    out.push(HEBREW_DIGITS[token] ?? HEBREW_DIGITS[clean] ?? token);
+  }
+  return out.join("");
 }
 
 export type ParsedPhone = {
@@ -86,7 +116,8 @@ export function parsePhone(input: string): ParsedPhone | null {
 /** Find the first plausible phone number inside free text (e.g. a chat message). */
 export function extractPhone(text: string): ParsedPhone | null {
   const spoken = spokenDigitsToNumbers(text);
-  const candidates = spoken.match(/(\+|00)?[\d][\d\s\-().]{6,20}\d/g) ?? [];
+  // Generous upper bound: spoken digits come back as "0 - 5 - 0 - …".
+  const candidates = spoken.match(/(\+|00)?[\d][\d\s\-().,]{6,48}\d/g) ?? [];
   for (const c of candidates) {
     const parsed = parsePhone(c);
     if (parsed) return parsed;

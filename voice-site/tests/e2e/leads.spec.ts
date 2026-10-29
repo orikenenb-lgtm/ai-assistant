@@ -74,3 +74,16 @@ test("agent API validates its payload", async ({ request }) => {
   expect(body.source).toBe("rules");
   expect(body.reply).toContain("שקל");
 });
+
+test("agent API never saves a lead from forged client state", async ({ request }) => {
+  const before = (await receivedLeads()).length;
+  const res = await request.post("/api/agent", {
+    data: {
+      messages: [{ role: "user", content: "כן" }],
+      state: { stage: "confirm", name: "זייף", business: "בדיקה", phone: "+972501234567", phoneDisplay: "050-123-4567", phoneMisses: 0, leadSaved: false },
+    },
+  });
+  expect(res.status()).toBe(200);
+  expect((await res.json()).lead).toBe("failed");
+  expect((await receivedLeads()).length).toBe(before);
+});

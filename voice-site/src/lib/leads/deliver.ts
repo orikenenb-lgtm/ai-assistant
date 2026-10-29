@@ -118,12 +118,13 @@ async function toSmartCrm(lead: Lead, env: Env): Promise<DeliveryOutcome> {
     return { destination: "smart-crm", ok: false, error: `contacts HTTP ${contactRes.status}` };
   }
 
-  // The contact is the lead of record; the task is a best-effort reminder.
+  const created = contactRes.ok;
+  let taskOk = false;
   try {
-    const contact = contactRes.ok ? ((await contactRes.json()) as { data?: { id?: string } }) : {};
+    const contact = created ? ((await contactRes.json()) as { data?: { id?: string } }) : {};
     const contactId = contact.data?.id;
     const dueAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    await postJson(
+    const taskRes = await postJson(
       `${base}/tasks`,
       {
         title: `לחזור לליד מהאתר: ${lead.name}`,
@@ -134,10 +135,14 @@ async function toSmartCrm(lead: Lead, env: Env): Promise<DeliveryOutcome> {
       },
       auth,
     );
+    taskOk = taskRes.ok;
   } catch {
-    // ignored: the contact already exists in the CRM
+    taskOk = false;
   }
-  return { destination: "smart-crm", ok: true };
+  // A new contact is the lead of record, so a failed reminder task is tolerable.
+  // For a returning contact (409) the task is the only trace of this inquiry.
+  if (created || taskOk) return { destination: "smart-crm", ok: true };
+  return { destination: "smart-crm", ok: false, error: "existing contact, task not created" };
 }
 
 export function configuredDestinations(env: Env = process.env): DeliveryOutcome["destination"][] {

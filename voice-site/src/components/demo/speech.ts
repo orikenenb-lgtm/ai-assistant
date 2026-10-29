@@ -97,6 +97,22 @@ export function speak(text: string, voice: SpeechSynthesisVoice | null, opts: { 
   });
 }
 
+/**
+ * One speech engine is shared by the live call and the scripted conversation
+ * players. While a voice call is live the players stay silent (and stop when a
+ * call starts), so they never cut the agent off or get picked up by the mic.
+ */
+let voiceCallLive = false;
+
+export function setVoiceCallActive(active: boolean): void {
+  voiceCallLive = active;
+  if (active && typeof window !== "undefined") window.dispatchEvent(new Event("speech:call-started"));
+}
+
+export function isVoiceCallActive(): boolean {
+  return voiceCallLive;
+}
+
 export function stopSpeaking(): void {
   if (canSpeak()) window.speechSynthesis.cancel();
 }

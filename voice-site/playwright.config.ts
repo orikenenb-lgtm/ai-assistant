@@ -38,6 +38,8 @@ export default defineConfig({
       LEAD_WEBHOOK_URL: `http://127.0.0.1:${HOOK_PORT}/hook`,
       LEAD_WEBHOOK_SECRET: "e2e-secret",
       AGENT_MODE: "rules",
+      // Every spec posts leads from 127.0.0.1; keep the production default (6/h) elsewhere.
+      LEAD_RATE_LIMIT_PER_HOUR: "500",
     },
   },
 });

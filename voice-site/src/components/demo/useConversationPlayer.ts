@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Line } from "@/content/industries";
-import { hebrewVoice, speak, stopSpeaking } from "@/components/demo/speech";
+import { hebrewVoice, isVoiceCallActive, speak, stopSpeaking } from "@/components/demo/speech";
 
 /** Reading pace used when no Hebrew voice is available (ms per character). */
 const MS_PER_CHAR = 55;
@@ -28,17 +28,44 @@ export function useConversationPlayer(lines: Line[]) {
   const [elapsed, setElapsed] = useState(0);
   const [withVoice, setWithVoice] = useState(false);
   const runId = useRef(0);
+  /** True while this player owns the speech engine (so cleanup never silences a live call). */
+  const speakingRef = useRef(false);
+
+  const halt = useCallback(() => {
+    runId.current += 1;
+    if (speakingRef.current) {
+      speakingRef.current = false;
+      stopSpeaking();
+    }
+  }, []);
 
   const stop = useCallback(() => {
-    runId.current += 1;
-    stopSpeaking();
+    halt();
     setPlaying(false);
-  }, []);
+  }, [halt]);
 
-  useEffect(() => () => {
-    runId.current += 1;
-    stopSpeaking();
-  }, []);
+  const self = useRef({});
+
+  useEffect(() => {
+    // A live voice call, or another player, takes over the speech engine:
+    // stop playing here (the whole transcript stays visible).
+    const yieldEngine = () => {
+      runId.current += 1;
+      speakingRef.current = false;
+      setPlaying(false);
+      setVisible(lines.length);
+    };
+    const onPlayer = (e: Event) => {
+      if ((e as CustomEvent).detail !== self.current) yieldEngine();
+    };
+    window.addEventListener("speech:call-started", yieldEngine);
+    window.addEventListener("speech:player-started", onPlayer);
+    return () => {
+      window.removeEventListener("speech:call-started", yieldEngine);
+      window.removeEventListener("speech:player-started", onPlayer);
+      halt();
+    };
+  }, [halt, lines.length]);
 
   // Reset when the script changes (e.g. switching industry tabs).
   const [prevLines, setPrevLines] = useState(lines);
@@ -48,10 +75,7 @@ export function useConversationPlayer(lines: Line[]) {
     setPlaying(false);
     setElapsed(0);
   }
-  useEffect(() => {
-    runId.current += 1;
-    stopSpeaking();
-  }, [lines]);
+  useEffect(() => halt, [halt, lines]);
 
   useEffect(() => {
     if (!playing) return;
@@ -62,10 +86,13 @@ export function useConversationPlayer(lines: Line[]) {
 
   const play = useCallback(async () => {
     const id = ++runId.current;
+    window.dispatchEvent(new CustomEvent("speech:player-started", { detail: self.current }));
     setPlaying(true);
     setVisible(0);
     setElapsed(0);
-    const voice = await hebrewVoice();
+    const voice = isVoiceCallActive() ? null : await hebrewVoice();
+    if (runId.current !== id) return;
+    speakingRef.current = Boolean(voice);
     setWithVoice(Boolean(voice));
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -80,7 +107,10 @@ export function useConversationPlayer(lines: Line[]) {
       if (runId.current !== id) return;
       await wait(GAP_MS);
     }
-    if (runId.current === id) setPlaying(false);
+    if (runId.current === id) {
+      speakingRef.current = false;
+      setPlaying(false);
+    }
   }, [lines]);
 
   return { visible, playing, elapsed, withVoice, play, stop };

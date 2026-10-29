@@ -2,8 +2,11 @@
 
 export const MAX_MESSAGES = 40;
 export const MAX_MESSAGE_CHARS = 600;
-/** After this many visitor turns the demo wraps up (cost and abuse guard). */
-export const MAX_USER_TURNS = 24;
+/**
+ * After this many visitor turns the demo wraps up. Must stay below what fits in
+ * the MAX_MESSAGES window the browser sends (about half of it is visitor turns).
+ */
+export const MAX_USER_TURNS = 16;
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 

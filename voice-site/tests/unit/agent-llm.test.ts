@@ -49,6 +49,9 @@ describe("respondWithClaude", () => {
     expect(req.output_config).toEqual({ effort: "low" });
     expect(req.thinking).toBeUndefined();
     expect(req.tool_choice).toBeUndefined();
+    expect(req.system).toHaveLength(1);
+    expect(req.messages.some((m: { role: string }) => m.role === "system")).toBe(false);
+    expect(create.mock.calls[0][1].timeout).toBeLessThanOrEqual(10_000);
   });
 
   it("saves a lead through the tool and reports it", async () => {
@@ -97,6 +100,29 @@ describe("respondWithClaude", () => {
     const save = vi.fn();
     await respondWithClaude(history, { ...initialDemoState, leadSaved: true }, save);
     expect(save).not.toHaveBeenCalled();
+  });
+
+  it("adds the already-saved note as a system block, not a mid-conversation message", async () => {
+    create.mockResolvedValueOnce(reply([text("כבר רשמתי.")]));
+    await respondWithClaude(history, { ...initialDemoState, leadSaved: true }, vi.fn());
+    const req = create.mock.calls[0][0];
+    expect(req.system).toHaveLength(2);
+    expect(req.system[1].text).toContain("already saved");
+  });
+
+  it("reports the lead as saved even if the follow-up call fails", async () => {
+    create
+      .mockResolvedValueOnce(reply([toolUse({ name: "דני", business: "מוסך", phone: "0501234567" })], "tool_use"))
+      .mockRejectedValueOnce(new Error("overloaded"));
+    const r = await respondWithClaude(history, initialDemoState, vi.fn().mockResolvedValue(true));
+    expect(r.lead).toBe("saved");
+    expect(r.state.leadSaved).toBe(true);
+    expect(r.reply).toContain("רשמתי");
+  });
+
+  it("lets errors before any save bubble up (the route falls back to the rule engine)", async () => {
+    create.mockRejectedValueOnce(new Error("down"));
+    await expect(respondWithClaude(history, initialDemoState, vi.fn())).rejects.toThrow("down");
   });
 
   it("handles a refusal without leaking anything", async () => {
