@@ -356,7 +356,18 @@ export function Dashboard() {
                   id={`dash-tab-${t.id}`}
                   aria-selected={tab === t.id}
                   aria-controls="dash-panel"
+                  tabIndex={tab === t.id ? 0 : -1}
                   onClick={() => setTab(t.id)}
+                  onKeyDown={(e) => {
+                    // RTL: ArrowLeft moves forward.
+                    const i = TABS.findIndex((x) => x.id === t.id);
+                    const delta = e.key === "ArrowLeft" ? 1 : e.key === "ArrowRight" ? -1 : 0;
+                    if (!delta) return;
+                    e.preventDefault();
+                    const next = TABS[(i + delta + TABS.length) % TABS.length];
+                    setTab(next.id);
+                    document.getElementById(`dash-tab-${next.id}`)?.focus();
+                  }}
                   className={clsx(
                     "-mb-px shrink-0 border-b-2 px-3 py-2 text-sm font-semibold transition-colors",
                     tab === t.id ? "border-brand text-ink" : "border-transparent text-ink-3 hover:text-ink",
