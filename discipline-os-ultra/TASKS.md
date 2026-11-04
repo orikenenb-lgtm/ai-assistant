@@ -15,7 +15,7 @@
 
 ## בתהליך / נותר
 - [x] build ירוק מלא של `:app` ב-CI: assembleDebug + unit tests + lint (run #14)
-- [ ] הרצת instrumented tests על אמולטור/מכשיר (מיגרציה, DAO, Compose UI, BlockScreen)
+- [x] הרצת instrumented tests על אמולטור: 30/30 (run #23)
 - [ ] בדיקות ידניות על Galaxy S25 Ultra: הרשאות, ריבוט, שלילת הרשאות, סוללה
 - [ ] החלפת placeholders של identityHash ב-schema JSON (נוצר אוטומטית ב-build הראשון)
 - [ ] אייקון התראה monochrome ייעודי לכל הערוצים

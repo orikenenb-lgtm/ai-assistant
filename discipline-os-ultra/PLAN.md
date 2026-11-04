@@ -12,5 +12,5 @@
 | Phase 5 | AI Coach | 🟡 | domain ✅ (מאמן דמו, guard, validator, conversation). ספק מרוחק + 27 בדיקות MockWebServer. Backend רפרנס — לא פרוס |
 | Phase 6 | Focus / Gamification / Stats | 🟡 | domain ✅. UI נכתב; עזרי UI טהורים נבדקו |
 | Phase 7 | אינטגרציות | 📋 | Google Calendar, Supabase sync, Push — תכנון בלבד (`docs/INTEGRATIONS.md`). דורש חשבונות ואישור אנושי |
-| Phase 8 | QA / Security / Performance | 🟡 (על מכשיר: לא נבדק) | סקירה בלתי תלויה, בדיקות אינטגרציה חוצות-מודולים, `SECURITY.md`. ראה `TEST_REPORT.md` |
+| Phase 8 | QA / Security / Performance | ✅ אמולטור · 🟡 מכשיר פיזי לא נבדק | סקירה בלתי תלויה, בדיקות אינטגרציה חוצות-מודולים, `SECURITY.md`. ראה `TEST_REPORT.md` |
 | Phase 9 | APK / release docs | ✅ debug · ⛔ release | debug APK נבנה בהצלחה ב-CI (run #14, artifact ‏20.7MB) עם unit tests ו-lint ירוקים. אין release חתום (דורש keystore של המשתמש) |

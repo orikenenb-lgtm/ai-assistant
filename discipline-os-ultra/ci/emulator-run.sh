@@ -22,10 +22,26 @@ python3 -m pip install --quiet --user pillow >/dev/null 2>&1 || true
 thumb() { # $1 = png path, $2 = width, $3 = out jpg
   python3 -c "import sys;from PIL import Image;im=Image.open(sys.argv[1]).convert('RGB');w=int(sys.argv[2]);im=im.resize((w,int(im.height*w/im.width)));im.save(sys.argv[3],quality=45)" "$1" "$2" "$3" 2>/dev/null
 }
+: > ci-screenshots/screen-texts.txt
+# Record the visible texts/content-descriptions of the current screen (plain-text evidence of what rendered).
+screen_texts() {
+  adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml ci-screenshots/ui.xml >/dev/null 2>&1 || return 0
+  python3 - "$1" <<'PY' >> ci-screenshots/screen-texts.txt
+import sys, xml.etree.ElementTree as ET
+seen = []
+for n in ET.parse("ci-screenshots/ui.xml").iter("node"):
+    for k in ("text", "content-desc"):
+        v = (n.get(k) or "").strip().replace("\n", " ")
+        if v and v not in seen:
+            seen.append(v)
+print(f"[{sys.argv[1]}] " + " | ".join(seen)[:600])
+PY
+}
 shot() {
   sleep "${2:-3}"
   adb exec-out screencap -p > "ci-screenshots/$1.png"
   thumb "ci-screenshots/$1.png" 300 "ci-screenshots/$1.thumb.jpg" || true
+  screen_texts "$1"
 }
 
 # Tap the first on-screen element whose text or content-description equals $1 (via UI Automator dump).
@@ -69,11 +85,6 @@ CRASH_LOG=$(adb logcat -d -b crash | grep -A 30 "$PKG" | head -60)
 adb shell am force-stop "$PKG"
 
 # Small final thumbnail of the dashboard (kept last-but-summary so a log tail can include it).
-for n in 10-dashboard 11-tasks 12-focus; do
-  if [ -f "ci-screenshots/$n.png" ] && thumb "ci-screenshots/$n.png" 240 "ci-screenshots/$n.small.jpg"; then
-    echo "THUMB_BEGIN:$n"; base64 -w0 "ci-screenshots/$n.small.jpg"; echo; echo "THUMB_END:$n"
-  fi
-done
 
 echo "==================== EMULATOR SUMMARY ===================="
 python3 - <<'PY'
@@ -93,6 +104,7 @@ PY
 echo "gradle_connected_exit=$TEST_STATUS"
 echo "app_crash=$CRASH"
 echo "missing_taps=${MISSING_TAPS:-none}"
+echo "--- visible texts per screen ---"; cat ci-screenshots/screen-texts.txt
 ls ci-screenshots/*.png 2>/dev/null | sed 's|.*/||' | tr '\n' ' '; echo
 [ $CRASH -ne 0 ] && echo "$CRASH_LOG"
 echo "=========================================================="
