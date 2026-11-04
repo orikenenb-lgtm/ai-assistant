@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of values/strings_core.xml (UI core). -->
+<resources>
+    <!-- Common -->
+    <string name="core_loading">Loading…</string>
+    <string name="core_retry">Try again</string>
+    <string name="core_error_title">Something went wrong</string>
+    <string name="core_error_generic">That didn\'t work. Please try again in a moment.</string>
+    <string name="core_ok">OK</string>
+    <string name="core_cancel">Cancel</string>
+    <string name="core_save">Save</string>
+    <string name="core_create">Create</string>
+    <string name="core_create_task">Create task</string>
+    <string name="core_action_open">Open</string>
+    <string name="core_action_back">Back</string>
+    <string name="core_action_edit">Edit</string>
+    <string name="core_action_delete">Delete</string>
+    <string name="core_action_archive">Archive</string>
+    <string name="core_archived">Archived</string>
+    <string name="core_today">Today</string>
+    <string name="core_tomorrow">Tomorrow</string>
+    <string name="core_yesterday">Yesterday</string>
+    <string name="core_overdue">Overdue</string>
+    <string name="core_percent">%1$d%%</string>
+    <string name="core_done_of_total">%1$d/%2$d</string>
+    <string name="core_char_counter">%1$d/%2$d</string>
+    <string name="core_duration_minutes">%1$d min</string>
+    <string name="core_duration_hours">%1$d h</string>
+    <string name="core_duration_hours_minutes">%1$d h %2$d min</string>
+
+    <!-- Accessibility (content descriptions) -->
+    <string name="core_cd_back">Back</string>
+    <string name="core_cd_more">More options</string>
+    <string name="core_cd_progress">Progress: %1$d%%</string>
+    <string name="core_cd_new_task">New task</string>
+    <string name="core_cd_open_coach">Open personal coach</string>
+    <string name="core_cd_complete_task">Mark as done: %1$s</string>
+    <string name="core_cd_remove_item">Remove: %1$s</string>
+    <string name="core_cd_clear_time">Clear time</string>
+    <string name="core_cd_clear_end_date">Clear end date</string>
+    <string name="core_cd_color_n">Color %1$d</string>
+
+    <!-- Navigation -->
+    <string name="core_nav_home">Home</string>
+    <string name="core_nav_tasks">Tasks</string>
+    <string name="core_nav_focus">Focus</string>
+    <string name="core_nav_stats">Progress</string>
+    <string name="core_nav_settings">Settings</string>
+
+    <!-- Greetings -->
+    <string name="core_greeting_morning">Good morning</string>
+    <string name="core_greeting_afternoon">Good afternoon</string>
+    <string name="core_greeting_evening">Good evening</string>
+    <string name="core_greeting_night">Good night</string>
+
+    <!-- Dashboard -->
+    <string name="core_dash_loading">Loading your day…</string>
+    <string name="core_dash_error">We couldn\'t load today\'s tasks.</string>
+    <string name="core_dash_empty_title">Your day is still empty</string>
+    <string name="core_dash_empty_message">Create your first task. Mandatory tasks turn on the blocker until you finish them; optional tasks just earn XP.</string>
+    <string name="core_dash_today_title">Today\'s progress</string>
+    <string name="core_dash_all_mandatory_done">All mandatory tasks are done. Well done!</string>
+    <string name="core_dash_mandatory_remaining">Mandatory tasks left: %1$d</string>
+    <string name="core_dash_mandatory_ratio">Mandatory: %1$d of %2$d</string>
+    <string name="core_section_overdue">Overdue</string>
+    <string name="core_section_mandatory">Mandatory tasks</string>
+    <string name="core_section_optional">Optional tasks</string>
+    <string name="core_section_today">Today</string>
+    <string name="core_section_upcoming">Upcoming</string>
+    <string name="core_section_recurring">Recurring tasks</string>
+
+    <!-- Blocker status -->
+    <string name="core_blocker_active">Blocking active: %1$d mandatory left</string>
+    <string name="core_blocker_active_focus">Blocking active: focus session in progress</string>
+    <string name="core_blocker_active_sub">Your selected apps will open once you\'re done. A temporary release is always available.</string>
+    <string name="core_blocker_open">Everything is open</string>
+    <string name="core_blocker_open_sub">No open mandatory tasks right now</string>
+    <string name="core_blocker_recovery">Recovery mode</string>
+    <string name="core_blocker_recovery_sub">Enforcement is temporarily paused</string>
+    <string name="core_blocker_recovery_until">Enforcement paused until %1$s</string>
+    <string name="core_blocker_bypass">Temporary release active</string>
+    <string name="core_blocker_bypass_until">Temporary release active until %1$s</string>
+    <string name="core_blocker_disabled">Blocker is off</string>
+    <string name="core_blocker_disabled_sub">Turn it on to limit apps until your mandatory tasks are done</string>
+    <string name="core_blocker_unavailable">Blocker status unavailable</string>
+    <string name="core_blocker_unavailable_sub">Tap to open blocker settings</string>
+
+    <!-- Gamification -->
+    <string name="core_streak_days">Streak: %1$d days</string>
+    <string name="core_streak_best">Best: %1$d · Freezes available: %2$d</string>
+    <string name="core_level">Level %1$d</string>
+    <string name="core_xp_progress">%1$d / %2$d XP to next level · %3$d total</string>
+
+    <!-- Focus -->
+    <string name="core_focus_title">Focus session</string>
+    <string name="core_focus_sub">Deep work without distractions. Your progress is kept even if the app closes.</string>
+    <string name="core_focus_start">Start focus</string>
+    <string name="core_focus_paused">Paused</string>
+    <string name="core_focus_ends_at">Ends at %1$s</string>
+    <string name="core_focus_phase_work">Focusing</string>
+    <string name="core_focus_phase_short_break">Short break</string>
+    <string name="core_focus_phase_long_break">Long break</string>
+
+    <!-- Coach -->
+    <string name="core_coach_title">Personal coach</string>
+    <string name="core_coach_sub">Plan your day, break tasks down and get tips. Nothing is saved without your approval.</string>
+
+    <!-- Weekly strip -->
+    <string name="core_week_title">Your week</string>
+    <string name="core_week_summary">%1$d%% complete · %2$s focus</string>
+
+    <!-- Tasks list -->
+    <string name="core_tasks_title">Tasks</string>
+    <string name="core_tasks_search">Search tasks</string>
+    <string name="core_tasks_error">We couldn\'t load your tasks.</string>
+    <string name="core_tasks_empty_title">No tasks yet</string>
+    <string name="core_tasks_empty_message">Start with one small task. You can make it mandatory so the blocker helps you stay on track.</string>
+    <string name="core_tasks_no_results_title">No tasks found</string>
+    <string name="core_tasks_no_results_message">Try a different search or clear the filters.</string>
+    <string name="core_tasks_clear_filters">Clear filters</string>
+    <string name="core_filter_all">All</string>
+    <string name="core_snoozed_until">Snoozed until %1$s</string>
+    <string name="core_subtasks_progress">%1$d/%2$d steps</string>
+
+    <!-- Kinds / priorities / statuses -->
+    <string name="core_kind_mandatory">Mandatory</string>
+    <string name="core_kind_optional">Optional</string>
+    <string name="core_priority_low">Low</string>
+    <string name="core_priority_medium">Normal</string>
+    <string name="core_priority_high">High</string>
+    <string name="core_priority_critical">Critical</string>
+    <string name="core_status_pending">Pending</string>
+    <string name="core_status_completed">Completed</string>
+    <string name="core_status_skipped">Skipped</string>
+    <string name="core_status_missed">Missed</string>
+
+    <!-- Verification -->
+    <string name="core_verify_none">None</string>
+    <string name="core_verify_checklist">Checklist</string>
+    <string name="core_verify_focus">Focus session</string>
+    <string name="core_verify_note">Reflection note</string>
+    <string name="core_verify_none_desc">Simply mark it as done.</string>
+    <string name="core_verify_checklist_desc">Can be completed only after all steps are checked.</string>
+    <string name="core_verify_focus_desc">Can be completed after a finished focus session on this task.</string>
+    <string name="core_verify_note_desc">When you finish, write a short sentence about what you did. Verification is based on self-reporting.</string>
+    <string name="core_verify_required_checklist">To finish, check off all the steps first.</string>
+    <string name="core_verify_required_focus">To finish, complete a focus session on this task.</string>
+    <string name="core_verify_required_note">To finish, write a short reflection note.</string>
+
+    <!-- Recurrence -->
+    <string name="core_recurrence_none">One-time</string>
+    <string name="core_recurrence_daily">Every day</string>
+    <string name="core_recurrence_weekly">Weekly</string>
+    <string name="core_recurrence_monthly">Monthly</string>
+    <string name="core_recurrence_every_n_days">Every %1$d days</string>
+    <string name="core_recurrence_weekly_days">Every week: %1$s</string>
+    <string name="core_recurrence_every_n_weeks_days">Every %1$d weeks: %2$s</string>
+    <string name="core_recurrence_monthly_day">Monthly on day %1$d</string>
+
+    <!-- Reminders -->
+    <string name="core_reminder_at_time">At time of task</string>
+    <string name="core_reminder_before">%1$s before</string>
+    <string name="core_reminder_days_before">%1$d days before</string>
+
+    <!-- Task errors -->
+    <string name="core_err_title_blank">Please enter a task title.</string>
+    <string name="core_err_title_too_long">The title is too long.</string>
+    <string name="core_err_notes_too_long">The notes are too long.</string>
+    <string name="core_err_invalid_date_range">The end date must be after the start date.</string>
+    <string name="core_err_invalid_reminder">One of the reminders isn\'t valid.</string>
+    <string name="core_err_invalid_estimate">The time estimate isn\'t valid.</string>
+    <string name="core_err_too_many_subtasks">Too many steps. You can split this into another task.</string>
+    <string name="core_err_dependency_not_found">A task this one depends on no longer exists.</string>
+    <string name="core_err_dependency_cycle">Tasks can\'t depend on each other in a loop.</string>
+    <string name="core_err_dependencies_incomplete">First finish the tasks this one depends on.</string>
+    <string name="core_err_verification_required">This task needs verification before it can be completed. Open it to finish.</string>
+    <string name="core_err_snooze_limit">You\'ve reached the snooze limit for this task.</string>
+    <string name="core_err_invalid_snooze">The snooze duration isn\'t valid.</string>
+    <string name="core_err_not_found">Task not found.</string>
+    <string name="core_err_already_resolved">This task has already been handled.</string>
+
+    <!-- Editor -->
+    <string name="core_editor_new_title">New task</string>
+    <string name="core_editor_edit_title">Edit task</string>
+    <string name="core_editor_fix_errors">Please fix the highlighted fields.</string>
+    <string name="core_editor_section_basics">Details</string>
+    <string name="core_editor_title_label">Title</string>
+    <string name="core_editor_notes_label">Notes (optional)</string>
+    <string name="core_editor_section_kind">Task type</string>
+    <string name="core_editor_kind_mandatory_short">Turns on the blocker</string>
+    <string name="core_editor_kind_optional_short">Doesn\'t block anything</string>
+    <string name="core_editor_kind_mandatory_explain">Mandatory tasks turn on the blocker: your selected apps are limited until you finish the task. A temporary release and recovery mode are always available.</string>
+    <string name="core_editor_kind_optional_explain">Optional tasks never block apps. They count toward your progress and earn XP.</string>
+    <string name="core_editor_section_priority">Priority and category</string>
+    <string name="core_editor_category">Category</string>
+    <string name="core_editor_no_category">None</string>
+    <string name="core_editor_new_category">New category</string>
+    <string name="core_editor_category_name">Category name</string>
+    <string name="core_editor_section_schedule">Schedule</string>
+    <string name="core_editor_date">Date</string>
+    <string name="core_editor_start_date">Start date</string>
+    <string name="core_editor_time">Time</string>
+    <string name="core_editor_any_time">Any time during the day</string>
+    <string name="core_editor_recurrence">Repeat</string>
+    <string name="core_editor_weekly_days_required">Choose at least one day of the week.</string>
+    <string name="core_editor_end_date">End date</string>
+    <string name="core_editor_no_end">No end date</string>
+    <string name="core_editor_section_reminders">Reminders and time estimate</string>
+    <string name="core_editor_reminders_need_time">To add reminders, set a time for the task.</string>
+    <string name="core_editor_estimate">Time estimate</string>
+    <string name="core_editor_no_estimate">None</string>
+    <string name="core_editor_section_verification">Completion check</string>
+    <string name="core_editor_section_dependencies">Dependencies</string>
+    <string name="core_editor_dependencies_explain">This task can be completed only after the tasks selected here are done.</string>
+    <string name="core_editor_pick_dependencies">Choose prerequisite tasks</string>
+    <string name="core_editor_section_subtasks">Steps</string>
+    <string name="core_editor_subtask_n">Step %1$d</string>
+    <string name="core_editor_add_subtask">Add step</string>
+
+    <!-- Detail -->
+    <string name="core_detail_title">Task details</string>
+    <string name="core_detail_error">We couldn\'t load this task.</string>
+    <string name="core_task_not_found_title">Task not found</string>
+    <string name="core_task_not_found_message">It may have been deleted.</string>
+    <string name="core_detail_schedule">When</string>
+    <string name="core_detail_no_occurrence">This task has no upcoming occurrences.</string>
+    <string name="core_detail_due_at">Due: %1$s</string>
+    <string name="core_detail_reflection">Reflection: %1$s</string>
+    <string name="core_detail_complete">Mark as done</string>
+    <string name="core_detail_uncomplete">Undo completion</string>
+    <string name="core_detail_completed_msg">Well done! Task completed.</string>
+    <string name="core_detail_snooze">Snooze</string>
+    <string name="core_detail_snoozed_msg">Task snoozed.</string>
+    <string name="core_detail_skip">Skip</string>
+    <string name="core_detail_start_focus">Start focus on this task</string>
+    <string name="core_detail_resolved_note">This occurrence has already been handled. You can pick another one above.</string>
+    <string name="core_detail_subtasks_header">Steps (%1$d/%2$d)</string>
+    <string name="core_detail_history">History</string>
+    <string name="core_detail_delete_title">Delete this task?</string>
+    <string name="core_detail_delete_message">The task and all its occurrences will be permanently deleted.</string>
+    <string name="core_detail_archive_title">Move to archive?</string>
+    <string name="core_detail_archive_message">The task will be hidden from your lists and won\'t create new occurrences. Its history is kept.</string>
+    <string name="core_detail_note_title">Reflection note</string>
+    <string name="core_detail_note_message">What did you do, and what did you learn? One sentence is enough.</string>
+    <string name="core_detail_note_label">Your note</string>
+    <string name="core_detail_note_min">At least %1$d characters</string>
+    <string name="core_detail_snooze_title">Snooze for how long?</string>
+    <string name="core_detail_snooze_for">In %1$s</string>
+    <string name="core_detail_skip_title">Skip this occurrence</string>
+    <string name="core_detail_skip_message">Skips are recorded in the history. What\'s the reason?</string>
+    <string name="core_detail_skip_label">Reason</string>
+    <string name="core_skip_reason_sick">Not feeling well</string>
+    <string name="core_skip_reason_not_relevant">Not relevant today</string>
+    <string name="core_skip_reason_rescheduled">Rescheduled</string>
+
+    <!-- History -->
+    <string name="core_history_created">Created</string>
+    <string name="core_history_edited">Edited</string>
+    <string name="core_history_completed">Completed</string>
+    <string name="core_history_uncompleted">Completion undone</string>
+    <string name="core_history_snoozed">Snoozed</string>
+    <string name="core_history_skipped">Skipped</string>
+    <string name="core_history_missed">Missed</string>
+    <string name="core_history_deleted">Deleted</string>
+    <string name="core_history_archived">Archived</string>
+
+    <!-- Week plan -->
+    <string name="core_week_plan_title">Weekly plan</string>
+    <string name="core_week_prev">Previous week</string>
+    <string name="core_week_next">Next week</string>
+    <string name="core_week_this">Back to this week</string>
+    <string name="core_week_range">%1$s – %2$s</string>
+    <string name="core_week_error">We couldn\'t load this week.</string>
+    <string name="core_week_day_empty">No tasks on this day</string>
+    <string name="core_smart_title">Smart planning</string>
+    <string name="core_smart_explain">Suggests placing your open tasks in free slots between 16:00 and 21:00, based on dependencies, mandatory status, priority and due date.</string>
+    <string name="core_smart_button">Smart planning</string>
+    <string name="core_smart_result_title">Suggested schedule</string>
+    <string name="core_smart_display_only">Suggestion only. Nothing is saved or changed automatically.</string>
+    <string name="core_smart_unscheduled">Tasks that didn\'t fit into free slots: %1$d</string>
+    <string name="core_smart_unknown_task">Task</string>
+    <string name="core_smart_nothing">No open tasks or free slots to schedule this week.</string>
+    <string name="core_smart_failed">Smart planning didn\'t work. Please try again.</string>
+    <string name="core_smart_dismiss">Dismiss suggestion</string>
+</resources>

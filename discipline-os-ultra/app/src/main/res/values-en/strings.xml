@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of values/strings.xml. Feature strings live in strings_<area>.xml, mirroring values/. -->
 <resources>
     <string name="app_name">DISCIPLINE OS</string>
     <string name="accessibility_service_label">DISCIPLINE OS – foreground app detection</string>

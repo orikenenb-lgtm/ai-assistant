@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of values/strings_notifications.xml. Supportive tone, no shaming. -->
+<resources>
+    <!-- Channels -->
+    <string name="notif_channel_reminders_name">Task reminders</string>
+    <string name="notif_channel_reminders_desc">Reminders before a task is due and a daily evening summary</string>
+    <string name="notif_channel_focus_name">Focus timer</string>
+    <string name="notif_channel_focus_desc">Timer status during a focus session</string>
+    <string name="notif_channel_enforcement_name">App blocking active</string>
+    <string name="notif_channel_enforcement_desc">A quiet, ongoing notification showing that blocking is running</string>
+    <string name="notif_channel_coach_name">Personal coach</string>
+    <string name="notif_channel_coach_desc">Messages from your personal coach</string>
+
+    <!-- Task reminder -->
+    <string name="notif_reminder_text_mandatory">A mandatory task is waiting for you. You\'ve got this 💪</string>
+    <string name="notif_reminder_text_optional">A gentle reminder about a task you planned</string>
+    <string name="notif_reminder_public_title">You have a task reminder</string>
+    <string name="notif_action_complete">Done</string>
+    <string name="notif_action_snooze_30">Snooze 30 min</string>
+    <string name="notif_action_needs_app_title">Finish this in the app</string>
+    <string name="notif_action_needs_app_text">This task needs confirmation or more details. Tap to open.</string>
+
+    <!-- Daily summary -->
+    <string name="notif_summary_title_cleared">Great day! All mandatory tasks are done</string>
+    <string name="notif_summary_title_open">Today\'s summary</string>
+    <string name="notif_summary_text_cleared">You completed %1$d of %2$d tasks today. Well done, rest well.</string>
+    <string name="notif_summary_text_open">You completed %1$d of %2$d tasks. Mandatory tasks left: %3$d. There\'s still time, one step at a time.</string>
+    <string name="notif_summary_public_title">Daily summary</string>
+</resources>
