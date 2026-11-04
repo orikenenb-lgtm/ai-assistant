@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -61,6 +62,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -100,7 +102,6 @@ import com.disciplineos.app.ui.common.formatMinutes
 import com.disciplineos.app.ui.common.horizontalGutter
 import com.disciplineos.app.ui.common.labelRes
 import com.disciplineos.app.ui.common.orderedWeek
-import com.disciplineos.app.ui.common.parseHexColor
 import com.disciplineos.app.ui.common.toHex
 import com.disciplineos.core.model.Priority
 import com.disciplineos.core.model.TaskKind
@@ -180,8 +181,8 @@ private fun TaskEditorScreen(
                         loading = state.saving,
                         icon = Icons.Filled.Check,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .then(Modifier.width(ContentMaxWidth)),
+                            .widthIn(max = ContentMaxWidth)
+                            .fillMaxWidth(),
                     )
                 }
             }
@@ -740,7 +741,7 @@ private fun NewCategoryDialog(onCreate: (String, String) -> Unit, onDismiss: () 
     val colors = DisciplineTheme.colors
     val swatches = listOf(colors.primary, colors.success, colors.warning, colors.danger, colors.xp, colors.primarySoft)
     var name by rememberSaveable { mutableStateOf("") }
-    var colorIndex by rememberSaveable { mutableStateOf(0) }
+    var colorIndex by rememberSaveable { mutableIntStateOf(0) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.core_editor_new_category)) },
@@ -764,7 +765,7 @@ private fun NewCategoryDialog(onCreate: (String, String) -> Unit, onDismiss: () 
                                     .size(32.dp)
                                     .clip(CircleShape)
                                     .background(swatch)
-                                    .border(if (index == colorIndex) 3.dp else 0.dp, colors.textPrimary, CircleShape),
+                                    .then(if (index == colorIndex) Modifier.border(3.dp, colors.textPrimary, CircleShape) else Modifier),
                             )
                         }
                     }
@@ -785,13 +786,3 @@ private fun NewCategoryDialog(onCreate: (String, String) -> Unit, onDismiss: () 
     )
 }
 
-/** Small colored dot used next to category names. */
-@Composable
-internal fun CategoryDot(colorHex: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(10.dp)
-            .clip(CircleShape)
-            .background(parseHexColor(colorHex, DisciplineTheme.colors.primary)),
-    )
-}

@@ -70,10 +70,10 @@ class EnforcementService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
+        notifier.cancelStartPrompt()
         // Must be in the foreground within a few seconds of startForegroundService().
         goForeground(notifier.buildOngoing(EnforcementStatus.Starting))
         lastStatus = EnforcementStatus.Starting
-        notifier.cancelStartPrompt()
 
         screenInteractive = (getSystemService(Context.POWER_SERVICE) as? PowerManager)?.isInteractive ?: true
         val filter = IntentFilter().apply {
