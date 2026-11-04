@@ -27,3 +27,4 @@ google-services.json
 !.env.example
 # Kotlin
 .kotlin/
+ci-screenshots/

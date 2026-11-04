@@ -49,4 +49,19 @@
 
 ## הרצות בפועל
 
-ראו את הטבלה המעודכנת בסוף המסמך (מתמלאת על ידי ה-Orchestrator לאחר שכל סוכן מסר תוצרים).
+כל הסוכנים הבאים הופעלו בפועל כ-subagents של Claude Code מתוך הסשן הראשי. A, B1 ו-B2 רצו במקביל ב-git worktrees נפרדים (כי שלושתם מקמפלים ובודקים את אותו מודול) ומוזגו ב-merge רגיל. C–G רצו במקביל בעץ הראשי עם בעלות נפרדת על קבצים. R רץ אחרי כולם, בלי הרשאת כתיבה לקוד.
+
+| סוכן | תוצרים עיקריים | אימות שבוצע בפועל | סיכונים שדווחו |
+|---|---|---|---|
+| A — Task Engine | חזרתיות, DST, codec, materializer, TaskCommands, DayPlan, SmartScheduler | 106 בדיקות JVM עוברות | פרצה קטנה: שינוי תאריך התחלה יוצר מופע חדש עם מונה דחיות מאופס |
+| B1 — Blocker & Focus | BlockPolicyEngine, ProtectedPackages, BypassManager, RecoveryMode, FocusTimerStateMachine, FocusSessionManager | 73 בדיקות JVM עוברות | שינוי אורך שלב בזמן השהיה עלול לסטות בזמן המזוכה (תחום 0..מתוכנן) |
+| B2 — Gamification/Stats/Coach | XP, רמות, רצפים+הקפאה, 13 הישגים, סטטיסטיקה, PromptInjectionGuard, CoachActionValidator, מאמן דמו, CoachConversation | 103 בדיקות JVM עוברות | זרימות ארוכות-חיים לא מתעדכנות בחצות עד הרשמה מחדש |
+| Orchestrator | חוזים, Gradle, Manifest, CI, 3 בדיקות אינטגרציה חוצות-מודולים (מחלקות אמיתיות) | 285 בדיקות domain עוברות מקומית וב-CI | — |
+| C — UI Core | Theme, 18 רכיבי Ds*, NavHost, Dashboard, 4 מסכי משימות, אייקון | type-check חלקי עם stubs; build מלא ב-CI | שמות אייקונים ו-API ניסיוניים — אומתו ב-CI |
+| D — Feature Screens | Focus (+alarm/notification), Stats (גרפי Canvas), Coach, Settings, Privacy, Onboarding | 30 בדיקות JVM לעזרים טהורים | שינוי שפה בפועל רק ב-Android 13+ |
+| E — Data & Scheduling | Room v2 + מיגרציה, DAOs, DataStore, SecureStore (Keystore), Backup, Workers, התראות, DisciplineApp | 29 בדיקות JVM; instrumented נכתבו, לא הורצו | identityHash placeholder ב-schema JSON |
+| F — Enforcement | ForegroundAppDetector, EnforcementService, Accessibility (אופציונלי), BlockActivity, הרשאות, מדריך S25 | 41 בדיקות JVM ללוגיקה טהורה | השהיה של עד ~1 שניה; OEM עלול להרוג שירות |
+| G — AI Backend | RemoteBackendCoachProvider (SSE), SelectingAiCoachRepository, AiModule, Supabase Edge Function | 27 בדיקות JVM (MockWebServer); `tsc --strict` לפונקציה | החלפת מזהה התקנה ל-JWT לא מומשה |
+| R — Code Reviewer | סקירה בלתי תלויה של כל מודול ה-app | הידור Kotlin חלקי מול ה-domain האמיתי; 125 בדיקות app JVM עוברות | 0 BLOCKER, 2 MAJOR, 8 MINOR — כולם טופלו |
+
+סוכנים שהוצעו בבריף ולא הופעלו כסוכן נפרד (כי אוחדו): ראו טבלת המיפוי למעלה. לא הופעל Agent Teams (לא זמין בסביבה); נעשה שימוש ב-subagents + worktrees.
