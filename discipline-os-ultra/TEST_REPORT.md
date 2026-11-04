@@ -7,8 +7,8 @@
 ## סיכום
 | חבילה | סביבה | תוצאה |
 |---|---|---|
-| Domain unit tests (`core:domain`) — 285 בדיקות | sandbox מקומי (JDK 21) + GitHub Actions (JDK 17) | ✅ PASS — 285/285, 0 נכשלו, 0 דולגו |
-| בדיקות אינטגרציה חוצות-מודולים (3, כלולות ב-285) | כנ"ל | ✅ PASS |
+| Domain unit tests (`core:domain`) — 307 בדיקות | sandbox מקומי (JDK 21) + GitHub Actions (JDK 17) | ✅ PASS — 307/307, 0 נכשלו, 0 דולגו |
+| בדיקות אינטגרציה חוצות-מודולים (3, כלולות ב-307) | כנ"ל | ✅ PASS |
 | `:app:assembleDebug` (קומפילציה מלאה: Kotlin, KSP/Room, Hilt, Compose, משאבים) | GitHub Actions, run #14 | ✅ PASS — נוצר APK |
 | `:app:testDebugUnitTest` — 125 בדיקות JVM של שכבת ה-app | GitHub Actions, run #14 | ✅ PASS |
 | `:app:lintDebug` (`abortOnError = true`) | GitHub Actions, run #14 | ✅ PASS — 0 שגיאות (יש אזהרות) |
@@ -17,7 +17,10 @@
 | הרצת האפליקציה האמיתית על אמולטור: התקנה, הפעלה, Onboarding ומעבר בכל 5 הלשוניות | CI, run #25 | ✅ אין קריסה (בדיקת crash buffer) · 11 צילומי מסך ב-artifact |
 | בדיקות על Galaxy S25 Ultra פיזי | — | ⛔ לא רץ (אין מכשיר בסביבה) |
 
-## פירוט בדיקות ה-domain (285)
+## פירוט בדיקות ה-domain (307)
+
+תוספות אחרונות: 10 בדיקות לתיקוני חוסן (אורך שלב קבוע בטיימר, מעבר חצות, הקפאת רצף במסלול כתיבה, מונה דחיות במשימה שהוזזה), ו-12 בדיקות להצעות דחיית משימה במאמן (`CoachRescheduleTest`).
+
 | תחום | בדיקות | כיסוי עיקרי |
 |---|---|---|
 | RecurrenceEngine | 18 | None/Daily/Weekly/Monthly, every-N, endDate, archived, clamp לסוף חודש |

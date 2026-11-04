@@ -63,5 +63,8 @@
 | F — Enforcement | ForegroundAppDetector, EnforcementService, Accessibility (אופציונלי), BlockActivity, הרשאות, מדריך S25 | 41 בדיקות JVM ללוגיקה טהורה | השהיה של עד ~1 שניה; OEM עלול להרוג שירות |
 | G — AI Backend | RemoteBackendCoachProvider (SSE), SelectingAiCoachRepository, AiModule, Supabase Edge Function | 27 בדיקות JVM (MockWebServer); `tsc --strict` לפונקציה | החלפת מזהה התקנה ל-JWT לא מומשה |
 | R — Code Reviewer | סקירה בלתי תלויה של כל מודול ה-app | הידור Kotlin חלקי מול ה-domain האמיתי; 125 בדיקות app JVM עוברות | 0 BLOCKER, 2 MAJOR, 8 MINOR — כולם טופלו |
+| T — Localization | תרגום אנגלית מלא ב-`values-en` (712 משאבים) | סקריפט אימות: שמות, format specifiers, XML; lint `MissingTranslation` פעיל | 4 מחרוזות עם מספרים שראוי להפוך ל-plurals |
+| J — AI Auth & Coach | `SupabaseAnonymousTokenProvider`, retry על 401, `CoachTaskRef` והצעות דחייה, איפוס מגבלה בחצות | 12 בדיקות domain + 51 בדיקות ai (scratch) | CAPTCHA ב-Supabase ישבור הרשמה אנונימית |
+| K — Robustness | `phasePlannedMillis`, מעבר חצות, הקפאת רצף במסלול כתיבה, אייקון התראות, סגירת פרצת דחיות | 10 בדיקות domain + 2 PrefsCodec | — |
 
 סוכנים שהוצעו בבריף ולא הופעלו כסוכן נפרד (כי אוחדו): ראו טבלת המיפוי למעלה. לא הופעל Agent Teams (לא זמין בסביבה); נעשה שימוש ב-subagents + worktrees.

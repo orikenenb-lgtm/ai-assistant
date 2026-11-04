@@ -38,6 +38,6 @@
 ## סיכונים שנותרו (ידועים)
 1. מסד הנתונים לא מוצפן ברמת האפליקציה.
 2. אין certificate pinning לבקאנד (מתוכנן).
-3. החלפת מזהה ההתקנה ב-JWT קצר-חיים (Supabase anonymous auth) לא מומשה — הספק המרוחק יחזיר 401 עד שתמומש.
+3. החלפת טוקן ממומשת: Supabase anonymous auth ו-JWT קצר-חיים עם רענון (`SupabaseAnonymousTokenProvider`). היא פעילה רק כשמוגדרים `discipline.supabaseUrl` ו-`discipline.supabaseAnonKey`, והמפתח הוא המפתח הציבורי בלבד, אף פעם לא `service_role`. אם יופעל CAPTCHA ב-Supabase, ההרשמה האנונימית תיכשל והמאמן המרוחק יציג "לא מוגדר".
 4. Prompt injection מצומצם, לא מבוטל — לכן כל פעולה דורשת אישור אנושי.
 5. משתמש עם root או ADB יכול לעקוף כל דבר — זה מכוון (האפליקציה היא כלי משמעת אישי, לא בקרת הורים).

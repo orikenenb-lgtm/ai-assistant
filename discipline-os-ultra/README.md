@@ -32,7 +32,7 @@
 ```
 discipline-os-ultra/
 ├── core/model/        # data classes משותפים (Kotlin טהור)
-├── core/domain/       # כל כללי המוצר + 285 בדיקות (Kotlin טהור)
+├── core/domain/       # כל כללי המוצר + 307 בדיקות (Kotlin טהור)
 │   ├── task/          #   חזרתיות, DST, פקודות, תכנון
 │   ├── blocker/       #   מדיניות חסימה, bypass, התאוששות
 │   ├── focus/         #   מכונת מצבים לטיימר

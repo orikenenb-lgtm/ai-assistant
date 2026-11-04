@@ -19,7 +19,7 @@
 - [ ] בדיקות ידניות על Galaxy S25 Ultra: הרשאות, ריבוט, שלילת הרשאות, סוללה
 - [ ] החלפת placeholders של identityHash ב-schema JSON (נוצר אוטומטית ב-build הראשון)
 - [ ] אייקון התראה monochrome ייעודי לכל הערוצים
-- [ ] החלפת מזהה התקנה ב-JWT (Supabase anonymous auth) לפני הפעלת AI מרוחק
+- [x] החלפת מזהה התקנה ב-JWT (Supabase anonymous auth) עם רענון ו-retry על 401
 
 ## מתוכנן (Roadmap)
 - [ ] Google Calendar (קריאה בלבד → כתיבה לאירועי האפליקציה)
