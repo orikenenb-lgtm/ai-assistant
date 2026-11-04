@@ -16,8 +16,8 @@ import kotlinx.coroutines.flow.first
 
 /**
  * Daily (and on app start): create occurrences for the rolling window, resolve past ones, award
- * "day cleared" for yesterday, then refresh reminders for the next 48h. Every step is idempotent, so
- * running it twice (periodic + on-start) is harmless.
+ * "day cleared" for yesterday, record automatic streak freezes, then refresh reminders for the next 48h.
+ * Every step is idempotent, so running it twice (periodic + on-start) is harmless.
  */
 @HiltWorker
 class MaterializeWorker @AssistedInject constructor(
@@ -34,7 +34,10 @@ class MaterializeWorker @AssistedInject constructor(
         materializer.materializeWindow()
         val config = blockerRepository.observeConfig().first()
         materializer.sweepPast(config.carryOverOverdue)
-        gamification.checkDayCleared(time.today().minusDays(1))
+        val today = time.today()
+        gamification.checkDayCleared(today.minusDays(1))
+        // Persist automatic streak freezes here (write path); observeProgress() is a pure read.
+        gamification.applyStreakFreezes(today)
         reminders.rescheduleAll()
         Result.success()
     } catch (e: CancellationException) {

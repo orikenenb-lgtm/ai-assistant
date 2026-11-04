@@ -34,7 +34,8 @@ class OccurrenceMaterializer @Inject constructor(
      * used to reset the snooze limit.
      *
      * One-off tasks are handled as a whole: their single PENDING occurrence is moved to the new start date (even if
-     * it was in the past), and no new occurrence is created once the task was completed or skipped.
+     * it was in the past), and no new occurrence is created once the task was completed or skipped. The moved
+     * occurrence keeps its snooze count, so changing the start date cannot reset the snooze limit either.
      */
     suspend fun rematerializeTask(taskId: Long) {
         val task = repo.getTask(taskId) ?: return
@@ -47,7 +48,11 @@ class OccurrenceMaterializer @Inject constructor(
             val resolved = all.any { it.status == OccurrenceStatus.COMPLETED || it.status == OccurrenceStatus.SKIPPED }
             if (resolved) return
             val dates = RecurrenceEngine.occurrenceDates(task, task.startDate, task.startDate)
+            // Same date: full snooze state carries over. Moved to another date: the snooze *count* still carries over
+            // (moving the start date must not reset the snooze limit); a pending snooze-until instant does not.
+            val carriedCount = pending.maxOfOrNull { it.snoozeCount } ?: 0
             val fresh = carrySnooze(buildOccurrences(task, dates), pending)
+                .map { if (it.snoozeCount < carriedCount) it.copy(snoozeCount = carriedCount) else it }
             if (fresh.isNotEmpty()) repo.insertOccurrencesIfAbsent(fresh)
             return
         }

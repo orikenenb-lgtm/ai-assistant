@@ -125,6 +125,23 @@ class OccurrenceMaterializerTest {
         assertEquals(listOf(d("2026-11-06")), repo.occurrencesOf(id).map { it.localDate })
     }
 
+    @Test fun rematerializeTask_oneOff_movedToNewDate_keepsSnoozeCount() = runTest {
+        val id = repo.upsertTask(task(startDate = today, dueTime = t("09:00")))
+        materializer.rematerializeTask(id)
+        repo.updateOccurrence(repo.occurrence(id, today).copy(snoozeCount = 2, snoozedUntil = time.now().plusSeconds(600)))
+        repo.upsertTask(repo.getTask(id)!!.copy(startDate = today.plusDays(3)))
+        materializer.rematerializeTask(id)
+        val moved = repo.occurrencesOf(id).single()
+        assertEquals(today.plusDays(3), moved.localDate)
+        assertEquals(OccurrenceStatus.PENDING, moved.status)
+        assertEquals(2, moved.snoozeCount) // loophole closed: moving the date does not reset the snooze limit
+        assertNull(moved.snoozedUntil) // a snooze-until instant on the old date is not meaningful on the new one
+        // Moving it again (back into the past) still keeps the count.
+        repo.upsertTask(repo.getTask(id)!!.copy(startDate = today.minusDays(1)))
+        materializer.rematerializeTask(id)
+        assertEquals(2, repo.occurrencesOf(id).single().snoozeCount)
+    }
+
     @Test fun rematerializeTask_oneOff_completedIsNotRecreated() = runTest {
         val id = repo.upsertTask(task(startDate = today))
         materializer.rematerializeTask(id)

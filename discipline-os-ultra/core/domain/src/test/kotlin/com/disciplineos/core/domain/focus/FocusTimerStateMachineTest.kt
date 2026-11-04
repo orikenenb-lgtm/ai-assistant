@@ -242,4 +242,50 @@ class FocusTimerStateMachineTest {
         // skip long after the end (unobserved) never credits more than planned
         assertEquals(WorkPhaseFinished(1500, false), reduce(s, FocusEvent.Skip, at(600)).effects.first())
     }
+
+    // ---- planned length captured at phase start (config edits mid-phase must not change it) ----
+
+    @Test fun startPhase_capturesPlannedLength() {
+        assertEquals(25 * 60_000L, started().phasePlannedMillis)
+        val brk = reduce(started(), FocusEvent.PhaseElapsed, at(25)).state
+        assertEquals(FocusPhase.SHORT_BREAK, brk.phase)
+        assertEquals(5 * 60_000L, brk.phasePlannedMillis)
+    }
+
+    @Test fun workLengthEditedDuringPause_resumeAndCreditUseOriginalPlannedLength() {
+        val s = started() // 25 min planned
+        val paused = reduce(s, FocusEvent.Pause, at(10)).state // 10 min focused, 15 remaining
+        val edited = cfg.copy(workMinutes = 50)
+        // While paused, the credited time is still 10 minutes (would be 35 with the new 50-minute config).
+        assertEquals(600L, FocusTimerStateMachine.focusedSeconds(paused, edited, at(20)))
+        val resumed = reduce(paused, FocusEvent.Resume, at(20), edited).state
+        assertEquals(at(35), resumed.phaseEndsAt)
+        assertEquals(at(10), resumed.phaseStartedAt) // virtual start: 25-min phase with 15 remaining
+        assertEquals(25 * 60_000L, resumed.phasePlannedMillis)
+        // Stop 5 minutes after resume: 15 minutes focused in total.
+        val stop = reduce(resumed, FocusEvent.Stop, at(25), edited)
+        assertEquals(WorkPhaseFinished(900, completed = false), stop.effects.first())
+        // Natural finish credits exactly the original 25 minutes.
+        val done = reduce(resumed, FocusEvent.PhaseElapsed, at(35), edited)
+        assertEquals(WorkPhaseFinished(1500, completed = true), done.effects.first())
+    }
+
+    @Test fun workLengthShortenedDuringPause_creditNotClampedToNewLength() {
+        val paused = reduce(started(), FocusEvent.Pause, at(20)).state // 20 min focused
+        val edited = cfg.copy(workMinutes = 10)
+        assertEquals(1200L, FocusTimerStateMachine.focusedSeconds(paused, edited, at(30)))
+        val resumed = reduce(paused, FocusEvent.Resume, at(30), edited).state
+        assertEquals(at(35), resumed.phaseEndsAt)
+        assertEquals(at(10), resumed.phaseStartedAt)
+    }
+
+    @Test fun legacyStateWithoutPlannedLength_fallsBackToConfig() {
+        // State persisted before phasePlannedMillis existed.
+        val legacy = reduce(started(), FocusEvent.Pause, at(10)).state.copy(phasePlannedMillis = null)
+        assertEquals(600L, FocusTimerStateMachine.focusedSeconds(legacy, cfg, at(12)))
+        val resumed = reduce(legacy, FocusEvent.Resume, at(12)).state
+        assertEquals(at(27), resumed.phaseEndsAt)
+        assertEquals(at(2), resumed.phaseStartedAt)
+        assertEquals(WorkPhaseFinished(1500, completed = true), reduce(resumed, FocusEvent.PhaseElapsed, at(27)).effects.first())
+    }
 }

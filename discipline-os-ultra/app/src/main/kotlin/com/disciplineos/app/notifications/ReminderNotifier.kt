@@ -36,7 +36,7 @@ class ReminderNotifier @Inject constructor(
     fun showTaskReminder(occurrenceId: Long, title: String, mandatory: Boolean, quickCompleteAllowed: Boolean) {
         val text = context.getString(if (mandatory) R.string.notif_reminder_text_mandatory else R.string.notif_reminder_text_optional)
         val builder = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
-            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setSmallIcon(R.drawable.ic_stat_discipline)
             .setContentTitle(title)
             .setContentText(text)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -55,7 +55,7 @@ class ReminderNotifier @Inject constructor(
     /** Replaces a reminder when a quick action could not be applied (e.g. proof required, snooze limit). */
     fun showActionNeedsApp(occurrenceId: Long) {
         val notification = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
-            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setSmallIcon(R.drawable.ic_stat_discipline)
             .setContentTitle(context.getString(R.string.notif_action_needs_app_title))
             .setContentText(context.getString(R.string.notif_action_needs_app_text))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -80,7 +80,7 @@ class ReminderNotifier @Inject constructor(
             context.getString(R.string.notif_summary_text_open, completed, total, mandatoryOpen)
         }
         val notification = NotificationCompat.Builder(context, NotificationChannels.COACH)
-            .setSmallIcon(android.R.drawable.ic_menu_agenda)
+            .setSmallIcon(R.drawable.ic_stat_discipline)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
@@ -107,7 +107,7 @@ class ReminderNotifier @Inject constructor(
 
     private fun publicVersion(titleRes: Int): Notification =
         NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
-            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setSmallIcon(R.drawable.ic_stat_discipline)
             .setContentTitle(context.getString(titleRes))
             .build()
 

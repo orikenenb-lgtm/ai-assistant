@@ -265,6 +265,17 @@ class TaskCommandsTest {
         assertEquals(3, repo.history.count { it.type == TaskHistoryType.SNOOZED })
     }
 
+    @Test fun snoozeLimit_cannotBeResetByMovingOneOffStartDate() = runTest {
+        val id = create()
+        val occ = repo.occurrencesOf(id).single().id
+        repeat(3) { assertEquals(TaskResult.Success(Unit), commands.snoozeOccurrence(occ, 10)) }
+        assertEquals(TaskResult.Success(Unit), commands.updateTask(id, input(startDate = today.plusDays(1))))
+        val moved = repo.occurrencesOf(id).single()
+        assertEquals(today.plusDays(1), moved.localDate)
+        assertEquals(3, moved.snoozeCount)
+        assertFailure(TaskError.SNOOZE_LIMIT_REACHED, commands.snoozeOccurrence(moved.id, 10))
+    }
+
     @Test fun snooze_completedOccurrence_isAlreadyResolved() = runTest {
         val occ = repo.occurrencesOf(create()).single().id
         commands.completeOccurrence(occ)

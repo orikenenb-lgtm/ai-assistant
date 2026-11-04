@@ -4,10 +4,14 @@ import com.disciplineos.core.domain.gamification.StreakEngine
 import com.disciplineos.core.domain.repository.BlockerRepository
 import com.disciplineos.core.domain.repository.FocusRepository
 import com.disciplineos.core.domain.repository.TaskRepository
+import com.disciplineos.core.domain.time.LOCAL_DATE_TICK_MILLIS
 import com.disciplineos.core.domain.time.TimeProvider
+import com.disciplineos.core.domain.time.observeLocalDate
 import com.disciplineos.core.model.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -132,8 +136,15 @@ class ObserveStatisticsUseCase @Inject constructor(
     private val blockerRepo: BlockerRepository,
     private val time: TimeProvider,
 ) {
-    operator fun invoke(range: StatsRange): Flow<StatsSnapshot> {
-        val today = time.today()
+    /**
+     * Statistics for the [range] ending today. The date window follows the local date, so a screen left open past
+     * midnight re-subscribes for the new day (polled every [dateTickMillis]).
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    operator fun invoke(range: StatsRange, dateTickMillis: Long = LOCAL_DATE_TICK_MILLIS): Flow<StatsSnapshot> =
+        time.observeLocalDate(dateTickMillis).flatMapLatest { today -> observeFor(range, today) }
+
+    private fun observeFor(range: StatsRange, today: LocalDate): Flow<StatsSnapshot> {
         val zone = time.zone()
         val start = today.minusDays(range.days - 1L)
         val prevStart = start.minusDays(range.days.toLong())

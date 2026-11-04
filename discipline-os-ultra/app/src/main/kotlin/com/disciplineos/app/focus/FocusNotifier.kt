@@ -48,7 +48,7 @@ class FocusNotifier @Inject constructor(
         )
 
         val builder = NotificationCompat.Builder(context, NotificationChannels.FOCUS)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setSmallIcon(R.drawable.ic_stat_discipline)
             .setContentTitle(phaseLabel)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

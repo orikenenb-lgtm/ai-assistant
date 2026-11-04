@@ -124,7 +124,12 @@ class FocusViewModel @Inject constructor(
         } else {
             FocusTimerStateMachine.remaining(state, now).toMillis().coerceAtLeast(0L)
         }
-        val total = if (state.phase == FocusPhase.IDLE) remaining else FocusFormat.phaseTotalMillis(state.phase, config)
+        // Planned length captured at phase start, so editing the config mid-phase does not jump the progress ring.
+        val total = if (state.phase == FocusPhase.IDLE) {
+            remaining
+        } else {
+            state.phasePlannedMillis?.takeIf { it > 0 } ?: FocusFormat.phaseTotalMillis(state.phase, config)
+        }
         FocusUiState(
             loading = false,
             phase = state.phase,
