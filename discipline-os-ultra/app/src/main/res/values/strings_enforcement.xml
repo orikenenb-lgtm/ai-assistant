@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Owner: agent F (Android enforcement). Hebrew is the default locale. -->
+<resources>
+
+    <!-- Accessibility service (system settings description). Label lives in strings.xml (orchestrator). -->
+    <string name="accessibility_service_description">מצב אופציונלי של DISCIPLINE OS. השירות קורא רק את שם החבילה (package name) של האפליקציה שעברה לחזית, כדי להציג מסך תזכורת כשנפתחת אפליקציה שבחרת להגביל בזמן שמשימות החובה שלך עדיין פתוחות. השירות לא קורא תוכן מהמסך, לא מקליד ולא לוחץ בשמך, ושום מידע לא נשמר או נשלח מהמכשיר. אפשר לכבות אותו בכל רגע כאן.</string>
+
+    <!-- Accessibility disclosure (prominent in-app disclosure shown BEFORE sending the user to system settings) -->
+    <string name="a11y_disclosure_title">גילוי נאות: מצב נגישות (אופציונלי)</string>
+    <string name="a11y_disclosure_body">DISCIPLINE OS יכול להשתמש בשירות הנגישות של Android כדי לזהות מהר יותר איזו אפליקציה נפתחה.\n\nמה נקרא: רק שם החבילה (למשל com.example.app) של חלון שעבר לחזית, דרך אירוע TYPE_WINDOW_STATE_CHANGED.\n\nמה לא נקרא ולא נעשה: אנחנו לא קוראים טקסט, תמונות או כל תוכן אחר מהמסך, לא מקלידים, לא לוחצים ולא מבצעים פעולות בשמך.\n\nלאן המידע הולך: לשום מקום. שם החבילה נבדק בזיכרון מול רשימת האפליקציות שבחרת ונמחק מיד. לא נשמר, לא נשלח ולא משותף.\n\nלמה: כדי להציג את מסך התזכורת כשנפתחת אפליקציה שבחרת להגביל, בזמן שמשימות החובה שלך פתוחות.\n\nזה לא חובה: מצב ברירת המחדל (גישה לנתוני שימוש + הצגה מעל אפליקציות) עובד בלי שירות נגישות. אפשר לבטל בכל רגע בהגדרות המכשיר או כאן.</string>
+    <string name="a11y_disclosure_accept">אני מסכים/ה – פתח את הגדרות הנגישות</string>
+    <string name="a11y_disclosure_decline">לא עכשיו</string>
+    <string name="a11y_withdraw_consent">ביטול ההסכמה וחזרה למצב ברירת המחדל</string>
+    <string name="a11y_enabled_without_consent">שירות הנגישות מופעל בהגדרות, אבל עדיין לא אישרת את הגילוי הנאות – לכן הוא לא פועל. אפשר לאשר כאן או לכבות אותו בהגדרות.</string>
+
+    <!-- Notification channels (fallback only; normally created by the data layer) -->
+    <string name="enf_channel_enforcement_name">מגביל אפליקציות</string>
+    <string name="enf_channel_enforcement_desc">התראה קבועה שמראה שהמגביל פעיל ומה מצבו</string>
+    <string name="enf_channel_alert_name">תזכורות</string>
+
+    <!-- Persistent notification -->
+    <string name="enf_notif_title">המגביל של DISCIPLINE OS פעיל</string>
+    <plurals name="enf_notif_mandatory_pending">
+        <item quantity="one">משימת חובה אחת פתוחה • אפליקציות נבחרות מוגבלות</item>
+        <item quantity="two">%d משימות חובה פתוחות • אפליקציות נבחרות מוגבלות</item>
+        <item quantity="other">%d משימות חובה פתוחות • אפליקציות נבחרות מוגבלות</item>
+    </plurals>
+    <string name="enf_notif_focus_active">סשן פוקוס פעיל • אפליקציות נבחרות מוגבלות</string>
+    <string name="enf_notif_bypass_until">שחרור זמני פעיל עד %1$s</string>
+    <string name="enf_notif_bypass">שחרור זמני פעיל</string>
+    <string name="enf_notif_recovery_until">מצב התאוששות – האכיפה מושהית עד %1$s</string>
+    <string name="enf_notif_recovery">מצב התאוששות – האכיפה מושהית</string>
+    <string name="enf_notif_all_open">הכל פתוח</string>
+    <string name="enf_notif_missing_usage">מצב מוגבל: הרשאת \"גישה לנתוני שימוש\" חסרה – הקש לתיקון</string>
+    <string name="enf_notif_missing_overlay">מצב מוגבל: הרשאת \"הצגה מעל אפליקציות\" חסרה – מוצגות התראות במקום מסך חסימה</string>
+    <string name="enf_notif_starting">מתחיל…</string>
+
+    <!-- Fallback alert / start prompt -->
+    <string name="enf_alert_text_app">%1$s מוגבלת כרגע – יש משימות חובה פתוחות</string>
+    <string name="enf_alert_text_generic">האפליקציה הזו מוגבלת כרגע – יש משימות חובה פתוחות</string>
+    <string name="enf_alert_overlay_hint">כדי להציג מסך מלא במקום התראה, אשר/י \"הצגה מעל אפליקציות\".</string>
+    <string name="enf_alert_fix_permission">תיקון הרשאה</string>
+    <string name="enf_start_prompt_title">המגביל לא הופעל ברקע</string>
+    <string name="enf_start_prompt_text">Android לא אפשר להפעיל את המגביל ברקע. הקש כדי לפתוח את האפליקציה ולהפעיל אותו.</string>
+
+    <!-- Block screen -->
+    <string name="block_title">זמן להשלים את המשימות</string>
+    <string name="block_title_focus">אתה באמצע סשן פוקוס</string>
+    <string name="block_subtitle_app">%1$s תיפתח שוב ברגע שמשימות החובה יושלמו.</string>
+    <string name="block_subtitle_generic">האפליקציה תיפתח שוב ברגע שמשימות החובה יושלמו.</string>
+    <string name="block_subtitle_focus">האפליקציות שבחרת ייפתחו בסוף שלב העבודה. אתה יכול!</string>
+    <string name="block_remaining_header">משימות חובה שנשארו</string>
+    <string name="block_overdue">באיחור</string>
+    <string name="block_more_tasks">ועוד %1$d…</string>
+    <string name="block_open_tasks">פתח את המשימות</string>
+    <string name="block_go_home">חזרה למסך הבית</string>
+    <string name="block_emergency">שחרור חירום</string>
+    <string name="block_recovery_link">מצב התאוששות</string>
+    <string name="block_recovery_explain">מרגיש/ה שזה יותר מדי? אפשר להשהות את כל האכיפה (עד 72 שעות) באפליקציה ← מגביל ← מצב התאוששות. ותמיד אפשר לכבות את המגביל או לבטל הרשאות בהגדרות המכשיר – אנחנו אף פעם לא נועלים אותך.</string>
+    <string name="block_shield_cd">איור מגן</string>
+    <string-array name="block_motivation">
+        <item>צעד קטן עכשיו שווה שקט גדול אחר כך.</item>
+        <item>אתה קרוב יותר ממה שנדמה. עוד משימה אחת.</item>
+        <item>המשמעת היא מתנה שאתה נותן לעצמך של מחר.</item>
+        <item>לא צריך להיות מושלם – רק להתחיל.</item>
+        <item>חמש דקות של התחלה שוות יותר משעה של דחייה.</item>
+        <item>כל משימה שמסתיימת היא ניצחון אמיתי. מגיע לך.</item>
+        <item>האפליקציה תחכה. המטרות שלך חשובות יותר.</item>
+    </string-array>
+
+    <!-- Emergency bypass sheet -->
+    <string name="bypass_sheet_title">שחרור חירום</string>
+    <string name="bypass_sheet_body">השחרור זמני ושקוף: הוא נרשם ביומן השחרורים שאתה יכול לראות בכל עת.</string>
+    <string name="bypass_reason_emergency">חירום</string>
+    <string name="bypass_reason_work">עבודה / לימודים</string>
+    <string name="bypass_reason_health">בריאות</string>
+    <string name="bypass_reason_other">אחר</string>
+    <string name="bypass_note_label">הערה (לא חובה)</string>
+    <string name="bypass_confirm">שחרר ל-%1$d דקות</string>
+    <string name="bypass_confirm_generic">שחרר</string>
+    <string name="bypass_cancel">ביטול</string>
+    <string name="bypass_remaining">נותרו היום: %1$d שחרורים</string>
+    <string name="bypass_next_at">השחרור הבא אפשרי ב-%1$s</string>
+    <string name="bypass_emergency_always">חירום תמיד מאושר – בטיחות קודמת לכל.</string>
+    <string name="bypass_denied_limit">הגעת למכסת השחרורים היומית. במקרה חירום בחר/י \"חירום\".</string>
+    <string name="bypass_denied_cooldown">אפשר לבקש שחרור נוסף ב-%1$s. במקרה חירום בחר/י \"חירום\".</string>
+    <string name="bypass_denied_active">כבר יש שחרור פעיל.</string>
+    <string name="bypass_denied_not_restricting">אין כרגע הגבלה פעילה.</string>
+    <string name="bypass_error">לא הצלחנו לבצע את השחרור. נסה/י שוב.</string>
+
+    <!-- Blocker hub -->
+    <string name="blocker_title">מגביל אפליקציות</string>
+    <string name="blocker_master_switch">הפעלת המגביל</string>
+    <string name="blocker_master_switch_sub">מגביל את האפליקציות שבחרת רק כשמשימות החובה שלך פתוחות</string>
+    <string name="blocker_needs_permissions">כדי להפעיל צריך לאשר כמה הרשאות. נעביר אותך למסך ההרשאות.</string>
+    <string name="blocker_status_header">מצב נוכחי</string>
+    <string name="blocker_status_off">המגביל כבוי</string>
+    <string name="blocker_status_loading">טוען…</string>
+    <string name="blocker_status_degraded">מצב מוגבל – חסרות הרשאות. הקש כדי לתקן.</string>
+    <string name="blocker_apps_header">אפליקציות מוגבלות</string>
+    <string name="blocker_apps_count">%1$d אפליקציות נבחרו</string>
+    <string name="blocker_apps_none">עוד לא נבחרו אפליקציות</string>
+    <string name="blocker_choose_apps">בחירת אפליקציות</string>
+    <string name="blocker_permissions">הרשאות ומצב סוללה</string>
+    <string name="blocker_mode_header">שיטת זיהוי</string>
+    <string name="blocker_mode_usage">ברירת מחדל: נתוני שימוש + הצגה מעל אפליקציות</string>
+    <string name="blocker_mode_usage_sub">מומלץ. בודק כל שנייה (רק כשיש הגבלה פעילה והמסך דלוק). השהייה של עד כשנייה.</string>
+    <string name="blocker_mode_a11y">אופציונלי: שירות נגישות</string>
+    <string name="blocker_mode_a11y_sub">זיהוי מיידי וחסכוני יותר בסוללה. קורא רק את שם האפליקציה שבחזית. דורש גילוי נאות והפעלה ידנית בהגדרות.</string>
+    <string name="blocker_mode_a11y_status_on">שירות הנגישות פעיל</string>
+    <string name="blocker_mode_a11y_status_off">שירות הנגישות כבוי בהגדרות – הקש כדי לפתוח</string>
+    <string name="blocker_rules_header">כללים</string>
+    <string name="blocker_carry_over">משימות חובה באיחור ממשיכות להגביל</string>
+    <string name="blocker_carry_over_sub">משימת חובה מאתמול שלא הושלמה תמשיך להגביל עד שתטופל</string>
+    <string name="blocker_focus">הגבלה בזמן סשן פוקוס</string>
+    <string name="blocker_focus_sub">בזמן שלב עבודה, האפליקציות שבחרת מוגבלות גם בלי משימות פתוחות</string>
+    <string name="blocker_bypass_header">שחרור זמני</string>
+    <string name="blocker_bypass_duration">משך שחרור: %1$d דקות</string>
+    <string name="blocker_bypass_max">מקסימום ביום: %1$d</string>
+    <string name="blocker_bypass_cooldown">המתנה בין שחרורים: %1$d דקות</string>
+    <string name="blocker_decrease">הפחת</string>
+    <string name="blocker_increase">הוסף</string>
+    <string name="blocker_history_header">יומן שחרורים (7 ימים)</string>
+    <string name="blocker_history_empty">אין שחרורים בשבוע האחרון</string>
+    <string name="blocker_history_item">%1$s • %2$s • %3$d דק\'</string>
+    <string name="blocker_history_ended_early">הסתיים מוקדם</string>
+    <string name="blocker_recovery_header">מצב התאוששות</string>
+    <string name="blocker_recovery_explain">רשת ביטחון: משהה את כל האכיפה לזמן שתבחר/י. תמיד זמין, בלי שאלות.</string>
+    <string name="blocker_recovery_active">מצב התאוששות פעיל עד %1$s</string>
+    <string name="blocker_recovery_hours">%1$d ש\'</string>
+    <string name="blocker_recovery_disable">סיום מצב התאוששות</string>
+    <string name="blocker_limits_link">מה המגביל יכול ולא יכול לעשות</string>
+    <string name="blocker_limits_text">המגביל מזהה איזו אפליקציה פתוחה ומציג מסך תזכורת. הוא לא חוסם באופן מוחלט: ייתכן עיכוב של עד כשנייה, יצרני מכשירים עלולים לעצור אותו כדי לחסוך סוללה, ותמיד אפשר לבטל הרשאות, לכבות או להסיר את האפליקציה. הוא אף פעם לא יגביל טלפון, חירום, הודעות, הגדרות או מסך הבית.</string>
+
+    <!-- Blocked apps -->
+    <string name="apps_title">בחירת אפליקציות להגבלה</string>
+    <string name="apps_search">חיפוש אפליקציה</string>
+    <string name="apps_suggested_header">הצעות (מותקנות במכשיר)</string>
+    <string name="apps_all_header">כל האפליקציות</string>
+    <string name="apps_protected">לא ניתן לחסום – אפליקציית חירום/מערכת</string>
+    <string name="apps_loading">טוען אפליקציות…</string>
+    <string name="apps_empty">לא נמצאו אפליקציות</string>
+    <string name="apps_empty_search">אין תוצאות לחיפוש</string>
+    <string name="apps_selected_count">%1$d נבחרו</string>
+    <string name="apps_toggle_cd">הגבלת %1$s</string>
+
+    <!-- Permissions -->
+    <string name="perm_title">הרשאות</string>
+    <string name="perm_intro">כל הרשאה מוסברת. אפשר לבטל כל אחת מהן בכל רגע בהגדרות המכשיר – והאפליקציה תמשיך לעבוד, רק בלי המגביל.</string>
+    <string name="perm_granted">מאושר</string>
+    <string name="perm_missing">חסר</string>
+    <string name="perm_optional">אופציונלי</string>
+    <string name="perm_not_applicable">לא נדרש בגרסה זו</string>
+    <string name="perm_open_settings">פתח הגדרות</string>
+    <string name="perm_usage_title">גישה לנתוני שימוש</string>
+    <string name="perm_usage_why">נדרש. מאפשר לדעת איזו אפליקציה פתוחה כרגע, כדי להציג תזכורת רק כשנפתחת אפליקציה שבחרת. הנתונים נשארים במכשיר.</string>
+    <string name="perm_overlay_title">הצגה מעל אפליקציות אחרות</string>
+    <string name="perm_overlay_why">נדרש ב-Android 10 ומעלה כדי להציג את מסך התזכורת מעל האפליקציה המוגבלת. בלי זה נציג התראה במקום.</string>
+    <string name="perm_notif_title">התראות</string>
+    <string name="perm_notif_why">מומלץ. מציג את ההתראה הקבועה שמראה שהמגביל פעיל, ותזכורות למשימות.</string>
+    <string name="perm_battery_title">ללא הגבלת סוללה</string>
+    <string name="perm_battery_why">מומלץ. מונע מהמערכת לעצור את המגביל ברקע. המגביל חוסך סוללה בעצמו: לא בודק כשהמסך כבוי או כשאין מה להגביל.</string>
+    <string name="perm_battery_hint">במסך שייפתח: בחר/י \"כל האפליקציות\", מצא/י את DISCIPLINE OS ובחר/י \"אל תבצע אופטימיזציה\".</string>
+    <string name="perm_app_details">פרטי האפליקציה</string>
+    <string name="perm_a11y_title">שירות נגישות (אופציונלי)</string>
+    <string name="perm_a11y_why">לא חובה. זיהוי מיידי של האפליקציה שבחזית – קורא רק את שם החבילה. נפתח רק אחרי גילוי נאות והסכמה.</string>
+    <string name="perm_exact_title">התראות ושעונים מדויקים (אופציונלי)</string>
+    <string name="perm_exact_why">לא חובה. מאפשר לטיימר הפוקוס להסתיים בדיוק בזמן. בלי זה הסיום עשוי להתעכב מעט.</string>
+    <string name="perm_samsung_header">טיפים ל-Samsung Galaxy</string>
+    <string name="perm_samsung_tips">• הגדרות ← סוללה ← הגבלות שימוש ברקע ← \"אפליקציות שאף פעם לא נכנסות למצב שינה\" ← הוסף/י את DISCIPLINE OS.\n• באותו מסך: כבה/י \"העבר אפליקציות שאינן בשימוש למצב שינה\" (או ודא/י שהאפליקציה לא ברשימת השינה).\n• הגדרות ← אפליקציות ← DISCIPLINE OS ← סוללה ← \"ללא הגבלה\".\n• השמות המדויקים משתנים בין גרסאות One UI.</string>
+    <string name="perm_samsung_expand">הצג טיפים</string>
+    <string name="perm_samsung_collapse">הסתר טיפים</string>
+    <string name="perm_ready">הכל מוכן למצב ברירת המחדל</string>
+    <string name="perm_not_ready">חסרות הרשאות נדרשות</string>
+</resources>

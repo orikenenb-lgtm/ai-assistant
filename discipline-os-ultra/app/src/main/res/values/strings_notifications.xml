@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Owner: agent E (data & scheduling). Hebrew is the default locale. Supportive tone, no shaming. -->
+<resources>
+    <!-- Channels -->
+    <string name="notif_channel_reminders_name">תזכורות למשימות</string>
+    <string name="notif_channel_reminders_desc">תזכורות לפני מועד משימה וסיכום ערב יומי</string>
+    <string name="notif_channel_focus_name">טיימר פוקוס</string>
+    <string name="notif_channel_focus_desc">מצב הטיימר בזמן סשן פוקוס</string>
+    <string name="notif_channel_enforcement_name">חסימת אפליקציות פעילה</string>
+    <string name="notif_channel_enforcement_desc">התראה קבועה ושקטה שמראה שהחסימה פועלת</string>
+    <string name="notif_channel_coach_name">המאמן האישי</string>
+    <string name="notif_channel_coach_desc">הודעות מהמאמן האישי</string>
+
+    <!-- Task reminder -->
+    <string name="notif_reminder_text_mandatory">משימת חובה מחכה לך. אפשר לעשות את זה 💪</string>
+    <string name="notif_reminder_text_optional">תזכורת קטנה למשימה שתכננת</string>
+    <string name="notif_reminder_public_title">יש לך תזכורת למשימה</string>
+    <string name="notif_action_complete">סיימתי</string>
+    <string name="notif_action_snooze_30">דחייה ב-30 דק׳</string>
+    <string name="notif_action_needs_app_title">צריך להשלים באפליקציה</string>
+    <string name="notif_action_needs_app_text">המשימה הזו דורשת אישור או פרטים נוספים. הקש כדי לפתוח.</string>
+
+    <!-- Daily summary -->
+    <string name="notif_summary_title_cleared">יום מצוין! כל משימות החובה הושלמו</string>
+    <string name="notif_summary_title_open">סיכום היום</string>
+    <string name="notif_summary_text_cleared">השלמת %1$d מתוך %2$d משימות היום. כל הכבוד, תנוח טוב.</string>
+    <string name="notif_summary_text_open">השלמת %1$d מתוך %2$d משימות. נשארו %3$d משימות חובה — עדיין יש זמן, צעד אחד בכל פעם.</string>
+    <string name="notif_summary_public_title">סיכום יומי</string>
+</resources>

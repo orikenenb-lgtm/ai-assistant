@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OPTIONAL enforcement mode (owner: agent F).
+  Reads ONLY the package name of TYPE_WINDOW_STATE_CHANGED events. No window content, no gestures, no input.
+  Enabled only after the in-app prominent disclosure + explicit consent, then manually by the user in system settings.
+  Google Play: using AccessibilityService for a non-accessibility purpose requires the Play Console declaration and may be
+  rejected; the default mode (UsageStats + overlay) does not depend on it. See docs/BLOCKER_LIMITATIONS.md.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:description="@string/accessibility_service_description"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canRetrieveWindowContent="false"
+    android:canPerformGestures="false"
+    android:canRequestFilterKeyEvents="false"
+    android:isAccessibilityTool="false"
+    android:notificationTimeout="100"
+    tools:ignore="UnusedAttribute" />

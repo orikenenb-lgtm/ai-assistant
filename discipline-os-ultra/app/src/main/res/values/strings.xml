@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Default locale is Hebrew (primary product language). English lives in values-en. Feature strings live in strings_<area>.xml (one owner per file). -->
+<resources>
+    <string name="app_name">DISCIPLINE OS</string>
+    <string name="accessibility_service_label">DISCIPLINE OS – זיהוי אפליקציה פעילה</string>
+</resources>

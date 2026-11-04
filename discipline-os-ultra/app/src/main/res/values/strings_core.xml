@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI-core strings (owner: agent C). Hebrew is the default locale. Use ׳ (geresh) rather than an apostrophe. -->
+<resources>
+    <!-- Common -->
+    <string name="core_loading">טוען…</string>
+    <string name="core_retry">נסה שוב</string>
+    <string name="core_error_title">משהו השתבש</string>
+    <string name="core_error_generic">הפעולה נכשלה. נסה שוב בעוד רגע.</string>
+    <string name="core_ok">אישור</string>
+    <string name="core_cancel">ביטול</string>
+    <string name="core_save">שמירה</string>
+    <string name="core_create">יצירה</string>
+    <string name="core_create_task">צור משימה</string>
+    <string name="core_action_open">פתח</string>
+    <string name="core_action_back">חזרה</string>
+    <string name="core_action_edit">עריכה</string>
+    <string name="core_action_delete">מחיקה</string>
+    <string name="core_action_archive">העברה לארכיון</string>
+    <string name="core_archived">בארכיון</string>
+    <string name="core_today">היום</string>
+    <string name="core_tomorrow">מחר</string>
+    <string name="core_yesterday">אתמול</string>
+    <string name="core_overdue">באיחור</string>
+    <string name="core_percent">%1$d%%</string>
+    <string name="core_done_of_total">%1$d/%2$d</string>
+    <string name="core_char_counter">%1$d/%2$d</string>
+    <string name="core_duration_minutes">%1$d דק׳</string>
+    <string name="core_duration_hours">%1$d שע׳</string>
+    <string name="core_duration_hours_minutes">%1$d שע׳ %2$d דק׳</string>
+
+    <!-- Accessibility (content descriptions) -->
+    <string name="core_cd_back">חזרה</string>
+    <string name="core_cd_more">אפשרויות נוספות</string>
+    <string name="core_cd_progress">התקדמות: %1$d%%</string>
+    <string name="core_cd_new_task">משימה חדשה</string>
+    <string name="core_cd_open_coach">פתיחת המאמן האישי</string>
+    <string name="core_cd_complete_task">סימון כהושלם: %1$s</string>
+    <string name="core_cd_remove_item">הסרה: %1$s</string>
+    <string name="core_cd_clear_time">ניקוי השעה</string>
+    <string name="core_cd_clear_end_date">ניקוי תאריך הסיום</string>
+    <string name="core_cd_color_n">צבע %1$d</string>
+
+    <!-- Navigation -->
+    <string name="core_nav_home">בית</string>
+    <string name="core_nav_tasks">משימות</string>
+    <string name="core_nav_focus">מיקוד</string>
+    <string name="core_nav_stats">התקדמות</string>
+    <string name="core_nav_settings">הגדרות</string>
+
+    <!-- Greetings -->
+    <string name="core_greeting_morning">בוקר טוב</string>
+    <string name="core_greeting_afternoon">צהריים טובים</string>
+    <string name="core_greeting_evening">ערב טוב</string>
+    <string name="core_greeting_night">לילה טוב</string>
+
+    <!-- Dashboard -->
+    <string name="core_dash_loading">טוען את היום שלך…</string>
+    <string name="core_dash_error">לא הצלחנו לטעון את משימות היום.</string>
+    <string name="core_dash_empty_title">היום עוד ריק</string>
+    <string name="core_dash_empty_message">צור משימה ראשונה. משימות חובה מפעילות את החוסם עד שתסיים אותן; משימות רשות רק מוסיפות XP.</string>
+    <string name="core_dash_today_title">ההתקדמות של היום</string>
+    <string name="core_dash_all_mandatory_done">כל משימות החובה הושלמו. כל הכבוד!</string>
+    <string name="core_dash_mandatory_remaining">נותרו %1$d משימות חובה</string>
+    <string name="core_dash_mandatory_ratio">חובה: %1$d מתוך %2$d</string>
+    <string name="core_section_overdue">באיחור</string>
+    <string name="core_section_mandatory">משימות חובה</string>
+    <string name="core_section_optional">משימות רשות</string>
+    <string name="core_section_today">היום</string>
+    <string name="core_section_upcoming">בקרוב</string>
+    <string name="core_section_recurring">משימות חוזרות</string>
+
+    <!-- Blocker status -->
+    <string name="core_blocker_active">חסימה פעילה: %1$d משימות חובה נותרו</string>
+    <string name="core_blocker_active_focus">חסימה פעילה: סשן מיקוד בעבודה</string>
+    <string name="core_blocker_active_sub">האפליקציות שבחרת ייפתחו כשתסיים. תמיד אפשר שחרור זמני.</string>
+    <string name="core_blocker_open">הכל פתוח</string>
+    <string name="core_blocker_open_sub">אין משימות חובה פתוחות כרגע</string>
+    <string name="core_blocker_recovery">מצב התאוששות</string>
+    <string name="core_blocker_recovery_sub">האכיפה מושהית זמנית</string>
+    <string name="core_blocker_recovery_until">האכיפה מושהית עד %1$s</string>
+    <string name="core_blocker_bypass">שחרור זמני פעיל</string>
+    <string name="core_blocker_bypass_until">שחרור זמני פעיל עד %1$s</string>
+    <string name="core_blocker_disabled">החוסם כבוי</string>
+    <string name="core_blocker_disabled_sub">הפעל כדי להגביל אפליקציות עד שתסיים את משימות החובה</string>
+    <string name="core_blocker_unavailable">סטטוס החוסם לא זמין</string>
+    <string name="core_blocker_unavailable_sub">הקש לפתיחת הגדרות החוסם</string>
+
+    <!-- Gamification -->
+    <string name="core_streak_days">רצף של %1$d ימים</string>
+    <string name="core_streak_best">שיא: %1$d · הקפאות זמינות: %2$d</string>
+    <string name="core_level">רמה %1$d</string>
+    <string name="core_xp_progress">%1$d / %2$d XP לרמה הבאה · סה״כ %3$d</string>
+
+    <!-- Focus -->
+    <string name="core_focus_title">סשן מיקוד</string>
+    <string name="core_focus_sub">עבודה עמוקה בלי הסחות. ההתקדמות נשמרת גם אם האפליקציה נסגרת.</string>
+    <string name="core_focus_start">התחל מיקוד</string>
+    <string name="core_focus_paused">מושהה</string>
+    <string name="core_focus_ends_at">מסתיים ב־%1$s</string>
+    <string name="core_focus_phase_work">מיקוד פעיל</string>
+    <string name="core_focus_phase_short_break">הפסקה קצרה</string>
+    <string name="core_focus_phase_long_break">הפסקה ארוכה</string>
+
+    <!-- Coach -->
+    <string name="core_coach_title">המאמן האישי</string>
+    <string name="core_coach_sub">תכנון היום, פירוק משימות ועצות. שום שינוי לא נשמר בלי אישורך.</string>
+
+    <!-- Weekly strip -->
+    <string name="core_week_title">השבוע שלך</string>
+    <string name="core_week_summary">%1$d%% השלמה · %2$s מיקוד</string>
+
+    <!-- Tasks list -->
+    <string name="core_tasks_title">משימות</string>
+    <string name="core_tasks_search">חיפוש משימות</string>
+    <string name="core_tasks_error">לא הצלחנו לטעון את המשימות.</string>
+    <string name="core_tasks_empty_title">אין עדיין משימות</string>
+    <string name="core_tasks_empty_message">התחל ממשימה אחת קטנה. אפשר להגדיר אותה כחובה כדי שהחוסם יעזור לך להתמיד.</string>
+    <string name="core_tasks_no_results_title">לא נמצאו משימות</string>
+    <string name="core_tasks_no_results_message">נסה חיפוש אחר או נקה את הסינון.</string>
+    <string name="core_tasks_clear_filters">ניקוי סינון</string>
+    <string name="core_filter_all">הכל</string>
+    <string name="core_snoozed_until">נדחה עד %1$s</string>
+    <string name="core_subtasks_progress">%1$d/%2$d שלבים</string>
+
+    <!-- Kinds / priorities / statuses -->
+    <string name="core_kind_mandatory">חובה</string>
+    <string name="core_kind_optional">רשות</string>
+    <string name="core_priority_low">נמוכה</string>
+    <string name="core_priority_medium">רגילה</string>
+    <string name="core_priority_high">גבוהה</string>
+    <string name="core_priority_critical">קריטית</string>
+    <string name="core_status_pending">ממתינה</string>
+    <string name="core_status_completed">הושלמה</string>
+    <string name="core_status_skipped">דולגה</string>
+    <string name="core_status_missed">הוחמצה</string>
+
+    <!-- Verification -->
+    <string name="core_verify_none">ללא</string>
+    <string name="core_verify_checklist">רשימת שלבים</string>
+    <string name="core_verify_focus">סשן מיקוד</string>
+    <string name="core_verify_note">הערת רפלקציה</string>
+    <string name="core_verify_none_desc">סימון פשוט של ״בוצע״.</string>
+    <string name="core_verify_checklist_desc">אפשר לסיים רק אחרי שכל השלבים סומנו.</string>
+    <string name="core_verify_focus_desc">אפשר לסיים אחרי סשן מיקוד שהושלם על המשימה.</string>
+    <string name="core_verify_note_desc">בסיום תכתוב משפט קצר על מה שעשית. האימות מבוסס על דיווח עצמי.</string>
+    <string name="core_verify_required_checklist">כדי לסיים, סמן קודם את כל השלבים.</string>
+    <string name="core_verify_required_focus">כדי לסיים, השלם סשן מיקוד על המשימה.</string>
+    <string name="core_verify_required_note">כדי לסיים, כתוב הערת רפלקציה קצרה.</string>
+
+    <!-- Recurrence -->
+    <string name="core_recurrence_none">חד־פעמית</string>
+    <string name="core_recurrence_daily">כל יום</string>
+    <string name="core_recurrence_weekly">שבועית</string>
+    <string name="core_recurrence_monthly">חודשית</string>
+    <string name="core_recurrence_every_n_days">כל %1$d ימים</string>
+    <string name="core_recurrence_weekly_days">כל שבוע: %1$s</string>
+    <string name="core_recurrence_every_n_weeks_days">כל %1$d שבועות: %2$s</string>
+    <string name="core_recurrence_monthly_day">כל חודש ב־%1$d בחודש</string>
+
+    <!-- Reminders -->
+    <string name="core_reminder_at_time">בזמן</string>
+    <string name="core_reminder_before">%1$s לפני</string>
+    <string name="core_reminder_days_before">%1$d ימים לפני</string>
+
+    <!-- Task errors -->
+    <string name="core_err_title_blank">יש להזין כותרת למשימה.</string>
+    <string name="core_err_title_too_long">הכותרת ארוכה מדי.</string>
+    <string name="core_err_notes_too_long">ההערות ארוכות מדי.</string>
+    <string name="core_err_invalid_date_range">תאריך הסיום חייב להיות אחרי תאריך ההתחלה.</string>
+    <string name="core_err_invalid_reminder">אחת התזכורות אינה תקינה.</string>
+    <string name="core_err_invalid_estimate">הערכת הזמן אינה תקינה.</string>
+    <string name="core_err_too_many_subtasks">יותר מדי שלבים. אפשר לפצל למשימה נוספת.</string>
+    <string name="core_err_dependency_not_found">אחת המשימות שהמשימה תלויה בה כבר לא קיימת.</string>
+    <string name="core_err_dependency_cycle">אי אפשר ליצור תלות מעגלית בין משימות.</string>
+    <string name="core_err_dependencies_incomplete">יש קודם לסיים את המשימות שהמשימה הזו תלויה בהן.</string>
+    <string name="core_err_verification_required">המשימה דורשת אימות לפני סיום. פתח אותה כדי להשלים.</string>
+    <string name="core_err_snooze_limit">הגעת למגבלת הדחיות למשימה הזו.</string>
+    <string name="core_err_invalid_snooze">משך הדחייה אינו תקין.</string>
+    <string name="core_err_not_found">המשימה לא נמצאה.</string>
+    <string name="core_err_already_resolved">המשימה כבר טופלה.</string>
+
+    <!-- Editor -->
+    <string name="core_editor_new_title">משימה חדשה</string>
+    <string name="core_editor_edit_title">עריכת משימה</string>
+    <string name="core_editor_fix_errors">יש לתקן את השדות המסומנים.</string>
+    <string name="core_editor_section_basics">פרטים</string>
+    <string name="core_editor_title_label">כותרת</string>
+    <string name="core_editor_notes_label">הערות (לא חובה)</string>
+    <string name="core_editor_section_kind">סוג המשימה</string>
+    <string name="core_editor_kind_mandatory_short">מפעילה את החוסם</string>
+    <string name="core_editor_kind_optional_short">לא חוסמת דבר</string>
+    <string name="core_editor_kind_mandatory_explain">משימות חובה מפעילות את החוסם: האפליקציות שבחרת יוגבלו עד שתסיים את המשימה. שחרור זמני ומצב התאוששות תמיד זמינים.</string>
+    <string name="core_editor_kind_optional_explain">משימות רשות אף פעם לא חוסמות אפליקציות. הן נספרות להתקדמות ומזכות ב־XP.</string>
+    <string name="core_editor_section_priority">עדיפות וקטגוריה</string>
+    <string name="core_editor_category">קטגוריה</string>
+    <string name="core_editor_no_category">ללא</string>
+    <string name="core_editor_new_category">קטגוריה חדשה</string>
+    <string name="core_editor_category_name">שם הקטגוריה</string>
+    <string name="core_editor_section_schedule">תזמון</string>
+    <string name="core_editor_date">תאריך</string>
+    <string name="core_editor_start_date">תאריך התחלה</string>
+    <string name="core_editor_time">שעה</string>
+    <string name="core_editor_any_time">בכל שעה במהלך היום</string>
+    <string name="core_editor_recurrence">חזרה</string>
+    <string name="core_editor_weekly_days_required">יש לבחור לפחות יום אחד בשבוע.</string>
+    <string name="core_editor_end_date">תאריך סיום</string>
+    <string name="core_editor_no_end">ללא תאריך סיום</string>
+    <string name="core_editor_section_reminders">תזכורות והערכת זמן</string>
+    <string name="core_editor_reminders_need_time">כדי להוסיף תזכורות, קבע שעה למשימה.</string>
+    <string name="core_editor_estimate">הערכת זמן</string>
+    <string name="core_editor_no_estimate">ללא</string>
+    <string name="core_editor_section_verification">אימות סיום</string>
+    <string name="core_editor_section_dependencies">תלויות</string>
+    <string name="core_editor_dependencies_explain">המשימה תיפתח לסיום רק אחרי שהמשימות שנבחרו כאן יושלמו.</string>
+    <string name="core_editor_pick_dependencies">בחירת משימות קודמות</string>
+    <string name="core_editor_section_subtasks">שלבים</string>
+    <string name="core_editor_subtask_n">שלב %1$d</string>
+    <string name="core_editor_add_subtask">הוספת שלב</string>
+
+    <!-- Detail -->
+    <string name="core_detail_title">פרטי משימה</string>
+    <string name="core_detail_error">לא הצלחנו לטעון את המשימה.</string>
+    <string name="core_task_not_found_title">המשימה לא נמצאה</string>
+    <string name="core_task_not_found_message">ייתכן שהיא נמחקה.</string>
+    <string name="core_detail_schedule">מועד</string>
+    <string name="core_detail_no_occurrence">אין מופע של המשימה בטווח הקרוב.</string>
+    <string name="core_detail_due_at">יעד: %1$s</string>
+    <string name="core_detail_reflection">רפלקציה: %1$s</string>
+    <string name="core_detail_complete">סמן כהושלם</string>
+    <string name="core_detail_uncomplete">ביטול ההשלמה</string>
+    <string name="core_detail_completed_msg">כל הכבוד! המשימה הושלמה.</string>
+    <string name="core_detail_snooze">דחייה</string>
+    <string name="core_detail_snoozed_msg">המשימה נדחתה.</string>
+    <string name="core_detail_skip">דילוג</string>
+    <string name="core_detail_start_focus">התחל מיקוד על המשימה</string>
+    <string name="core_detail_resolved_note">המופע הזה כבר טופל. אפשר לבחור מופע אחר למעלה.</string>
+    <string name="core_detail_subtasks_header">שלבים (%1$d/%2$d)</string>
+    <string name="core_detail_history">היסטוריה</string>
+    <string name="core_detail_delete_title">למחוק את המשימה?</string>
+    <string name="core_detail_delete_message">המשימה וכל המופעים שלה יימחקו לצמיתות.</string>
+    <string name="core_detail_archive_title">להעביר לארכיון?</string>
+    <string name="core_detail_archive_message">המשימה תוסתר מהרשימות ולא תיצור מופעים חדשים. ההיסטוריה נשמרת.</string>
+    <string name="core_detail_note_title">הערת רפלקציה</string>
+    <string name="core_detail_note_message">מה עשית ומה למדת? משפט אחד מספיק.</string>
+    <string name="core_detail_note_label">ההערה שלך</string>
+    <string name="core_detail_note_min">לפחות %1$d תווים</string>
+    <string name="core_detail_snooze_title">לדחות בכמה זמן?</string>
+    <string name="core_detail_snooze_for">בעוד %1$s</string>
+    <string name="core_detail_skip_title">דילוג על המופע</string>
+    <string name="core_detail_skip_message">דילוג מתועד בהיסטוריה. מה הסיבה?</string>
+    <string name="core_detail_skip_label">סיבה</string>
+    <string name="core_skip_reason_sick">לא מרגיש טוב</string>
+    <string name="core_skip_reason_not_relevant">לא רלוונטי היום</string>
+    <string name="core_skip_reason_rescheduled">תוזמן מחדש</string>
+
+    <!-- History -->
+    <string name="core_history_created">נוצרה</string>
+    <string name="core_history_edited">נערכה</string>
+    <string name="core_history_completed">הושלמה</string>
+    <string name="core_history_uncompleted">ההשלמה בוטלה</string>
+    <string name="core_history_snoozed">נדחתה</string>
+    <string name="core_history_skipped">דולגה</string>
+    <string name="core_history_missed">הוחמצה</string>
+    <string name="core_history_deleted">נמחקה</string>
+    <string name="core_history_archived">הועברה לארכיון</string>
+
+    <!-- Week plan -->
+    <string name="core_week_plan_title">תכנון שבועי</string>
+    <string name="core_week_prev">השבוע הקודם</string>
+    <string name="core_week_next">השבוע הבא</string>
+    <string name="core_week_this">חזרה לשבוע הנוכחי</string>
+    <string name="core_week_range">%1$s – %2$s</string>
+    <string name="core_week_error">לא הצלחנו לטעון את השבוע.</string>
+    <string name="core_week_day_empty">אין משימות ביום הזה</string>
+    <string name="core_smart_title">תכנון חכם</string>
+    <string name="core_smart_explain">מציע שיבוץ של המשימות הפתוחות לחלונות פנויים בין 16:00 ל־21:00, לפי תלויות, חובה, עדיפות ויעד.</string>
+    <string name="core_smart_button">תכנון חכם</string>
+    <string name="core_smart_result_title">הצעת שיבוץ</string>
+    <string name="core_smart_display_only">הצעה בלבד. שום דבר לא נשמר או משתנה אוטומטית.</string>
+    <string name="core_smart_unscheduled">%1$d משימות לא נכנסו לחלונות הפנויים</string>
+    <string name="core_smart_unknown_task">משימה</string>
+    <string name="core_smart_nothing">אין משימות פתוחות או חלונות פנויים לשיבוץ השבוע.</string>
+    <string name="core_smart_failed">התכנון החכם נכשל. נסה שוב.</string>
+    <string name="core_smart_dismiss">סגירת ההצעה</string>
+</resources>
