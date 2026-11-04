@@ -2,13 +2,13 @@ package com.disciplineos.app.ui.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.disciplineos.core.domain.gamification.GamificationService
 import com.disciplineos.core.domain.gamification.WeeklyReview
 import com.disciplineos.core.domain.gamification.WeeklyReviewUseCase
+import com.disciplineos.core.domain.gamification.XpRules
 import com.disciplineos.core.domain.repository.GamificationRepository
 import com.disciplineos.core.domain.repository.SettingsRepository
 import com.disciplineos.core.domain.time.TimeProvider
-import com.disciplineos.core.model.XpEvent
-import com.disciplineos.core.model.XpSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,6 +47,7 @@ sealed interface FinishResult {
 class WeeklyReviewViewModel @Inject constructor(
     private val weeklyReview: WeeklyReviewUseCase,
     private val gamificationRepository: GamificationRepository,
+    private val gamification: GamificationService,
     settingsRepository: SettingsRepository,
     private val time: TimeProvider,
 ) : ViewModel() {
@@ -88,34 +89,25 @@ class WeeklyReviewViewModel @Inject constructor(
     }
 
     /**
-     * Marks the review as done by awarding a one-time WEEKLY_REVIEW XP event. Idempotent: the dedupe key
-     * ("review:<weekStart>") guarantees the same week is never rewarded twice.
+     * Marks the review as done via GamificationService.onWeeklyReviewCompleted (awards XP once per week and
+     * unlocks the weekly-review achievement). Idempotent in the domain ("review:<weekStart>" dedupe key).
      */
     fun finishReview() {
         val current = state.value as? WeeklyReviewLoad.Ready ?: return
         if (_finish.value == FinishResult.Saving) return
         val start = current.review.weekStart
+        val wasDone = current.alreadyCompleted
         viewModelScope.launch {
             _finish.value = FinishResult.Saving
-            _finish.value = runCatching {
-                gamificationRepository.awardXp(
-                    XpEvent(
-                        at = time.now(),
-                        amount = WEEKLY_REVIEW_XP,
-                        source = XpSource.WEEKLY_REVIEW,
-                        dedupeKey = dedupeKey(start),
-                    ),
-                )
-            }.fold(
-                onSuccess = { awarded -> if (awarded) FinishResult.Awarded(WEEKLY_REVIEW_XP) else FinishResult.AlreadyDone },
+            _finish.value = runCatching { gamification.onWeeklyReviewCompleted(start) }.fold(
+                onSuccess = { if (wasDone) FinishResult.AlreadyDone else FinishResult.Awarded(XpRules.WEEKLY_REVIEW) },
                 onFailure = { FinishResult.Failed },
             )
         }
     }
 
     companion object {
-        /** No domain constant exists for this yet (reported to the Orchestrator); kept small and encouraging. */
-        const val WEEKLY_REVIEW_XP = 30
+        /** Must match the dedupe key used by GamificationService.onWeeklyReviewCompleted. */
         fun dedupeKey(weekStart: LocalDate) = "review:$weekStart"
     }
 }

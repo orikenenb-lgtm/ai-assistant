@@ -199,7 +199,7 @@ class DashboardViewModel @Inject constructor(
     }
 }
 
-private data class ClockTick(val today: LocalDate, val hour: Int, val now: Instant)
+internal data class ClockTick(val today: LocalDate, val hour: Int, val now: Instant)
 
 private fun BlockPolicyInput.toStatus(decision: BlockDecision): BlockerStatus {
     if (!config.enabled) return BlockerStatus.Disabled

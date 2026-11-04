@@ -34,6 +34,7 @@ import com.disciplineos.core.model.BypassReason
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -66,8 +67,13 @@ class BlockActivity : ComponentActivity() {
             val ui by viewModel.state.collectAsStateWithLifecycle()
             DisciplineTheme(highContrast = ui.settings.highContrast, reduceMotion = ui.settings.reduceMotion) {
                 val decision = ui.decision
-                LaunchedEffect(decision) {
-                    if (decision is BlockDecision.Allow) finish()
+                LaunchedEffect(decision, ui.closeRequested) {
+                    if (decision is BlockDecision.Allow || ui.closeRequested) finish()
+                }
+                LaunchedEffect(Unit) {
+                    // Fail open: if the policy data never arrives, do not leave an empty screen up.
+                    delay(4_000)
+                    if (viewModel.state.value.decision == null) finish()
                 }
                 if (decision is BlockDecision.Block) {
                     BlockScreen(
@@ -79,7 +85,7 @@ class BlockActivity : ComponentActivity() {
                             bypassDurationMinutes = ui.bypassDurationMinutes,
                             bypassBusy = ui.bypassBusy,
                             bypassFeedback = ui.feedback,
-                            motivationIndex = motivationalIndex(System.currentTimeMillis(), Int.MAX_VALUE).let { 0 } + ui.motivationIndex,
+                            motivationIndex = ui.motivationIndex,
                         ),
                         onOpenTasks = ::openTasks,
                         onGoHome = ::goHome,
@@ -146,6 +152,7 @@ data class BlockUiState(
     val feedback: BypassFeedback? = null,
     val motivationIndex: Int = 0,
     val settings: AppSettings = AppSettings(),
+    val closeRequested: Boolean = false,
 )
 
 @HiltViewModel
@@ -161,7 +168,7 @@ class BlockViewModel @Inject constructor(
     private val pkg = MutableStateFlow<String?>(null)
     private val local = MutableStateFlow(LocalState())
 
-    private data class LocalState(val busy: Boolean = false, val feedback: BypassFeedback? = null)
+    private data class LocalState(val busy: Boolean = false, val feedback: BypassFeedback? = null, val granted: Boolean = false)
     private data class Base(val decision: BlockDecision?, val label: String?, val duration: Int)
 
     private val base = combine(pkg, engine.input, blockerRepository.observeConfig()) { p, input, config ->
@@ -189,6 +196,7 @@ class BlockViewModel @Inject constructor(
             feedback = l.feedback,
             motivationIndex = motivationalIndex(time.now().toEpochMilli(), Int.MAX_VALUE),
             settings = settings,
+            closeRequested = l.granted,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BlockUiState())
 
@@ -203,7 +211,7 @@ class BlockViewModel @Inject constructor(
         viewModelScope.launch {
             val result = runCatching { bypassManager.request(reason, note.take(200)) }.getOrNull()
             when (result) {
-                is BypassResult.Granted -> local.update { it.copy(busy = false) } // decision flips to Allow -> finish
+                is BypassResult.Granted -> local.update { it.copy(busy = false, granted = true) }
                 is BypassResult.Denied -> local.update {
                     it.copy(busy = false, feedback = BypassFeedback.Denied(result.denial, result.retryAt))
                 }

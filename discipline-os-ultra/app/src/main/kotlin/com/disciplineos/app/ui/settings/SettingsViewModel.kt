@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -265,7 +264,3 @@ class SettingsViewModel @Inject constructor(
         transient.value = transient.value.copy(message = SettingsMessage(res, arg))
     }
 }
-
-/** Unused-import guard for `map` on some toolchains. */
-@Suppress("unused")
-private val keepMap = listOf(1).map { it }
