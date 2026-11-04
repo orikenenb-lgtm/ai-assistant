@@ -92,7 +92,7 @@ class TasksViewModel @Inject constructor(
 
     private val filter = MutableStateFlow(TasksFilter())
     private val busy = MutableStateFlow<Set<Long>>(emptySet())
-    private val retry = MutableStateFlow(0)
+    private val retryTrigger = MutableStateFlow(0)
     private val eventChannel = Channel<TasksEvent>(Channel.BUFFERED)
     val events: Flow<TasksEvent> = eventChannel.receiveAsFlow()
 
@@ -102,7 +102,7 @@ class TasksViewModel @Inject constructor(
     private val categories: Flow<List<Category>> = deferredFlow { repo.observeCategories() }
         .catch { emit(emptyList()) }
 
-    private val raw: Flow<Result<RawTasks>> = combine(todayFlow, retry) { day, _ -> day }.flatMapLatest { day ->
+    private val raw: Flow<Result<RawTasks>> = combine(todayFlow, retryTrigger) { day, _ -> day }.flatMapLatest { day ->
         combine(
             deferredFlow { repo.observeOccurrences(day, day.plusDays(WINDOW_DAYS)) },
             deferredFlow { repo.observeOpenOccurrences(day.minusDays(1)) },
@@ -133,7 +133,7 @@ class TasksViewModel @Inject constructor(
     fun setCategory(categoryId: Long?) = filter.update { it.copy(categoryId = if (it.categoryId == categoryId) null else categoryId) }
     fun setQuery(query: String) = filter.update { it.copy(query = query) }
     fun clearFilters() = filter.update { TasksFilter() }
-    fun retry() = retry.update { it + 1 }
+    fun retry() = retryTrigger.update { it + 1 }
 
     fun setCompleted(item: OccurrenceWithTask, completed: Boolean) {
         val id = item.occurrence.id

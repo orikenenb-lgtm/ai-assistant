@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon (Android 13+) layer: shield silhouette with the check cut out. The system tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M54,25 L77,33 L77,52 C77,66.5 67.5,77 54,83 C40.5,77 31,66.5 31,52 L31,33 Z M39.9,56.6 L47.9,64.6 C49.1,65.8 50.9,65.8 52.1,64.6 L68.1,48.1 C69.3,46.9 69.3,45.1 68.1,43.9 C66.9,42.7 65.1,42.7 63.9,43.9 L50,58.3 L44.1,52.4 C42.9,51.2 41.1,51.2 39.9,52.4 C38.7,53.6 38.7,55.4 39.9,56.6 Z" />
+</vector>

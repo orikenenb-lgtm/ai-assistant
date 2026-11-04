@@ -14,7 +14,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.outlined.CalendarViewWeek
 import androidx.compose.material.icons.outlined.Event
-import androidx.compose.material.icons.outlined.PlaylistAddCheck
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAddCheck
 import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -133,7 +133,7 @@ fun TasksRoute(
                         DsEmptyState(
                             title = stringResource(R.string.core_tasks_empty_title),
                             message = stringResource(R.string.core_tasks_empty_message),
-                            icon = Icons.Outlined.PlaylistAddCheck,
+                            icon = Icons.AutoMirrored.Outlined.PlaylistAddCheck,
                             actionLabel = stringResource(R.string.core_create_task),
                             onAction = onCreateTask,
                         )

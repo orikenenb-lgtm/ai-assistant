@@ -1,5 +1,6 @@
 package com.disciplineos.app.ui.navigation
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,8 @@ import com.disciplineos.app.designsystem.theme.DisciplineTheme
  * App shell: bottom navigation + NavHost. The outer Scaffold only reserves space for the bottom bar
  * (its insets are consumed), each screen's own Scaffold handles status-bar/IME insets.
  */
+// consumeWindowInsets(PaddingValues) was experimental in older foundation releases; opting in is harmless when stable.
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AppRoot(
     startDestination: String,

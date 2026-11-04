@@ -97,7 +97,7 @@ class DashboardViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
-    private val retry = MutableStateFlow(0)
+    private val retryTrigger = MutableStateFlow(0)
     private val busy = MutableStateFlow<Set<Long>>(emptySet())
     private val eventChannel = Channel<DashboardEvent>(Channel.BUFFERED)
     val events: Flow<DashboardEvent> = eventChannel.receiveAsFlow()
@@ -110,7 +110,7 @@ class DashboardViewModel @Inject constructor(
         return ClockTick(today = now.atZone(time.zone()).toLocalDate(), hour = now.atZone(time.zone()).hour, now = now)
     }
 
-    private val plan: Flow<UiState<DayPlan>> = combine(clock.map { it.today }.distinctUntilChanged(), retry) { day, _ -> day }
+    private val plan: Flow<UiState<DayPlan>> = combine(clock.map { it.today }.distinctUntilChanged(), retryTrigger) { day, _ -> day }
         .flatMapLatest { day ->
             deferredFlow { observeDayPlan(day) }
                 .map<DayPlan, UiState<DayPlan>> { dayPlan ->
@@ -157,7 +157,7 @@ class DashboardViewModel @Inject constructor(
         .combine(week) { state, week -> state.copy(week = week) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial)
 
-    fun retry() = retry.update { it + 1 }
+    fun retry() = retryTrigger.update { it + 1 }
 
     /** Quick-complete from the dashboard. Verification is enforced by the domain; we explain failures. */
     fun setCompleted(item: OccurrenceWithTask, completed: Boolean) {

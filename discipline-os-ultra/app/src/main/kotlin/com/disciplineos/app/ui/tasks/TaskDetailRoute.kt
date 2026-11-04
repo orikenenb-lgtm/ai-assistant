@@ -215,7 +215,11 @@ fun TaskDetailRoute(
                         StatusCard(
                             state = state,
                             onComplete = {
-                                if (task.verification == VerificationMethod.REFLECTION_NOTE) dialog = DetailDialog.NOTE else viewModel.complete()
+                                if (task.verification == VerificationMethod.REFLECTION_NOTE) {
+                                    dialog = DetailDialog.NOTE
+                                } else {
+                                    viewModel.complete()
+                                }
                             },
                             onUncomplete = viewModel::uncomplete,
                             onSnooze = { dialog = DetailDialog.SNOOZE },

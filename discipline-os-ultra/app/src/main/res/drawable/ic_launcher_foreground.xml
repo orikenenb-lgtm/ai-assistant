@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DISCIPLINE OS mark (original): a shield whose inner contour forms a "D", crossed by a check.
+  Blue → green gradient = "pending → done". Everything sits inside the 66dp adaptive safe zone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Shield -->
+    <path android:pathData="M54,25 L77,33 L77,52 C77,66.5 67.5,77 54,83 C40.5,77 31,66.5 31,52 L31,33 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="34"
+                android:startY="27"
+                android:endX="76"
+                android:endY="82"
+                android:startColor="#FF3B82F6"
+                android:endColor="#FF22C55E" />
+        </aapt:attr>
+    </path>
+    <!-- Subtle top highlight -->
+    <path
+        android:fillColor="#26FFFFFF"
+        android:pathData="M54,25 L77,33 L77,41 C70,38.5 62,37 54,37 C46,37 38,38.5 31,41 L31,33 Z" />
+    <!-- Inner "D" contour -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#59FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round"
+        android:pathData="M43,40 L52,40 C61.4,40 67,46 67,54 C67,62 61.4,68 52,68 L43,68 Z" />
+    <!-- Check -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M42,54.5 L50,62.5 L66,46" />
+</vector>
