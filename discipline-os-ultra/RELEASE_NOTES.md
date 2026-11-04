@@ -20,13 +20,12 @@
 ### ידוע / מגבלות
 - אין חסימה מוחלטת (מגבלת Android). השהיית זיהוי של עד כשניה. יצרנים (כולל Samsung) עלולים לעצור שירותי רקע — ראו `docs/PERMISSIONS_S25_ULTRA.md`.
 - מסד הנתונים לא מוצפן ברמת האפליקציה (מסתמך על הצפנת המכשיר).
-- תרגום לאנגלית חלקי.
 - AI מרוחק דורש פריסת backend בידי המשתמש. החלפת הטוקן (Supabase anonymous auth) ממומשת בצד האפליקציה.
 - Google Calendar, סנכרון Supabase ו-Push — מתוכננים בלבד.
 
 ## Roadmap
 1. בדיקות על מכשיר: instrumented tests, Galaxy S25 Ultra, ריבוט, שלילת הרשאות, סוללה לאורך 24 שעות.
-2. אייקוני התראה ייעודיים, תרגום אנגלית מלא, Widgets.
+2. Widgets למסך הבית, plurals לכל המחרוזות עם מספרים.
 3. Google Calendar (קריאה בלבד ← כתיבה לאירועי האפליקציה).
 4. סנכרון Supabase אופציונלי עם RLS והצפנת כותרות בצד הלקוח.
 5. Certificate pinning, SQLCipher, Baseline Profiles.
