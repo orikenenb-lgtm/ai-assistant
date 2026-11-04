@@ -13,8 +13,8 @@
 | `:app:testDebugUnitTest` — 125 בדיקות JVM של שכבת ה-app | GitHub Actions, run #14 | ✅ PASS |
 | `:app:lintDebug` (`abortOnError = true`) | GitHub Actions, run #14 | ✅ PASS — 0 שגיאות (יש אזהרות) |
 | Debug APK | artifact `discipline-os-ultra-debug-apk` (‏20.7MB) ב-run #14 | ✅ נוצר |
-| Instrumented tests — 30 בדיקות (Migration, DAO, Backup, Design System, BlockScreen, PermissionStatus) | אמולטור Android 14 (API 34) ב-CI, run #23 | ✅ PASS — 30/30 |
-| הרצת האפליקציה האמיתית על אמולטור: התקנה, הפעלה, Onboarding ומעבר בכל 5 הלשוניות | CI, run #23 | ✅ אין קריסה (בדיקת crash buffer) · 11 צילומי מסך ב-artifact |
+| Instrumented tests — 30 בדיקות (Migration, DAO, Backup, Design System, BlockScreen, PermissionStatus) | אמולטור Android 14 (API 34) ב-CI, run #25 | ✅ PASS — 30/30 |
+| הרצת האפליקציה האמיתית על אמולטור: התקנה, הפעלה, Onboarding ומעבר בכל 5 הלשוניות | CI, run #25 | ✅ אין קריסה (בדיקת crash buffer) · 11 צילומי מסך ב-artifact |
 | בדיקות על Galaxy S25 Ultra פיזי | — | ⛔ לא רץ (אין מכשיר בסביבה) |
 
 ## פירוט בדיקות ה-domain (285)
@@ -44,7 +44,7 @@
 AI remote provider (MockWebServer: streaming, מיפוי 401/402/429, אירוע פגום, ביטול), ולידציית URL, בחירת ספק; מיפוי entity↔model; PrefsCodec; BackupCodec (12: גודל, schemaVersion, שדות, הפניות שבורות); ReminderPlanner (כולל DST); EnforcementLogic (41: הסקת אפליקציה בחזית מאירועים, מרווחי polling, debounce); עזרי UI (גרפים, פורמט זמן, קלט צ'אט, onboarding, הגדרות).
 
 ## תוצאות אמולטור
-הכל ב-run #23 (‏GitHub Actions, אמולטור Pixel 7 עם API 34):
+הכל ב-run #25 (‏GitHub Actions, אמולטור Pixel 7 עם API 34):
 - `connectedDebugAndroidTest`: **30/30 עברו**, 0 נכשלו, 0 דולגו. כלול: מיגרציית Room 1→2 עם MigrationTestHelper, בדיקות DAO, גיבוי וייבוא, רכיבי Design System (כולל RTL וגופן מוגדל), BlockScreen ו-PermissionStatus.
 - היסטוריה כנה של ההגעה לירוק:
   - בריצות הקודמות נכשלה בדיקה אחת, `BackupManagerTest`. היא קודדה את ההתנהגות הישנה, שבה ייבוא גיבוי מחזיר את החוסם למצב פעיל.
@@ -53,9 +53,21 @@ AI remote provider (MockWebServer: streaming, מיפוי 401/402/429, אירוע
 - סקריפט `ci/emulator-run.sh` התקין את ה-APK, הפעיל אותו, עבר את ה-Onboarding ולחץ על כל לשונית: בית, משימות, מיקוד, התקדמות והגדרות.
   - **אף קריסה** לא נרשמה ב-`logcat -b crash`.
   - כל הלחיצות על הלשוניות מצאו את הכפתור.
-- צילומי המסך המלאים (‏PNG) זמינים ב-artifact `emulator-results-and-screenshots` של run #23 בלשונית Actions.
+- צילומי המסך המלאים (‏PNG) זמינים ב-artifact `emulator-results-and-screenshots` של run #25 בלשונית Actions.
   - הערה: לא הצלחתי לצפות בהם בעצמי, כי ה-sandbox חוסם את אחסון ה-artifacts של GitHub.
   - לכן נוסף ל-CI תיעוד טקסטואלי של מה שמוצג בכל מסך (‏`screen-texts.txt`), כדי לאמת ניווט בלי תמונות.
+
+### מה הוצג בפועל בכל מסך (מתוך UI Automator, ‏run #25)
+| מסך | טקסטים שזוהו (מקוצר) |
+|---|---|
+| Onboarding 1–5 | "ברוך הבא ל־DISCIPLINE OS" · "איך זה עובד" + "בכנות מלאה: אין חסימה מוחלטת… טלפון וחירום לעולם לא נחסמים" · "תזכורות בזמן" · "משימת החובה הראשונה" (שדה 0/120) · "הכול מוכן… כל הנתונים נשמרים במכשיר שלך" |
+| Dashboard | "צהריים טובים · יום רביעי, 4 בנובמבר · היום עוד ריק · צור משימה · החוסם כבוי · רצף של 0 ימים · רמה 1 · 0 / 100 XP · סשן מיקוד" + ניווט תחתון |
+| משימות | חיפוש (0/80) · מסננים הכל/חובה/רשות · "אין עדיין משימות" · תכנון שבועי · משימה חדשה |
+| מיקוד | "טיימר ריכוז מוכן, 25 דקות · 0 מתוך 4 סשנים · התחל ריכוז · חסימת אפליקציות כבויה" |
+| התקדמות | שבוע/חודש/רבעון · "עוד אין נתונים לתקופה הזו" · סקירה שבועית · כרטיס הרשאת זמן מסך |
+| הגדרות | אפליקציות לחסימה · הרשאות אכיפה · חריגים לחירום · מצב התאוששות (1/4/24 שע׳) · התראות |
+
+מסקנה: כל לשונית מציגה תוכן שונה ונכון בעברית. אין מצב שגיאה ואין קריסה. זה מצב התחלתי ריק, כלומר אפליקציה חדשה בלי נתונים.
 
 ## מה לא נבדק (ונדרש לפני שימוש אמיתי)
 1. התנהגות על Galaxy S25 Ultra: הרשאות, One UI battery, ריבוט, שלילת הרשאות בזמן ריצה, Accessibility.
