@@ -109,13 +109,23 @@ class EnforcementService : LifecycleService() {
     }
 
     private fun goForeground(notification: Notification) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ServiceCompat.startForeground(
-                this, NotificationChannels.ID_ENFORCEMENT, notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
-            )
-        } else {
-            startForeground(NotificationChannels.ID_ENFORCEMENT, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ServiceCompat.startForeground(
+                    this, NotificationChannels.ID_ENFORCEMENT, notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                )
+            } else {
+                startForeground(NotificationChannels.ID_ENFORCEMENT, notification)
+            }
+        } catch (_: IllegalStateException) {
+            // e.g. a sticky restart from the background that Android 12+ refuses. Never run invisibly:
+            // ask the user to open the app (which re-syncs) and stop.
+            notifier.postStartPrompt()
+            stopSelf()
+        } catch (_: SecurityException) {
+            notifier.postStartPrompt()
+            stopSelf()
         }
     }
 
