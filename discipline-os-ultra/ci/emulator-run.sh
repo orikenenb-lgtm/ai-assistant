@@ -18,13 +18,14 @@ adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 
 adb logcat -c
 MISSING_TAPS=""
 
+python3 -m pip install --quiet --user pillow >/dev/null 2>&1 || true
+thumb() { # $1 = png path, $2 = width, $3 = out jpg
+  python3 -c "import sys;from PIL import Image;im=Image.open(sys.argv[1]).convert('RGB');w=int(sys.argv[2]);im=im.resize((w,int(im.height*w/im.width)));im.save(sys.argv[3],quality=45)" "$1" "$2" "$3" 2>/dev/null
+}
 shot() {
   sleep "${2:-3}"
   adb exec-out screencap -p > "ci-screenshots/$1.png"
-  if command -v convert >/dev/null 2>&1; then
-    convert "ci-screenshots/$1.png" -resize 320x -quality 55 "ci-screenshots/$1.thumb.jpg"
-    echo "SHOT_BEGIN:$1"; base64 -w0 "ci-screenshots/$1.thumb.jpg"; echo; echo "SHOT_END:$1"
-  fi
+  thumb "ci-screenshots/$1.png" 300 "ci-screenshots/$1.thumb.jpg" || true
 }
 
 # Tap the first on-screen element whose text or content-description equals $1 (via UI Automator dump).
@@ -68,10 +69,11 @@ CRASH_LOG=$(adb logcat -d -b crash | grep -A 30 "$PKG" | head -60)
 adb shell am force-stop "$PKG"
 
 # Small final thumbnail of the dashboard (kept last-but-summary so a log tail can include it).
-if [ -f ci-screenshots/10-dashboard.png ] && command -v convert >/dev/null 2>&1; then
-  convert ci-screenshots/10-dashboard.png -resize 240x -quality 50 ci-screenshots/final.thumb.jpg
-  echo "FINAL_THUMB_BEGIN"; base64 -w0 ci-screenshots/final.thumb.jpg; echo; echo "FINAL_THUMB_END"
-fi
+for n in 10-dashboard 11-tasks 12-focus; do
+  if [ -f "ci-screenshots/$n.png" ] && thumb "ci-screenshots/$n.png" 240 "ci-screenshots/$n.small.jpg"; then
+    echo "THUMB_BEGIN:$n"; base64 -w0 "ci-screenshots/$n.small.jpg"; echo; echo "THUMB_END:$n"
+  fi
+done
 
 echo "==================== EMULATOR SUMMARY ===================="
 python3 - <<'PY'

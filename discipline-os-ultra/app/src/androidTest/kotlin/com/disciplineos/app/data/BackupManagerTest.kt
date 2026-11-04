@@ -168,7 +168,8 @@ class BackupManagerTest {
         )
         assertEquals(expected, after.copy(dependencies = after.dependencies.sortedBy { it.taskId }))
         assertEquals(AppLanguage.ENGLISH, settings.observeSettings().first().language)
-        assertTrue(blocker.observeConfig().first().enabled)
+        assertEquals("import must not re-enable the blocker", false, blocker.observeConfig().first().enabled)
+        assertEquals(1, blocker.observeConfig().first().maxBypassesPerDay) // other blocker settings restored
         assertEquals(listOf("a", "b"), tasks.observeSubTasks(taskId).first().map { it.title })
         // Chat history is not part of a backup and is left untouched by an import.
         assertEquals(1, chat.observeMessages().first().size)
