@@ -3,9 +3,8 @@ package com.disciplineos.app.ui.coach
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.disciplineos.app.BuildConfig
 import com.disciplineos.app.R
-import com.disciplineos.core.domain.coach.AiCoachRepository
+import com.disciplineos.app.ai.AiBackendConfig
 import com.disciplineos.core.domain.coach.CoachConversationUseCase
 import com.disciplineos.core.domain.coach.CoachErrorKind
 import com.disciplineos.core.domain.coach.CoachSendState
@@ -57,13 +56,12 @@ private data class Transient(
 @HiltViewModel
 class CoachViewModel @Inject constructor(
     private val conversation: CoachConversationUseCase,
-    coachRepository: AiCoachRepository,
+    private val backendConfig: AiBackendConfig,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     private val transient = MutableStateFlow(Transient())
     private var sendJob: Job? = null
-    private val providerName: String = runCatching { coachRepository.providerName }.getOrDefault("")
 
     private sealed interface Messages {
         data object Loading : Messages
@@ -90,9 +88,8 @@ class CoachViewModel @Inject constructor(
             streamingText = t.streamingText,
             limitReached = t.limitReached,
             errorRes = t.errorRes,
-            // Remote only when the provider is remote AND the user enabled it AND a backend is configured.
-            isLocalProvider = CoachInput.isLocalProvider(providerName) || !privacy.remoteProviderEnabled ||
-                BuildConfig.AI_BACKEND_URL.isBlank(),
+            // Same rule as SelectingAiCoachRepository.shouldUseRemote: user opt-in AND a configured backend.
+            isLocalProvider = !CoachInput.usesRemote(privacy.remoteProviderEnabled, backendConfig.isConfigured),
             privacy = privacy,
             pendingAction = t.pendingAction,
         )

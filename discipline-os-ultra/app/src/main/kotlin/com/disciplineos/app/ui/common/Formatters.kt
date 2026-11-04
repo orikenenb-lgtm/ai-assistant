@@ -3,6 +3,8 @@ package com.disciplineos.app.ui.common
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.disciplineos.app.R
@@ -103,3 +105,14 @@ fun formatMinutes(totalMinutes: Int): String {
         else -> stringResource(R.string.core_duration_hours_minutes, h, m)
     }
 }
+
+/** Parses a stored category color ("#RRGGBB" / "#AARRGGBB"); malformed values fall back. */
+fun parseHexColor(hex: String, fallback: Color): Color =
+    try {
+        Color(android.graphics.Color.parseColor(hex))
+    } catch (e: IllegalArgumentException) {
+        fallback
+    }
+
+/** "#RRGGBB" for persisting a theme color (e.g. a new category's color). */
+fun Color.toHex(): String = String.format(Locale.ROOT, "#%06X", toArgb() and 0xFFFFFF)

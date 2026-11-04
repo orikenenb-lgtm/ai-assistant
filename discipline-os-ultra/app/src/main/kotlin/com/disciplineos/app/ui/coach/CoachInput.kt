@@ -14,7 +14,6 @@ object CoachInput {
     /** Show the counter only when it is useful (last 20%), to keep the composer calm. */
     fun showCounter(length: Int): Boolean = length >= MAX_CHARS * 8 / 10
 
-    /** Provider ids that mean "runs fully on device". */
-    fun isLocalProvider(providerName: String): Boolean =
-        providerName.isBlank() || providerName.startsWith("local", ignoreCase = true)
+    /** The next reply goes to the remote backend only with explicit user opt-in AND a configured backend. */
+    fun usesRemote(remoteEnabled: Boolean, backendConfigured: Boolean): Boolean = remoteEnabled && backendConfigured
 }

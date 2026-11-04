@@ -19,14 +19,17 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.HourglassBottom
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.MilitaryTech
+import androidx.compose.material.icons.filled.Stars
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.RateReview
-import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
@@ -215,15 +218,18 @@ private fun AchievementCell(a: AchievementView) {
 
 /** Maps catalog icon keys to Material icons; unknown keys fall back to a trophy. */
 private fun iconFor(key: String): ImageVector = when (key.lowercase(Locale.ROOT)) {
-    "fire", "streak", "flame" -> Icons.Filled.LocalFireDepartment
-    "timer", "focus", "clock" -> Icons.Filled.Timer
-    "check", "task", "done" -> Icons.Filled.CheckCircle
-    "star", "xp" -> Icons.Filled.Star
-    "shield", "mandatory" -> Icons.Filled.Shield
-    "calendar", "week" -> Icons.Filled.CalendarMonth
-    "bolt", "speed" -> Icons.Filled.Bolt
-    "review" -> Icons.Filled.RateReview
-    "calm", "zen", "recovery" -> Icons.Filled.SelfImprovement
-    "premium", "level", "medal" -> Icons.Filled.WorkspacePremium
+    "flag" -> Icons.Filled.Flag
+    "check_circle", "check", "task" -> Icons.Filled.CheckCircle
+    "local_fire", "fire", "streak" -> Icons.Filled.LocalFireDepartment
+    "workspace_premium", "premium" -> Icons.Filled.WorkspacePremium
+    "timer", "focus" -> Icons.Filled.Timer
+    "hourglass" -> Icons.Filled.HourglassBottom
+    "military_tech" -> Icons.Filled.MilitaryTech
+    "insights", "review" -> Icons.Filled.Insights
+    "wb_sunny", "sun" -> Icons.Filled.WbSunny
+    "trending_up" -> Icons.AutoMirrored.Filled.TrendingUp
+    "star" -> Icons.Filled.Star
+    "stars" -> Icons.Filled.Stars
+    "shield" -> Icons.Filled.Shield
     else -> Icons.Filled.EmojiEvents
 }
