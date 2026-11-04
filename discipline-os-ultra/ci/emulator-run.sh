@@ -16,6 +16,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell cmd locale set-app-locales "$PKG" --locales he >/dev/null 2>&1 || true
 adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
 adb logcat -c
+MISSING_TAPS=""
 
 shot() {
   sleep "${2:-3}"
@@ -43,7 +44,7 @@ for n in ET.parse("ci-screenshots/ui.xml").iter("node"):
             break
 PY
 )
-  [ -n "$xy" ] || { echo "tap_text: '$1' not found"; return 1; }
+  [ -n "$xy" ] || { echo "tap_text: '$1' not found"; MISSING_TAPS="$MISSING_TAPS|$1"; return 1; }
   adb shell input tap $xy
 }
 
@@ -62,11 +63,37 @@ tap_text "הגדרות" && shot 14-settings 3
 tap_text "בית" && shot 15-dashboard-again 3
 
 CRASH=0
-if adb logcat -d -b crash | grep -q "$PKG"; then
-  echo "APP CRASH DETECTED:"; adb logcat -d -b crash | tail -60; CRASH=1
-fi
-adb logcat -d | grep -E "FATAL EXCEPTION|AndroidRuntime" -A 25 | head -80 || true
+if adb logcat -d -b crash | grep -q "$PKG"; then CRASH=1; fi
+CRASH_LOG=$(adb logcat -d -b crash | grep -A 30 "$PKG" | head -60)
 adb shell am force-stop "$PKG"
+
+# Small final thumbnail of the dashboard (kept last-but-summary so a log tail can include it).
+if [ -f ci-screenshots/10-dashboard.png ] && command -v convert >/dev/null 2>&1; then
+  convert ci-screenshots/10-dashboard.png -resize 240x -quality 50 ci-screenshots/final.thumb.jpg
+  echo "FINAL_THUMB_BEGIN"; base64 -w0 ci-screenshots/final.thumb.jpg; echo; echo "FINAL_THUMB_END"
+fi
+
+echo "==================== EMULATOR SUMMARY ===================="
+python3 - <<'PY'
+import glob, xml.etree.ElementTree as ET
+t = f = e = s = 0; failed = []
+for p in glob.glob("app/build/outputs/androidTest-results/connected/**/*.xml", recursive=True):
+    r = ET.parse(p).getroot()
+    for suite in ([r] if r.tag == "testsuite" else r.iter("testsuite")):
+        t += int(suite.get("tests", 0)); f += int(suite.get("failures", 0)); e += int(suite.get("errors", 0)); s += int(suite.get("skipped", 0))
+        for c in suite.iter("testcase"):
+            if c.find("failure") is not None or c.find("error") is not None:
+                node = c.find("failure") if c.find("failure") is not None else c.find("error")
+                failed.append(f"{c.get('classname')}.{c.get('name')}: {(node.get('message') or '')[:300]}")
+print(f"instrumented: tests={t} failures={f} errors={e} skipped={s}")
+for x in failed: print("FAILED:", x)
+PY
+echo "gradle_connected_exit=$TEST_STATUS"
+echo "app_crash=$CRASH"
+echo "missing_taps=${MISSING_TAPS:-none}"
+ls ci-screenshots/*.png 2>/dev/null | sed 's|.*/||' | tr '\n' ' '; echo
+[ $CRASH -ne 0 ] && echo "$CRASH_LOG"
+echo "=========================================================="
 
 if [ $TEST_STATUS -ne 0 ] || [ $CRASH -ne 0 ]; then exit 1; fi
 exit 0
