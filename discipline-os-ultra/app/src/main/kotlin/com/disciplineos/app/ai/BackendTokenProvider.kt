@@ -8,4 +8,11 @@ package com.disciplineos.app.ai
  */
 interface BackendTokenProvider {
     suspend fun token(): String?
+
+    /**
+     * Called when the backend rejected [rejectedToken] with HTTP 401. Implementations drop their cached
+     * credentials (if they still equal [rejectedToken]) so the next [token] call obtains a fresh one.
+     * Default: no-op (e.g. a static install id cannot be refreshed).
+     */
+    suspend fun invalidate(rejectedToken: String) {}
 }

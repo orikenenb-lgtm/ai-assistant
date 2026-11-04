@@ -1,5 +1,10 @@
 package com.disciplineos.app.ui.coach
 
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+
 /** Pure input rules for the coach composer (unit-tested in CoachInputTest). */
 object CoachInput {
     /** Mirrors PromptInjectionGuard.MAX_USER_CHARS; kept here so the UI rule is testable without the domain body. */
@@ -16,4 +21,20 @@ object CoachInput {
 
     /** The next reply goes to the remote backend only with explicit user opt-in AND a configured backend. */
     fun usesRemote(remoteEnabled: Boolean, backendConfigured: Boolean): Boolean = remoteEnabled && backendConfigured
+
+    /**
+     * The daily-limit banner applies only to the local day on which the limit was hit. After midnight it lifts
+     * (the domain's CostGuard re-counts on the next send anyway). If the clock moved backwards, stay conservative.
+     */
+    fun isLimitActive(limitReachedOn: LocalDate?, today: LocalDate): Boolean =
+        limitReachedOn != null && !today.isAfter(limitReachedOn)
+
+    /** Longest wait between "has the day changed?" checks (also bounds drift from sleep, zone or clock changes). */
+    const val MAX_DAY_CHECK_MILLIS = 60_000L
+
+    /** Delay until the next local midnight, clamped to 1s..[MAX_DAY_CHECK_MILLIS]. */
+    fun dayCheckDelayMillis(now: Instant, zone: ZoneId): Long {
+        val nextMidnight = now.atZone(zone).toLocalDate().plusDays(1).atStartOfDay(zone).toInstant()
+        return Duration.between(now, nextMidnight).toMillis().coerceIn(1_000L, MAX_DAY_CHECK_MILLIS)
+    }
 }

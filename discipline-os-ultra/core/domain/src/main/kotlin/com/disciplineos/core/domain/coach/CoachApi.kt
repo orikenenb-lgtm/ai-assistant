@@ -233,6 +233,8 @@ object CostGuard {
 /**
  * Builds the minimal context sent to a coach provider. Task titles are included only when
  * [AiPrivacySettings.shareTaskTitles] is on (sanitised, max [MAX_TITLES]); otherwise generic placeholders are used.
+ * [CoachContext.pendingTasks] carries the same tasks with their local ids (so `reschedule_task` can be validated against
+ * real ids) and the same title rules.
  * [CoachContext.appUsageSummary] is ALWAYS null here: app usage may only be added by the Android layer, and only when
  * [AiPrivacySettings.shareAppUsage] is explicitly enabled.
  */
@@ -282,14 +284,30 @@ class CoachContextBuilder internal constructor(
             .filter { it.startedAt.atZone(zone).toLocalDate() == today }
             .sumOf { it.focusedSeconds.coerceAtLeast(0) }
 
+        val mandatoryTitles = titles(mandatory, "משימת חובה")
+        val optionalTitles = titles(optional, "משימת רשות")
+        // Same tasks and same (possibly placeholder) titles as above, plus the local ids needed for reschedule_task.
+        // A recurring task with several open occurrences appears once (its highest-ranked occurrence).
+        val refs = (mandatory.zip(mandatoryTitles) + optional.zip(optionalTitles))
+            .map { (o, title) ->
+                CoachTaskRef(
+                    id = o.task.id,
+                    title = title,
+                    mandatory = o.task.kind == TaskKind.MANDATORY,
+                    date = o.occurrence.localDate.toString(),
+                )
+            }
+            .distinctBy { it.id }
+
         return CoachContext(
             localDateIso = today.toString(),
-            pendingMandatoryTitles = titles(mandatory, "משימת חובה"),
-            pendingOptionalTitles = titles(optional, "משימת רשות"),
+            pendingMandatoryTitles = mandatoryTitles,
+            pendingOptionalTitles = optionalTitles,
             completedTodayCount = todays.count { it.occurrence.status == OccurrenceStatus.COMPLETED },
             streakDays = streakDays().coerceAtLeast(0),
             focusMinutesToday = (focusSeconds / 60).toInt(),
             appUsageSummary = null,
+            pendingTasks = refs,
         )
     }
 
@@ -359,6 +377,8 @@ class CoachConversationUseCase internal constructor(
         chatRepo.insertMessage(ChatMessage(role = ChatRole.USER, text = sanitized.text, createdAt = time.now()))
 
         val context = buildContext()
+        // Source of truth is the repository (not the context the provider saw): every id offered in
+        // context.pendingTasks is an active task, and an id the model invents still fails validation.
         val knownTaskIds = taskRepo.getAllActiveTasks().map { it.id }.toSet()
         val reply = StringBuilder()
         val actions = ArrayList<ProposedAction>()

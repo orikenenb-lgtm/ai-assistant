@@ -11,6 +11,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -27,9 +29,11 @@ import okhttp3.sse.EventSources
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Streams coach replies from the project's own AI proxy (reference: `backend/supabase/functions/coach-stream`).
@@ -47,6 +51,8 @@ import javax.inject.Singleton
  *  - No body/header logging anywhere (no HttpLoggingInterceptor); error messages never contain content.
  *  - Bounded output: total streamed text and action count are capped; anything over → INVALID_RESPONSE.
  *  - Cancellation: collector cancellation → awaitClose → EventSource.cancel() → socket closed.
+ *  - Auth: HTTP 401 → [BackendTokenProvider.invalidate] + exactly one retry with a fresh token; a second 401
+ *    (or 403) → NOT_CONFIGURED. A 401 always precedes any SSE event, so the retry never duplicates output.
  *  - Certificate pinning: roadmap, not hardcoded — see docs/AI_SECURITY.md (pins must match a backend we do
  *    not yet operate; a wrong/rotated pin would brick the feature for every installed APK).
  */
@@ -81,26 +87,15 @@ class RemoteBackendCoachProvider @Inject constructor(
             awaitClose { }
             return@callbackFlow
         }
-        val token = tokenProvider.token()
-        if (token.isNullOrBlank()) {
-            finish(CoachChunk.Error(CoachErrorKind.NOT_CONFIGURED, "no backend token"))
-            awaitClose { }
-            return@callbackFlow
-        }
 
         val body = json.encodeToString(CoachStreamRequest.serializer(), buildRequest(history, userMessage, context))
-        val request = Request.Builder()
-            .url(endpoint)
-            .header("Authorization", "Bearer $token")
-            .header("Accept", "text/event-stream")
-            .header("Cache-Control", "no-store")
-            .post(body.toRequestBody(JSON_MEDIA_TYPE))
-            .build()
-
         val textChars = AtomicInteger(0)
         val actionCount = AtomicInteger(0)
+        val current = AtomicReference<EventSource?>(null)
+        // Assigned below; declared first so the listener's 401 path can re-enter it.
+        lateinit var start: suspend (attempt: Int) -> Unit
 
-        val listener = object : EventSourceListener() {
+        fun listener(attempt: Int, token: String) = object : EventSourceListener() {
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
                 if (terminated.get()) return
                 when (type) {
@@ -145,12 +140,52 @@ class RemoteBackendCoachProvider @Inject constructor(
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
+                // A 401 arrives before any event (HTTP status of the stream request), so nothing was emitted yet and
+                // one transparent retry with a fresh token is safe. The quota was not consumed (auth precedes quota).
+                if (response?.code == 401 && attempt < MAX_AUTH_RETRIES && !terminated.get()) {
+                    launch {
+                        try {
+                            tokenProvider.invalidate(token)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            // Invalidation is best effort; the retry below then fails with NOT_CONFIGURED as before.
+                        }
+                        start(attempt + 1)
+                    }
+                    return
+                }
                 finish(CoachChunk.Error(mapFailure(t, response), failureMessage(t, response)))
             }
         }
 
-        val eventSource = eventSourceFactory.newEventSource(request, listener)
-        awaitClose { eventSource.cancel() }
+        start = { attempt ->
+            val token = try {
+                tokenProvider.token()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            if (token.isNullOrBlank()) {
+                finish(CoachChunk.Error(CoachErrorKind.NOT_CONFIGURED, "no backend token"))
+            } else if (isActive && !terminated.get()) {
+                val request = Request.Builder()
+                    .url(endpoint)
+                    .header("Authorization", "Bearer $token")
+                    .header("Accept", "text/event-stream")
+                    .header("Cache-Control", "no-store")
+                    .post(body.toRequestBody(JSON_MEDIA_TYPE))
+                    .build()
+                val es = eventSourceFactory.newEventSource(request, listener(attempt, token))
+                current.set(es)
+                // Collector cancelled while we were creating the call: don't leak it.
+                if (!isActive) es.cancel()
+            }
+        }
+
+        start(0)
+        awaitClose { current.get()?.cancel() }
     }.buffer(Channel.UNLIMITED) // bounded in practice by MAX_TOTAL_TEXT_CHARS / MAX_ACTIONS
 
     companion object {
@@ -164,6 +199,8 @@ class RemoteBackendCoachProvider @Inject constructor(
         const val MAX_TOTAL_TEXT_CHARS = 16_000
         const val MAX_ACTIONS = 5
         const val MAX_ACTION_JSON_CHARS = 4_000
+        /** One transparent retry after HTTP 401 with a freshly obtained token (expired/revoked JWT). */
+        const val MAX_AUTH_RETRIES = 1
 
         private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -203,6 +240,18 @@ class RemoteBackendCoachProvider @Inject constructor(
                     streakDays = context.streakDays.coerceAtLeast(0),
                     focusMinutesToday = context.focusMinutesToday.coerceAtLeast(0),
                     appUsageSummary = context.appUsageSummary?.let { cleanText(it, MAX_APP_USAGE_CHARS) },
+                    pendingTasks = context.pendingTasks
+                        .filter { it.id > 0 }
+                        .distinctBy { it.id }
+                        .take(MAX_TITLES_PER_LIST)
+                        .map {
+                            WireTaskRef(
+                                id = it.id,
+                                title = cleanText(it.title, MAX_TITLE_CHARS),
+                                mandatory = it.mandatory,
+                                date = it.date.take(10),
+                            )
+                        },
                 ),
                 locale = LOCALE,
             )
@@ -280,6 +329,16 @@ internal data class WireContext(
     val streakDays: Int,
     val focusMinutesToday: Int,
     val appUsageSummary: String? = null,
+    /** Pending tasks the model may propose to reschedule (ids are local integers; titles follow shareTaskTitles). */
+    val pendingTasks: List<WireTaskRef> = emptyList(),
+)
+
+@Serializable
+internal data class WireTaskRef(
+    val id: Long,
+    val title: String,
+    val mandatory: Boolean,
+    val date: String,
 )
 
 @Serializable

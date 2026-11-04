@@ -3,6 +3,7 @@ package com.disciplineos.app.ai
 import com.disciplineos.core.domain.coach.CoachChunk
 import com.disciplineos.core.domain.coach.CoachContext
 import com.disciplineos.core.domain.coach.CoachErrorKind
+import com.disciplineos.core.domain.coach.CoachTaskRef
 import com.disciplineos.core.model.ChatMessage
 import com.disciplineos.core.model.ChatRole
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +45,14 @@ class RemoteBackendCoachProviderTest {
     private class FakeTokens(private val value: String?) : BackendTokenProvider {
         var calls = 0
         override suspend fun token(): String? { calls++; return value }
+    }
+
+    /** Hands out tok-1, tok-2, … (null after [maxTokens]); records invalidations. */
+    private class RotatingTokens(private val maxTokens: Int = Int.MAX_VALUE) : BackendTokenProvider {
+        var calls = 0
+        val invalidated = mutableListOf<String>()
+        override suspend fun token(): String? { calls++; return if (calls <= maxTokens) "tok-$calls" else null }
+        override suspend fun invalidate(rejectedToken: String) { invalidated += rejectedToken }
     }
 
     @Before
@@ -135,10 +144,68 @@ class RemoteBackendCoachProviderTest {
 
     @Test
     fun http401And403MapToNotConfigured() {
+        // 401 is retried exactly once (with a fresh token); a second 401 → NOT_CONFIGURED. 403 is never retried.
+        server.enqueue(MockResponse().setResponseCode(401))
         server.enqueue(MockResponse().setResponseCode(401))
         server.enqueue(MockResponse().setResponseCode(403))
-        assertEquals(listOf(CoachErrorKind.NOT_CONFIGURED), collect(provider().streamReply(emptyList(), "hi", context)).errors())
-        assertEquals(listOf(CoachErrorKind.NOT_CONFIGURED), collect(provider().streamReply(emptyList(), "hi", context)).errors())
+        val tokens = RotatingTokens()
+        assertEquals(listOf(CoachErrorKind.NOT_CONFIGURED), collect(provider(tokens).streamReply(emptyList(), "hi", context)).errors())
+        assertEquals(2, server.requestCount)
+        assertEquals(listOf("tok-1"), tokens.invalidated)
+        assertEquals(listOf(CoachErrorKind.NOT_CONFIGURED), collect(provider(tokens).streamReply(emptyList(), "hi", context)).errors())
+        assertEquals(3, server.requestCount)
+        assertEquals("403 must not invalidate", listOf("tok-1"), tokens.invalidated)
+    }
+
+    @Test
+    fun http401InvalidatesTokenAndRetriesOnceWithFreshToken() {
+        server.enqueue(MockResponse().setResponseCode(401))
+        server.enqueue(sse("delta" to """{"text":"שלום"}""", "done" to "{}"))
+        val tokens = RotatingTokens()
+        val chunks = collect(provider(tokens).streamReply(emptyList(), "hi", context))
+        assertEquals(listOf(CoachChunk.TextDelta("שלום"), CoachChunk.Done), chunks)
+        assertEquals("Bearer tok-1", server.takeRequest(2, TimeUnit.SECONDS)!!.getHeader("Authorization"))
+        val retry = server.takeRequest(2, TimeUnit.SECONDS)!!
+        assertEquals("Bearer tok-2", retry.getHeader("Authorization"))
+        assertTrue("same body is re-sent", retry.body.readUtf8().contains("\"messages\""))
+        assertEquals(listOf("tok-1"), tokens.invalidated)
+        assertEquals(2, tokens.calls)
+    }
+
+    @Test
+    fun http401RetryWithoutTokenMapsToNotConfigured() {
+        server.enqueue(MockResponse().setResponseCode(401))
+        val tokens = RotatingTokens(maxTokens = 1)
+        assertEquals(listOf(CoachErrorKind.NOT_CONFIGURED), collect(provider(tokens).streamReply(emptyList(), "hi", context)).errors())
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test
+    fun requestCarriesPendingTaskRefs() {
+        val refs = listOf(
+            CoachTaskRef(7, "דוח\u202E <b>", mandatory = true, date = "2026-11-02"),
+            CoachTaskRef(7, "כפול", mandatory = true, date = "2026-11-04"),
+            CoachTaskRef(0, "מזהה לא חוקי", mandatory = false, date = "2026-11-04"),
+            CoachTaskRef(9, "קריאה", mandatory = false, date = "2026-11-04"),
+        )
+        val req = RemoteBackendCoachProvider.buildRequest(emptyList(), "דחה", context.copy(pendingTasks = refs))
+        assertEquals(listOf(7L, 9L), req.context.pendingTasks.map { it.id })
+        assertEquals("דוח <b>", req.context.pendingTasks[0].title) // control/bidi stripped (titles already sanitised upstream)
+        assertEquals("2026-11-02", req.context.pendingTasks[0].date)
+        val wire = Json.parseToJsonElement(RemoteBackendCoachProvider.json.encodeToString(CoachStreamRequest.serializer(), req)).jsonObject
+        val first = wire["context"]!!.jsonObject["pendingTasks"]!!.jsonArray[0].jsonObject
+        assertEquals(7, first["id"]!!.jsonPrimitive.content.toInt())
+        assertEquals("true", first["mandatory"]!!.jsonPrimitive.content)
+        // Default: empty list, still serialised (encodeDefaults) so the backend sees a stable shape.
+        val empty = RemoteBackendCoachProvider.buildRequest(emptyList(), "hi", context)
+        assertTrue(empty.context.pendingTasks.isEmpty())
+    }
+
+    @Test
+    fun pendingTaskRefsAreCapped() {
+        val many = (1L..100L).map { CoachTaskRef(it, "t$it", mandatory = true, date = "2026-11-04") }
+        val req = RemoteBackendCoachProvider.buildRequest(emptyList(), "hi", context.copy(pendingTasks = many))
+        assertEquals(RemoteBackendCoachProvider.MAX_TITLES_PER_LIST, req.context.pendingTasks.size)
     }
 
     @Test
