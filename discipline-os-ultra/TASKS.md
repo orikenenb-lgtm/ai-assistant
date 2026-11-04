@@ -25,6 +25,5 @@
 - [ ] Google Calendar (קריאה בלבד → כתיבה לאירועי האפליקציה)
 - [ ] Supabase sync אופציונלי
 - [ ] Push אופציונלי
-- [ ] תרגום מלא לאנגלית
 - [ ] Certificate pinning, SQLCipher
 - [ ] Widgets למסך הבית, Wear OS
