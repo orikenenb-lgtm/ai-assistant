@@ -30,10 +30,10 @@ class AnonymousInstallTokenProvider @Inject constructor(
 
     override suspend fun token(): String? = mutex.withLock {
         try {
-            val existing = secureStore.getString(KEY_INSTALL_ID)
+            val existing = secureStore.get(KEY_INSTALL_ID)
             if (existing != null && TOKEN_FORMAT.matches(existing)) return@withLock existing
             val fresh = newInstallId()
-            secureStore.putString(KEY_INSTALL_ID, fresh)
+            secureStore.put(KEY_INSTALL_ID, fresh)
             fresh
         } catch (e: CancellationException) {
             throw e
@@ -50,7 +50,8 @@ class AnonymousInstallTokenProvider @Inject constructor(
     }
 
     companion object {
-        const val KEY_INSTALL_ID = "ai.backend.install_id"
+        /** Reuses agent E's well-known entry name; wiped by SecureStore.clearAll() ("delete all my data"). */
+        const val KEY_INSTALL_ID = SecureStore.BACKEND_DEVICE_TOKEN
         /** 32 bytes, base64url without padding = 43 chars. */
         private val TOKEN_FORMAT = Regex("^[A-Za-z0-9_-]{43}$")
     }
