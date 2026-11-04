@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ds_background">#0B1220</color>
+    <color name="ds_surface">#1E293B</color>
+    <color name="ds_primary">#3B82F6</color>
+
+    <style name="Theme.DisciplineOS" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ds_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="Theme.DisciplineOS.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ds_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.DisciplineOS</item>
+    </style>
+</resources>
