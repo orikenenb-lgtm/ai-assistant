@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of values/strings_enforcement.xml (Android enforcement). -->
+<resources>
+
+    <!-- Accessibility service (system settings description). Label lives in strings.xml (orchestrator). -->
+    <string name="accessibility_service_description">An optional DISCIPLINE OS mode. This service reads only the package name of the app that comes to the foreground, so it can show a reminder screen when you open an app you chose to limit while your mandatory tasks are still open. It does not read screen content, type or tap on your behalf, and no information is stored or sent off the device. You can turn it off here at any time.</string>
+
+    <!-- Accessibility disclosure (prominent in-app disclosure shown BEFORE sending the user to system settings) -->
+    <string name="a11y_disclosure_title">Disclosure: Accessibility mode (optional)</string>
+    <string name="a11y_disclosure_body">DISCIPLINE OS can use the Android Accessibility Service to detect more quickly which app was opened.\n\nWhat is read: only the package name (for example com.example.app) of a window that comes to the foreground, via the TYPE_WINDOW_STATE_CHANGED event.\n\nWhat is not read or done: we do not read text, images or any other content on the screen, and we do not type, tap or take any action on your behalf.\n\nWhere the data goes: nowhere. The package name is checked in memory against the list of apps you selected and discarded immediately. It is not stored, sent or shared.\n\nWhy: to show the reminder screen when you open an app you chose to limit while your mandatory tasks are open.\n\nThis is optional: the default mode (Usage access + Display over other apps) works without the Accessibility Service. You can turn it off at any time in your device settings or here.</string>
+    <string name="a11y_disclosure_accept">I agree – open Accessibility settings</string>
+    <string name="a11y_disclosure_decline">Not now</string>
+    <string name="a11y_withdraw_consent">Withdraw consent and return to the default mode</string>
+    <string name="a11y_enabled_without_consent">The Accessibility Service is turned on in settings, but you haven\'t accepted the disclosure yet, so it isn\'t running. You can accept it here or turn the service off in settings.</string>
+
+    <!-- Notification channels (fallback only; normally created by the data layer) -->
+    <string name="enf_channel_enforcement_name">App limiter</string>
+    <string name="enf_channel_enforcement_desc">An ongoing notification showing that the limiter is active and its current status</string>
+    <string name="enf_channel_alert_name">Reminders</string>
+
+    <!-- Persistent notification -->
+    <string name="enf_notif_title">DISCIPLINE OS limiter is active</string>
+    <plurals name="enf_notif_mandatory_pending">
+        <item quantity="one">%d mandatory task open • Selected apps are limited</item>
+        <item quantity="other">%d mandatory tasks open • Selected apps are limited</item>
+    </plurals>
+    <string name="enf_notif_focus_active">Focus session active • Selected apps are limited</string>
+    <string name="enf_notif_bypass_until">Temporary release active until %1$s</string>
+    <string name="enf_notif_bypass">Temporary release active</string>
+    <string name="enf_notif_recovery_until">Recovery mode – enforcement paused until %1$s</string>
+    <string name="enf_notif_recovery">Recovery mode – enforcement paused</string>
+    <string name="enf_notif_all_open">Everything is open</string>
+    <string name="enf_notif_missing_usage">Limited mode: \"Usage access\" permission is missing – tap to fix</string>
+    <string name="enf_notif_missing_overlay">Limited mode: \"Display over other apps\" permission is missing – showing notifications instead of a block screen</string>
+    <string name="enf_notif_starting">Starting…</string>
+
+    <!-- Fallback alert / start prompt -->
+    <string name="enf_alert_text_app">%1$s is limited right now – you have open mandatory tasks</string>
+    <string name="enf_alert_text_generic">This app is limited right now – you have open mandatory tasks</string>
+    <string name="enf_alert_overlay_hint">To show a full screen instead of a notification, allow \"Display over other apps\".</string>
+    <string name="enf_alert_fix_permission">Fix permission</string>
+    <string name="enf_start_prompt_title">The limiter didn\'t start in the background</string>
+    <string name="enf_start_prompt_text">Android didn\'t allow the limiter to start in the background. Tap to open the app and start it.</string>
+
+    <!-- Block screen -->
+    <string name="block_title">Time to finish your tasks</string>
+    <string name="block_title_focus">You\'re in the middle of a focus session</string>
+    <string name="block_subtitle_app">%1$s will open again as soon as your mandatory tasks are done.</string>
+    <string name="block_subtitle_generic">This app will open again as soon as your mandatory tasks are done.</string>
+    <string name="block_subtitle_focus">Your selected apps will open at the end of this work phase. You\'ve got this!</string>
+    <string name="block_remaining_header">Mandatory tasks remaining</string>
+    <string name="block_overdue">Overdue</string>
+    <string name="block_more_tasks">and %1$d more…</string>
+    <string name="block_open_tasks">Open tasks</string>
+    <string name="block_go_home">Go to home screen</string>
+    <string name="block_emergency">Emergency release</string>
+    <string name="block_recovery_link">Recovery mode</string>
+    <string name="block_recovery_explain">Feeling like it\'s too much? You can pause all enforcement (up to 72 hours) in the app → Limiter → Recovery mode. And you can always turn the limiter off or revoke permissions in your device settings – we never lock you in.</string>
+    <string name="block_shield_cd">Shield illustration</string>
+    <string-array name="block_motivation">
+        <item>A small step now means a lot of calm later.</item>
+        <item>You\'re closer than it feels. Just one more task.</item>
+        <item>Discipline is a gift you give your future self.</item>
+        <item>You don\'t have to be perfect – just start.</item>
+        <item>Five minutes of starting beats an hour of putting it off.</item>
+        <item>Every finished task is a real win. You\'ve earned it.</item>
+        <item>The app will wait. Your goals matter more.</item>
+    </string-array>
+
+    <!-- Emergency bypass sheet -->
+    <string name="bypass_sheet_title">Emergency release</string>
+    <string name="bypass_sheet_body">The release is temporary and transparent: it\'s recorded in a release log you can view at any time.</string>
+    <string name="bypass_reason_emergency">Emergency</string>
+    <string name="bypass_reason_work">Work / study</string>
+    <string name="bypass_reason_health">Health</string>
+    <string name="bypass_reason_other">Other</string>
+    <string name="bypass_note_label">Note (optional)</string>
+    <string name="bypass_confirm">Release for %1$d minutes</string>
+    <string name="bypass_confirm_generic">Release</string>
+    <string name="bypass_cancel">Cancel</string>
+    <string name="bypass_remaining">Releases left today: %1$d</string>
+    <string name="bypass_next_at">Next release available at %1$s</string>
+    <string name="bypass_emergency_always">Emergencies are always allowed – safety comes first.</string>
+    <string name="bypass_denied_limit">You\'ve used today\'s releases. In an emergency, choose \"Emergency\".</string>
+    <string name="bypass_denied_cooldown">You can request another release at %1$s. In an emergency, choose \"Emergency\".</string>
+    <string name="bypass_denied_active">A release is already active.</string>
+    <string name="bypass_denied_not_restricting">Nothing is being limited right now.</string>
+    <string name="bypass_error">We couldn\'t start the release. Please try again.</string>
+
+    <!-- Blocker hub -->
+    <string name="blocker_title">App limiter</string>
+    <string name="blocker_master_switch">Turn on the limiter</string>
+    <string name="blocker_master_switch_sub">Limits the apps you choose only while your mandatory tasks are open</string>
+    <string name="blocker_needs_permissions">A few permissions are needed to turn this on. We\'ll take you to the permissions screen.</string>
+    <string name="blocker_status_header">Current status</string>
+    <string name="blocker_status_off">The limiter is off</string>
+    <string name="blocker_status_loading">Loading…</string>
+    <string name="blocker_status_degraded">Limited mode – permissions missing. Tap to fix.</string>
+    <string name="blocker_apps_header">Limited apps</string>
+    <string name="blocker_apps_count">Apps selected: %1$d</string>
+    <string name="blocker_apps_none">No apps selected yet</string>
+    <string name="blocker_choose_apps">Choose apps</string>
+    <string name="blocker_permissions">Permissions and battery</string>
+    <string name="blocker_mode_header">Detection method</string>
+    <string name="blocker_mode_usage">Default: Usage access + Display over other apps</string>
+    <string name="blocker_mode_usage_sub">Recommended. Checks every second (only while limiting is active and the screen is on). Delay of up to about one second.</string>
+    <string name="blocker_mode_a11y">Optional: Accessibility Service</string>
+    <string name="blocker_mode_a11y_sub">Instant detection and easier on the battery. Reads only the name of the foreground app. Requires a disclosure and manual activation in settings.</string>
+    <string name="blocker_mode_a11y_status_on">Accessibility Service is on</string>
+    <string name="blocker_mode_a11y_status_off">Accessibility Service is off in settings – tap to open</string>
+    <string name="blocker_rules_header">Rules</string>
+    <string name="blocker_carry_over">Overdue mandatory tasks keep limiting</string>
+    <string name="blocker_carry_over_sub">An unfinished mandatory task from yesterday keeps limiting until it\'s handled</string>
+    <string name="blocker_focus">Limit during focus sessions</string>
+    <string name="blocker_focus_sub">During a work phase, your selected apps are limited even with no open tasks</string>
+    <string name="blocker_bypass_header">Temporary release</string>
+    <string name="blocker_bypass_duration">Release length: %1$d minutes</string>
+    <string name="blocker_bypass_max">Daily maximum: %1$d</string>
+    <string name="blocker_bypass_cooldown">Wait between releases: %1$d minutes</string>
+    <string name="blocker_decrease">Decrease</string>
+    <string name="blocker_increase">Increase</string>
+    <string name="blocker_history_header">Release log (7 days)</string>
+    <string name="blocker_history_empty">No releases in the past week</string>
+    <string name="blocker_history_item">%1$s • %2$s • %3$d min</string>
+    <string name="blocker_history_ended_early">Ended early</string>
+    <string name="blocker_recovery_header">Recovery mode</string>
+    <string name="blocker_recovery_explain">A safety net: pauses all enforcement for as long as you choose. Always available, no questions asked.</string>
+    <string name="blocker_recovery_active">Recovery mode active until %1$s</string>
+    <string name="blocker_recovery_hours">%1$d h</string>
+    <string name="blocker_recovery_disable">End recovery mode</string>
+    <string name="blocker_limits_link">What the limiter can and can\'t do</string>
+    <string name="blocker_limits_text">The limiter detects which app is open and shows a reminder screen. There is no absolute blocking: there may be a delay of up to about one second, device makers may stop it to save battery, and you can always revoke permissions, turn it off or uninstall the app. It will never limit the phone, emergency, messaging, settings or the home screen.</string>
+
+    <!-- Blocked apps -->
+    <string name="apps_title">Choose apps to limit</string>
+    <string name="apps_search">Search apps</string>
+    <string name="apps_suggested_header">Suggestions (installed on this device)</string>
+    <string name="apps_all_header">All apps</string>
+    <string name="apps_protected">Can\'t be blocked – emergency/system app</string>
+    <string name="apps_loading">Loading apps…</string>
+    <string name="apps_empty">No apps found</string>
+    <string name="apps_empty_search">No search results</string>
+    <string name="apps_selected_count">%1$d selected</string>
+    <string name="apps_toggle_cd">Limit %1$s</string>
+
+    <!-- Permissions -->
+    <string name="perm_title">Permissions</string>
+    <string name="perm_intro">Every permission is explained. You can revoke any of them at any time in your device settings – the app keeps working, just without the limiter.</string>
+    <string name="perm_granted">Granted</string>
+    <string name="perm_missing">Missing</string>
+    <string name="perm_optional">Optional</string>
+    <string name="perm_not_applicable">Not needed on this version</string>
+    <string name="perm_open_settings">Open settings</string>
+    <string name="perm_usage_title">Usage access</string>
+    <string name="perm_usage_why">Required. Lets the app know which app is currently open, so a reminder appears only when you open an app you selected. The data stays on your device.</string>
+    <string name="perm_overlay_title">Display over other apps</string>
+    <string name="perm_overlay_why">Required on Android 10 and later to show the reminder screen over the limited app. Without it, we show a notification instead.</string>
+    <string name="perm_notif_title">Notifications</string>
+    <string name="perm_notif_why">Recommended. Shows the ongoing notification that the limiter is active, plus task reminders.</string>
+    <string name="perm_battery_title">Unrestricted battery</string>
+    <string name="perm_battery_why">Recommended. Keeps the system from stopping the limiter in the background. The limiter saves battery on its own: it doesn\'t check while the screen is off or when there\'s nothing to limit.</string>
+    <string name="perm_battery_hint">On the next screen: choose \"All apps\", find DISCIPLINE OS and select \"Don\'t optimize\".</string>
+    <string name="perm_app_details">App info</string>
+    <string name="perm_a11y_title">Accessibility Service (optional)</string>
+    <string name="perm_a11y_why">Optional. Instantly detects the foreground app – reads only the package name. Available only after a disclosure and your consent.</string>
+    <string name="perm_exact_title">Alarms and reminders (optional)</string>
+    <string name="perm_exact_why">Optional. Lets the focus timer end exactly on time. Without it, the end may be slightly delayed.</string>
+    <string name="perm_samsung_header">Tips for Samsung Galaxy</string>
+    <string name="perm_samsung_tips">• Settings → Battery → Background usage limits → \"Never sleeping apps\" → add DISCIPLINE OS.\n• On the same screen: turn off \"Put unused apps to sleep\" (or make sure the app isn\'t on the sleeping list).\n• Settings → Apps → DISCIPLINE OS → Battery → \"Unrestricted\".\n• Exact names vary between One UI versions.</string>
+    <string name="perm_samsung_expand">Show tips</string>
+    <string name="perm_samsung_collapse">Hide tips</string>
+    <string name="perm_ready">All set for the default mode</string>
+    <string name="perm_not_ready">Required permissions are missing</string>
+</resources>
