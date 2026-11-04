@@ -10,20 +10,26 @@ import com.disciplineos.core.domain.coach.CoachErrorKind
 import com.disciplineos.core.domain.coach.CoachSendState
 import com.disciplineos.core.domain.repository.SettingsRepository
 import com.disciplineos.core.domain.task.TaskError
+import com.disciplineos.core.domain.time.TimeProvider
 import com.disciplineos.core.domain.task.TaskResult
 import com.disciplineos.core.model.AiPrivacySettings
 import com.disciplineos.core.model.ChatMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 data class CoachUiState(
@@ -48,7 +54,8 @@ private data class Transient(
     val input: String = "",
     val sending: Boolean = false,
     val streamingText: String? = null,
-    val limitReached: Boolean = false,
+    /** Local day on which the daily limit was reached; the limit lifts automatically after midnight. */
+    val limitReachedOn: LocalDate? = null,
     val errorRes: Int? = null,
     val pendingAction: Pair<Long, Int>? = null,
 )
@@ -58,6 +65,7 @@ class CoachViewModel @Inject constructor(
     private val conversation: CoachConversationUseCase,
     private val backendConfig: AiBackendConfig,
     settingsRepository: SettingsRepository,
+    private val time: TimeProvider,
 ) : ViewModel() {
 
     private val transient = MutableStateFlow(Transient())
@@ -74,11 +82,23 @@ class CoachViewModel @Inject constructor(
         .onStart { emit(Messages.Loading) }
         .catch { emit(Messages.Failed) }
 
+    /**
+     * Current local day, re-checked at least every minute (and right at midnight), so a "limit reached" state
+     * from yesterday lifts while the screen stays open. Restarted on resume via WhileSubscribed.
+     */
+    private val today: Flow<LocalDate> = flow {
+        while (true) {
+            emit(time.today())
+            delay(CoachInput.dayCheckDelayMillis(time.now(), time.zone()))
+        }
+    }.distinctUntilChanged()
+
     val uiState: StateFlow<CoachUiState> = combine(
         messages,
         settingsRepository.observeAiPrivacy().catch { emit(AiPrivacySettings()) },
         transient,
-    ) { m, privacy, t ->
+        today,
+    ) { m, privacy, t, day ->
         CoachUiState(
             loading = m is Messages.Loading,
             loadFailed = m is Messages.Failed,
@@ -86,7 +106,7 @@ class CoachViewModel @Inject constructor(
             input = t.input,
             sending = t.sending,
             streamingText = t.streamingText,
-            limitReached = t.limitReached,
+            limitReached = CoachInput.isLimitActive(t.limitReachedOn, day),
             errorRes = t.errorRes,
             // Same rule as SelectingAiCoachRepository.shouldUseRemote: user opt-in AND a configured backend.
             isLocalProvider = !CoachInput.usesRemote(privacy.remoteProviderEnabled, backendConfig.isConfigured),
@@ -105,8 +125,13 @@ class CoachViewModel @Inject constructor(
     }
 
     fun send() {
-        val t = transient.value
-        if (!CoachInput.canSend(t.input, t.sending, t.limitReached)) return
+        val current = transient.value
+        // Re-evaluate on every attempt: a limit hit yesterday must not block today's first message.
+        val t = if (CoachInput.isLimitActive(current.limitReachedOn, time.today())) current else current.copy(limitReachedOn = null)
+        if (!CoachInput.canSend(t.input, t.sending, t.limitReachedOn != null)) {
+            transient.value = t
+            return
+        }
         val text = t.input.trim()
         transient.value = t.copy(input = "", sending = true, streamingText = "", errorRes = null)
         sendJob?.cancel()
@@ -128,7 +153,7 @@ class CoachViewModel @Inject constructor(
             is CoachSendState.Streaming -> t.copy(streamingText = s.partialText)
             CoachSendState.Completed -> t.copy(sending = false, streamingText = null)
             is CoachSendState.Failed -> t.copy(sending = false, streamingText = null, errorRes = errorFor(s.kind))
-            CoachSendState.LimitReached -> t.copy(sending = false, streamingText = null, limitReached = true)
+            CoachSendState.LimitReached -> t.copy(sending = false, streamingText = null, limitReachedOn = time.today())
         }
     }
 

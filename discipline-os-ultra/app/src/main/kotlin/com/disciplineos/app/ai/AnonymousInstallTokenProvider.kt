@@ -13,12 +13,12 @@ import kotlin.coroutines.cancellation.CancellationException
  * Per-install anonymous token: a random 256-bit id generated once and kept in the Keystore-backed [SecureStore].
  * It identifies an installation (for quota) without identifying a person. No account, no login, no PII.
  *
- * DEPLOYMENT NOTE (not implemented on purpose): the reference backend (`backend/supabase/functions/coach-stream`)
- * verifies a Supabase Auth JWT. A real deployment should exchange this install id for a short-lived JWT via
- * Supabase Auth *anonymous sign-in* (`POST /auth/v1/signup` with the project's publishable anon key, which is
- * public by design), cache the access token in memory, refresh it before expiry, and return it here. Until that
- * exchange is wired, a deployed reference backend will answer 401 → NOT_CONFIGURED, and the app keeps working
- * with the local coach. See docs/AI_SECURITY.md §"אימות".
+ * Fallback provider: [com.disciplineos.app.di.AiModule] uses it only when the build has no Supabase Auth
+ * configuration (`discipline.supabaseUrl` / `discipline.supabaseAnonKey`). The reference backend
+ * (`backend/supabase/functions/coach-stream`) verifies a Supabase Auth JWT, so with this provider it answers
+ * 401 → NOT_CONFIGURED and the app keeps working with the local coach. With Supabase configured,
+ * [SupabaseAnonymousTokenProvider] exchanges an anonymous sign-in for a short-lived JWT instead.
+ * See docs/AI_SECURITY.md §"אימות".
  */
 @Singleton
 class AnonymousInstallTokenProvider @Inject constructor(

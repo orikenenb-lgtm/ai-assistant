@@ -13,7 +13,18 @@ data class CoachContext(
     val focusMinutesToday: Int,
     /** Null unless AiPrivacySettings.shareAppUsage is true. */
     val appUsageSummary: String? = null,
+    /**
+     * Pending tasks the coach may propose to reschedule (`reschedule_task.taskId` must be one of these ids).
+     * Titles follow the same rules as [pendingMandatoryTitles] (sanitised, placeholders unless shareTaskTitles).
+     */
+    val pendingTasks: List<CoachTaskRef> = emptyList(),
 )
+
+/**
+ * Minimal reference to a pending task. [id] is the local task id (a meaningless local integer, safe to share);
+ * [date] is the ISO local date of the pending occurrence (may be before today = overdue).
+ */
+data class CoachTaskRef(val id: Long, val title: String, val mandatory: Boolean, val date: String)
 
 sealed interface CoachChunk {
     data class TextDelta(val text: String) : CoachChunk

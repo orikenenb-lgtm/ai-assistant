@@ -23,6 +23,11 @@ android {
         // Optional AI backend base URL. Empty = local demo coach only. NEVER put API keys here:
         // the backend holds provider keys; the app authenticates per-user (see SECURITY.md).
         buildConfigField("String", "AI_BACKEND_URL", "\"${project.findProperty("discipline.aiBackendUrl") ?: ""}\"")
+        // Optional Supabase Auth (anonymous sign-in) used to obtain a short-lived JWT for the AI backend.
+        // SUPABASE_ANON_KEY is the project's PUBLISHABLE (anon) key: public by design, safe inside an APK and
+        // protected by RLS. NEVER pass the service_role key here. Both empty = install-id token (backend answers 401).
+        buildConfigField("String", "SUPABASE_URL", "\"${project.findProperty("discipline.supabaseUrl") ?: ""}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${project.findProperty("discipline.supabaseAnonKey") ?: ""}\"")
     }
 
     buildTypes {

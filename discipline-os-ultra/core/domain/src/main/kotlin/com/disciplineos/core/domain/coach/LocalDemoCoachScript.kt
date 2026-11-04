@@ -9,12 +9,13 @@ import java.time.LocalDate
 /**
  * Deterministic, keyword-based script behind [LocalDemoCoachProvider]. No network, no randomness:
  * the same message + context + date always produce the same reply. All emitted action JSON is built to pass
- * [CoachActionValidator] (dates are today, titles <= 120 chars, <= 10 sub-tasks, estimate 1..720).
+ * [CoachActionValidator] (create dates are today, reschedule dates tomorrow and only for ids from
+ * [CoachContext.pendingTasks], titles <= 120 chars, <= 10 sub-tasks, estimate 1..720).
  */
 internal object LocalDemoCoachScript {
     data class Reply(val intent: Intent, val text: String, val actionJson: List<String>)
 
-    enum class Intent { BREAK_DOWN, PLAN_DAY, PRIORITIZE, SUMMARY, MOTIVATION }
+    enum class Intent { BREAK_DOWN, RESCHEDULE, PLAN_DAY, PRIORITIZE, SUMMARY, MOTIVATION }
 
     const val DEMO_NOTE = "(מאמן הדגמה לא מקוון)"
     private const val MAX_LISTED = 7
@@ -22,12 +23,14 @@ internal object LocalDemoCoachScript {
     private val breakDownKeys = listOf("פרק לי", "תפרק", "לפרק", "פירוק", "break down", "breakdown", "break it down")
     private val planKeys = listOf("תכנן", "תכנון", "תוכנית", "לתכנן", "plan my day", "plan")
     private val prioritizeKeys = listOf("מה לעשות קודם", "במה להתחיל", "מה קודם", "עדיפות", "לתעדף", "תעדוף", "priorit", "what first", "what should i do first")
+    private val rescheduleKeys = listOf("דחה", "לדחות", "תדחה", "תדחי", "להזיז", "תזיז", "תזיזי", "postpone", "reschedule")
     private val summaryKeys = listOf("סכם", "סיכום", "תסכם", "summary", "summarize", "summarise", "recap")
 
     fun detect(message: String): Intent {
         val m = message.lowercase()
         return when {
             breakDownKeys.any { it in m } -> Intent.BREAK_DOWN
+            rescheduleKeys.any { it in m } -> Intent.RESCHEDULE
             prioritizeKeys.any { it in m } -> Intent.PRIORITIZE
             summaryKeys.any { it in m } -> Intent.SUMMARY
             planKeys.any { it in m } -> Intent.PLAN_DAY
@@ -38,6 +41,7 @@ internal object LocalDemoCoachScript {
     fun reply(message: String, context: CoachContext, today: LocalDate): Reply = when (detect(message)) {
         Intent.PLAN_DAY -> planDay(context, today)
         Intent.BREAK_DOWN -> breakDown(message, today)
+        Intent.RESCHEDULE -> reschedule(context, today)
         Intent.PRIORITIZE -> prioritize(context)
         Intent.SUMMARY -> summary(context)
         Intent.MOTIVATION -> motivation(message, context)
@@ -98,6 +102,40 @@ internal object LocalDemoCoachScript {
         return Reply(Intent.BREAK_DOWN, text, listOf(action))
     }
 
+    /**
+     * Proposes moving ONE pending task to tomorrow: the oldest overdue mandatory task first, otherwise the first
+     * mandatory task of today. Only ids from [CoachContext.pendingTasks] are used, never invented ones.
+     */
+    private fun reschedule(c: CoachContext, today: LocalDate): Reply {
+        val refs = c.pendingTasks.filter { it.mandatory && it.id > 0 }
+        fun dateOf(ref: CoachTaskRef): LocalDate? = runCatching { LocalDate.parse(ref.date) }.getOrNull()
+        val overdue = refs.filter { dateOf(it)?.isBefore(today) == true }.minByOrNull { dateOf(it)!! }
+        val target = overdue ?: refs.firstOrNull { dateOf(it) == today }
+        if (target == null) {
+            val text = "$DEMO_NOTE אין כרגע משימת חובה פתוחה שאפשר לדחות. אם משהו מרגיש כבד מדי — " +
+                "אפשר לבקש ממני \"פרק לי\" ולהתחיל מצעד קטן."
+            return Reply(Intent.RESCHEDULE, text, emptyList())
+        }
+        val newDate = today.plusDays(1)
+        val title = PromptInjectionGuard.sanitizeContextField(target.title, 80).ifBlank { "משימת החובה" }
+        val text = buildString {
+            append("$DEMO_NOTE ")
+            if (overdue != null) {
+                append("\"$title\" באיחור מאז ${target.date}. ")
+            } else {
+                append("\"$title\" מתוכננת להיום. ")
+            }
+            append("אפשר לדחות אותה למחר ($newDate) ולקבוע לה זמן ברור — עדיף מועד ריאלי מאשר עוד יום של אשמה. ")
+            append("הכנתי הצעה לדחייה — היא תתבצע רק אם תאשר.")
+        }
+        val action = buildJsonObject {
+            put("type", "reschedule_task")
+            put("taskId", target.id)
+            put("newDate", newDate.toString())
+        }.toString()
+        return Reply(Intent.RESCHEDULE, text, listOf(action))
+    }
+
     private fun prioritize(c: CoachContext): Reply {
         val text = when {
             c.pendingMandatoryTitles.isNotEmpty() -> buildString {
@@ -143,7 +181,7 @@ internal object LocalDemoCoachScript {
             append("$DEMO_NOTE ")
             append(motivations[idx])
             if (c.streakDays > 0) append(" הרצף שלך עומד על ${c.streakDays} ימים — כל הכבוד.")
-            append(" אפשר לבקש ממני: \"תכנן לי את היום\", \"פרק לי מטרה\", \"מה לעשות קודם\" או \"סכם את היום\".")
+            append(" אפשר לבקש ממני: \"תכנן לי את היום\", \"פרק לי מטרה\", \"מה לעשות קודם\", \"דחה משימה\" או \"סכם את היום\".")
         }
         return Reply(Intent.MOTIVATION, text, emptyList())
     }

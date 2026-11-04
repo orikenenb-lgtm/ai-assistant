@@ -54,6 +54,13 @@
 
 ## 2. סנכרון Supabase (אופציונלי, מתוכנן)
 
+> **כבר קיים: Supabase Auth אנונימי עבור המאמן.** מאפייני build (ריקים כברירת מחדל):
+> `-Pdiscipline.supabaseUrl=https://<PROJECT_REF>.supabase.co` ו-`-Pdiscipline.supabaseAnonKey=<PUBLISHABLE_ANON_KEY>`
+> → `BuildConfig.SUPABASE_URL` / `SUPABASE_ANON_KEY`. ה-anon key הוא מפתח **ציבורי** (publishable), מוגן ב-RLS ובטוח
+> בתוך APK; `service_role` לעולם לא באפליקציה. `SupabaseAnonymousTokenProvider` מבצע anonymous sign-in, שומר את
+> ה-session ב-`SecureStore` ומרענן אותו — אותו משתמש אנונימי ישמש בעתיד גם לסנכרון (ו-"linking" לחשבון קבוע).
+> פרטים: `docs/AI_SECURITY.md` §6.
+
 ### 2.1 מטרה
 גיבוי וסנכרון בין מכשירים של משימות/רצפים/סשנים, **מקומי-תחילה**: Room נשאר מקור האמת, השרת הוא העתק.
 
@@ -116,5 +123,6 @@ services, ב-`google-services.json` ובפרויקט Firebase — לכן לא נ
 |---|---|---|---|---|
 | שרת מאמן (`backend/`) | Supabase, Anthropic Console | — | Anthropic לפי שימוש; Supabase free/paid | `ANTHROPIC_API_KEY` ב-`supabase secrets` |
 | Google Calendar | Google Cloud | OAuth consent; verification ל-scope רגיש | אין | אין (Android client ציבורי) |
+| Supabase Auth (מאמן) | Supabase | הפעלת Anonymous Sign-ins, rate limit | free/paid | אין בלקוח; `discipline.supabaseAnonKey` = מפתח ציבורי |
 | Supabase Sync | Supabase | מדיניות פרטיות, מחיקת חשבון | לפי נפח בייצור | אין בלקוח; anon key ציבורי |
 | FCM Push | Firebase | Data Safety ב-Play | אין | Service Account בשרת; `google-services.json` ב-CI |
