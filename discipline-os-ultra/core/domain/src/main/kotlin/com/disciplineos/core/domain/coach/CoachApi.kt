@@ -67,7 +67,7 @@ object PromptInjectionGuard {
 
     /** Bidi overrides/isolates, zero-width characters and BOM — commonly used to hide instructions. */
     private fun isInvisibleControl(c: Char): Boolean =
-        c in '‪'..'‮' || c in '⁦'..'⁩' || c in '​'..'‍' || c == '⁠' || c == '﻿'
+        c in '\u202A'..'\u202E' || c in '\u2066'..'\u2069' || c in '\u200B'..'\u200D' || c == '\u2060' || c == '\uFEFF'
 
     /** Removes C0/C1 control characters (except \n and \t), bidi overrides and zero-width characters. */
     internal fun stripUnsafeChars(raw: String): String = buildString(raw.length) {

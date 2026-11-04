@@ -125,7 +125,8 @@ class BackupManagerImpl @Inject constructor(
             dao.insertStreakFreezes(s.streakFreezes)
         }
         s.settings?.let { imported -> settingsRepository.updateSettings { imported } }
-        s.blockerConfig?.let { imported -> blockerRepository.updateConfig { imported } }
+        // Imported config never enables enforcement: the user re-enables it via the blocker screen, which checks permissions.
+        s.blockerConfig?.let { imported -> blockerRepository.updateConfig { imported.copy(enabled = false) } }
         s.focusConfig?.let { imported -> focusRepository.updateConfig { imported } }
     }
 

@@ -79,7 +79,7 @@ class ReminderNotifier @Inject constructor(
         } else {
             context.getString(R.string.notif_summary_text_open, completed, total, mandatoryOpen)
         }
-        val notification = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
+        val notification = NotificationCompat.Builder(context, NotificationChannels.COACH)
             .setSmallIcon(android.R.drawable.ic_menu_agenda)
             .setContentTitle(title)
             .setContentText(text)

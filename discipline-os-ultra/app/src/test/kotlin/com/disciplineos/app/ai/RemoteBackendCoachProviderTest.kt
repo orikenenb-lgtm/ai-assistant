@@ -270,8 +270,8 @@ class RemoteBackendCoachProviderTest {
 
     @Test
     fun cleanTextStripsControlAndBidiOverrides() {
-        val raw = "a\u0000b‮c⁦d‏e\nf\u0085g"
-        assertEquals("abcd‏e\nfg", RemoteBackendCoachProvider.cleanText(raw, 100))
+        val raw = "a\u0000b\u202Ec\u2066d\u200Fe\nf\u0085g"
+        assertEquals("abcd\u200Fe\nfg", RemoteBackendCoachProvider.cleanText(raw, 100))
         // Never splits a surrogate pair.
         val emoji = "ab😀"
         assertEquals("ab", RemoteBackendCoachProvider.cleanText(emoji, 3))

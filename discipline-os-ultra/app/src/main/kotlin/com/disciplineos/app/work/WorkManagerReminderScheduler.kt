@@ -51,6 +51,13 @@ class WorkManagerReminderScheduler @Inject constructor(
         val queuedFire = HashMap<String, String>() // unique name -> fire tag
         for (info in queued) {
             if (info.state.isFinished) continue
+            // Never cancel a reminder that is running or already due: the planner drops past fire times, but a
+            // due reminder may simply be waiting for Doze/the process start that triggered this reschedule.
+            // ReminderWorker re-checks the occurrence state itself, so letting it run is always safe.
+            if (info.state == WorkInfo.State.RUNNING) continue
+            val queuedFireAt = info.tags.firstOrNull { it.startsWith(WorkNames.FIRE_TAG_PREFIX) }
+                ?.removePrefix(WorkNames.FIRE_TAG_PREFIX)?.toLongOrNull()
+            if (queuedFireAt != null && queuedFireAt <= now.toEpochMilli() + DUE_GRACE_MILLIS) continue
             val name = info.tags.firstOrNull { it.startsWith(WorkNames.NAME_TAG_PREFIX) }?.removePrefix(WorkNames.NAME_TAG_PREFIX)
             if (name == null || name !in plannedByName) {
                 workManager.cancelWorkById(info.id)
@@ -77,5 +84,10 @@ class WorkManagerReminderScheduler @Inject constructor(
 
     override suspend fun cancelForTask(taskId: Long) {
         workManager.cancelAllWorkByTag(WorkNames.taskTag(taskId))
+    }
+
+    private companion object {
+        /** Reminders due within this window are left alone (see rescheduleAll). */
+        const val DUE_GRACE_MILLIS = 2 * 60_000L
     }
 }

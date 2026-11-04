@@ -29,6 +29,10 @@ class FocusAlarmReceiver : BroadcastReceiver() {
             try {
                 // goAsync gives ~10s; stay well inside it.
                 withTimeoutOrNull(TIMEOUT_MILLIS) {
+                    // The process may have been killed while the ongoing notification stayed visible; in that case
+                    // the in-memory timer is still IDLE. restore() is mutex-guarded and idempotent (it reloads the
+                    // last persisted state), so load it before applying the user's action.
+                    manager.restore()
                     when (action) {
                         ACTION_PHASE_END -> manager.onPhaseMaybeElapsed()
                         ACTION_PAUSE -> manager.pause()

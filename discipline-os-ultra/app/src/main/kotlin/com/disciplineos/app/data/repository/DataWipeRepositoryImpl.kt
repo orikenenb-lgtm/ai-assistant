@@ -34,6 +34,7 @@ class DataWipeRepositoryImpl @Inject constructor(
     private val secureStore: SecureStore,
     private val maintenance: MaintenanceScheduler,
     private val focusSessionManager: FocusSessionManager,
+    private val enforcementPrefs: com.disciplineos.app.enforcement.EnforcementPrefs,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : DataWipeRepository {
 
@@ -49,6 +50,7 @@ class DataWipeRepositoryImpl @Inject constructor(
         NotificationManagerCompat.from(context).cancelAll()
         withContext(io) { db.clearAllTables() } // must not run on the main thread
         secureStore.clearAll()
+        enforcementPrefs.clear()
         dataStore.edit { it.clear() }
         maintenance.enqueuePeriodic()
     }

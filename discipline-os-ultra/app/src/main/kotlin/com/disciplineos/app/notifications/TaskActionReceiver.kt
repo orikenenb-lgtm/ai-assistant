@@ -50,6 +50,8 @@ class TaskActionReceiver : BroadcastReceiver() {
                         }
                     null -> notifier.showActionNeedsApp(occurrenceId) // timed out
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 notifier.showActionNeedsApp(occurrenceId)
             } finally {

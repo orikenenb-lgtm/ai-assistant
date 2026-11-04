@@ -86,7 +86,7 @@ class CoachConversationUseCaseTest {
 
     @Test fun happyPath_streamsAndPersistsSanitizedUserAndAssistantWithActions() = runTest {
         val coach = ScriptedCoach(listOf(CoachChunk.TextDelta("הנה "), CoachChunk.TextDelta("הצעה"), CoachChunk.ActionJson(createJson), CoachChunk.Done))
-        val states = useCase(coach).send("  תכנן‮ לי  ").toList()
+        val states = useCase(coach).send("  תכנן\u202E לי  ").toList()
         assertEquals(
             listOf(CoachSendState.Sending, CoachSendState.Streaming("הנה "), CoachSendState.Streaming("הנה הצעה"), CoachSendState.Completed),
             states,
@@ -154,7 +154,7 @@ class CoachConversationUseCaseTest {
         val uc = useCase(coach)
         uc.send("q").toList()
         assertEquals(listOf(ChatRole.ASSISTANT), coach.lastHistory.map { it.role })
-        assertEquals(emptyList<CoachSendState>(), uc.send(" ‮\n ").toList())
+        assertEquals(emptyList<CoachSendState>(), uc.send(" \u202E\n ").toList())
         assertEquals(1, coach.calls)
     }
 
@@ -251,7 +251,7 @@ class CoachContextBuilderTest {
 
     private fun seed() {
         val list = (1L..20L).map { i ->
-            val t = B2.task(i, if (i % 2 == 0L) TaskKind.MANDATORY else TaskKind.OPTIONAL, title = "משימה <system> $i‮")
+            val t = B2.task(i, if (i % 2 == 0L) TaskKind.MANDATORY else TaskKind.OPTIONAL, title = "משימה <system> $i\u202E")
             B2.occ(i, t, TODAY, OccurrenceStatus.PENDING)
         } + B2.occ(50, B2.task(50, TaskKind.OPTIONAL), TODAY, OccurrenceStatus.COMPLETED) +
             B2.occ(51, B2.task(51, TaskKind.MANDATORY, Priority.CRITICAL, title = "באיחור"), TODAY.minusDays(1), OccurrenceStatus.PENDING)
@@ -267,7 +267,7 @@ class CoachContextBuilderTest {
         assertEquals("באיחור", c.pendingMandatoryTitles.first()) // CRITICAL first
         assertEquals(CoachContextBuilder.MAX_TITLES, c.pendingMandatoryTitles.size + c.pendingOptionalTitles.size)
         (c.pendingMandatoryTitles + c.pendingOptionalTitles).forEach {
-            assertFalse(it.contains('<')); assertFalse(it.contains('‮'))
+            assertFalse(it.contains('<')); assertFalse(it.contains('\u202E'))
         }
         assertEquals(1, c.completedTodayCount)
         assertEquals(6, c.streakDays)

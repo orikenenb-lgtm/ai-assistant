@@ -52,6 +52,13 @@ class EnforcementPrefs @Inject constructor(
         _mode.value = EnforcementMode.USAGE_STATS
     }
 
+    /** "Delete all my data": forget mode + consent. A connected accessibility service disables itself on withdrawal. */
+    fun clear() {
+        prefs.edit().clear().apply()
+        _accessibilityConsentAt.value = null
+        _mode.value = EnforcementMode.USAGE_STATS
+    }
+
     private fun readMode(): EnforcementMode =
         runCatching { EnforcementMode.valueOf(prefs.getString(KEY_MODE, null) ?: "") }.getOrDefault(EnforcementMode.USAGE_STATS)
 

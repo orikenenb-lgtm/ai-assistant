@@ -258,7 +258,7 @@ private fun ProposalCard(proposal: ProposalState.Ready, today: LocalDate, onOpen
                 ) {
                     // Times are LTR digits; keep "16:00–16:30" ordering stable in Hebrew.
                     Text(
-                        text = "⁦${Formatters.time(block.start)}–${Formatters.time(block.end)}⁩",
+                        text = "\u2066${Formatters.time(block.start)}–${Formatters.time(block.end)}\u2069",
                         style = DisciplineTheme.typography.labelLarge,
                         color = colors.textSecondary,
                     )

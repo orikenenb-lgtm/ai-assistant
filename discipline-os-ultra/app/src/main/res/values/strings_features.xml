@@ -282,7 +282,7 @@
     <string name="feat_privacy_share_titles">שיתוף כותרות משימות</string>
     <string name="feat_privacy_share_titles_sub">מאפשר המלצות מדויקות יותר</string>
     <string name="feat_privacy_share_usage">שיתוף סיכום שימוש באפליקציות</string>
-    <string name="feat_privacy_share_usage_sub">כבוי כברירת מחדל. נשלח רק סיכום, לעולם לא רשימה מלאה</string>
+    <string name="feat_privacy_share_usage_sub">בקרוב. כרגע נתוני שימוש לא נשלחים בשום מצב</string>
     <string name="feat_privacy_sharing_inactive">ההגדרות האלו רלוונטיות רק כשהספק המרוחק פעיל.</string>
     <string name="feat_privacy_section_limit">הגבלת שימוש</string>
     <string name="feat_privacy_limit">מכסת הודעות יומית</string>

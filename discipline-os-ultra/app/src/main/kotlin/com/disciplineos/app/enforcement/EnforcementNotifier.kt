@@ -132,6 +132,13 @@ class EnforcementNotifier @Inject constructor(
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setTimeoutAfter(60_000)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(
+                NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
+                    .setSmallIcon(R.drawable.ic_enforcement_shield)
+                    .setContentTitle(context.getString(R.string.block_title))
+                    .build(),
+            )
             .setContentIntent(pi)
             .addAction(0, context.getString(R.string.enf_alert_fix_permission), openAppIntent(ROUTE_PERMISSIONS))
             .build()
@@ -142,6 +149,10 @@ class EnforcementNotifier @Inject constructor(
 
     /** Shown when Android refused to start the foreground service from the background. Tapping opens the app, which re-syncs. */
     fun postStartPrompt() {
+        val prefs = context.getSharedPreferences(PROMPT_PREFS, Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        if (now - prefs.getLong(KEY_LAST_PROMPT, 0L) in 0 until PROMPT_MIN_INTERVAL_MILLIS) return
+        prefs.edit().putLong(KEY_LAST_PROMPT, now).apply()
         ensureChannels()
         val notification = NotificationCompat.Builder(context, NotificationChannels.ENFORCEMENT)
             .setSmallIcon(R.drawable.ic_enforcement_shield)
@@ -173,6 +184,9 @@ class EnforcementNotifier @Inject constructor(
     private fun format(instant: Instant): String = timeFormat.format(instant.atZone(ZoneId.systemDefault()))
 
     companion object {
+        private const val PROMPT_PREFS = "enforcement_prompt"
+        private const val KEY_LAST_PROMPT = "last_start_prompt"
+        private const val PROMPT_MIN_INTERVAL_MILLIS = 6 * 60 * 60 * 1000L
         /** Ids outside the ranges reserved in NotificationChannels (1001-1003, 200_000+). */
         const val ID_BLOCK_ALERT = 1010
         const val ID_START_PROMPT = 1011

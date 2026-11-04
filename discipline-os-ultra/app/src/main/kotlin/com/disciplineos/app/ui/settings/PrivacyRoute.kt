@@ -135,9 +135,10 @@ fun PrivacyRoute(onBack: () -> Unit, viewModel: PrivacyViewModel = hiltViewModel
                     DsSwitchRow(
                         title = stringResource(R.string.feat_privacy_share_usage),
                         subtitle = stringResource(R.string.feat_privacy_share_usage_sub),
-                        checked = state.privacy.shareAppUsage,
+                        // Not wired yet: no app-usage summary is ever built, so the switch is shown as off and disabled.
+                        checked = false,
                         onCheckedChange = viewModel::setShareAppUsage,
-                        enabled = state.privacy.remoteProviderEnabled,
+                        enabled = false,
                     )
                     if (!state.privacy.remoteProviderEnabled) {
                         Text(

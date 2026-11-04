@@ -1,5 +1,9 @@
 package com.disciplineos.app
 
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import android.app.Application
 import android.os.StrictMode
 import android.util.Log
@@ -21,10 +25,15 @@ import javax.inject.Inject
  * Application entry point. WorkManager is initialised on demand through [Configuration.Provider] with the
  * Hilt worker factory (the default initializer is removed in AndroidManifest.xml).
  */
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface WorkerFactoryEntryPoint {
+    fun workerFactory(): HiltWorkerFactory
+}
+
 @HiltAndroidApp
 class DisciplineApp : Application(), Configuration.Provider {
 
-    @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var channels: NotificationChannelsInitializer
     @Inject lateinit var maintenance: MaintenanceScheduler
     @Inject lateinit var reminderScheduler: ReminderScheduler
@@ -35,7 +44,9 @@ class DisciplineApp : Application(), Configuration.Provider {
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
+            // Resolved via an EntryPoint (not a field) so this works even if WorkManager is created while Hilt is
+            // still injecting fields (e.g. MaintenanceScheduler -> WorkManager.getInstance -> this getter).
+            .setWorkerFactory(EntryPointAccessors.fromApplication(this, WorkerFactoryEntryPoint::class.java).workerFactory())
             .setMinimumLoggingLevel(if (BuildConfig.DEBUG) Log.INFO else Log.ERROR)
             .build()
 
