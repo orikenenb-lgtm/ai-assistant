@@ -225,13 +225,14 @@ class RemoteBackendCoachProviderTest {
         // MockWebServer also applies the throttle while reading the *request* body, so the first period must be
         // larger than the request (~300 bytes): pad it with an SSE comment line.
         val first = "event: delta\ndata: {\"text\":\"first\"}\n\n: " + "p".repeat(4_096) + "\n"
-        // After the first chunk the server stalls for 30s (throttled body) — only cancellation can end the call.
+        // After the first chunk the server stalls for 3s (throttled body). The call must be gone well before that,
+        // so only cancellation (not a natural end of stream) can satisfy the assertion below.
         val body = first + ": " + "x".repeat(4_096) + "\n\nevent: done\ndata: {}\n\n"
         server.enqueue(
             MockResponse()
                 .setHeader("Content-Type", "text/event-stream")
                 .setBody(body)
-                .throttleBody(first.toByteArray().size.toLong(), 30, TimeUnit.SECONDS),
+                .throttleBody(first.toByteArray().size.toLong(), 3, TimeUnit.SECONDS),
         )
         val chunk = runBlocking {
             withTimeout(5_000) { provider().streamReply(emptyList(), "hi", context).first() }
@@ -239,7 +240,7 @@ class RemoteBackendCoachProviderTest {
         assertEquals(CoachChunk.TextDelta("first"), chunk)
 
         // first() cancels the collector → awaitClose → EventSource.cancel() → the call is gone.
-        val deadline = System.currentTimeMillis() + 3_000
+        val deadline = System.currentTimeMillis() + 1_500
         while (client.dispatcher.runningCallsCount() > 0 && System.currentTimeMillis() < deadline) Thread.sleep(20)
         assertEquals(0, client.dispatcher.runningCallsCount())
     }
