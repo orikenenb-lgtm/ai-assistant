@@ -20,6 +20,8 @@ sealed interface MainUiState {
 
     data class Ready(
         val startDestination: String,
+        /** Live value (unlike [startDestination]); gates external deep-link routes. */
+        val onboardingCompleted: Boolean,
         val highContrast: Boolean,
         val reduceMotion: Boolean,
     ) : MainUiState
@@ -45,6 +47,7 @@ class MainViewModel @Inject constructor(
                     .also { startDestination = it }
             MainUiState.Ready(
                 startDestination = start,
+                onboardingCompleted = settings.onboardingCompleted,
                 highContrast = settings.highContrast,
                 reduceMotion = settings.reduceMotion,
             )

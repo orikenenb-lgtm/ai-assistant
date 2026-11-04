@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -18,10 +20,29 @@ import com.disciplineos.app.designsystem.theme.DisciplineTheme
  * (its insets are consumed), each screen's own Scaffold handles status-bar/IME insets.
  */
 @Composable
-fun AppRoot(startDestination: String) {
+fun AppRoot(
+    startDestination: String,
+    onboardingCompleted: Boolean = true,
+    pendingRoute: String? = null,
+    onPendingRouteHandled: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val routeHandled by rememberUpdatedState(onPendingRouteHandled)
+
+    // External route (notification / block screen). Applied only once onboarding is finished and the
+    // user has actually left the onboarding screen; until then it stays pending.
+    LaunchedEffect(pendingRoute, onboardingCompleted, currentRoute) {
+        val route = pendingRoute ?: return@LaunchedEffect
+        if (!onboardingCompleted || currentRoute == null || currentRoute == Routes.ONBOARDING) return@LaunchedEffect
+        if (route == Routes.DASHBOARD) {
+            navController.navigateToTopLevel(TopLevelDestination.DASHBOARD)
+        } else if (route != currentRoute) {
+            navController.navigate(route) { launchSingleTop = true }
+        }
+        routeHandled()
+    }
     val currentTopLevel = TopLevelDestination.entries.firstOrNull { it.route == currentRoute }
 
     Scaffold(
