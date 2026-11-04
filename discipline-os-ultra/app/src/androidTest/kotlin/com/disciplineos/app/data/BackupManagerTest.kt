@@ -159,7 +159,14 @@ class BackupManagerTest {
         val imported = manager.importFrom(Uri.fromFile(file)).getOrThrow()
         assertEquals(written, imported)
         val after = manager.readSnapshot()
-        assertEquals(before.copy(dependencies = before.dependencies.sortedBy { it.taskId }), after.copy(dependencies = after.dependencies.sortedBy { it.taskId }))
+        // Safety rule: an imported backup never re-enables enforcement (the user must re-enable it through the
+        // blocker screen, which verifies permissions). Every other blocker setting round-trips unchanged.
+        assertEquals(false, after.blockerConfig?.enabled)
+        val expected = before.copy(
+            blockerConfig = before.blockerConfig?.copy(enabled = false),
+            dependencies = before.dependencies.sortedBy { it.taskId },
+        )
+        assertEquals(expected, after.copy(dependencies = after.dependencies.sortedBy { it.taskId }))
         assertEquals(AppLanguage.ENGLISH, settings.observeSettings().first().language)
         assertTrue(blocker.observeConfig().first().enabled)
         assertEquals(listOf("a", "b"), tasks.observeSubTasks(taskId).first().map { it.title })

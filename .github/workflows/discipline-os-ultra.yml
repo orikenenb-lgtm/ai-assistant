@@ -16,6 +16,11 @@ on:
 permissions:
   contents: read
 
+# push + pull_request on the same branch share a group; a newer run cancels the older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: discipline-os-ultra
