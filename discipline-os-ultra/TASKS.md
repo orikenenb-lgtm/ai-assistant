@@ -14,7 +14,7 @@
 - [x] backend רפרנס (Supabase Edge Function) — לא פרוס
 
 ## בתהליך / נותר
-- [ ] build ירוק מלא של `:app` ב-CI (ראה TEST_REPORT)
+- [x] build ירוק מלא של `:app` ב-CI: assembleDebug + unit tests + lint (run #14)
 - [ ] הרצת instrumented tests על אמולטור/מכשיר (מיגרציה, DAO, Compose UI, BlockScreen)
 - [ ] בדיקות ידניות על Galaxy S25 Ultra: הרשאות, ריבוט, שלילת הרשאות, סוללה
 - [ ] החלפת placeholders של identityHash ב-schema JSON (נוצר אוטומטית ב-build הראשון)
