@@ -86,7 +86,7 @@ plugin packages that folder as androidTest assets for `MigrationTestHelper`.
 
 **Honest status:** the repository was produced in a sandbox without Google Maven, so Room's compiler never ran.
 `1.json` and `2.json` were **hand-written** to match the entities exactly (same `createSql`, fields, indices, FKs and
-the `DEFAULT 0`). Their `identityHash` values (`e0a1…7e01`, `e0a1…7e02`) are **placeholders**.
+the `DEFAULT 0`). `2.json` now carries Room's **real** identityHash (`a5c5f295…79c1`), read on 2026-11-04 from the `room_master_table` of the database the debug app created on the CI emulator (`ci/emulator-run.sh` prints it as `room_identity_hash=`). `1.json` keeps a placeholder hash (`e0a1…7e01`), which is harmless: MigrationTestHelper only uses its table definitions.
 
 On the first real build:
 
