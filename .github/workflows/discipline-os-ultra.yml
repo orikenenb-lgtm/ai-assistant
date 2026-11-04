@@ -1,0 +1,68 @@
+# CI של DISCIPLINE OS ULTRA (אפליקציית Android) — רץ רק כשיש שינוי בתיקיית הפרויקט.
+# מסלול 1: בדיקות domain טהורות (Kotlin/JVM) — לא דורש Android SDK.
+# מסלול 2: build מלא של Android (debug APK), בדיקות יחידה ו-lint — דורש Google Maven (זמין ב-GitHub Actions).
+name: DISCIPLINE OS ULTRA
+
+on:
+  push:
+    paths:
+      - "discipline-os-ultra/**"
+      - ".github/workflows/discipline-os-ultra.yml"
+  pull_request:
+    paths:
+      - "discipline-os-ultra/**"
+      - ".github/workflows/discipline-os-ultra.yml"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: discipline-os-ultra
+
+jobs:
+  domain:
+    name: בדיקות domain (JVM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew -p verify-jvm test --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: domain-test-reports
+          path: discipline-os-ultra/core/*/build/reports/tests/
+
+  android:
+    name: Android build + unit tests + lint
+    runs-on: ubuntu-latest
+    needs: domain
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      # ubuntu-latest כולל Android SDK מותקן מראש (ANDROID_HOME). אין סודות ואין חתימת release ב-CI.
+      - run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug --console=plain
+      - uses: actions/upload-artifact@v4
+        with:
+          name: discipline-os-ultra-debug-apk
+          path: discipline-os-ultra/app/build/outputs/apk/debug/*.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-reports
+          path: |
+            discipline-os-ultra/app/build/reports/
+            discipline-os-ultra/app/schemas/
