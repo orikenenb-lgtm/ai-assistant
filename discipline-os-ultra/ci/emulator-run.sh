@@ -84,6 +84,11 @@ if adb logcat -d -b crash | grep -q "$PKG"; then CRASH=1; fi
 CRASH_LOG=$(adb logcat -d -b crash | grep -A 30 "$PKG" | head -60)
 adb shell am force-stop "$PKG"
 
+# Room's real identity hash, read from the database the app created on first launch (debug build => run-as works).
+adb exec-out run-as "$PKG" cat databases/discipline.db > ci-screenshots/discipline.db 2>/dev/null || true
+adb exec-out run-as "$PKG" cat databases/discipline.db-wal > ci-screenshots/discipline.db-wal 2>/dev/null || true
+ROOM_HASH=$(python3 -c "import sqlite3,sys;print(sqlite3.connect(sys.argv[1]).execute('select identity_hash from room_master_table').fetchone()[0])" ci-screenshots/discipline.db 2>/dev/null || echo "unavailable (WAL not checkpointed or db not created)")
+
 # Small final thumbnail of the dashboard (kept last-but-summary so a log tail can include it).
 
 echo "==================== EMULATOR SUMMARY ===================="
@@ -104,6 +109,7 @@ PY
 echo "gradle_connected_exit=$TEST_STATUS"
 echo "app_crash=$CRASH"
 echo "missing_taps=${MISSING_TAPS:-none}"
+echo "room_identity_hash=$ROOM_HASH"
 echo "--- visible texts per screen ---"; cat ci-screenshots/screen-texts.txt
 ls ci-screenshots/*.png 2>/dev/null | sed 's|.*/||' | tr '\n' ' '; echo
 [ $CRASH -ne 0 ] && echo "$CRASH_LOG"
