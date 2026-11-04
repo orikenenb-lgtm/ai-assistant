@@ -56,8 +56,6 @@ android {
         abortOnError = true
         warningsAsErrors = false
         checkDependencies = true
-        // English (values-en) is a planned, partial translation; Hebrew (default values/) is complete.
-        disable += "MissingTranslation"
     }
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
