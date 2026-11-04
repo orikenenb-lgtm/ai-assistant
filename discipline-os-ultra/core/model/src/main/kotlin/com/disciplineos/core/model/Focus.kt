@@ -23,6 +23,12 @@ data class FocusSession(
     val focusedSeconds: Long = 0,
     val completed: Boolean = false,
     val interruptions: Int = 0,
+    /**
+     * Planned length of the current phase, captured when the phase started. Resume and focused-time math use it
+     * (falling back to the current [FocusConfig] when null, e.g. state persisted before this field existed), so
+     * editing the config mid-phase never changes the length of the phase already in progress.
+     */
+    val phasePlannedMillis: Long? = null,
 )
 
 /**
@@ -39,4 +45,10 @@ data class FocusState(
     val taskId: Long? = null,
     val currentSessionId: Long? = null,
     val interruptions: Int = 0,
+    /**
+     * Planned length of the current phase, captured when the phase started. Resume and focused-time math use it
+     * (falling back to the current [FocusConfig] when null, e.g. state persisted before this field existed), so
+     * editing the config mid-phase never changes the length of the phase already in progress.
+     */
+    val phasePlannedMillis: Long? = null,
 )

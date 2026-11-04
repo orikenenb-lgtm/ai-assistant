@@ -118,6 +118,8 @@ object PrefsCodec {
         val taskId: Long? = null,
         val currentSessionId: Long? = null,
         val interruptions: Int = 0,
+        /** Added later: absent in older persisted JSON, which decodes to null (reducer falls back to config). */
+        val phasePlannedMillis: Long? = null,
     )
 
     fun encodeFocusState(s: FocusState): String = json.encodeToString(
@@ -132,6 +134,7 @@ object PrefsCodec {
             taskId = s.taskId,
             currentSessionId = s.currentSessionId,
             interruptions = s.interruptions,
+            phasePlannedMillis = s.phasePlannedMillis,
         ),
     )
 
@@ -150,6 +153,7 @@ object PrefsCodec {
                 taskId = d.taskId,
                 currentSessionId = d.currentSessionId,
                 interruptions = d.interruptions,
+                phasePlannedMillis = d.phasePlannedMillis,
             )
         } catch (e: Exception) {
             null

@@ -43,7 +43,8 @@ data class FocusTransition(val state: FocusState, val effects: List<FocusEffect>
  * `now - phaseStartedAt` is the elapsed time excluding pauses.
  *  - Pause: `pausedRemainingMillis = phaseEndsAt - now`, `phaseEndsAt = null` (phaseStartedAt kept as-is).
  *  - Resume: `phaseEndsAt = now + remaining`, `phaseStartedAt = now - (planned - remaining)`, where planned is
- *    the phase length from the [FocusConfig] passed in (the only place the config length is assumed).
+ *    [FocusState.phasePlannedMillis] captured when the phase started (falling back to the [FocusConfig] length
+ *    only for state persisted before that field existed), so editing the config mid-pause has no effect.
  *  - focusedSeconds = elapsed excluding pauses, clamped to `[0, planned]`.
  *
  * ## Elapsed phases / long gaps (device asleep)
@@ -82,7 +83,7 @@ object FocusTimerStateMachine {
 
             FocusEvent.Resume -> {
                 if (state.phase == FocusPhase.IDLE || !state.paused) return ignore
-                val planned = phaseLength(state.phase, config).toMillis()
+                val planned = plannedMillis(state, config)
                 val remaining = (state.pausedRemainingMillis ?: 0L).coerceAtLeast(0L)
                 val elapsedBefore = (planned - remaining).coerceIn(0L, planned)
                 FocusTransition(
@@ -127,7 +128,7 @@ object FocusTimerStateMachine {
                 when (state.phase) {
                     FocusPhase.WORK -> {
                         val completedCount = state.completedWorkSessions + 1
-                        val start = state.phaseStartedAt ?: endsAt.minus(phaseLength(FocusPhase.WORK, config))
+                        val start = state.phaseStartedAt ?: endsAt.minusMillis(plannedMillis(state, config))
                         // Credit the planned length only — never the (possibly hours-long) unobserved overshoot.
                         val focused = Duration.between(start, endsAt).seconds.coerceAtLeast(0)
                         val finished = FocusEffect.WorkPhaseFinished(focused, completed = true)
@@ -173,16 +174,23 @@ object FocusTimerStateMachine {
     fun focusedSeconds(state: FocusState, config: FocusConfig, now: Instant): Long {
         if (state.phase != FocusPhase.WORK) return 0
         val millis = if (state.paused) {
-            val planned = phaseLength(FocusPhase.WORK, config).toMillis()
+            val planned = plannedMillis(state, config)
             (planned - (state.pausedRemainingMillis ?: planned)).coerceIn(0L, planned)
         } else {
             val start = state.phaseStartedAt ?: return 0
             val planned = state.phaseEndsAt?.let { Duration.between(start, it).toMillis() }
-                ?: phaseLength(FocusPhase.WORK, config).toMillis()
+                ?: plannedMillis(state, config)
             Duration.between(start, now).toMillis().coerceIn(0L, planned.coerceAtLeast(0L))
         }
         return millis / 1000
     }
+
+    /**
+     * Planned length of the state's current phase: the length captured at phase start, or (for state persisted
+     * before [FocusState.phasePlannedMillis] existed) the current [config] length.
+     */
+    fun plannedMillis(state: FocusState, config: FocusConfig): Long =
+        state.phasePlannedMillis?.takeIf { it > 0 } ?: phaseLength(state.phase, config).toMillis()
 
     private fun startPhase(
         base: FocusState,
@@ -191,7 +199,8 @@ object FocusTimerStateMachine {
         config: FocusConfig,
         preceding: List<FocusEffect>,
     ): FocusTransition {
-        val endsAt = at.plus(phaseLength(phase, config))
+        val length = phaseLength(phase, config)
+        val endsAt = at.plus(length)
         val isWork = phase == FocusPhase.WORK
         val next = base.copy(
             phase = phase,
@@ -199,6 +208,7 @@ object FocusTimerStateMachine {
             phaseStartedAt = at,
             phaseEndsAt = endsAt,
             pausedRemainingMillis = null,
+            phasePlannedMillis = length.toMillis(),
             // The previous work row (if any) is closed by the caller; a new WORK row id is assigned by the manager.
             currentSessionId = null,
             interruptions = if (isWork) 0 else base.interruptions,
@@ -331,7 +341,7 @@ class FocusSessionManager internal constructor(
             id = id ?: 0,
             taskId = prev.taskId,
             startedAt = prev.phaseStartedAt ?: now,
-            plannedSeconds = FocusTimerStateMachine.phaseLength(FocusPhase.WORK, config).seconds,
+            plannedSeconds = FocusTimerStateMachine.plannedMillis(prev, config) / 1000,
         )
         val endedAt = if (effect.completed) prev.phaseEndsAt ?: now else now
         var finished = base.copy(

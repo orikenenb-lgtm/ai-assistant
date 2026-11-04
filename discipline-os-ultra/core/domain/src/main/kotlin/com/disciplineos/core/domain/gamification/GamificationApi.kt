@@ -3,12 +3,16 @@ package com.disciplineos.core.domain.gamification
 import com.disciplineos.core.domain.repository.FocusRepository
 import com.disciplineos.core.domain.repository.GamificationRepository
 import com.disciplineos.core.domain.repository.TaskRepository
+import com.disciplineos.core.domain.time.LOCAL_DATE_TICK_MILLIS
 import com.disciplineos.core.domain.time.TimeProvider
+import com.disciplineos.core.domain.time.observeLocalDate
 import com.disciplineos.core.model.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -277,9 +281,10 @@ internal object AchievementRules {
  * XP, levels, streaks and achievements. All awards are idempotent via dedupe keys:
  * "occ:<occurrenceId>", "day:<date>", "focus:<sessionId>", "ach:<achievementId>", "review:<weekStart>".
  *
- * Streaks are derived from the last [WINDOW_DAYS] days of occurrences (bounded for performance). Freezes that the
- * engine applies are reported to [GamificationRepository.recordStreakFreezeUsed] once per date per service instance;
- * the repository implementation is expected to be idempotent per date.
+ * Streaks are derived from the last [WINDOW_DAYS] days of occurrences (bounded for performance). Read paths
+ * ([observeProgress]) are side-effect free: freezes the engine applies are persisted only by the explicit write path
+ * [applyStreakFreezes] (run daily by the materialize worker), once per date per service instance; the repository
+ * implementation is expected to be idempotent per date.
  */
 class GamificationService @Inject constructor(
     private val repo: GamificationRepository,
@@ -293,21 +298,37 @@ class GamificationService @Inject constructor(
 
     private fun windowStart(today: LocalDate): LocalDate = today.minusDays(WINDOW_DAYS - 1)
 
-    fun observeProgress(): Flow<PlayerProgress> {
-        val today = time.today()
-        return combine(
-            repo.observeXpEvents(),
-            taskRepo.observeOccurrences(windowStart(today), today),
-        ) { events, occurrences ->
-            val evaluation = StreakEngine.evaluate(occurrences, time.today())
-            recordFreezes(evaluation.frozenDates)
-            LevelCurve.progressFor(
-                totalXp = events.sumOf { it.amount.toLong() },
-                currentStreak = evaluation.streak.current,
-                bestStreak = evaluation.streak.best,
-                freezes = evaluation.freezesAvailable,
-            )
+    /**
+     * Live XP/level/streak. The occurrence window follows the local date: a subscriber left open past midnight
+     * re-subscribes for the new day (polled every [dateTickMillis]). Pure read — never writes.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun observeProgress(dateTickMillis: Long = LOCAL_DATE_TICK_MILLIS): Flow<PlayerProgress> =
+        time.observeLocalDate(dateTickMillis).flatMapLatest { today ->
+            combine(
+                repo.observeXpEvents(),
+                taskRepo.observeOccurrences(windowStart(today), today),
+            ) { events, occurrences ->
+                val evaluation = StreakEngine.evaluate(occurrences, today)
+                LevelCurve.progressFor(
+                    totalXp = events.sumOf { it.amount.toLong() },
+                    currentStreak = evaluation.streak.current,
+                    bestStreak = evaluation.streak.best,
+                    freezes = evaluation.freezesAvailable,
+                )
+            }
         }.distinctUntilChanged()
+
+    /**
+     * Write path for automatic streak freezes: evaluates the window ending at [today] and records every date the
+     * engine froze (idempotent per date). Returns the frozen dates. Progress output does not depend on this call —
+     * freezes are derived deterministically — it only persists the record.
+     */
+    suspend fun applyStreakFreezes(today: LocalDate = time.today()): List<LocalDate> {
+        val occurrences = taskRepo.observeOccurrences(windowStart(today), today).first()
+        val frozen = StreakEngine.evaluate(occurrences, today).frozenDates
+        recordFreezes(frozen)
+        return frozen
     }
 
     fun observeAchievements(): Flow<List<AchievementView>> =

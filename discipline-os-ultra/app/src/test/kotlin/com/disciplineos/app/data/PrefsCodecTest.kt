@@ -50,4 +50,26 @@ class PrefsCodecTest {
         assertNull(PrefsCodec.decodeFocusState("not-json"))
         assertEquals(FocusPhase.IDLE, PrefsCodec.decodeFocusState("""{"phase":"MARS"}""")!!.phase)
     }
+
+    @Test
+    fun focusState_phasePlannedMillis_roundTrips() {
+        val s = FocusState(
+            phase = FocusPhase.WORK, paused = true, phaseStartedAt = Instant.ofEpochMilli(1_000),
+            pausedRemainingMillis = 42_000, phasePlannedMillis = 25 * 60_000L,
+        )
+        val decoded = PrefsCodec.decodeFocusState(PrefsCodec.encodeFocusState(s))
+        assertEquals(s, decoded)
+        assertEquals(25 * 60_000L, decoded!!.phasePlannedMillis)
+    }
+
+    @Test
+    fun focusState_legacyJsonWithoutPlannedLength_decodesWithNull() {
+        // JSON persisted by a version that predates phasePlannedMillis.
+        val legacy = """{"phase":"WORK","paused":true,"phaseStartedAtMillis":1000,"pausedRemainingMillis":42000,""" +
+            """"completedWorkSessions":2,"taskId":9,"currentSessionId":4,"interruptions":1}"""
+        val decoded = PrefsCodec.decodeFocusState(legacy)!!
+        assertEquals(FocusPhase.WORK, decoded.phase)
+        assertEquals(42_000L, decoded.pausedRemainingMillis)
+        assertNull(decoded.phasePlannedMillis)
+    }
 }

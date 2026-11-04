@@ -117,7 +117,7 @@ class GamificationServiceTest {
         assertTrue(AchievementIds.WEEKLY_REVIEW in unlocked())
     }
 
-    @Test fun observeProgress_combinesXpAndStreak_andRecordsFreeze() = runTest {
+    @Test fun observeProgress_combinesXpAndStreak_withoutWriting_andApplyStreakFreezesRecords() = runTest {
         val days = (10L downTo 4L).map { TODAY.minusDays(it) to OccurrenceStatus.COMPLETED } +
             listOf(TODAY.minusDays(3) to OccurrenceStatus.PENDING, TODAY.minusDays(2) to OccurrenceStatus.COMPLETED)
         tasks.setOccurrences(B2.mandatoryDays(*days.toTypedArray()))
@@ -129,9 +129,23 @@ class GamificationServiceTest {
         assertEquals(20L, p.xpIntoLevel)
         assertEquals(8, p.currentStreakDays)
         assertEquals(0, p.streakFreezesAvailable)
+        // Read path is side-effect free.
+        assertEquals(emptyList<java.time.LocalDate>(), repo.freezesUsed)
+
+        // Explicit write path records the freeze, idempotently.
+        assertEquals(listOf(TODAY.minusDays(3)), service.applyStreakFreezes(TODAY))
         assertEquals(listOf(TODAY.minusDays(3)), repo.freezesUsed)
-        service.observeProgress().first()
+        service.applyStreakFreezes()
         assertEquals(1, repo.freezesUsed.size)
+
+        // Progress output is identical before and after persisting the freeze.
+        assertEquals(p, service.observeProgress().first())
+    }
+
+    @Test fun applyStreakFreezes_noFailedDays_recordsNothing() = runTest {
+        tasks.setOccurrences(B2.mandatoryDays(TODAY.minusDays(1) to OccurrenceStatus.COMPLETED))
+        assertEquals(emptyList<java.time.LocalDate>(), service.applyStreakFreezes(TODAY))
+        assertEquals(0, repo.freezesUsed.size)
     }
 
     @Test fun observeProgress_ignoresHistoryOutsideWindow() = runTest {
