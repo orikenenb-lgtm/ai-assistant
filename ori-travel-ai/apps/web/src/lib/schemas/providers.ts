@@ -7,7 +7,7 @@
  * tolerates either; prefer `providerDisplayName()` / `providerMode()` helpers.
  */
 import { z } from 'zod';
-import { CategorySchema, DataModeSchema, IsoDateTimeSchema, ProviderHealthStatusSchema } from './common';
+import { CategorySchema, DataModeSchema, IsoDateTimeSchema, ProviderHealthStatusSchema, type DataMode } from './common';
 
 export const ProviderCapabilitiesSchema = z.object({
   provider_id: z.string(),
@@ -60,7 +60,7 @@ export function providerDisplayName(p: ProviderStatus): string {
   return p.display_name ?? p.capabilities?.display_name ?? p.provider_id;
 }
 
-export function providerMode(p: ProviderStatus): 'DEMO' | 'LIVE' | 'CACHED' | undefined {
+export function providerMode(p: ProviderStatus): DataMode | undefined {
   return p.mode ?? p.capabilities?.mode;
 }
 

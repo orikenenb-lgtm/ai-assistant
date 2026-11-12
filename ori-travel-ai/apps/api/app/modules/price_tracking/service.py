@@ -52,7 +52,7 @@ def alert_out(db: Session, alert: Alert, owner_name: str | None = None) -> Alert
     if owner_name is None:
         owner = db.get(User, alert.user_id)
         owner_name = owner.display_name if owner else None
-    mode = alert.last_best_mode if alert.last_best_mode in ("DEMO", "LIVE", "CACHED") else None
+    mode = alert.last_best_mode if alert.last_best_mode in ("DEMO", "LIVE", "CACHED", "SANDBOX") else None
     return AlertOut(
         id=alert.id,
         user_id=alert.user_id,
@@ -84,7 +84,7 @@ def snapshot_out(s: PriceSnapshot) -> SnapshotOut:
         alert_id=s.alert_id,
         offer_id=s.offer_id,
         provider_id=s.provider_id if s.provider_id != NO_SNAPSHOT_PROVIDER else None,
-        mode=s.mode if s.mode in ("DEMO", "LIVE", "CACHED") else None,  # type: ignore[arg-type]
+        mode=s.mode if s.mode in ("DEMO", "LIVE", "CACHED", "SANDBOX") else None,  # type: ignore[arg-type]
         price=_money(s.amount_minor, s.currency) if ok else None,
         status=s.status,
         error_message=s.error_message,
@@ -344,13 +344,14 @@ def check_alert(db: Session, alert: Alert, now: datetime | None = None) -> Check
         if triggered:
             demo = " (נתוני הדגמה — לא מחיר אמיתי)" if best.source.mode == "DEMO" else ""
             cached = " (נתונים ממטמון)" if best.source.mode == "CACHED" else ""
+            sandbox = " (נתוני בדיקה של הספק — לא מחיר אמיתי)" if best.source.mode == "SANDBOX" else ""
             notify(
                 db,
                 alert.user_id,
                 "price_drop",
                 f"ירידת מחיר: {alert.name}",
                 f"נמצא מחיר {_fmt(best_minor, alert.currency)} — בגובה יעד המחיר שהגדרתם "
-                f"({_fmt(target, alert.currency)}).{demo}{cached}",  # type: ignore[arg-type]
+                f"({_fmt(target, alert.currency)}).{demo}{cached}{sandbox}",  # type: ignore[arg-type]
                 "/alerts",
             )
     else:

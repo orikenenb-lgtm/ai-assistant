@@ -331,12 +331,17 @@ def _normalize_run(run: _Run, category: Category) -> None:
         run.message = MSG_DEMO_OK
 
 
-def dedupe_group(offer: CanonicalOffer) -> tuple[str, str, bool]:
+def data_class(offer: CanonicalOffer) -> str:
+    """DEMO fixtures, SANDBOX test data and real offers (LIVE / CACHED) are never merged with each other."""
+    return offer.source.mode if offer.source.mode in ("DEMO", "SANDBOX") else "REAL"
+
+
+def dedupe_group(offer: CanonicalOffer) -> tuple[str, str, str]:
     """Offers sharing this key are the same product: (dedupe_key, currency, demo-or-real).
 
     Shared by ``dedupe_offers`` and the fare calendar's ``offers_count``.
     """
-    return (offer.dedupe_key, offer.price.total.currency, offer.source.mode == "DEMO")
+    return (offer.dedupe_key, offer.price.total.currency, data_class(offer))
 
 
 def dedupe_offers(offers: list[CanonicalOffer]) -> tuple[list[CanonicalOffer], int]:
@@ -345,7 +350,7 @@ def dedupe_offers(offers: list[CanonicalOffer]) -> tuple[list[CanonicalOffer], i
     DEMO offers are never merged with real (LIVE/CACHED) ones, so fixture data can
     never hide a real supplier offer (or vice versa).
     """
-    groups: dict[tuple[str, str, bool], list[CanonicalOffer]] = {}
+    groups: dict[tuple[str, str, str], list[CanonicalOffer]] = {}
     for o in offers:
         groups.setdefault(dedupe_group(o), []).append(o)
     out: list[CanonicalOffer] = []
@@ -596,7 +601,9 @@ def run_search(db: Session, user_id: str | None, params: Any, origin: str = "man
     to_call: list[_Run] = []
     for adapter in adapters:
         caps = adapter.capabilities()
-        run = _Run(adapter=adapter, name=caps.display_name, mode=caps.mode)
+        sandbox = getattr(adapter, "is_sandbox", None)
+        run_mode = "SANDBOX" if caps.mode == "LIVE" and callable(sandbox) and sandbox() else caps.mode
+        run = _Run(adapter=adapter, name=caps.display_name, mode=run_mode)
         cfg = configs.get(adapter.provider_id)
         if cfg is not None and not cfg.enabled:
             run.status, run.message = "DISABLED", MSG_DISABLED

@@ -161,7 +161,7 @@ export function FeaturedDeal({ pick, onReview, placeName, className }: FeaturedD
             <Search className="size-4" aria-hidden="true" />
             בדיקת ההצעה
           </button>
-          <StartBookingButton offerId={offer.id} size="md" className="min-h-11" />
+          <StartBookingButton offerId={offer.id} mode={offer.source.mode} size="md" className="min-h-11" />
         </div>
       </div>
     </section>

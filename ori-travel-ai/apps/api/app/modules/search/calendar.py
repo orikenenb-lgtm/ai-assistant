@@ -177,7 +177,7 @@ class _Quote:
 
     status: str  # OK / FAILED / TIMEOUT / UNSUPPORTED / SKIPPED
     cheapest: CanonicalOffer | None = None
-    keys: set[tuple[str, str, bool]] = field(default_factory=set)  # service.dedupe_group of matching offers
+    keys: set[tuple[str, str, str]] = field(default_factory=set)  # service.dedupe_group of matching offers
     error_code: str | None = None
     message: str | None = None
     # Currencies of offers this provider returned in a currency OTHER than requested (never relabelled/converted)

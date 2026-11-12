@@ -328,7 +328,9 @@ def finalize_offer(adapter: ProviderAdapter, offer: CanonicalOffer) -> Canonical
     caps = adapter.capabilities()
     if offer.source.provider_id != adapter.provider_id:
         raise NormalizationError("offer provider_id does not match adapter")
-    if offer.source.mode != caps.mode:
+    # A LIVE adapter may label an offer SANDBOX (its supplier's test environment) — never the other way round,
+    # and a DEMO adapter can never produce anything but DEMO.
+    if offer.source.mode != caps.mode and not (caps.mode == "LIVE" and offer.source.mode == "SANDBOX"):
         raise NormalizationError("offer data mode does not match adapter mode")
     if offer.category != offer.details.kind:
         raise NormalizationError("offer category does not match details kind")

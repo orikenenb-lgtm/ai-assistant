@@ -216,7 +216,7 @@ export function OfferDetailDialog({ offer, onOpenChange }: OfferDetailDialogProp
           <CompareToggle offerId={offer.id} size="md" />
           <SaveOfferButton offerId={offer.id} size="md" />
           <AddToTripButton offerId={offer.id} size="md" />
-          <StartBookingButton offerId={offer.id} size="md" />
+          <StartBookingButton offerId={offer.id} mode={offer.source.mode} size="md" />
         </div>
       }
     >

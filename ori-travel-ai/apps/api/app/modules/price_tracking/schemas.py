@@ -39,7 +39,7 @@ class AlertOut(ApiModel):
     last_checked_at: datetime | None = None
     next_check_at: datetime | None = None
     last_best_price: Money | None = None
-    last_best_mode: Literal["DEMO", "LIVE", "CACHED"] | None = None
+    last_best_mode: Literal["DEMO", "LIVE", "CACHED", "SANDBOX"] | None = None
     # NEVER / OK / FAILED / NO_RESULTS / EXPIRED
     last_status: str
     last_error: str | None = None
@@ -52,7 +52,7 @@ class SnapshotOut(ApiModel):
     alert_id: str | None = None
     offer_id: str | None = None
     provider_id: str | None = None
-    mode: Literal["DEMO", "LIVE", "CACHED"] | None = None
+    mode: Literal["DEMO", "LIVE", "CACHED", "SANDBOX"] | None = None
     price: Money | None = None
     status: str
     error_message: str | None = None

@@ -279,7 +279,7 @@ def test_normalize_round_trip_with_connection_child_baggage_conditions(live):
     raw = adapter.search("flight", params(), ctx())[0]
     offer = normalized(adapter, raw)
 
-    assert offer.category == "flight" and offer.source.mode == "LIVE" and offer.source.deep_link is None
+    assert offer.category == "flight" and offer.source.mode == "SANDBOX" and offer.source.deep_link is None
     assert offer.source.provider_id == "duffel" and offer.source.supplier_offer_id == "off_0000A1B2C3D4E5F6G7H8"
     assert offer.source.note == "מצב בדיקה של Duffel — חברת תעופה בדיונית"
     assert offer.source.expires_at is not None
@@ -457,7 +457,7 @@ def test_revalidate_unchanged(live):
     res = adapter.revalidate(offer)
     assert res.status == "unchanged" and res.offer_id == "offer-1"
     assert res.new_total == offer.price.total and res.refreshed_offer is not None
-    assert res.refreshed_offer.id == "offer-1" and res.refreshed_offer.source.mode == "LIVE"
+    assert res.refreshed_offer.id == "offer-1" and res.refreshed_offer.source.mode == "SANDBOX"
     assert rec.requests[-1].method == "GET" and rec.requests[-1].url.path == "/air/offers/off_0000A1B2C3D4E5F6G7H8"
 
 
@@ -566,6 +566,8 @@ def test_search_service_end_to_end_with_mock_transport(live, db, make_user):
         res = service.run_search(db, make_user().id, body, use_cache=False)
     runs = {p.provider_id: p for p in res.providers}
     assert runs["duffel"].status == "OK" and runs["duffel"].result_count == 2
-    assert res.has_live_results and not res.has_demo_results
+    # Test-mode offers are SANDBOX: a real Duffel answer, but never counted as live (bookable) results.
+    assert not res.has_live_results and not res.has_demo_results
+    assert runs["duffel"].mode == "SANDBOX"
     assert {o.source.provider_id for o in res.offers} == {"duffel"}
-    assert all(o.source.mode == "LIVE" and o.source.deep_link is None for o in res.offers)
+    assert all(o.source.mode == "SANDBOX" and o.source.deep_link is None for o in res.offers)

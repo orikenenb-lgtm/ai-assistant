@@ -12,7 +12,7 @@ export const CATEGORIES = ['flight', 'hotel', 'car', 'activity'] as const;
 export const CategorySchema = z.enum(CATEGORIES);
 export type Category = z.infer<typeof CategorySchema>;
 
-export const DATA_MODES = ['DEMO', 'LIVE', 'CACHED'] as const;
+export const DATA_MODES = ['DEMO', 'LIVE', 'CACHED', 'SANDBOX'] as const;
 export const DataModeSchema = z.enum(DATA_MODES);
 export type DataMode = z.infer<typeof DataModeSchema>;
 

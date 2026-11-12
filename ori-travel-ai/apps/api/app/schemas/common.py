@@ -11,7 +11,9 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, PlainSerializ
 from app.core.money import SUPPORTED_CURRENCIES, quantize
 
 Category = Literal["flight", "hotel", "car", "activity"]
-DataMode = Literal["DEMO", "LIVE", "CACHED"]
+# SANDBOX = answered by a real supplier API in its test environment (e.g. Duffel test mode): real integration,
+# fictional data — never a bookable fare and never treated as a real price.
+DataMode = Literal["DEMO", "LIVE", "CACHED", "SANDBOX"]
 
 # Decimal serialised as a string in JSON to avoid float rounding.
 DecimalStr = Annotated[Decimal, PlainSerializer(lambda v: format(v, "f"), return_type=str, when_used="json")]

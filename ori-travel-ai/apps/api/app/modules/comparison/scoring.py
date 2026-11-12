@@ -14,6 +14,7 @@ total = sum(weight_f * factor_f) / 100 with weights in percent (sum 100).
 * quality     — flights: baggage, cabin; hotels: guest rating + stars;
                 cars: insurance; activities: rating, reviews, family fit.
 
+SANDBOX (supplier test data) offers are ranked after all others.
 Ties are broken by total price, then provider_id, then supplier_offer_id, so
 the same inputs always produce the same ranking. The input list is not mutated.
 """
@@ -328,8 +329,9 @@ def _activity_quality(d: ActivityDetails) -> tuple[Decimal, list[str]]:
 
 def _sort_key(o: CanonicalOffer) -> tuple:
     assert o.score is not None
-    return (-o.score.total, o.price.total.amount, o.price.total.currency, o.source.provider_id,
-            o.source.supplier_offer_id)
+    # Supplier TEST data (SANDBOX) never outranks offers the family could act on, whatever its score.
+    return (o.source.mode == "SANDBOX", -o.score.total, o.price.total.amount, o.price.total.currency,
+            o.source.provider_id, o.source.supplier_offer_id)
 
 
 def score_offers(

@@ -46,7 +46,7 @@ export function SavedOfferItem({ saved, trips, canAssign, onOpenDetails }: Saved
         onOpenDetails={onOpenDetails}
         extraActions={
           <>
-            {!saved.is_expired && <StartBookingButton offerId={saved.offer.id} />}
+            {!saved.is_expired && <StartBookingButton offerId={saved.offer.id} mode={saved.offer.source.mode} />}
             <Button size="sm" variant="secondary" leadingIcon={<NotebookPen aria-hidden="true" />} onClick={() => { setNote(saved.note ?? ''); setNoteOpen(true); }}>
               {saved.note ? 'עריכת הערה' : 'הוספת הערה'}
             </Button>

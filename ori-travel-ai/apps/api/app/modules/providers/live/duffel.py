@@ -242,6 +242,10 @@ class DuffelAdapter(LiveAdapter):
         token = self._token()
         return bool(get_settings().live_providers_enabled) and bool(token and _TOKEN_RE.match(token))
 
+    def is_sandbox(self) -> bool:
+        """Test-mode token: results come from Duffel's sandbox (fictional airline), reported as mode SANDBOX."""
+        return self._is_test_token()
+
     @classmethod
     def _is_test_token(cls) -> bool:
         token = cls._token() or ""
@@ -373,7 +377,9 @@ class DuffelAdapter(LiveAdapter):
     def normalize(self, category: Category, raw: RawOffer, ctx: SearchContext) -> CanonicalOffer:
         offer = _obj(raw.payload.get("offer"))
         req = _obj(raw.payload.get("request"))
-        test_mode = bool(raw.payload.get("test_mode")) or offer.get("live_mode") is False
+        # Duffel says per offer whether it is live; the token prefix is only a fallback when the field is missing.
+        live_flag = offer.get("live_mode")
+        test_mode = live_flag is False or (live_flag is None and bool(raw.payload.get("test_mode")))
         warnings: list[str] = []
         if test_mode:
             warnings.append(TEST_WARNING)
@@ -439,7 +445,7 @@ class DuffelAdapter(LiveAdapter):
             source=SourceInfo(
                 provider_id=self.provider_id,
                 provider_name=self.display_name,
-                mode="LIVE",
+                mode="SANDBOX" if test_mode else "LIVE",
                 fetched_at=raw.fetched_at,
                 expires_at=_expiry(offer.get("expires_at")) or raw.expires_at,
                 supplier_offer_id=raw.supplier_offer_id,

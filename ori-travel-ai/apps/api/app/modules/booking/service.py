@@ -320,6 +320,13 @@ def _execution_mode(offer: CanonicalOffer, requested: str | None = None) -> str:
         "לא ניתן להכין הזמנה להצעה זו: הספק אינו מציע סימולציה או מעבר מאושר לאתר הספק.",
         code="BOOKING_UNAVAILABLE",
     )
+    if offer.source.mode == "SANDBOX":
+        raise ConflictError(
+            "זו הצעה ממצב הבדיקה (Sandbox) של הספק — נתוני בדיקה בלבד, לא טיסה אמיתית ולא מחיר אמיתי. "
+            "אי אפשר להכין עבורה הזמנה.",
+            code="BOOKING_UNAVAILABLE",
+            details={"reason": "SANDBOX_OFFER"},
+        )
     adapter = registry.find_adapter(offer.source.provider_id)
     if adapter is None:
         raise unavailable

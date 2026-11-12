@@ -6,6 +6,7 @@ import {
   FlaskConical,
   History,
   Radio,
+  TestTube,
   TimerOff,
   TriangleAlert,
   Unplug,
@@ -36,6 +37,14 @@ export const MODE_BADGE_CONFIG: Record<ModeBadgeValue, ModeConfig> = {
     icon: FlaskConical,
     srPrefix: 'מקור נתונים:',
     description: 'נתוני הדגמה בלבד: ספקים, מחירים וזמינות אינם אמיתיים, ולא ניתן להזמין אותם.',
+  },
+  SANDBOX: {
+    label: 'בדיקה (Sandbox)',
+    tone: 'warn',
+    icon: TestTube,
+    srPrefix: 'מקור נתונים:',
+    description:
+      'תשובה אמיתית מסביבת הבדיקה של הספק: חברות התעופה, המחירים והזמינות הם נתוני בדיקה ולא טיסה אמיתית. לא ניתן להזמין.',
   },
   LIVE: {
     label: 'חי',

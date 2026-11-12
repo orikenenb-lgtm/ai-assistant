@@ -171,7 +171,7 @@ class TripItemOut(ApiModel):
     sort_order: int
     offer_snapshot: dict | None = None
     # Convenience flags derived from the snapshot
-    data_mode: Literal["DEMO", "LIVE", "CACHED"] | None = None
+    data_mode: Literal["DEMO", "LIVE", "CACHED", "SANDBOX"] | None = None
     offer_expired: bool = False
     # forbidden overlaps this item takes part in (see overlaps.py)
     overlaps: list[OverlapOut] = Field(default_factory=list)

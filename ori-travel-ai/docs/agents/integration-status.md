@@ -23,7 +23,7 @@
 | ספק | קטגוריה | מצב ברירת מחדל | מה נדרש כדי להפעיל |
 |---|---|---|---|
 | 8 ספקי DEMO (2 לכל קטגוריה) | טיסות, מלונות, רכבים, אטרקציות | פעילים | — |
-| Duffel | טיסות | **לא מחובר** | `ORI_DUFFEL_ACCESS_TOKEN` (test) + `ORI_LIVE_PROVIDERS_ENABLED=true`. נבדק רק מול fixtures |
+| Duffel | טיסות | **SANDBOX VERIFIED** (2026-11-12) | טוקן בדיקה ו-`ORI_LIVE_PROVIDERS_ENABLED=true`. בדיקת אימות `GET /air/airlines` החזירה 200. חיפוש TLV→ATH: `POST /air/offer_requests` החזיר 201, `GET /air/offers` החזיר 200, ו-50 הצעות `off_…` עם `live_mode=false` (אומת ישירות מול Duffel). ההצעות מסומנות `SANDBOX` ולא ניתנות להזמנה |
 | Viator | אטרקציות | **לא מחובר** | `ORI_VIATOR_API_KEY` + opt-in. מזהי היעדים לא אומתו |
 | Amadeus Self-Service | — | **מושבת** | הפורטל נסגר (לפי דיווחים מ-2026) |
 | Booking.com Demand | מלונות | **לא מחובר** | דורש הסכם שותף |
