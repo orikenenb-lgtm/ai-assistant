@@ -207,3 +207,19 @@ reasons[], card}]}], intro, intro_mode:"model"|"template", search_id, interests,
 6. Hebrew for all user-facing messages; English for code/comments.
 7. Final report: files created/changed, endpoints implemented, tests run + results,
    known gaps, any requested cross-scope changes.
+
+## 5. Post-audit contract changes (see docs/security/audit-report.md, decisions ד-014)
+
+| Change | Reason |
+|---|---|
+| `POST /api/auth/invitations/preview {token}` (preferred); `GET /api/auth/invitations/{token}` kept as deprecated | AUD-02: tokens must not travel in URLs |
+| Invitation links are `/invite#<token>` (fragment never reaches the server) | AUD-02 |
+| `POST /api/bookings/{id}/checkout-link` (was GET) | AUD-09: state-changing → CSRF-protected |
+| `POST /api/bookings` / `PATCH .../travelers` → 400 `TRAVELER_MISMATCH` when travelers don't match the offer | AUD-04 |
+| `POST /api/bookings` → 409 `BOOKING_UNAVAILABLE` (`details.reason=REVALIDATION_UNSUPPORTED`) for hosted checkout without price re-check | AUD-05 |
+| `terms_hash` binds every line of `terms_summary` (TERMS_VERSION 2) | AUD-01 |
+| `DELETE /api/family/users/{id}` (owner, deactivated non-owner users, recent reauth) | AUD-08 |
+| `DELETE /api/travelers/{id}` requires recent reauth (403 `REAUTH_REQUIRED`) | AUD-12 |
+| Viewers get a reduced traveler shape (no accessibility needs, passport fragments, expiry, nationality) | AUD-07 |
+| Login no longer counts as step-up (`reauth_at` starts empty) | AUD-22 |
+| Host header allowlist `ORI_ALLOWED_HOSTS`; body limit enforced on streamed bytes | AUD-13/14 |
