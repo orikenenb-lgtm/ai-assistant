@@ -134,6 +134,8 @@ export interface OpenOpts {
   anonymous?: boolean;
   height?: number;
   reducedMotion?: 'reduce' | 'no-preference';
+  /** 'frozen' (default) = FROZEN_NOW; 'real' = the current time (report screenshots: relative times read naturally). */
+  clock?: 'frozen' | 'real';
 }
 
 export async function openContext(browser: Browser, o: OpenOpts): Promise<BrowserContext> {
@@ -184,7 +186,7 @@ export async function openPage(browser: Browser, o: OpenOpts): Promise<{ ctx: Br
   const ctx = await openContext(browser, o);
   await cacheCalendar(ctx);
   const page = await ctx.newPage();
-  await page.clock.setFixedTime(FROZEN_NOW);
+  await page.clock.setFixedTime(o.clock === 'real' ? new Date() : FROZEN_NOW);
   return { ctx, page };
 }
 

@@ -15,7 +15,7 @@ test.beforeEach(({ browserName }, testInfo) => {
   void browserName;
 });
 
-const MASK_RE = /(לפני\s+\S+(\s+\S+)?|עודכן|נבדק[ה]?\s|נוצר|נוצרה|התחברות אחרונה|תוקף|DEMO-[A-Z0-9]{6,}|\b[0-9a-f]{16,}\b|\d{1,2}:\d{2}:\d{2}|\d{4},?\s+\d{1,2}:\d{2})/;
+const MASK_RE = /((לפני|בעוד)\s+\S+(\s+\S+)?|עודכן|נבדק[ה]?\s|נוצר|נוצרה|התחברות אחרונה|תוקף|DEMO-[A-Z0-9]{6,}|\b[0-9a-f]{16,}\b|\d{1,2}:\d{2}:\d{2}|\d{4},?\s+\d{1,2}:\d{2})/;
 
 /** Marks the smallest elements whose own text looks dynamic, so Playwright can mask them. */
 async function markDynamic(page: Page) {

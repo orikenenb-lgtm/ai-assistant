@@ -69,8 +69,9 @@ test.describe('הגדרות', () => {
       await region.getByRole('spinbutton', { name: 'איכות' }).blur();
       await expect.poll(async () => (await values()).reduce((a, b) => a + b, 0)).toBe(100);
 
+      const prev = JSON.stringify(await values());
       await region.getByRole('button', { name: 'הכי זול' }).click();
-      await expect.poll(async () => { const v = await values(); return v[0] > v[1]; }).toBe(true); // preset applied
+      await expect.poll(async () => JSON.stringify(await values())).not.toBe(prev); // preset applied
       const cheap = await values();
       expect(cheap.reduce((a, b) => a + b, 0)).toBe(100);
       expect(cheap[0]).toBeGreaterThan(cheap[1]); // cost dominates the "cheapest" preset

@@ -42,7 +42,7 @@ test.describe.configure({ mode: 'parallel' });
 for (const s of shots) {
   test(`${s.n}-${s.screen}-${px(s.width)}-${s.theme}`, async ({ browser }) => {
     const f = await ensureFixtures();
-    const { ctx, page } = await openPage(browser, { width: s.width, theme: s.theme });
+    const { ctx, page } = await openPage(browser, { width: s.width, theme: s.theme, clock: 'real' });
     try {
       const target = await s.run(page, f);
       await page.addStyleTag({ content: NO_MOTION_CSS });
