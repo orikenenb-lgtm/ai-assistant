@@ -2,6 +2,7 @@ import { Luggage, NotebookPen, Trash2, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Badge, Button, Callout, ConfirmDialog, Dialog, Field, NativeSelect, Textarea, useToast } from '@/components/ui';
+import { StartBookingButton } from '@/features/bookings/components/StartBookingButton';
 import { OfferCard } from '@/features/offers';
 import type { SavedOffer } from '@/lib/schemas/saved';
 import type { TripSummary } from '@/lib/schemas/trips';
@@ -45,6 +46,7 @@ export function SavedOfferItem({ saved, trips, canAssign, onOpenDetails }: Saved
         onOpenDetails={onOpenDetails}
         extraActions={
           <>
+            {!saved.is_expired && <StartBookingButton offerId={saved.offer.id} />}
             <Button size="sm" variant="secondary" leadingIcon={<NotebookPen aria-hidden="true" />} onClick={() => { setNote(saved.note ?? ''); setNoteOpen(true); }}>
               {saved.note ? 'עריכת הערה' : 'הוספת הערה'}
             </Button>

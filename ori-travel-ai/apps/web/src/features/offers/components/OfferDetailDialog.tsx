@@ -5,6 +5,7 @@ import { formatDuration, formatNumber } from '@/lib/format';
 import { CATEGORY_SINGULAR } from '@/lib/labels';
 import type { CanonicalOffer } from '@/lib/schemas/offers';
 import { BOARD_LABELS, CAR_CLASS_LABELS, INTEREST_LABELS, TRANSMISSION_LABELS } from '../labels';
+import { StartBookingButton } from '@/features/bookings/components/StartBookingButton';
 import { AddToTripButton } from './AddToTripButton';
 import { AlsoOfferedBy } from './AlsoOfferedBy';
 import { baggageText, passengersText } from './OfferFacts';
@@ -222,6 +223,7 @@ export function OfferDetailDialog({ offer, onOpenChange }: OfferDetailDialogProp
           <CompareToggle offerId={offer.id} size="md" />
           <SaveOfferButton offerId={offer.id} size="md" />
           <AddToTripButton offerId={offer.id} size="md" />
+          <StartBookingButton offerId={offer.id} size="md" />
         </div>
       }
     >

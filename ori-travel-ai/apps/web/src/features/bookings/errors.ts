@@ -43,7 +43,7 @@ export function describeBookingError(error: unknown): BookingProblem {
       return {
         ...base,
         title: error.code === 'PRICE_CHANGED' ? 'המחיר השתנה — האישור בוטל' : 'התנאים השתנו — האישור בוטל',
-        message: `${error.message} טענו מחדש את ההזמנה: יש לקרוא את התנאים המעודכנים ולאשר מחדש. שום דבר לא נשלח לספק.`,
+        message: `${error.message} ההזמנה נטענה מחדש מהשרת. יש לקרוא את התנאים המעודכנים ולאשר מחדש. שום דבר לא נשלח לספק.`,
         tone: 'warn',
         mustReread: true,
         priceDiff: diff.success ? { oldPrice: diff.data.old_price, newPrice: diff.data.new_price } : undefined,
