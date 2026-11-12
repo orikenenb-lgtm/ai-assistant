@@ -73,6 +73,7 @@ from app.modules.search.schemas import (
     CalendarStats,
     FlightCalendarRequest,
     FlightCalendarResponse,
+    FlightYearScanRequest,
 )
 from app.modules.search.service import (
     MAX_RAW_OFFERS_PER_PROVIDER,
@@ -91,9 +92,13 @@ from app.schemas.search import FlightSearchParams
 
 log = logging.getLogger("ori.search.calendar")
 
+# Both request shapes expose the same attributes (origin, destination, trip_nights, depart_dates, travellers, …).
+CalendarLike = FlightCalendarRequest | FlightYearScanRequest
+
 CALENDAR_RATE_LIMIT = 10
 CALENDAR_RATE_WINDOW_SECONDS = 600
 CALENDAR_TIME_BUDGET_SECONDS = 8.0
+YEAR_SCAN_TIME_BUDGET_SECONDS = 25.0
 CALENDAR_MAX_WORKERS = 4
 
 MSG_LIVE_NOT_QUERIED = "ספקים חיים אינם נשאלים עבור לוח המחירים (עלות ומגבלות קצב)"
@@ -118,7 +123,7 @@ def check_calendar_rate_limit(user_id: str) -> None:
     )
 
 
-def _cell_payload(req: FlightCalendarRequest, depart: date, ret: date | None) -> dict[str, Any]:
+def _cell_payload(req: CalendarLike, depart: date, ret: date | None) -> dict[str, Any]:
     """The exact body a normal ``POST /api/search/flight`` for this cell would send."""
     return {
         "category": "flight",
@@ -136,10 +141,18 @@ def _cell_payload(req: FlightCalendarRequest, depart: date, ret: date | None) ->
 
 
 def parse_calendar_request(payload: Any) -> FlightCalendarRequest:
+    return _parse(FlightCalendarRequest, payload)
+
+
+def parse_year_scan_request(payload: Any) -> FlightYearScanRequest:
+    return _parse(FlightYearScanRequest, payload)
+
+
+def _parse[R: (FlightCalendarRequest, FlightYearScanRequest)](model: type[R], payload: Any) -> R:
     if not isinstance(payload, dict):
         raise UnprocessableError("גוף הבקשה חייב להיות אובייקט JSON")
     try:
-        req = FlightCalendarRequest.model_validate(payload)
+        req = model.model_validate(payload)
     except ValidationError as exc:
         message, details = _translate_errors(exc.errors(include_url=False))
         raise UnprocessableError(message, details=details) from None
@@ -348,10 +361,25 @@ def _median(amounts: list[Decimal], currency: str) -> Decimal:
 
 
 def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCalendarResponse:
-    started = time.monotonic()
     req = parse_calendar_request(payload)  # invalid (422) requests do not consume the quota
     if user_id is not None:
         check_calendar_rate_limit(user_id)
+    return _build_calendar(db, req, CALENDAR_TIME_BUDGET_SECONDS)
+
+
+def flight_year_scan(db: Session, user_id: str | None, payload: Any) -> FlightCalendarResponse:
+    """Every depart date of the coming year for one trip length — same honesty rules as the calendar.
+
+    Counts as one request of the calendar budget (it is a single, server-bounded scan).
+    """
+    req = parse_year_scan_request(payload)
+    if user_id is not None:
+        check_calendar_rate_limit(user_id)
+    return _build_calendar(db, req, YEAR_SCAN_TIME_BUDGET_SECONDS)
+
+
+def _build_calendar(db: Session, req: CalendarLike, time_budget: float) -> FlightCalendarResponse:
+    started = time.monotonic()
     currency = req.currency
     nights_axis: list[int | None] = list(req.trip_nights or []) or [None]
 
@@ -374,8 +402,7 @@ def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCal
     live_usable = {a.provider_id for a in adapters
                    if a.capabilities().mode == "LIVE" and enabled(a) and registry.is_usable(a)}
     cached = _cached_offers(db, cells, currency, live_usable, configs)
-    quotes = _quote_all(cells, demo, {pid: dict(c.settings or {}) for pid, c in configs.items()},
-                        CALENDAR_TIME_BUDGET_SECONDS)
+    quotes = _quote_all(cells, demo, {pid: dict(c.settings or {}) for pid, c in configs.items()}, time_budget)
     demo_names = {a.provider_id: a.capabilities().display_name for a in demo}
 
     # ---- cells ----
@@ -440,6 +467,8 @@ def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCal
         min=Money(amount=min(priced_amounts), currency=currency) if priced_amounts else None,
         max=Money(amount=max(priced_amounts), currency=currency) if priced_amounts else None,
         median=Money(amount=_median(priced_amounts, currency), currency=currency) if priced_amounts else None,
+        mean=(Money(amount=quantize(sum(priced_amounts) / len(priced_amounts), currency), currency=currency)
+              if priced_amounts else None),
         **counts,
     )
 

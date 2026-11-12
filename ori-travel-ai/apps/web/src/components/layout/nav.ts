@@ -1,7 +1,8 @@
 import {
   BedDouble,
-  Bookmark,
   BellRing,
+  Bookmark,
+  CalendarRange,
   Car,
   CircleHelp,
   ClipboardCheck,
@@ -42,6 +43,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: '/assistant', label: 'עוזר AI', icon: Sparkles },
       { to: '/search/flights', label: 'טיסות', icon: Plane },
+      { to: '/cheapest-year', label: 'הזול בשנה', icon: CalendarRange },
       { to: '/search/hotels', label: 'מלונות', icon: BedDouble },
       { to: '/search/cars', label: 'רכבים', icon: Car },
       { to: '/search/activities', label: 'אטרקציות', icon: Ticket },

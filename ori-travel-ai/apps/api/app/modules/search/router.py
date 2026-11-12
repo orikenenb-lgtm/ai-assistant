@@ -1,7 +1,7 @@
 """Search API: run searches, read/re-rank stored searches, history, offers.
 
 Route order matters: ``/api/search/history`` is declared before
-``/api/search/{search_id}``; ``/api/search/flight/calendar`` before
+``/api/search/{search_id}``; ``/api/search/flight/calendar`` and ``/api/search/flight/year-scan`` before
 ``/api/search/{category}``.
 """
 
@@ -48,6 +48,18 @@ def flight_calendar(
     Rate limited (10 per 10 minutes per user). Nothing is persisted.
     """
     return calendar.flight_calendar(db, ctx.user_id, payload)
+
+
+@router.post("/api/search/flight/year-scan", response_model=FlightCalendarResponse)
+def flight_year_scan(
+    payload: dict[str, Any] = Body(...),
+    ctx: AuthContext = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> FlightCalendarResponse:
+    """Cheapest day of the coming year for one trip length: every depart date, DEMO adapters + cached real
+    offers only (LIVE never called). Shares the calendar's per-user rate limit; nothing is persisted.
+    """
+    return calendar.flight_year_scan(db, ctx.user_id, payload)
 
 
 @router.post("/api/search/{category}", response_model=SearchResponse)

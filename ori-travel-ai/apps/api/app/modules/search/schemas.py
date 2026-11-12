@@ -105,6 +105,59 @@ class FlightCalendarRequest(ApiModel):
         return self.adults + len(self.children_ages)
 
 
+YEAR_SCAN_MAX_NIGHTS = 30
+
+
+class FlightYearScanRequest(ApiModel):
+    """Year scan: every depart date from tomorrow until a year ahead, for ONE trip length (or one-way).
+
+    Same per-cell rules as the calendar (DEMO adapters + cached real offers, LIVE never called); only the date
+    range is fixed by the server instead of the client.
+    """
+
+    origin: IataCode
+    destination: IataCode
+    nights: int | None = Field(None, ge=1, le=YEAR_SCAN_MAX_NIGHTS)  # null => one-way
+    adults: int = Field(1, ge=1, le=MAX_TRAVELLERS)
+    children_ages: list[Annotated[int, Field(ge=0, le=17)]] = Field(default_factory=list, max_length=8)
+    cabin: Literal["economy", "premium_economy", "business", "first"] = "economy"
+    max_stops: int | None = Field(None, ge=0, le=3)
+    checked_bags: int = Field(0, ge=0, le=3)
+    currency: CurrencyCode = "ILS"
+
+    @field_validator("origin", "destination", "currency", mode="before")
+    @classmethod
+    def _upper(cls, v: object) -> object:
+        return v.strip().upper() if isinstance(v, str) else v
+
+    @model_validator(mode="after")
+    def _validate(self) -> FlightYearScanRequest:
+        if self.currency not in SUPPORTED_CURRENCIES:
+            raise ValueError(f"המטבע {self.currency} אינו נתמך")
+        return self
+
+    @property
+    def trip_nights(self) -> list[int]:
+        return [self.nights] if self.nights else []
+
+    @property
+    def depart_from(self) -> date:
+        return date.today() + timedelta(days=1)
+
+    @property
+    def depart_to(self) -> date:
+        # The return flight must still be within the searchable year.
+        return date.today() + timedelta(days=MAX_DAYS_AHEAD - (self.nights or 0))
+
+    @property
+    def depart_dates(self) -> list[date]:
+        return [self.depart_from + timedelta(days=i) for i in range((self.depart_to - self.depart_from).days + 1)]
+
+    @property
+    def travelers(self) -> int:
+        return self.adults + len(self.children_ages)
+
+
 class CalendarCell(ApiModel):
     depart_date: date
     return_date: date | None = None
@@ -128,6 +181,7 @@ class CalendarStats(ApiModel):
     min: Money | None = None
     max: Money | None = None
     median: Money | None = None
+    mean: Money | None = None  # average of the priced cells (same currency)
     priced: int = 0
     no_offers: int = 0
     not_searched: int = 0

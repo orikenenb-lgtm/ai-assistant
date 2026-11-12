@@ -44,6 +44,8 @@ export const FareCalendarStatsSchema = z.object({
   min: MoneySchema.nullable().optional(),
   max: MoneySchema.nullable().optional(),
   median: MoneySchema.nullable().optional(),
+  /** Average of the priced cells (same currency). */
+  mean: MoneySchema.nullable().optional(),
   priced: z.number().int().default(0),
   no_offers: z.number().int().default(0),
   not_searched: z.number().int().default(0),
@@ -96,3 +98,17 @@ export interface FareCalendarRequest {
 export const CALENDAR_MAX_DEPART_DATES = 42;
 export const CALENDAR_MAX_CELLS = 150;
 export const CALENDAR_MAX_NIGHTS_VALUES = 7;
+
+/**
+ * Year scan — `POST /api/search/flight/year-scan`: every depart date from tomorrow until a year ahead for ONE trip
+ * length (`nights` null ⇒ one-way). Same response shape and honesty rules as the calendar (DEMO + cached only).
+ */
+export interface YearScanRequest {
+  origin: string;
+  destination: string;
+  nights: number | null;
+  adults: number;
+  children_ages: number[];
+  cabin: string;
+  currency: string;
+}

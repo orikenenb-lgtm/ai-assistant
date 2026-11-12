@@ -137,3 +137,23 @@ contrast checks and document them in `docs/release/design-system.md`.
   Invalid calendar requests no longer consume the rate limit. `offers_count` uses the same dedupe group as the
   normal search (`service.dedupe_group`). The calendar `coverage_note` no longer repeats the "no full market
   coverage" sentence — the flights page shows that disclaimer once (search coverage note).
+
+## 7. סריקת שנה: "הטיסה הזולה בשנה" (`/cheapest-year`)
+
+נבנה בעקבות סרטון ההשראה, בעיצוב המקורי של המערכת.
+
+* **API:** ‏`POST /api/search/flight/year-scan`. גוף הבקשה: `{origin, destination, nights (1..30 או null לכיוון אחד), adults, children_ages, cabin, currency}`.
+  * השרת קובע את טווח התאריכים: מחר, ועד שגם תאריך החזרה נכנס בשנה (`MAX_DAYS_AHEAD`).
+  * התשובה זהה במבנה לתשובה של לוח המחירים, כולל אותם כללי יושר: ספקי DEMO ומחירים שמורים בלבד, וספקים חיים לא נשאלים.
+  * נוסף `stats.mean` (ממוצע הימים שיש להם מחיר).
+  * הסריקה נספרת כבקשה אחת מתוך מגבלת הקצב של לוח המחירים.
+  * תקציב הזמן הוא 25 שניות. בפועל היא לוקחת כ-5 שניות על 361 ימים.
+* **הממשק:**
+  * **מפת חום:** חודש בכל שורה, יום בכל עמודה. הצבעים לפי דירוג מחיר, בחמש מדרגות מכחול לאדום, עם מונה "ימים נסרקו".
+  * **כרטיס "הכי זול בשנה הקרובה":**
+    * מחיר, תאריכים, חברה, שעה ועצירות. הפרטים מגיעים מחיפוש רגיל לאותו יום, כך שהם תואמים למחיר.
+    * עיגול "חוסכים X מול הממוצע". מוצג רק כשיש לפחות 10 ימים עם מחיר.
+    * תג DEMO.
+  * **מפת מסלול.**
+  * **רשימת 10 הימים הזולים:** החלופה הנגישה למפת החום, שמשמשת גם לניווט במקלדת.
+* **Google Flights:** קישור חיצוני רגיל לאותו מסלול ואותם תאריכים, כדי לראות מחיר אמיתי. האפליקציה לא שולפת משם שום מידע (בלי scraping), והטקסט ליד הקישור מבהיר שהמחיר במערכת הוא הדגמה.

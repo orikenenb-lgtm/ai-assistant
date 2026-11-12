@@ -36,6 +36,7 @@ export const routes: RouteObject[] = [
               { index: true, ...page(() => import('@/pages/dashboard/DashboardPage')) },
               { path: 'assistant', ...page(() => import('@/pages/assistant/AssistantPage')) },
               { path: 'search/flights', ...page(() => import('@/pages/search/FlightsSearchPage')) },
+              { path: 'cheapest-year', ...page(() => import('@/pages/search/CheapestYearPage')) },
               { path: 'search/hotels', ...page(() => import('@/pages/search/HotelsSearchPage')) },
               { path: 'search/cars', ...page(() => import('@/pages/search/CarsSearchPage')) },
               { path: 'search/activities', ...page(() => import('@/pages/search/ActivitiesSearchPage')) },
