@@ -44,8 +44,13 @@ def _db_path() -> Path:
     return src
 
 
+def _ro(path: Path) -> str:
+    """Read-only SQLite URI; as_uri() percent-encodes spaces/#/% and handles Windows drive letters."""
+    return path.as_uri() + "?mode=ro"
+
+
 def _table_count(path: Path) -> int:
-    with sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True) as c:
+    with sqlite3.connect(_ro(path), uri=True) as c:
         return int(c.execute("SELECT count(*) FROM sqlite_master WHERE type='table'").fetchone()[0])
 
 
@@ -57,7 +62,7 @@ def _pending_migrations(path: Path) -> bool:
     cfg = Config(str(API_ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(API_ROOT / "alembic"))
     heads = set(ScriptDirectory.from_config(cfg).get_heads())
-    with sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True) as c:
+    with sqlite3.connect(_ro(path), uri=True) as c:
         try:
             current = {r[0] for r in c.execute("SELECT version_num FROM alembic_version")}
         except sqlite3.OperationalError:  # no alembic_version table: unversioned DB, treat as pending
@@ -74,7 +79,7 @@ def _backup(src: Path, label: str) -> Path:
     while dest.exists():  # two backups within the same second
         dest = dest_dir / f"{src.stem}{mid}-{datetime.now():%Y%m%d-%H%M%S}-{n}.db"
         n += 1
-    with sqlite3.connect(f"file:{src.as_posix()}?mode=ro", uri=True) as s, sqlite3.connect(dest) as d:
+    with sqlite3.connect(_ro(src), uri=True) as s, sqlite3.connect(dest) as d:
         s.backup(d)
         d.execute("PRAGMA journal_mode=DELETE")  # single self-contained file, no -wal/-shm siblings
     return dest
@@ -96,7 +101,7 @@ def main() -> int:
         try:
             if _table_count(bak) == 0:
                 _fail("The backup file has no tables - refusing to restore it.")
-            with sqlite3.connect(f"file:{bak.as_posix()}?mode=ro", uri=True) as c:
+            with sqlite3.connect(_ro(bak), uri=True) as c:
                 if c.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                     _fail("The backup file failed SQLite integrity_check - refusing to restore it.")
         except sqlite3.DatabaseError as exc:
@@ -106,7 +111,10 @@ def main() -> int:
         src.parent.mkdir(parents=True, exist_ok=True)
         for suffix in ("-wal", "-shm"):  # stale journals must not be replayed onto the restored file
             Path(str(src) + suffix).unlink(missing_ok=True)
-        shutil.copyfile(bak, src)
+        try:
+            shutil.copyfile(bak, src)
+        except PermissionError:
+            _fail("Cannot overwrite the database - is the Ori server still running? Stop it and retry.")
         print(f"Restored {bak.name} -> {src}")
         return 0
 
