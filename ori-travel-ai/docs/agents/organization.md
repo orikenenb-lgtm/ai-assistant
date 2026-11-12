@@ -55,3 +55,41 @@
 | 5 | המנהל: תיקונים, אימות סופי, תיעוד | ממתין |
 
 הספירה הסופית של הסוכנים שהופעלו בפועל מופיעה בסוף [agent-activity-log.md](agent-activity-log.md).
+
+## V6: 30 תפקידים, ביצוע מבוסס-מציאות
+
+ההנחיה מבקשת עד 30 תפקידים, לא 30 תהליכים בו-זמנית. כל תפקיד ממופה לסוכן אמיתי שהופעל,
+או לסשן הראשי. ב-V6 נוספו סוכנים חדשים. הספירה המלאה נמצאת ב-agent-activity-log.
+
+| # | תפקיד V6 | ביצוע בפועל |
+|---|---|---|
+| 01 | Project Director | הסשן הראשי (claude-opus-5-5, מאומת) |
+| 02 | Deputy Director | הסשן הראשי: לוח משימות, ownership.md, dependency-graph.md, מעקב |
+| 03 | Chief Architect | הסשן הראשי: `api-contract.md`, `v6-flight-experience-contract.md` |
+| 04 | Frontend Lead | FE-FLIGHT |
+| 05 | React/TypeScript Engineer | FE-FLIGHT, BE-TRIPS (ממשק טיולים), BOOK-REDIRECT (ממשק הזמנות) |
+| 06 | Design System Specialist | UX-DS |
+| 07 | Mobile/RTL/Accessibility | UX-DS (+ בדיקות נגישות ב-E2E) |
+| 08 | Visual Regression & UX Tester | VIS-A11Y (מתוכנן לגל B) |
+| 09 | Backend Lead | הסשן הראשי (ליבה, תיקוני ביקורת) |
+| 10 | FastAPI Engineer | BE-TRIPS |
+| 11 | Database/Migrations | הסשן הראשי (Alembic, parity מול PostgreSQL 16) |
+| 12 | Search Orchestration/Cache | BE-CAL |
+| 13 | Provider Integration Lead | PROV-ANALYST |
+| 14 | Flights/Duffel/Amadeus | B6 (V3) + PROV-ANALYST (אימות) |
+| 15 | Hotels/Booking/Expedia | B6 (V3) + PROV-ANALYST |
+| 16 | Cars | BE-TRIPS (בדיקת נתונים) + PROV-ANALYST (חלופות) |
+| 17 | Attractions/Viator | B6 (V3) + PROV-ANALYST |
+| 18 | Supplier Contract & Pricing Analyst | PROV-ANALYST |
+| 19 | AI Lead | B5 (V3) |
+| 20 | AI Tool-Calling & Grounding | B5 (V3 + תיקון AUD-06) |
+| 21 | Fare Calendar & Optimization | BE-CAL (שרת) + FE-FLIGHT (ממשק) |
+| 22 | Itinerary/Family Preference | BE-TRIPS |
+| 23 | Booking Lead | BOOK-REDIRECT |
+| 24 | Payment/Checkout Safety | BOOK-REDIRECT |
+| 25 | AppSec/Privacy | הסשן הראשי (תיקוני ביקורת) + AUD |
+| 26 | Threat Modeling/Abuse Testing | AUD (V3) + RELEASE-AUDIT (מתוכנן) |
+| 27 | QA Automation Lead | QA |
+| 28 | E2E/Browser Test Engineer | QA + E2E-V6 (מתוכנן) |
+| 29 | Windows/DevOps/Performance | D1 (V3) + DEVOPS-RELEASE (מתוכנן) |
+| 30 | Independent Release Auditor | RELEASE-AUDIT (fable, מתוכנן, לא כותב קוד) |
