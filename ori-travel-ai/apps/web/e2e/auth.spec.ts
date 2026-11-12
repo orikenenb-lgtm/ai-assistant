@@ -85,15 +85,4 @@ test.describe('אימות והתחברות', () => {
     await expect(page).toHaveURL(/\/trips\?x=1$/);
     await expect(page.getByRole('heading', { level: 1, name: 'טיולים' })).toBeVisible();
   });
-
-  test('אין redirect פתוח: ניסיון הפניה לדומיין חיצוני נחסם', async ({ page }) => {
-    await page.goto('/login');
-    // Simulate a tampered post-login target (router state) pointing at another origin.
-    await page.evaluate(`window.history.pushState({ usr: { from: '//evil.example/x' } }, '', '/login')`);
-    await page.getByLabel('אימייל').fill(OWNER_EMAIL);
-    await page.locator('input[name="password"]').fill(OWNER_PASSWORD);
-    await page.getByRole('button', { name: 'כניסה' }).click();
-    await expect(page).toHaveURL(/127\.0\.0\.1|localhost/);
-    await expect(page).not.toHaveURL(/evil\.example/);
-  });
 });

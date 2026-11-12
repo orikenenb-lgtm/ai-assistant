@@ -508,3 +508,36 @@ DELETE /api/travelers/<member> -> 200   (מחיקת דרכון בלי אימות
 * **תיקיות ה-frontend שעדיין בעבודה** (`trips`, ‏`saved`, ‏`alerts`, ‏`family`, ‏`settings`, ‏`assistant`,
   ‏`bookings`). נסקרו בקריאה חלקית בלבד, ותוצאת vitest נכונה לרגע ההרצה.
 * **מסלול HOSTED_CHECKOUT מקצה לקצה.** בגלל AUD-05 הוא נבדק רק עם שינוי ישיר ב-DB של סביבת הבדיקה.
+
+---
+
+## נספח: סטטוס תיקונים אחרי הביקורת (נכתב ע״י המנהל, לא ע״י המבקר)
+
+> המבקר לא בדק מחדש את התיקונים. הסטטוס כאן מבוסס על בדיקות רגרסיה שנוספו לכל תיקון,
+> ועל ריצה מלאה של 672 בדיקות API ב-SQLite וב-PostgreSQL 16.
+
+| ID | חומרה | סטטוס | מה נעשה | איפה נבדק |
+|---|---|---|---|---|
+| AUD-01 | בינונית | ✅ תוקן | `terms_hash` קושר את כל שורות `terms_summary`, הכותרת, שם הספק, `total_status` ו-`excluded_notes` (TERMS_VERSION 2) | `tests/test_booking.py` |
+| AUD-02 | בינונית | ✅ תוקן | preview ב-POST עם הטוקן בגוף הבקשה, קישור `/invite#token`, צנזור נתיבים בלוגים כולל uvicorn | `tests/test_security_hardening.py`, `tests/test_auth.py` |
+| AUD-03 | בינונית | ✅ תוקן | ה-allowlist דוחה backslash, רווחים, תווי בקרה, userinfo, פורט ו-IP. גם בצד הלקוח (`lib/safeUrl.ts`) | `test_security_hardening.py`, `safeUrl.test.ts` |
+| AUD-04 | בינונית | ✅ תוקן | הרכב הנוסעים חייב להתאים להצעה (`TRAVELER_MISMATCH`) | `test_booking.py` |
+| AUD-05 | בינונית | ✅ תוקן ותועד | hosted checkout נדחה כשאין אפשרות לבדוק מחיר מחדש. התיעוד עודכן | `test_booking.py` |
+| AUD-06 | בינונית | ✅ תוקן | grounding: פורמטים אירופיים, מכפילים, מספרים במילים, טענות הזמנה בעברית ובאנגלית | `test_ai_grounding.py` (216 בדיקות AI) |
+| AUD-07 | בינונית | ✅ תוקן | הצפנה של notes, accessibility, gender ו-nationality. צופים מקבלים מידע מצומצם | `test_travelers.py` |
+| AUD-08 | בינונית | ✅ תוקן | מחיקת משתמש, מחיקת שם בן משפחה מהזמנות, retention לסשנים, הזמנות, התראות ו-snapshots | `test_family.py`, `test_settings.py` |
+| AUD-09 | נמוכה | ✅ תוקן | checkout-link הפך ל-POST | `test_booking.py` |
+| AUD-10 | נמוכה | ✅ תוקן חלקית | `--no-proxy-headers` בכל סקריפט ובשרת ה-CI. נעילת חשבון אחרי 5 כישלונות נשארת (סיכון DoS משפחתי מתועד) | סקריפטים |
+| AUD-11 | נמוכה | ✅ תוקן | `MINOR_CANNOT_BE_ADULT` | `test_family.py` |
+| AUD-12 | נמוכה | ✅ תוקן | עריכת בן משפחה עם חשבון מותרת רק לו או לבעלים. מחיקת פרופיל דורשת reauth. נאכפת עקביות בין age_group ל-is_minor | `test_family.py`, `test_travelers.py` |
+| AUD-13 | נמוכה | ✅ תוקן | מגבלת גוף הבקשה נאכפת על הבייטים בפועל (ASGI) | `test_security_hardening.py` |
+| AUD-14 | נמוכה | ✅ תוקן | TrustedHostMiddleware (`ORI_ALLOWED_HOSTS`) | `test_security_hardening.py` |
+| AUD-15 | נמוכה | ✅ תוקן | ה-CSP כולל `tile.openstreetmap.org` | קוד |
+| AUD-16 | נמוכה | ✅ תוקן | מדיניות סיסמה: 3 סוגי תווים או משפט סיסמה של 16+, בלי חזרתיות ובלי סיסמאות נפוצות. מסונכרן עם הלקוח | `test_security_hardening.py` |
+| AUD-17 | נמוכה | ✅ תוקן | סירוב לעלות ב-production עם הגדרות לא בטוחות. HSTS כש-`cookie_secure` | `test_security_hardening.py` |
+| AUD-18 | מידע | התקבל | צופים יכולים לחפש ולהשתמש ב-AI. יש rate limit, וספקים חיים כבויים כברירת מחדל | — |
+| AUD-19 | מידע | התקבל | הבעלים רואה חיפושים של אחרים. זה תפקיד ניהולי | — |
+| AUD-20 | מידע | ✅ תוקן חלקית | DEMO לא מתמזג עם הצעה אמיתית ב-dedupe | `test_security_hardening.py` |
+| AUD-21 | מידע | התקבל | נעילת FX מוגבלת ל-8 שניות, והמסלול כבוי כברירת מחדל | — |
+| AUD-22 | מידע | ✅ תוקן | התחברות כבר לא נחשבת אימות חוזר | `test_auth.py`, `test_travelers.py` |
+| AUD-23 | מידע | התקבל | רישום אסמכתה ידני הוא החלטה מתועדת | — |

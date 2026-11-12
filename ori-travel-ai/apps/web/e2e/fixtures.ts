@@ -1,5 +1,5 @@
 /* eslint-disable no-empty-pattern -- Playwright fixtures must destructure their first argument */
-import { test as base, expect, request as pwRequest, type Page } from '@playwright/test';
+import { test as base, expect, request as pwRequest, type Browser, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -54,6 +54,19 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
 
 /** Test with no session at all (login page, redirects, public surface). */
 export const anon = base;
+
+/**
+ * A second, independent owner session (fresh login, so no "recent re-authentication" yet).
+ * Costs one login against the rate limit (10/5min per email) -- use sparingly.
+ */
+export async function freshOwnerContext(browser: Browser, baseURL: string, viewport: { width: number; height: number }) {
+  const api = await pwRequest.newContext({ baseURL });
+  const res = await api.post('/api/auth/login', { data: { email: OWNER_EMAIL, password: OWNER_PASSWORD } });
+  if (!res.ok()) throw new Error(`fresh owner login failed (${res.status()}): ${await res.text()}`);
+  const state = await api.storageState();
+  await api.dispose();
+  return browser.newContext({ baseURL, locale: 'he-IL', viewport, storageState: state });
+}
 
 /** Waits for the SPA shell to have rendered (nav present) and returns. */
 export async function appReady(page: Page) {
