@@ -100,7 +100,13 @@ export function ChildAgesEditor({ ages, onChange, max, error, className }: Child
         </ul>
       )}
       <div>
-        <Button size="sm" variant="secondary" leadingIcon={<Plus aria-hidden="true" />} disabled={ages.length >= max} onClick={() => onChange([...ages, 8])}>
+        <Button
+          size="sm"
+          variant="secondary"
+          leadingIcon={<Plus aria-hidden="true" />}
+          disabled={ages.length >= max}
+          onClick={() => onChange([...ages, 8])}
+        >
           הוספת ילד
         </Button>
       </div>
@@ -174,7 +180,10 @@ export function PlaceCombobox({
       hint={
         hint ??
         (resolved ? (
-          <span className={density === 'compact' ? 'block truncate' : undefined} title={density === 'compact' ? `${resolved.city} · ${resolved.name}` : undefined}>
+          <span
+            className={density === 'compact' ? 'block truncate' : undefined}
+            title={density === 'compact' ? `${resolved.city} · ${resolved.name}` : undefined}
+          >
             {resolved.city} · {resolved.name}
           </span>
         ) : mode === 'iata' ? (
@@ -278,7 +287,7 @@ export interface TravelersPickerProps {
 export function travellersSummary(adults: number, children: number): string {
   const a = adults === 1 ? 'מבוגר אחד' : `${adults} מבוגרים`;
   if (!children) return a;
-  return `${a} · ${children === 1 ? 'ילד אחד' : `${children} ילדים`}`;
+  return `${a} + ${children === 1 ? 'ילד' : `${children} ילדים`}`;
 }
 
 /**
@@ -340,14 +349,7 @@ export function TravelersPicker({ adults, childrenAges, onAdults, onChildrenAges
         hidden={!open}
         className="absolute inset-x-0 top-full z-30 mt-1.5 flex flex-col gap-4 rounded-xl border border-line bg-surface p-4 shadow-lg md:inset-x-auto md:end-0 md:w-80"
       >
-        <Stepper
-          label="מבוגרים"
-          value={adults}
-          min={1}
-          max={maxTravellers}
-          onChange={onAdults}
-          hint={`עד ${maxTravellers} נוסעים בסך הכול`}
-        />
+        <Stepper label="מבוגרים" value={adults} min={1} max={maxTravellers} onChange={onAdults} hint={`עד ${maxTravellers} נוסעים בסך הכול`} />
         <ChildAgesEditor ages={childrenAges} onChange={onChildrenAges} max={Math.min(8, maxTravellers - adults)} />
         <div className="flex justify-end border-t border-line pt-3">
           <Button size="sm" variant="secondary" onClick={() => close(true)}>
@@ -373,11 +375,13 @@ export interface InlineSelectProps {
 export function InlineSelect({ label, value, onChange, options, className }: InlineSelectProps) {
   const id = useId();
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div className={cn('flex min-w-0 items-center gap-2', className)}>
       <label htmlFor={id} className="shrink-0 text-xs font-medium text-fg-muted">
         {label}
       </label>
-      <NativeSelect id={id} value={value} options={options} onChange={(e) => onChange(e.target.value)} className="min-w-28" />
+      <div className="min-w-0 flex-1 sm:flex-none">
+        <NativeSelect id={id} value={value} options={options} onChange={(e) => onChange(e.target.value)} className="min-w-20" />
+      </div>
     </div>
   );
 }
@@ -425,7 +429,14 @@ export function CurrencyPriceFields({
         error={errors.currency}
       />
       <Field label="מחיר מקסימלי" optional error={errors.max_price} hint={`סה״כ ב-${currency}`}>
-        <Input inputMode="decimal" dir="ltr" className="text-start" placeholder="ללא הגבלה" value={maxPrice} onChange={(e) => onMaxPrice(e.target.value)} />
+        <Input
+          inputMode="decimal"
+          dir="ltr"
+          className="text-start"
+          placeholder="ללא הגבלה"
+          value={maxPrice}
+          onChange={(e) => onMaxPrice(e.target.value)}
+        />
       </Field>
     </>
   );

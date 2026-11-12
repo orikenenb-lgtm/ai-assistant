@@ -29,7 +29,13 @@ describe('calendar base + requests', () => {
   });
 
   it('month request covers the month with the search nights, clamped to today', () => {
-    expect(monthRequest(base, '2026-12', today)).toMatchObject({ depart_from: '2026-12-01', depart_to: '2026-12-31', trip_nights: [5], adults: 2, children_ages: [7] });
+    expect(monthRequest(base, '2026-12', today)).toMatchObject({
+      depart_from: '2026-12-01',
+      depart_to: '2026-12-31',
+      trip_nights: [5],
+      adults: 2,
+      children_ages: [7],
+    });
     expect(monthRequest(base, '2026-11', today)).toMatchObject({ depart_from: '2026-11-12', depart_to: '2026-11-30' });
     expect(monthRequest(base, '2026-10', today)).toBeNull();
     // Return must stay within a year: the last depart date leaves room for the nights.

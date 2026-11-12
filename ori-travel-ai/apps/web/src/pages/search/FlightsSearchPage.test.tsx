@@ -29,14 +29,54 @@ function searchResponse(id: string, params: Record<string, unknown>) {
     coverage_note: 'אין התחייבות לכיסוי מלא של השוק — ייתכנו מחירים ואפשרויות נוספים אצל ספקים אחרים.',
     has_demo_results: true,
     has_live_results: false,
-    highlights: { currency: 'ILS', cheapest_offer_id: 'a1', fastest_offer_id: 'a1', best_score_offer_id: 'b2', comparable_count: 2, note: 'הזול ביותר מבין ההצעות שנמצאו בחיפוש זה (מטבע זהה) — לא בהכרח בכל השוק' },
+    highlights: {
+      currency: 'ILS',
+      cheapest_offer_id: 'a1',
+      fastest_offer_id: 'a1',
+      best_score_offer_id: 'b2',
+      comparable_count: 2,
+      note: 'הזול ביותר מבין ההצעות שנמצאו בחיפוש זה (מטבע זהה) — לא בהכרח בכל השוק',
+    },
   };
 }
 
 const airports = [
-  { code: 'TLV', city_code: 'TLV', name_he: 'נמל התעופה בן גוריון', name_en: 'Ben Gurion', city_he: 'תל אביב', city_en: 'Tel Aviv', country_code: 'IL', lat: 32.0114, lon: 34.8867, timezone: 'Asia/Jerusalem' },
-  { code: 'ATH', city_code: 'ATH', name_he: 'נמל התעופה אתונה', name_en: 'Athens', city_he: 'אתונה', city_en: 'Athens', country_code: 'GR', lat: 37.9364, lon: 23.9445, timezone: 'Europe/Athens' },
-  { code: 'FCO', city_code: 'ROM', name_he: 'נמל התעופה פיומיצ׳ינו', name_en: 'Fiumicino', city_he: 'רומא', city_en: 'Rome', country_code: 'IT', lat: 41.8003, lon: 12.2389, timezone: 'Europe/Rome' },
+  {
+    code: 'TLV',
+    city_code: 'TLV',
+    name_he: 'נמל התעופה בן גוריון',
+    name_en: 'Ben Gurion',
+    city_he: 'תל אביב',
+    city_en: 'Tel Aviv',
+    country_code: 'IL',
+    lat: 32.0114,
+    lon: 34.8867,
+    timezone: 'Asia/Jerusalem',
+  },
+  {
+    code: 'ATH',
+    city_code: 'ATH',
+    name_he: 'נמל התעופה אתונה',
+    name_en: 'Athens',
+    city_he: 'אתונה',
+    city_en: 'Athens',
+    country_code: 'GR',
+    lat: 37.9364,
+    lon: 23.9445,
+    timezone: 'Europe/Athens',
+  },
+  {
+    code: 'FCO',
+    city_code: 'ROM',
+    name_he: 'נמל התעופה פיומיצ׳ינו',
+    name_en: 'Fiumicino',
+    city_he: 'רומא',
+    city_en: 'Rome',
+    country_code: 'IT',
+    lat: 41.8003,
+    lon: 12.2389,
+    timezone: 'Europe/Rome',
+  },
 ];
 
 function stub() {
@@ -64,7 +104,16 @@ function stub() {
 function desktop() {
   vi.spyOn(window, 'matchMedia').mockImplementation(
     (query: string) =>
-      ({ matches: query === '(min-width: 768px)', media: query, onchange: null, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false }) as MediaQueryList,
+      ({
+        matches: query === '(min-width: 768px)',
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      }) as MediaQueryList,
   );
 }
 
@@ -86,7 +135,9 @@ describe('FlightsSearchPage (V6 fast comparison)', () => {
     desktop();
     const { searches } = stub();
     const user = userEvent.setup({ advanceTimers: () => {} });
-    const { router } = renderRoutes([{ path: '/search/flights', element: <FlightsSearchPage /> }], { initialEntries: ['/search/flights?search_id=s1'] });
+    const { router } = renderRoutes([{ path: '/search/flights', element: <FlightsSearchPage /> }], {
+      initialEntries: ['/search/flights?search_id=s1'],
+    });
 
     const featured = await screen.findByTestId('featured-deal');
     expect(featured).toHaveAttribute('data-offer-id', 'a1');
@@ -113,7 +164,9 @@ describe('FlightsSearchPage (V6 fast comparison)', () => {
     await waitFor(() => expect(router.state.location.search).toBe('?search_id=s2'));
     await waitFor(() => expect(screen.getByTestId('search-results')).toHaveAttribute('data-search-id', 's2'));
     // The new search becomes the calendar's "current" cell; the results heading receives focus.
-    await waitFor(() => expect(screen.getAllByTestId('fare-cell').find((c) => c.dataset.date === '2026-12-03')).toHaveAttribute('aria-current', 'date'));
+    await waitFor(() =>
+      expect(screen.getAllByTestId('fare-cell').find((c) => c.dataset.date === '2026-12-03')).toHaveAttribute('aria-current', 'date'),
+    );
     await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId('result-count')));
   });
 

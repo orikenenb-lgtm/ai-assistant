@@ -4,7 +4,16 @@ import { Link } from 'react-router';
 import { Badge, Button, ButtonLink, Callout, DialogClose, Drawer, EmptyState, ErrorState, NativeSelect, Skeleton } from '@/components/ui';
 import { canEdit, useAuth } from '@/features/auth';
 import { FACTOR_LABELS, FACTOR_ORDER } from '@/features/offers/labels';
-import { COMPARE_MIN, FeaturedDeal, OfferCard, OfferDetailDialog, OfferTable, pickFeatured, useCompareSelection, type TableSortKey } from '@/features/offers';
+import {
+  COMPARE_MIN,
+  FeaturedDeal,
+  OfferCard,
+  OfferDetailDialog,
+  OfferTable,
+  pickFeatured,
+  useCompareSelection,
+  type TableSortKey,
+} from '@/features/offers';
 import { buildRoute, LazyRouteMap } from '@/features/route-map';
 import { cn } from '@/lib/cn';
 import type { Category } from '@/lib/schemas/common';
@@ -27,7 +36,12 @@ type ResultView = (typeof RESULT_VIEWS)[number];
 const CATEGORY_PLURAL: Record<Category, string> = { flight: 'טיסות', hotel: 'מלונות', car: 'רכבים', activity: 'אטרקציות' };
 
 const EMPTY_SUGGESTIONS: Record<Category, string[]> = {
-  flight: ['הגדילו את הגמישות בתאריכים (±1 עד ±3 ימים)', 'הסירו את מגבלת העצירות או המחיר', 'בדקו את קודי שדות התעופה, או נסו שדה תעופה סמוך'],
+  flight: [
+    'בחרו בלוח המחירים תאריך שיש בו מחיר',
+    'הגדילו את הגמישות בתאריכים (±1 עד ±3 ימים)',
+    'הסירו את מגבלת העצירות או המחיר',
+    'בדקו את קודי שדות התעופה, או נסו שדה תעופה סמוך',
+  ],
   hotel: ['נסו תאריכים אחרים או פחות לילות', 'הורידו את דירוג הכוכבים או את דרישת ביטול החינם', 'בדקו שם עיר אחר או כתיב שונה'],
   car: ['הרחיבו את טווח התאריכים', 'הסירו מגבלות סוג רכב או תיבת הילוכים', 'נסו מקום איסוף אחר, למשל שדה התעופה הקרוב'],
   activity: ['הרחיבו את טווח התאריכים', 'הסירו תחומי עניין או דרישת שפה', 'נסו יעד אחר או כתיב שונה'],
@@ -147,7 +161,10 @@ export function SearchResults({ base, onEditSearch, pending = false, autoFocus =
   const options = useMemo(() => filterOptions(data.offers), [data.offers]);
   const visible = useMemo(() => sortOffers(filterOffers(data.offers, filters, currency), sort), [data.offers, filters, currency, sort]);
   const filterCount = activeFilterCount(filters);
-  const featured = useMemo(() => pickFeatured(data.offers, visible, data.highlights, filterCount > 0), [data.offers, visible, data.highlights, filterCount]);
+  const featured = useMemo(
+    () => pickFeatured(data.offers, visible, data.highlights, filterCount > 0),
+    [data.offers, visible, data.highlights, filterCount],
+  );
   const mapOffer = (mapOfferId ? data.offers.find((o) => o.id === mapOfferId) : undefined) ?? featured?.offer ?? null;
   const route = useMemo(() => (isFlight && mapOffer ? buildRoute(mapOffer, airports) : null), [isFlight, mapOffer, airports]);
 
@@ -228,12 +245,22 @@ export function SearchResults({ base, onEditSearch, pending = false, autoFocus =
       )}
 
       {featured && (
-        <div className={cn('grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity', route && 'xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]', pending && 'opacity-60')}>
+        <div
+          className={cn(
+            'grid grid-cols-[minmax(0,1fr)] gap-4 transition-opacity',
+            route && 'xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]',
+            pending && 'opacity-60',
+          )}
+        >
           <FeaturedDeal pick={featured} onReview={setDetail} placeName={isFlight ? placeName : undefined} />
           {route && mapOffer && (
             <div ref={mapRef} className="scroll-mt-[calc(var(--spacing-topbar)+1rem)]">
               <Suspense fallback={<MapSkeleton />}>
-                <LazyRouteMap route={route} subtitle={mapOffer.id === featured.offer.id ? `${mapOffer.title} · ההצעה המודגשת` : mapOffer.title} className="h-full" />
+                <LazyRouteMap
+                  route={route}
+                  subtitle={mapOffer.id === featured.offer.id ? `${mapOffer.title} · ההצעה המודגשת` : mapOffer.title}
+                  className="h-full"
+                />
               </Suspense>
             </div>
           )}
@@ -318,14 +345,25 @@ export function SearchResults({ base, onEditSearch, pending = false, autoFocus =
 
           {canEdit(user) && (
             <div>
-              <ButtonLink to={`/alerts?from_search=${encodeURIComponent(data.search_id)}`} variant="secondary" size="sm" leadingIcon={<BellPlus aria-hidden="true" />}>
+              <ButtonLink
+                to={`/alerts?from_search=${encodeURIComponent(data.search_id)}`}
+                variant="secondary"
+                size="sm"
+                leadingIcon={<BellPlus aria-hidden="true" />}
+              >
                 יצירת התראת מחיר לחיפוש הזה
               </ButtonLink>
             </div>
           )}
 
           {rerankFailed && (
-            <ErrorState compact title="לא ניתן היה לחשב דירוג מותאם" error={ranked.error} onRetry={() => void ranked.refetch()} retrying={ranked.isFetching} />
+            <ErrorState
+              compact
+              title="לא ניתן היה לחשב דירוג מותאם"
+              error={ranked.error}
+              onRetry={() => void ranked.refetch()}
+              retrying={ranked.isFetching}
+            />
           )}
 
           <div className={cn('flex flex-col gap-4 transition-opacity', busy && 'opacity-60')} aria-busy={ranked.isFetching || undefined}>

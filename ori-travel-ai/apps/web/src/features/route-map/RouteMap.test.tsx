@@ -22,7 +22,10 @@ const airport = (code: string, city_he: string, lat: number, lon: number): GeoAi
 });
 
 const airports = new Map(
-  [airport('TLV', 'תל אביב', 32.0114, 34.8867), airport('ATH', 'אתונה', 37.9364, 23.9445), airport('FCO', 'רומא', 41.8003, 12.2389)].map((a) => [a.code, a]),
+  [airport('TLV', 'תל אביב', 32.0114, 34.8867), airport('ATH', 'אתונה', 37.9364, 23.9445), airport('FCO', 'רומא', 41.8003, 12.2389)].map((a) => [
+    a.code,
+    a,
+  ]),
 );
 
 const seg = (o: string, d: string, dep: string, arr: string, num: string) => ({
@@ -51,7 +54,10 @@ const offer = CanonicalOfferSchema.parse({
         arriving_at: '2026-12-10T13:00:00+01:00',
         duration_minutes: 360,
         stops: 1,
-        segments: [seg('TLV', 'ATH', '2026-12-10T08:00:00+02:00', '2026-12-10T10:00:00+02:00', '101'), seg('ATH', 'FCO', '2026-12-10T11:30:00+02:00', '2026-12-10T13:00:00+01:00', '202')],
+        segments: [
+          seg('TLV', 'ATH', '2026-12-10T08:00:00+02:00', '2026-12-10T10:00:00+02:00', '101'),
+          seg('ATH', 'FCO', '2026-12-10T11:30:00+02:00', '2026-12-10T13:00:00+01:00', '202'),
+        ],
         layovers_minutes: [90],
       },
       {
@@ -80,8 +86,22 @@ describe('route geometry', () => {
 
   it('splits paths at the antimeridian and offsets two-way lanes', () => {
     const proj = makeProjection(0);
-    expect(polylinePath([{ lon: 179, lat: 0 }, { lon: -179, lat: 0 }], proj).match(/M/g)).toHaveLength(2);
-    const lane = offsetPolyline([{ x: 0, y: 0 }, { x: 10, y: 0 }], 1);
+    expect(
+      polylinePath(
+        [
+          { lon: 179, lat: 0 },
+          { lon: -179, lat: 0 },
+        ],
+        proj,
+      ).match(/M/g),
+    ).toHaveLength(2);
+    const lane = offsetPolyline(
+      [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+      ],
+      1,
+    );
     expect(lane[0].y).toBe(-1);
   });
 

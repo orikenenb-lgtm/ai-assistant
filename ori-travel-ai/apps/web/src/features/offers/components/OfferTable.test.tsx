@@ -22,12 +22,32 @@ describe('OfferTable', () => {
     const onSort = vi.fn();
     const onMap = vi.fn();
     renderWithProviders(
-      <OfferTable offers={offers} category="flight" caption="טבלת השוואה: 2 טיסות" sort="price" onSort={onSort} onOpenDetails={onOpen} featuredId="a1" onShowOnMap={onMap} />,
+      <OfferTable
+        offers={offers}
+        category="flight"
+        caption="טבלת השוואה: 2 טיסות"
+        sort="price"
+        onSort={onSort}
+        onOpenDetails={onOpen}
+        featuredId="a1"
+        onShowOnMap={onMap}
+      />,
     );
     const table = screen.getByRole('table', { name: 'טבלת השוואה: 2 טיסות' });
     expect(table).toHaveAttribute('data-testid', 'results-table');
-    const headers = within(table).getAllByRole('columnheader').map((h) => clean(h.textContent));
-    expect(headers.slice(0, 8)).toEqual(['חברה וספק', expect.stringContaining('מסלול'), expect.stringContaining('סה״כ'), 'לנוסע', 'כבודה', 'ביטול', 'נבדק', 'מקור']);
+    const headers = within(table)
+      .getAllByRole('columnheader')
+      .map((h) => clean(h.textContent));
+    expect(headers.slice(0, 8)).toEqual([
+      'חברה וספק',
+      expect.stringContaining('מסלול'),
+      expect.stringContaining('סה״כ'),
+      'לנוסע',
+      'כבודה',
+      'ביטול',
+      'נבדק',
+      'מקור',
+    ]);
     expect(within(table).getByRole('columnheader', { name: /סה״כ/ })).toHaveAttribute('aria-sort', 'ascending');
 
     const rows = within(table).getAllByRole('row').slice(1);

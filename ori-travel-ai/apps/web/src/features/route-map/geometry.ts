@@ -41,11 +41,7 @@ export function greatCircle(a: LonLat, b: LonLat, n = 48): LonLat[] {
   const lam1 = a.lon * RAD;
   const phi2 = b.lat * RAD;
   const lam2 = b.lon * RAD;
-  const d =
-    2 *
-    Math.asin(
-      Math.sqrt(Math.sin((phi2 - phi1) / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin((lam2 - lam1) / 2) ** 2),
-    );
+  const d = 2 * Math.asin(Math.sqrt(Math.sin((phi2 - phi1) / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin((lam2 - lam1) / 2) ** 2));
   if (!Number.isFinite(d) || d < 1e-9) return [a, b];
   const out: LonLat[] = [];
   for (let i = 0; i <= n; i++) {
@@ -155,10 +151,26 @@ export function graticulePath(proj: Projection, box: { lonMin: number; lonMax: n
   const lon0 = Math.floor(box.lonMin / step) * step;
   const lat0 = Math.floor(box.latMin / step) * step;
   for (let lon = lon0; lon <= box.lonMax; lon += step) {
-    parts.push(polylinePath([{ lon, lat: box.latMin }, { lon, lat: box.latMax }], proj));
+    parts.push(
+      polylinePath(
+        [
+          { lon, lat: box.latMin },
+          { lon, lat: box.latMax },
+        ],
+        proj,
+      ),
+    );
   }
   for (let lat = lat0; lat <= box.latMax; lat += step) {
-    parts.push(polylinePath([{ lon: box.lonMin, lat }, { lon: box.lonMax, lat }], proj));
+    parts.push(
+      polylinePath(
+        [
+          { lon: box.lonMin, lat },
+          { lon: box.lonMax, lat },
+        ],
+        proj,
+      ),
+    );
   }
   return parts.join('');
 }

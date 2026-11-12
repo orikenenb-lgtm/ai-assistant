@@ -53,7 +53,8 @@ export interface FeaturedPick {
 }
 
 export const FEATURED_DEFAULT_NOTE = 'הזול ביותר מבין ההצעות שנמצאו בחיפוש זה (באותו מטבע) — לא בהכרח המחיר הנמוך ביותר בשוק.';
-export const FEATURED_FILTERED_NOTE = 'הזול ביותר מבין ההצעות שנמצאו בחיפוש זה ותואמות את המסננים שבחרתם (באותו מטבע) — לא בהכרח המחיר הנמוך ביותר בשוק.';
+export const FEATURED_FILTERED_NOTE =
+  'הזול ביותר מבין ההצעות שנמצאו בחיפוש זה ותואמות את המסננים שבחרתם (באותו מטבע) — לא בהכרח המחיר הנמוך ביותר בשוק.';
 
 /**
  * Chooses the featured offer.

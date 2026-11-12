@@ -26,7 +26,15 @@ function ringsOf(g: Geometry | null): Position[][] {
 }
 
 function toPath(rings: Position[][], proj: Projection, close: boolean): string {
-  return rings.map((r) => polylinePath(r.map(([lon, lat]) => ({ lon, lat })), proj, close)).join('');
+  return rings
+    .map((r) =>
+      polylinePath(
+        r.map(([lon, lat]) => ({ lon, lat })),
+        proj,
+        close,
+      ),
+    )
+    .join('');
 }
 
 let landRings: Position[][] | null = null;

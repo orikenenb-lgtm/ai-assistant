@@ -56,10 +56,7 @@ export function FeaturedDeal({ pick, onReview, placeName, className }: FeaturedD
       data-testid="featured-deal"
       data-offer-id={offer.id}
       data-source={pick.source}
-      className={cn(
-        'relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-deal-line bg-deal-soft p-5 shadow-sm sm:p-6',
-        className,
-      )}
+      className={cn('relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-deal-line bg-deal-soft p-5 shadow-sm sm:p-6', className)}
     >
       <span aria-hidden="true" className="absolute inset-y-0 start-0 w-1.5 bg-deal-strong" />
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -85,7 +82,7 @@ export function FeaturedDeal({ pick, onReview, placeName, className }: FeaturedD
           <p className="mt-1.5 text-sm font-medium text-tangerine-800">{totalLabel(offer)}</p>
           {perPerson && (
             <p className="text-sm text-fg-muted" data-testid="featured-per-person">
-              <MoneyText value={perPerson} className="font-semibold text-fg" /> לנוסע
+              <MoneyText value={perPerson} className="font-semibold text-fg" /> {offer.category === 'flight' ? 'לנוסע' : 'לאדם'}
             </p>
           )}
           {otherUnits.map((u) => (
@@ -129,7 +126,11 @@ export function FeaturedDeal({ pick, onReview, placeName, className }: FeaturedD
                 {stopsLabel(d.slices[0].stops)} · {formatDuration(d.slices[0].duration_minutes)}
               </Fact>
             )}
-            <Fact label="כבודה">{baggageText(d.baggage).filter((t) => t !== 'תיק אישי').join(' · ')}</Fact>
+            <Fact label="כבודה">
+              {baggageText(d.baggage)
+                .filter((t) => t !== 'תיק אישי')
+                .join(' · ')}
+            </Fact>
           </>
         ) : (
           offerFacts(offer)
@@ -155,12 +156,12 @@ export function FeaturedDeal({ pick, onReview, placeName, className }: FeaturedD
           <button
             type="button"
             onClick={() => onReview(offer)}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-deal-strong px-4 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-deal active:bg-tangerine-800"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-deal-strong px-4 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-deal active:bg-tangerine-800"
           >
             <Search className="size-4" aria-hidden="true" />
             בדיקת ההצעה
           </button>
-          <StartBookingButton offerId={offer.id} size="md" />
+          <StartBookingButton offerId={offer.id} size="md" className="min-h-11" />
         </div>
       </div>
     </section>

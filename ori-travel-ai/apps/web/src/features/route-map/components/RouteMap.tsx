@@ -2,16 +2,7 @@ import { useId, useMemo } from 'react';
 import { cn } from '@/lib/cn';
 import { formatDuration } from '@/lib/format';
 import { basemapPaths } from '../basemap';
-import {
-  fitViewBox,
-  graticulePath,
-  greatCircle,
-  makeProjection,
-  offsetPolyline,
-  standardParallelFor,
-  xyPath,
-  type XY,
-} from '../geometry';
+import { fitViewBox, graticulePath, greatCircle, makeProjection, offsetPolyline, standardParallelFor, xyPath, type XY } from '../geometry';
 import type { RouteModel, RoutePoint } from '../legs';
 
 export interface RouteMapProps {
@@ -32,7 +23,8 @@ function chevron(points: readonly XY[], size: number): string | null {
   const b = points[i + 1];
   const angle = Math.atan2(b.y - a.y, b.x - a.x);
   const p = points[i];
-  const rot = (dx: number, dy: number) => `${(p.x + dx * Math.cos(angle) - dy * Math.sin(angle)).toFixed(3)} ${(p.y + dx * Math.sin(angle) + dy * Math.cos(angle)).toFixed(3)}`;
+  const rot = (dx: number, dy: number) =>
+    `${(p.x + dx * Math.cos(angle) - dy * Math.sin(angle)).toFixed(3)} ${(p.y + dx * Math.sin(angle) + dy * Math.cos(angle)).toFixed(3)}`;
   return `M${rot(-size, -size * 0.8)}L${rot(size * 0.6, 0)}L${rot(-size, size * 0.8)}`;
 }
 
@@ -105,7 +97,11 @@ export default function RouteMap({ route, subtitle, className }: RouteMapProps) 
   const { vb, unit } = model;
 
   return (
-    <figure className={cn('flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5', className)} data-testid="route-map" aria-labelledby={headingId}>
+    <figure
+      className={cn('flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5', className)}
+      data-testid="route-map"
+      aria-labelledby={headingId}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 id={headingId} className="text-sm font-semibold text-fg">
@@ -172,7 +168,9 @@ export default function RouteMap({ route, subtitle, className }: RouteMapProps) 
               cx={xy.x}
               cy={xy.y}
               r={r}
-              className={p.role === 'stop' ? 'fill-ink-600 stroke-white' : cn('fill-white', p.role === 'origin' ? 'stroke-tangerine-600' : 'stroke-sky-700')}
+              className={
+                p.role === 'stop' ? 'fill-ink-600 stroke-white' : cn('fill-white', p.role === 'origin' ? 'stroke-tangerine-600' : 'stroke-sky-700')
+              }
               strokeWidth={p.role === 'stop' ? 1.5 : 3}
               vectorEffect="non-scaling-stroke"
             />

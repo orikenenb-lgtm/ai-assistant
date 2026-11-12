@@ -121,15 +121,13 @@ export function FareCellButton({
           </span>
         </>
       )}
-      {best && variant !== 'grid' && (
-        <Star className="absolute end-1 top-1 size-2.5 fill-current text-tangerine-800" aria-hidden="true" />
-      )}
+      {best && variant !== 'grid' && <Star className="absolute end-1 top-1 size-2.5 fill-current text-tangerine-800" aria-hidden="true" />}
       {status === 'priced' ? (
         <span className={cn('font-bold tabular-nums leading-tight', variant === 'grid' ? 'text-sm' : 'text-[0.8125rem]')}>{price ?? '—'}</span>
       ) : status === 'out_of_range' ? (
         variant !== 'grid' && <span className="text-xs">·</span>
       ) : (
-        <span className={cn('flex items-center gap-1 leading-tight', variant === 'grid' ? 'text-2xs' : 'text-2xs')}>
+        <span className={cn('flex items-center leading-tight text-2xs', variant === 'strip' ? 'flex-col gap-0' : 'gap-1')}>
           <span
             aria-hidden="true"
             className={cn(

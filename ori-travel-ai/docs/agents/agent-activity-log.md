@@ -74,3 +74,5 @@
 | 2026-11-12 ~15:45 | Agent UX-DS | הסתיים: עיצוב בהיר (סרגל לבן, accent טורקיז, tangerine לדילים), dark mode עם בורר, Segmented/Legend, מטרות מגע 44px, 59 זוגות צבע AA בשני המצבים, תיקון BUG-QA-01/02; 209 בדיקות web; 48 צילומי לפני/אחרי | opus | ✅ |
 | 2026-11-12 ~16:00 | Agent DEVOPS-RELEASE | הסתיים: התקנה נקייה מ-clone (bash) עברה מקצה לקצה ב-23 שניות; גיבוי לפני migration + שחזור (נבדק עם migration זמני); מסמכי windows-release/rollback/diagnostics; CI: shellcheck + בדיקת גיבוי. PowerShell לא הורץ | sonnet | ✅ |
 | 2026-11-12 ~16:02 | מנהל | request_id בשורת לוג הבקשה (rid=…) + בדיקה; עדכון diagnostics.md | — | ✅ |
+| 2026-11-12 ~16:20 | Agent FE-FLIGHT | הסתיים: טופס חיפוש קומפקטי, לוח מחירים (חודשי + מטריצת לילות, ניווט מקלדת, מובייל swipe), כרטיס דיל מומלץ, טבלת תוצאות, סינון מזוודה, מפת מסלול SVG (Natural Earth), תיקון QA-06 וחפיפה ב-AddToTrip; 248 בדיקות web | opus | ✅ |
+| 2026-11-12 ~16:25 | מנהל | בדיקת אינטגרציה: API 839 עוברות, ruff+alembic check נקיים; web typecheck/lint/248 בדיקות/build ירוקים; סקירת צילומי מסך | — | ✅ |

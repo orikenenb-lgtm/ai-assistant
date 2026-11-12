@@ -34,7 +34,19 @@ export interface OfferTableProps {
 const TH = 'whitespace-nowrap px-2.5 py-2.5 text-start text-xs font-semibold text-fg-muted';
 const TD = 'px-2.5 py-3 align-top text-sm text-fg';
 
-function SortHeader({ label, sortKey, sort, onSort, hint }: { label: string; sortKey: TableSortKey; sort?: string; onSort?: (k: TableSortKey) => void; hint: string }) {
+function SortHeader({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  hint,
+}: {
+  label: string;
+  sortKey: TableSortKey;
+  sort?: string;
+  onSort?: (k: TableSortKey) => void;
+  hint: string;
+}) {
   const active = sort === sortKey;
   if (!onSort) return <>{label}</>;
   return (
@@ -115,7 +127,10 @@ function BaggageCell({ offer }: { offer: CanonicalOffer }) {
   const b = offer.details.baggage;
   const checked = b.checked_included;
   const carry = b.carry_on_included;
-  const extra = [checked && checked > 0 && b.checked_bag_weight_kg ? `${b.checked_bag_weight_kg} ק״ג` : null, carry == null ? 'טרולי: לא ידוע' : carry > 0 ? 'טרולי' : 'ללא טרולי']
+  const extra = [
+    checked && checked > 0 && b.checked_bag_weight_kg ? `${b.checked_bag_weight_kg} ק״ג` : null,
+    carry == null ? 'טרולי: לא ידוע' : carry > 0 ? 'טרולי' : 'ללא טרולי',
+  ]
     .filter(Boolean)
     .join(' · ');
   return (
@@ -138,7 +153,18 @@ function unitPrice(offer: CanonicalOffer) {
  * Semantic comparison table of offers (desktop). Every value is read from the offer itself; the featured offer is
  * marked with text, not colour alone. Flights get itinerary/baggage columns; other categories get key facts.
  */
-export function OfferTable({ offers, category, caption, sort, onSort, onOpenDetails, featuredId, onShowOnMap, mapOfferId, className }: OfferTableProps) {
+export function OfferTable({
+  offers,
+  category,
+  caption,
+  sort,
+  onSort,
+  onOpenDetails,
+  featuredId,
+  onShowOnMap,
+  mapOfferId,
+  className,
+}: OfferTableProps) {
   const flight = category === 'flight';
   const ariaSort = (key: TableSortKey) => (sort === key ? ('ascending' as const) : undefined);
   return (
@@ -192,10 +218,14 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
               >
                 <th scope="row" className={cn(TD, 'min-w-36 max-w-48 text-start font-normal')}>
                   {featured && (
-                    <span className="mb-1 inline-flex items-center rounded-full bg-deal-strong px-2 py-0.5 text-2xs font-semibold text-white">הזול בחיפוש</span>
+                    <span className="mb-1 inline-flex items-center rounded-full bg-deal-strong px-2 py-0.5 text-2xs font-semibold text-white">
+                      הזול בחיפוש
+                    </span>
                   )}
                   <span className="block font-semibold leading-snug text-fg">
-                    {d.kind === 'flight' ? [...new Set(d.slices.flatMap((s) => s.segments.map((g) => g.carrier_name)))].join(' · ') || o.title : o.title}
+                    {d.kind === 'flight'
+                      ? [...new Set(d.slices.flatMap((s) => s.segments.map((g) => g.carrier_name)))].join(' · ') || o.title
+                      : o.title}
                   </span>
                   <span className="block text-xs text-fg-muted">
                     {d.kind === 'flight' && d.fare_brand ? `${d.fare_brand} · ` : o.subtitle && d.kind !== 'flight' ? `${o.subtitle} · ` : ''}
@@ -221,7 +251,11 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
                   )}
                 </td>
                 <td className={cn(TD, 'whitespace-nowrap')}>
-                  <MoneyText value={o.price.total} estimated={o.price.total_status === 'estimated'} className={cn('text-base font-bold', featured ? 'text-deal' : 'text-fg')} />
+                  <MoneyText
+                    value={o.price.total}
+                    estimated={o.price.total_status === 'estimated'}
+                    className={cn('text-base font-bold', featured ? 'text-deal' : 'text-fg')}
+                  />
                   {o.price.total_status === 'estimated' && <span className="block text-2xs text-amber-700">משוער</span>}
                 </td>
                 <td className={cn(TD, 'whitespace-nowrap')}>
@@ -259,7 +293,9 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
                         title="הצגת המסלול במפה"
                         className={cn(
                           'grid size-8 place-items-center rounded-md border transition-colors',
-                          mapOfferId === o.id ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-line text-fg-muted hover:bg-surface-sunken hover:text-fg',
+                          mapOfferId === o.id
+                            ? 'border-sky-500 bg-sky-50 text-sky-700'
+                            : 'border-line text-fg-muted hover:bg-surface-sunken hover:text-fg',
                         )}
                       >
                         <MapPin className="size-4" aria-hidden="true" />

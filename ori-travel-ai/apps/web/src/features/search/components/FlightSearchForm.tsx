@@ -12,7 +12,7 @@ import { COMPACT_LABEL, InlineSelect, PlaceCombobox, SegmentedChoice, TravelersP
 const opts = (labels: Record<string, string>) => Object.entries(labels).map(([value, label]) => ({ value, label }));
 
 const FLEX_OPTIONS = [
-  { value: '0', label: 'תאריכים מדויקים' },
+  { value: '0', label: 'ללא' },
   { value: '1', label: '±1 יום' },
   { value: '2', label: '±2 ימים' },
   { value: '3', label: '±3 ימים' },
@@ -79,41 +79,27 @@ export function FlightSearchForm({ initial, pending, serverErrors, onSubmit }: S
       )}
 
       {/* Toolbar: trip type + the options that change the fare most */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5">
-        <SegmentedChoice
-          legend="סוג הטיסה"
-          value={s.tripType}
-          onChange={(tripType) => update({ tripType })}
-          options={[
-            { value: 'round', label: 'הלוך-חזור' },
-            { value: 'oneway', label: 'כיוון אחד' },
-          ]}
-        />
+      <div className="grid grid-cols-2 items-center gap-x-3 gap-y-2.5 sm:flex sm:flex-wrap">
+        <div className="col-span-2 sm:col-span-1">
+          <SegmentedChoice
+            legend="סוג הטיסה"
+            value={s.tripType}
+            onChange={(tripType) => update({ tripType })}
+            options={[
+              { value: 'round', label: 'הלוך-חזור' },
+              { value: 'oneway', label: 'כיוון אחד' },
+            ]}
+          />
+        </div>
         <InlineSelect label="גמישות" value={String(s.flexDays)} onChange={(v) => update({ flexDays: Number(v) })} options={FLEX_OPTIONS} />
         <InlineSelect label="מחלקה" value={s.cabin} onChange={(cabin) => update({ cabin })} options={opts(CABIN_LABELS)} />
         <InlineSelect label="מזוודות לבטן" value={String(s.checkedBags)} onChange={(v) => update({ checkedBags: Number(v) })} options={BAG_OPTIONS} />
         <BudgetInput value={s.maxPrice} currency={s.currency} error={errors.max_price} onChange={(maxPrice) => update({ maxPrice })} />
-        <button
-          type="button"
-          className="inline-flex h-10 items-center gap-1 rounded-md px-1 text-sm font-medium text-accent hover:text-accent-hover"
-          aria-expanded={moreOpen}
-          aria-controls={moreId}
-          onClick={() => setMoreOpen((v) => !v)}
-        >
-          אפשרויות נוספות
-          <ChevronDown className={cn('size-4 transition-transform', moreOpen && 'rotate-180')} aria-hidden="true" />
-        </button>
-      </div>
-      <div id={moreId} hidden={!moreOpen} className="flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-lg bg-surface-sunken px-3 py-2.5">
-        <InlineSelect label="עצירות" value={s.maxStops} onChange={(maxStops) => update({ maxStops })} options={STOPS_OPTIONS} />
-        <InlineSelect label="שעות המראה" value={s.window} onChange={(window) => update({ window })} options={opts(WINDOW_LABELS)} />
-        <InlineSelect label="מטבע" value={s.currency} onChange={(currency) => update({ currency })} options={CURRENCIES.map((c) => ({ value: c, label: c }))} />
-        {errors.currency && <p className="text-sm text-coral-700">{errors.currency}</p>}
       </div>
 
       {/* Main row */}
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:flex-[1.15]">
+      <div className="flex flex-col gap-3 min-[1380px]:flex-row min-[1380px]:items-start">
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] min-[1380px]:flex-[1.15]">
           <PlaceCombobox
             label="מוצא"
             required
@@ -143,17 +129,11 @@ export function FlightSearchForm({ initial, pending, serverErrors, onSubmit }: S
             placeholder="FCO"
           />
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)_auto] xl:flex-[1.6]">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] min-[1380px]:flex-[1.6]">
           <Field label="תאריך יציאה" required error={errors.depart_date} labelClassName={COMPACT_LABEL}>
             <Input type="date" min={today} max={maxDate} value={s.departDate} onChange={(e) => update({ departDate: e.target.value })} />
           </Field>
-          <Field
-            label="תאריך חזרה"
-            required={round}
-            error={errors.return_date}
-            hint={round ? undefined : 'כיוון אחד'}
-            labelClassName={COMPACT_LABEL}
-          >
+          <Field label="תאריך חזרה" required={round} error={errors.return_date} hint={round ? undefined : 'כיוון אחד'} labelClassName={COMPACT_LABEL}>
             <Input
               type="date"
               min={s.departDate || today}
@@ -164,6 +144,7 @@ export function FlightSearchForm({ initial, pending, serverErrors, onSubmit }: S
             />
           </Field>
           <TravelersPicker
+            className="col-span-2 md:col-span-1"
             adults={s.adults}
             childrenAges={s.childrenAges}
             onAdults={(adults) => update({ adults })}
@@ -171,17 +152,48 @@ export function FlightSearchForm({ initial, pending, serverErrors, onSubmit }: S
             maxTravellers={MAX_TRAVELLERS}
             error={travellersError}
           />
-          <div className="flex flex-col gap-1.5">
+          <div className="col-span-2 flex flex-col gap-1.5 md:col-span-1">
             <span aria-hidden="true" className={cn(COMPACT_LABEL, 'invisible hidden md:block')}>
               ·
             </span>
-            <Button type="submit" loading={pending} loadingText="מחפשים…" leadingIcon={<Search aria-hidden="true" />} className="w-full px-6 md:w-auto">
+            <Button
+              type="submit"
+              loading={pending}
+              loadingText="מחפשים…"
+              leadingIcon={<Search aria-hidden="true" />}
+              className="w-full px-6 md:w-auto"
+            >
               חיפוש
             </Button>
           </div>
         </div>
       </div>
-      <p className="text-xs text-fg-subtle">החיפוש נשלח לכל הספקים הפעילים; ספקים שאינם מחוברים יסומנו בתוצאות. לאחר החיפוש יוצג לוח מחירים לפי תאריכים.</p>
+      <div id={moreId} hidden={!moreOpen} className="flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-lg bg-surface-sunken px-3 py-2.5">
+        <InlineSelect label="עצירות" value={s.maxStops} onChange={(maxStops) => update({ maxStops })} options={STOPS_OPTIONS} />
+        <InlineSelect label="שעות המראה" value={s.window} onChange={(window) => update({ window })} options={opts(WINDOW_LABELS)} />
+        <InlineSelect
+          label="מטבע"
+          value={s.currency}
+          onChange={(currency) => update({ currency })}
+          options={CURRENCIES.map((c) => ({ value: c, label: c }))}
+        />
+        {errors.currency && <p className="text-sm text-coral-700">{errors.currency}</p>}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <button
+          type="button"
+          className="inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-1 text-sm font-medium text-accent hover:text-accent-hover"
+          aria-expanded={moreOpen}
+          aria-controls={moreId}
+          onClick={() => setMoreOpen((v) => !v)}
+        >
+          אפשרויות נוספות
+          <ChevronDown className={cn('size-4 transition-transform', moreOpen && 'rotate-180')} aria-hidden="true" />
+        </button>
+        <p className="text-xs text-fg-subtle">
+          החיפוש נשלח לכל הספקים הפעילים; ספקים שאינם מחוברים יסומנו בתוצאות. אחרי החיפוש יוצג לוח מחירים לפי תאריכים.
+        </p>
+      </div>
     </form>
   );
 }
@@ -189,17 +201,17 @@ export function FlightSearchForm({ initial, pending, serverErrors, onSubmit }: S
 function BudgetInput({ value, currency, error, onChange }: { value: string; currency: string; error?: string; onChange: (v: string) => void }) {
   const id = useId();
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1">
       <div className="flex items-center gap-2">
         <label htmlFor={id} className="shrink-0 text-xs font-medium text-fg-muted">
-          תקציב מקסימלי
+          תקציב עד
         </label>
-        <div className="relative" dir="ltr">
+        <div className="relative min-w-0 flex-1 sm:flex-none" dir="ltr">
           <Input
             id={id}
             inputMode="decimal"
-            className="w-32 pe-12 text-start"
-            placeholder="ללא הגבלה"
+            className="pe-11 text-start sm:w-28"
+            placeholder="ללא"
             value={value}
             aria-invalid={error ? true : undefined}
             aria-describedby={`${id}-hint${error ? ` ${id}-err` : ''}`}

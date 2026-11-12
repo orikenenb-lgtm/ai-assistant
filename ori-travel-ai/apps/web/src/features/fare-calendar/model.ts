@@ -49,7 +49,17 @@ export function calendarBaseFromParams(params: Record<string, unknown>): Calenda
 
 /** Stable identity of a calendar (dates excluded): changing it starts a fresh calendar. */
 export function routeKey(b: CalendarBase): string {
-  return [b.origin, b.destination, b.adults, b.childrenAges.join('.'), b.cabin, b.maxStops ?? '', b.checkedBags, b.currency, b.nights === null ? 'ow' : 'rt'].join('|');
+  return [
+    b.origin,
+    b.destination,
+    b.adults,
+    b.childrenAges.join('.'),
+    b.cabin,
+    b.maxStops ?? '',
+    b.checkedBags,
+    b.currency,
+    b.nights === null ? 'ow' : 'rt',
+  ].join('|');
 }
 
 export function nightsSupported(nights: number | null): boolean {
@@ -186,7 +196,10 @@ export function indexCells(cells: readonly FareCell[]): Map<string, FareCell> {
  * (route, dates, party, cabin, stops, bags, currency) so the search is the one the cell priced: flexibility, departure
  * window and budget are not part of the calendar and would change the results (and the provider cache key).
  */
-export function searchBodyForCell(params: Record<string, unknown>, cell: Pick<FareCell, 'depart_date' | 'return_date' | 'nights'>): Record<string, unknown> {
+export function searchBodyForCell(
+  params: Record<string, unknown>,
+  cell: Pick<FareCell, 'depart_date' | 'return_date' | 'nights'>,
+): Record<string, unknown> {
   const b = flightBody(flightFromParams(params));
   const ret = cell.return_date ?? (cell.nights != null ? addDaysIso(cell.depart_date, cell.nights) : null);
   return {
@@ -244,9 +257,12 @@ export function cellPriceText(money: Money | null | undefined): string | null {
 function exactMoney(money: Money | null | undefined): string | null {
   if (!money) return null;
   try {
-    return new Intl.NumberFormat(LOCALE, { style: 'currency', currency: money.currency, currencyDisplay: 'narrowSymbol', roundingMode: 'halfEven' }).format(
-      money.amount as Intl.StringNumericLiteral,
-    );
+    return new Intl.NumberFormat(LOCALE, {
+      style: 'currency',
+      currency: money.currency,
+      currencyDisplay: 'narrowSymbol',
+      roundingMode: 'halfEven',
+    }).format(money.amount as Intl.StringNumericLiteral);
   } catch {
     return null;
   }
@@ -322,7 +338,11 @@ export function moveLinear(index: number, key: string, opts: { length: number; r
 }
 
 /** 2-D movement for the depart × nights matrix (columns = depart dates, rows = nights). */
-export function moveMatrix(pos: { row: number; col: number }, key: string, opts: { rows: number; cols: number; rtl: boolean }): { row: number; col: number } | null {
+export function moveMatrix(
+  pos: { row: number; col: number },
+  key: string,
+  opts: { rows: number; cols: number; rtl: boolean },
+): { row: number; col: number } | null {
   const { rows, cols, rtl } = opts;
   const c = (v: number) => Math.min(cols - 1, Math.max(0, v));
   const r = (v: number) => Math.min(rows - 1, Math.max(0, v));

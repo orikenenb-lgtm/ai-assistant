@@ -57,7 +57,13 @@ describe('FeaturedDeal', () => {
     const onReview = vi.fn();
     renderWithProviders(
       <FeaturedDeal
-        pick={{ offer, source: 'server', filtered: false, comparableCount: 7, note: 'הזול ביותר מבין ההצעות שנמצאו בחיפוש זה (מטבע זהה) — לא בהכרח בכל השוק' }}
+        pick={{
+          offer,
+          source: 'server',
+          filtered: false,
+          comparableCount: 7,
+          note: 'הזול ביותר מבין ההצעות שנמצאו בחיפוש זה (מטבע זהה) — לא בהכרח בכל השוק',
+        }}
         onReview={onReview}
         placeName={(c) => ({ TLV: 'תל אביב', ATH: 'אתונה' })[c]}
       />,
@@ -82,7 +88,9 @@ describe('FeaturedDeal', () => {
   });
 
   it('labels a filtered pick as such', () => {
-    renderWithProviders(<FeaturedDeal pick={{ offer, source: 'client', filtered: true, comparableCount: 1, note: FEATURED_FILTERED_NOTE }} onReview={() => {}} />);
+    renderWithProviders(
+      <FeaturedDeal pick={{ offer, source: 'client', filtered: true, comparableCount: 1, note: FEATURED_FILTERED_NOTE }} onReview={() => {}} />,
+    );
     expect(screen.getByRole('heading', { name: 'הזול ביותר מבין ההצעות שנמצאו בחיפוש זה ותואמות את המסננים' })).toBeInTheDocument();
     expect(screen.getByText('הזול ביותר לפי המסננים')).toBeInTheDocument();
   });

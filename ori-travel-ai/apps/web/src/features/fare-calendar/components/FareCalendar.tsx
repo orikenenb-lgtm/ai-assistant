@@ -84,7 +84,15 @@ export function FareCalendar(props: FareCalendarProps) {
   return <CalendarInner base={base} {...props} />;
 }
 
-function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pageCoverageNote, className }: FareCalendarProps & { base: CalendarBase }) {
+function CalendarInner({
+  base,
+  onSelect,
+  pendingKey,
+  selectError,
+  placeName,
+  pageCoverageNote,
+  className,
+}: FareCalendarProps & { base: CalendarBase }) {
   const titleId = useId();
   const legendId = useId();
   const periodId = useId();
@@ -244,7 +252,13 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
       );
   } else if (view === 'month') {
     body = isMd ? (
-      <div role="grid" aria-labelledby={`${titleId} ${periodId}`} aria-describedby={legendId} aria-busy={loading || undefined} className="flex flex-col gap-1.5">
+      <div
+        role="grid"
+        aria-labelledby={`${titleId} ${periodId}`}
+        aria-describedby={legendId}
+        aria-busy={loading || undefined}
+        className="flex flex-col gap-1.5"
+      >
         <div role="row" className="grid grid-cols-7 gap-1.5">
           {WEEKDAY_SHORT.map((w, i) => (
             <div role="columnheader" key={w} className="pb-0.5 text-center text-xs font-medium text-fg-subtle">
@@ -275,10 +289,22 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
     ) : (
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
-          <Button size="sm" variant="ghost" leadingIcon={<ChevronRight className="ltr:rotate-180" aria-hidden="true" />} onClick={() => scrollWeek(-1)}>
+          <Button
+            size="md"
+            variant="ghost"
+            className="min-h-11"
+            leadingIcon={<ChevronRight className="ltr:rotate-180" aria-hidden="true" />}
+            onClick={() => scrollWeek(-1)}
+          >
             השבוע הקודם
           </Button>
-          <Button size="sm" variant="ghost" trailingIcon={<ChevronLeft className="ltr:rotate-180" aria-hidden="true" />} onClick={() => scrollWeek(1)}>
+          <Button
+            size="md"
+            variant="ghost"
+            className="min-h-11"
+            trailingIcon={<ChevronLeft className="ltr:rotate-180" aria-hidden="true" />}
+            onClick={() => scrollWeek(1)}
+          >
             השבוע הבא
           </Button>
         </div>
@@ -309,7 +335,13 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
     const cols = 'grid grid-cols-[4.75rem_repeat(7,minmax(4.5rem,1fr))] gap-1.5';
     body = (
       <div className="scrollbar-thin -mx-1 overflow-x-auto px-1 pb-2">
-        <div role="grid" aria-labelledby={`${titleId} ${periodId}`} aria-describedby={legendId} aria-busy={loading || undefined} className="flex min-w-[38rem] flex-col gap-1.5">
+        <div
+          role="grid"
+          aria-labelledby={`${titleId} ${periodId}`}
+          aria-describedby={legendId}
+          aria-busy={loading || undefined}
+          className="flex min-w-[38rem] flex-col gap-1.5"
+        >
           <div role="row" className={cols}>
             <div role="columnheader" className="sticky start-0 z-10 flex items-end bg-surface pb-1 text-2xs font-medium leading-tight text-fg-subtle">
               לילות ↓ / יציאה
@@ -393,7 +425,7 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
               title={v === 'matrix' && oneWay ? 'זמין לטיסות הלוך-חזור' : undefined}
               onClick={() => changeView(v)}
               className={cn(
-                'inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+                'inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 max-md:min-h-11',
                 view === v ? 'bg-surface text-fg shadow-sm' : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -432,7 +464,12 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
                 <p id={periodId} className="min-w-36 text-center text-sm font-semibold text-fg" aria-live="polite">
                   {shortDate(departs[0])} – {shortDate(departs[departs.length - 1])}
                 </p>
-                <PeriodButton label="7 ימים מאוחר יותר" dir="next" disabled={nextWeekDisabled} onClick={() => setMatrixStart(addDaysIso(departs[0], 7))} />
+                <PeriodButton
+                  label="7 ימים מאוחר יותר"
+                  dir="next"
+                  disabled={nextWeekDisabled}
+                  onClick={() => setMatrixStart(addDaysIso(departs[0], 7))}
+                />
               </>
             )}
           </div>
@@ -473,7 +510,7 @@ function PeriodButton({ label, dir, disabled, onClick }: { label: string; dir: '
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className="grid size-10 place-items-center rounded-md border border-line text-fg-muted transition-colors hover:bg-surface-sunken hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+      className="grid size-11 place-items-center rounded-md border border-line text-fg-muted transition-colors hover:bg-surface-sunken hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
     >
       <Icon className="size-5 ltr:rotate-180" aria-hidden="true" />
     </button>
@@ -515,7 +552,11 @@ function CellDetails({ cell, cellKeyValue }: { cell: FareCell | undefined; cellK
   const nights = nightsRaw ? Number(nightsRaw) : null;
   const ret = cell?.return_date ?? (nights != null ? addDaysIso(depart, nights) : null);
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-sunken px-3 py-2 text-xs text-fg-muted" data-testid="fare-cell-details" aria-live="off">
+    <div
+      className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-surface-sunken px-3 py-2 text-xs text-fg-muted"
+      data-testid="fare-cell-details"
+      aria-live="off"
+    >
       <span className="font-semibold text-fg">
         {formatDate(depart, 'weekday-date') ?? depart}
         {ret && <> ← {formatDate(ret, 'weekday-date') ?? ret}</>}
@@ -525,7 +566,8 @@ function CellDetails({ cell, cellKeyValue }: { cell: FareCell | undefined; cellK
       ) : cell.status === 'priced' ? (
         <>
           <span>
-            החל מ-<MoneyText value={cell.min_total} className="font-bold text-fg" />
+            החל מ-
+            <MoneyText value={cell.min_total} className="font-bold text-fg" />
             {cell.travelers ? (cell.travelers === 1 ? ' לנוסע אחד' : ` ל-${cell.travelers} נוסעים`) : ''}
           </span>
           {cell.per_person && (cell.travelers ?? 0) > 1 && (

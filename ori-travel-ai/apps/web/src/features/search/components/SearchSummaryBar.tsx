@@ -12,7 +12,11 @@ function travellers(params: Record<string, unknown>): string | null {
       ? params.adults
       : null;
   const kids = rooms
-    ? rooms.reduce<number>((a, r) => a + (Array.isArray((r as { children_ages?: unknown })?.children_ages) ? (r as { children_ages: unknown[] }).children_ages.length : 0), 0)
+    ? rooms.reduce<number>(
+        (a, r) =>
+          a + (Array.isArray((r as { children_ages?: unknown })?.children_ages) ? (r as { children_ages: unknown[] }).children_ages.length : 0),
+        0,
+      )
     : Array.isArray(params.children_ages)
       ? params.children_ages.length
       : 0;
@@ -24,9 +28,11 @@ function travellers(params: Record<string, unknown>): string | null {
 function flightChips(p: Record<string, unknown>): string[] {
   const out: string[] = [];
   if (typeof p.cabin === 'string') out.push(cabinLabel(p.cabin));
-  if (typeof p.checked_bags === 'number' && p.checked_bags > 0) out.push(`${p.checked_bags === 1 ? 'מזוודה לבטן' : `${p.checked_bags} מזוודות לבטן`} לנוסע`);
+  if (typeof p.checked_bags === 'number' && p.checked_bags > 0)
+    out.push(`${p.checked_bags === 1 ? 'מזוודה לבטן' : `${p.checked_bags} מזוודות לבטן`} לנוסע`);
   if (typeof p.flex_days === 'number' && p.flex_days > 0) out.push(`גמישות ±${p.flex_days === 1 ? 'יום' : `${p.flex_days} ימים`}`);
-  if (typeof p.max_stops === 'number') out.push(p.max_stops === 0 ? 'ישירות בלבד' : `עד ${p.max_stops === 1 ? 'עצירה אחת' : `${p.max_stops} עצירות`}`);
+  if (typeof p.max_stops === 'number')
+    out.push(p.max_stops === 0 ? 'ישירות בלבד' : `עד ${p.max_stops === 1 ? 'עצירה אחת' : `${p.max_stops} עצירות`}`);
   if ((typeof p.max_price === 'string' || typeof p.max_price === 'number') && String(p.max_price).trim())
     out.push(`תקציב עד ${String(p.max_price).replace(/\.0+$/, '')} ${typeof p.currency === 'string' ? p.currency : ''}`.trim());
   return out;
@@ -59,7 +65,9 @@ export function SearchSummaryBar({ data, onEdit, placeName }: SearchSummaryBarPr
               {placeName(destination) ?? destination}
             </span>
           )}
-          <span className={flight && placeName ? 'text-sm font-medium text-fg-muted' : undefined}>{describeSearchParams(data.category, data.params)}</span>
+          <span className={flight && placeName ? 'text-sm font-medium text-fg-muted' : undefined}>
+            {describeSearchParams(data.category, data.params)}
+          </span>
         </p>
         <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-fg-muted">
           {t && <span>{t}</span>}

@@ -10,7 +10,9 @@ import { fareCalendarKeys, fetchFareCalendar } from './api';
 export function useFareCalendar(req: FareCalendarRequest | null) {
   return useQuery({
     queryKey: req ? fareCalendarKeys.calendar(req) : [...fareCalendarKeys.all, 'disabled'],
-    queryFn: ({ signal }) => fetchFareCalendar(req as FareCalendarRequest, signal),
+    // No AbortSignal on purpose: an aborted request has already reached the (rate-limited) server, so a remount
+    // (e.g. React StrictMode in dev) should reuse the in-flight request instead of cancelling and re-sending it.
+    queryFn: () => fetchFareCalendar(req as FareCalendarRequest),
     enabled: !!req,
     staleTime: 10 * 60_000,
     gcTime: 30 * 60_000,

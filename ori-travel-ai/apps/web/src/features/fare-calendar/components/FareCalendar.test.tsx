@@ -55,11 +55,23 @@ describe('FareCalendar', () => {
     mockViewport(true);
     const requests = stubCalendar();
     renderWithProviders(
-      <FareCalendar params={calendarSearchParams} onSelect={() => {}} pageCoverageNote="אין התחייבות לכיסוי מלא של השוק — ייתכנו מחירים ואפשרויות נוספים אצל ספקים אחרים." />,
+      <FareCalendar
+        params={calendarSearchParams}
+        onSelect={() => {}}
+        pageCoverageNote="אין התחייבות לכיסוי מלא של השוק — ייתכנו מחירים ואפשרויות נוספים אצל ספקים אחרים."
+      />,
     );
     const cal = screen.getByTestId('fare-calendar');
     await waitFor(() => expect(cal).toHaveAttribute('data-state', 'ready'));
-    expect(requests[0]).toMatchObject({ origin: 'TLV', destination: 'FCO', depart_from: '2026-12-01', depart_to: '2026-12-31', trip_nights: [5], adults: 2, children_ages: [7] });
+    expect(requests[0]).toMatchObject({
+      origin: 'TLV',
+      destination: 'FCO',
+      depart_from: '2026-12-01',
+      depart_to: '2026-12-31',
+      trip_nights: [5],
+      adults: 2,
+      children_ages: [7],
+    });
 
     expect(within(cal).getByRole('grid')).toBeInTheDocument();
     expect(within(cal).getAllByRole('columnheader')).toHaveLength(7);
@@ -130,7 +142,15 @@ describe('FareCalendar', () => {
     expect(screen.getByTestId('fare-calendar')).toHaveAttribute('data-view', 'matrix');
     expect(requests.at(-1)).toMatchObject({ depart_from: '2026-12-07', depart_to: '2026-12-13', trip_nights: [2, 3, 4, 5, 6, 7, 8] });
     expect(cells()).toHaveLength(49);
-    expect(screen.getAllByRole('rowheader').map((r) => r.textContent)).toEqual(['2 לילות', '3 לילות', '4 לילות', '5 לילות', '6 לילות', '7 לילות', '8 לילות']);
+    expect(screen.getAllByRole('rowheader').map((r) => r.textContent)).toEqual([
+      '2 לילות',
+      '3 לילות',
+      '4 לילות',
+      '5 לילות',
+      '6 לילות',
+      '7 לילות',
+      '8 לילות',
+    ]);
     expect(cellFor('2026-12-10', '5')).toHaveAttribute('aria-current', 'date');
 
     await user.click(screen.getByRole('button', { name: '7 ימים מאוחר יותר' }));
