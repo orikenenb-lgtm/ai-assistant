@@ -45,6 +45,10 @@ class InvitationPreview(ApiModel):
     expires_at: datetime
 
 
+class InvitationTokenBody(ApiModel):
+    token: str = Field(..., min_length=10, max_length=200)
+
+
 class AcceptInvitationRequest(ApiModel):
     token: str = Field(..., min_length=10, max_length=200)
     password: str = Field(..., min_length=1, max_length=256)

@@ -39,8 +39,9 @@ export async function logout(): Promise<void> {
   await api.post('/api/auth/logout', undefined, { schema: OkResponseSchema });
 }
 
+/** The token travels in the request body — never in a URL (URLs end up in server/proxy logs). */
 export function previewInvitation(token: string) {
-  return api.get(`/api/auth/invitations/${encodeURIComponent(token)}`, { schema: InvitationPreviewSchema });
+  return api.post('/api/auth/invitations/preview', { token }, { schema: InvitationPreviewSchema });
 }
 
 export async function acceptInvitation(input: { token: string; password: string }): Promise<SessionOut> {

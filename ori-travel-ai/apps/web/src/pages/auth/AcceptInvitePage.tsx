@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Check, Circle, Eye, EyeOff, MailOpen, UserPlus } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import {
   Badge,
@@ -116,7 +116,7 @@ function AcceptForm({
             </div>
             <ul className="flex flex-col gap-1">
               <Requirement ok={password.length >= MIN_PASSWORD_LENGTH}>{`לפחות ${MIN_PASSWORD_LENGTH} תווים`}</Requirement>
-              <Requirement ok={check.classesOk}>לפחות שני סוגי תווים: אותיות קטנות, גדולות, ספרות או סימנים</Requirement>
+              <Requirement ok={check.classesOk}>לפחות שלושה סוגי תווים (אותיות קטנות, גדולות, ספרות, סימנים) — או 16 תווים ומעלה</Requirement>
             </ul>
           </div>
         }
@@ -159,7 +159,11 @@ function AcceptForm({
 
 export default function AcceptInvitePage() {
   useDocumentTitle('הצטרפות למשפחה');
-  const { token = '' } = useParams();
+  // New links carry the token in the URL fragment (/invite#<token>), which browsers never
+  // send to the server; legacy /invite/<token> links keep working.
+  const { token: pathToken = '' } = useParams();
+  const { hash } = useLocation();
+  const token = pathToken || decodeURIComponent(hash.replace(/^#/, '').replace(/^t=/, ''));
   const { status, user, logout } = useAuth();
   const [joined, setJoined] = useState(false);
   const preview = useQuery({

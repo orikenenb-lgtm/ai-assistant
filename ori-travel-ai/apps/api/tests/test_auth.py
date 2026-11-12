@@ -164,8 +164,9 @@ def _invite(db, role="adult", attested=True, hours=72) -> str:
 
 def test_accept_invitation_flow(client, db):
     raw = _invite(db, role="viewer", attested=False)
-    prev = client.get(f"/api/auth/invitations/{raw}")
+    prev = client.post("/api/auth/invitations/preview", json={"token": raw})
     assert prev.status_code == 200 and prev.json()["role"] == "viewer"
+    assert client.get(f"/api/auth/invitations/{raw}").status_code == 200  # legacy path still works
     res = client.post("/api/auth/invitations/accept", json={"token": raw, "password": "Strong-Pass-789"})
     assert res.status_code == 200, res.text
     assert res.json()["user"]["role"] == "viewer"

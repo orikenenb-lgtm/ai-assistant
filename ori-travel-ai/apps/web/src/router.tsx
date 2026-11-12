@@ -22,6 +22,7 @@ export const routes: RouteObject[] = [
     hydrateFallbackElement: <FullPageStatus kind="loading" />,
     children: [
       { path: '/login', ...page(() => import('@/pages/auth/LoginPage')) },
+      { path: '/invite', ...page(() => import('@/pages/auth/AcceptInvitePage')) },
       { path: '/invite/:token', ...page(() => import('@/pages/auth/AcceptInvitePage')) },
       {
         element: <RequireAuth />,

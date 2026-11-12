@@ -39,7 +39,7 @@ if [ "$MODE" = "app" ]; then
   fi
   ok "Open: http://localhost:$PORT   (Ctrl+C to stop)"
   cd "$API_DIR"
-  exec "$PY" -m uvicorn app.main:app --host "$HOST" --port "$PORT"
+  exec "$PY" -m uvicorn app.main:app --no-proxy-headers --host "$HOST" --port "$PORT"
 fi
 
 # dev mode
@@ -60,7 +60,7 @@ cleanup() {
   info "Stopped."
 }
 trap cleanup INT TERM EXIT
-(cd "$API_DIR" && exec "$PY" -m uvicorn app.main:app --reload --host "$HOST" --port "$PORT") &
+(cd "$API_DIR" && exec "$PY" -m uvicorn app.main:app --reload --no-proxy-headers --host "$HOST" --port "$PORT") &
 PIDS+=("$!")
 (cd "$WEB_DIR" && VITE_API_TARGET="http://127.0.0.1:$PORT" VITE_PORT="$WEB_PORT" exec npm run dev) &
 PIDS+=("$!")

@@ -154,7 +154,7 @@ jobs:
       - name: Start API (serves apps/web/dist)
         working-directory: ori-travel-ai/apps/api
         run: |
-          ORI_DATA_KEY="$(python -m app.cli gen-key)" nohup python -m uvicorn app.main:app --host 127.0.0.1 --port "$E2E_PORT" > "$RUNNER_TEMP/api.log" 2>&1 &
+          ORI_DATA_KEY="$(python -m app.cli gen-key)" nohup python -m uvicorn app.main:app --no-proxy-headers --host 127.0.0.1 --port "$E2E_PORT" > "$RUNNER_TEMP/api.log" 2>&1 &
           for i in $(seq 1 40); do
             curl -fsS "http://127.0.0.1:$E2E_PORT/api/health" > /dev/null && exit 0
             sleep 1

@@ -64,7 +64,7 @@ try {
                 $env:ORI_OWNER_PASSWORD = 'E2e-Passw0rd-Local-1'   # throwaway test-only value
                 Invoke-Native -Exe $py -Arguments @('-m', 'app.cli', 'migrate') -WorkingDirectory $script:ApiDir
                 Invoke-Native -Exe $py -Arguments @('-m', 'app.cli', 'create-owner', '--email', 'owner@e2e.test', '--name', 'E2E Owner', '--password-env', 'ORI_OWNER_PASSWORD') -WorkingDirectory $script:ApiDir
-                $server = Start-Process -FilePath $py -ArgumentList "-m uvicorn app.main:app --host 127.0.0.1 --port $e2ePort" -WorkingDirectory $script:ApiDir -NoNewWindow -PassThru
+                $server = Start-Process -FilePath $py -ArgumentList "-m uvicorn app.main:app --no-proxy-headers --host 127.0.0.1 --port $e2ePort" -WorkingDirectory $script:ApiDir -NoNewWindow -PassThru
                 $ready = $false
                 for ($i = 0; $i -lt 40 -and -not $ready; $i++) {
                     Start-Sleep -Milliseconds 500

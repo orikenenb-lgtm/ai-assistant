@@ -55,7 +55,7 @@ try {
         Push-Location -LiteralPath $script:ApiDir
         try {
             $global:LASTEXITCODE = 0
-            & $py -m uvicorn app.main:app --host $bindHost --port $Port
+            & $py -m uvicorn app.main:app --no-proxy-headers --host $bindHost --port $Port
             if ($LASTEXITCODE -ne 0) { Write-Warn "Server stopped with exit code $LASTEXITCODE" }
         }
         finally { Pop-Location }
@@ -72,7 +72,7 @@ try {
     $env:VITE_API_TARGET = "http://127.0.0.1:$Port"
     $env:VITE_PORT = "$WebPort"
     Write-Info 'Starting API (--reload) and Vite / מפעיל שרת וממשק במצב פיתוח'
-    $apiArgs = "-m uvicorn app.main:app --reload --host $bindHost --port $Port"
+    $apiArgs = "-m uvicorn app.main:app --reload --no-proxy-headers --host $bindHost --port $Port"
     $apiProc = Start-Process -FilePath $py -ArgumentList $apiArgs -WorkingDirectory $script:ApiDir -NoNewWindow -PassThru
     $webProc = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c npm run dev' -WorkingDirectory $script:WebDir -NoNewWindow -PassThru
     Write-Ok "API: http://127.0.0.1:$Port    Web (dev): http://localhost:$WebPort    (Ctrl+C stops both / לעצירה)"

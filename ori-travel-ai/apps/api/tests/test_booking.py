@@ -13,13 +13,13 @@ from sqlalchemy import select, update
 
 from app.core.config import get_settings, reset_settings_cache
 from app.core.db import utcnow
-from app.core.errors import ConflictError
+from app.core.errors import BadRequestError, ConflictError
 from app.core.ratelimit import limiter
 from app.models import Approval, AuditEvent, BookingIntent, FamilyMember, Notification, Offer, Reservation
 from app.models.booking import BOOKING_STATES, SimulatedSupplierBooking
 from app.modules.booking import mock_supplier, service
 from app.modules.booking import state_machine as sm
-from app.modules.booking.terms import build_terms_summary, compute_terms_hash
+from app.modules.booking.terms import build_terms_summary, canonical_terms, compute_terms_hash
 from app.modules.providers import registry
 from app.modules.providers import service as provider_service
 from app.modules.providers.base import BookingOptions, RevalidationResult
@@ -34,7 +34,7 @@ def future(days: int) -> str:
 
 
 FLIGHT = {"origin": "TLV", "destination": "LCA", "depart_date": future(25), "return_date": future(29), "adults": 1}
-HOTEL = {"destination": "אתונה", "check_in": future(25), "check_out": future(28)}
+HOTEL = {"destination": "אתונה", "check_in": future(25), "check_out": future(28), "rooms": [{"adults": 1}]}
 B = "/api/bookings"
 
 
@@ -181,24 +181,32 @@ def test_state_cannot_be_assigned_outside_the_state_machine(db):
 # ------------------------------------------------------------- terms (unit) ----
 
 
+TA = {"family_member_id": "a", "display_name": "אבא", "age_group": "adult"}
+TB = {"family_member_id": "b", "display_name": "אמא", "age_group": "adult"}
+
+
+def _hash(snap, travelers, amount, cur, mode="SIMULATION"):
+    return compute_terms_hash(snap, travelers, amount, cur, mode)
+
+
 def test_terms_hash_binds_material_fields_only(auth_client):
     c = auth_client("owner")
     snap = offers(c)[0]
     amount, cur = 12345, snap["price"]["total"]["currency"]
-    base = compute_terms_hash(snap, ["a", "b"], amount, cur)
-    assert len(base) == 64 and base == compute_terms_hash(snap, ["b", "a"], amount, cur)
+    base = _hash(snap, [TA, TB], amount, cur)
+    assert len(base) == 64 and base == _hash(snap, [TB, TA], amount, cur)
 
     volatile = copy.deepcopy(snap)
     volatile["source"]["fetched_at"] = "2030-01-01T00:00:00Z"
     volatile["source"]["expires_at"] = "2030-01-01T00:30:00Z"
     volatile["score"] = None
     volatile["subtitle"] = "טקסט שיווקי"
-    assert compute_terms_hash(volatile, ["a", "b"], amount, cur) == base
+    assert _hash(volatile, [TA, TB], amount, cur) == base
 
     def mutated(fn):
         m = copy.deepcopy(snap)
         fn(m)
-        return compute_terms_hash(m, ["a", "b"], amount, cur)
+        return _hash(m, [TA, TB], amount, cur)
 
     changes = [
         lambda m: m["source"].__setitem__("provider_id", "other"),
@@ -208,19 +216,32 @@ def test_terms_hash_binds_material_fields_only(auth_client):
         lambda m: m["details"]["slices"][0].__setitem__("departing_at", "2031-01-01T00:00:00+02:00"),
         lambda m: m["details"]["slices"][0]["segments"][0].__setitem__("flight_number", "9999"),
         lambda m: m["cancellation"].__setitem__("refundable", not m["cancellation"].get("refundable")),
+        # AUD-01: every line the approver reads is bound
+        lambda m: m.__setitem__("title", "הצעה אחרת לגמרי"),
+        lambda m: m["price"].__setitem__("excluded_notes", ["מס עירוני בתשלום במקום"]),
+        lambda m: m["price"].__setitem__("total_status", "estimated"),
+        lambda m: m["details"]["slices"][0].__setitem__("stops", 3),
+        lambda m: m["source"].__setitem__("provider_name", "ספק אחר"),
+        lambda m: m["details"]["slices"][0]["segments"].append(dict(m["details"]["slices"][0]["segments"][0], flight_number="77")),
+        lambda m: m["cancellation"].__setitem__("policy_text", "נוסח חדש"),
     ]
     hashes = {mutated(fn) for fn in changes}
     assert base not in hashes and len(hashes) == len(changes)
-    assert compute_terms_hash(snap, ["a"], amount, cur) != base
-    assert compute_terms_hash(snap, ["a", "b"], amount + 1, cur) != base
-    assert compute_terms_hash(snap, ["a", "b"], amount, "EUR" if cur != "EUR" else "USD") != base
+    assert _hash(snap, [TA], amount, cur) != base
+    assert _hash(snap, [TA, {**TB, "display_name": "שם אחר"}], amount, cur) != base
+    assert _hash(snap, [TA, TB], amount + 1, cur) != base
+    assert _hash(snap, [TA, TB], amount, "EUR" if cur != "EUR" else "USD") != base
+    assert _hash(snap, [TA, TB], amount, cur, "HOSTED_CHECKOUT") != base
+    # the hash covers exactly the lines shown to the approver
+    for line in build_terms_summary(snap, [TA, TB], amount, cur, "SIMULATION"):
+        assert line in canonical_terms(snap, [TB, TA], amount, cur, "SIMULATION")["summary"]
 
 
 @pytest.mark.parametrize(("category", "body"), [
     ("flight", FLIGHT),
     ("hotel", HOTEL),
     ("car", {"pickup_location": "ATH", "pickup_at": f"{future(25)}T10:00:00", "dropoff_at": f"{future(28)}T10:00:00"}),
-    ("activity", {"destination": "ATH", "date_from": future(25), "date_to": future(27)}),
+    ("activity", {"destination": "ATH", "date_from": future(25), "date_to": future(27), "adults": 1}),
 ])
 def test_terms_summary_is_hebrew_and_complete_for_every_category(auth_client, db, category, body):
     c = auth_client("owner")
@@ -313,8 +334,81 @@ def test_create_validation(auth_client, db):
     assert count(db, BookingIntent) == 0
     # minors may travel; an authorized adult prepares the booking
     kid = add_member(db)
-    b = c.post(B, json={"offer_id": offer_id, "traveler_member_ids": [me, kid]}).json()
+    family = offers(c, body={**FLIGHT, "children_ages": [6]})[0]
+    b = c.post(B, json={"offer_id": family["id"], "traveler_member_ids": [me, kid]}).json()
     assert [t["is_minor"] for t in b["travelers"]] == [False, True] and b["travelers_count"] == 2
+    assert not any("תומחרה" in w for w in b["warnings"])
+
+
+def test_traveler_composition_must_match_the_offer(auth_client, db):
+    """AUD-04: nobody can be booked on a price quoted for a different party."""
+    c = auth_client("owner")
+    me, adult2 = member_id(db, c), add_member(db, "סבתא", "adult")
+    kid, kid2, baby = add_member(db), add_member(db, "ילד"), add_member(db, "תינוקת", "infant")
+
+    def refuse(offer, ids):
+        e = err(c.post(B, json={"offer_id": offer["id"], "traveler_member_ids": ids}), 400, "TRAVELER_MISMATCH")
+        assert e["details"]["selected"] and e["message"]
+        return e
+
+    two_adults = offers(c, body={**FLIGHT, "adults": 2})[0]
+    e = refuse(two_adults, [kid, baby])  # the audited case: 2 adults quoted, child + infant booked
+    assert "2 מבוגרים" in e["message"] and "1 ילדים" in e["message"] and e["details"]["expected"] == {"adult": 2, "child": 0, "infant": 0}
+    for ids in ([me], [me, kid], [me, adult2, kid], [me, baby]):
+        refuse(two_adults, ids)
+    ok = c.post(B, json={"offer_id": two_adults["id"], "traveler_member_ids": [me, adult2]})
+    assert ok.status_code == 201, ok.text
+    bid = ok.json()["id"]
+    revalidate(c, bid)
+    assert approve(c, bid).json()["state"] == "APPROVED"
+    # PATCH enforces the same rule and leaves the approval untouched when it refuses
+    for ids in ([me, kid], [kid, baby], [me], [me, adult2, kid]):
+        err(c.patch(f"{B}/{bid}/travelers", json={"traveler_member_ids": ids}), 400, "TRAVELER_MISMATCH")
+    g = get(c, bid)
+    assert g["state"] == "APPROVED" and g["approval"]["valid"] and g["travelers_count"] == 2
+
+    with_infant = offers(c, body={**FLIGHT, "children_ages": [6, 1]})[0]
+    assert with_infant["details"]["passengers"] == {"adult": 1, "child": 1, "infant": 1}
+    refuse(with_infant, [me, kid, kid2])
+    assert c.post(B, json={"offer_id": with_infant["id"], "traveler_member_ids": [baby, kid, me]}).status_code == 201
+
+    hotel = offers(c, "hotel", {**HOTEL, "rooms": [{"adults": 2, "children_ages": [4]}]})[0]
+    e = refuse(hotel, [me, adult2])
+    assert "2 מבוגרים ו-1 ילדים" in e["message"]
+    refuse(hotel, [me, kid, kid2])
+    assert c.post(B, json={"offer_id": hotel["id"], "traveler_member_ids": [me, adult2, baby]}).status_code == 201
+
+    activity = offers(c, "activity", {"destination": "ATH", "date_from": future(25), "date_to": future(27), "adults": 2})[0]
+    refuse(activity, [me])
+    refuse(activity, [me, kid])
+    assert c.post(B, json={"offer_id": activity["id"], "traveler_member_ids": [me, adult2]}).status_code == 201
+
+    car = offers(c, "car", {"pickup_location": "ATH", "pickup_at": f"{future(25)}T10:00:00",
+                            "dropoff_at": f"{future(28)}T10:00:00"})[0]
+    e = refuse(car, [kid, kid2])
+    assert "מבוגר אחד" in e["message"]
+    assert c.post(B, json={"offer_id": car["id"], "traveler_member_ids": [me, kid, baby]}).status_code == 201
+    assert count(db, AuditEvent, action="booking.create", outcome="denied") == 11
+
+
+def test_composition_rules_unit():
+    def t(*groups):
+        return [{"family_member_id": str(i), "age_group": g} for i, g in enumerate(groups)]
+
+    flight = {"kind": "flight", "passengers": {"adult": 0, "child": 0, "infant": 1}}
+    for details, travelers in [
+        (flight, t("infant")),  # an infant always needs an adult, even if the offer says otherwise
+        ({"kind": "flight", "passengers": {"adult": 1, "senior": 1}}, t("adult")),
+        ({"kind": "flight", "passengers": {}}, t("adult")),
+        ({"kind": "activity", "participants": {}}, t("child")),
+        ({"kind": "car"}, t("adult", "teen")),
+        ({"kind": "something-new"}, t("child")),
+    ]:
+        with pytest.raises(BadRequestError) as exc:
+            service._validate_composition(details, travelers)
+        assert exc.value.code == "TRAVELER_MISMATCH"
+    service._validate_composition({"kind": "activity", "participants": {}}, t("adult", "child"))
+    service._validate_composition({"kind": "car"}, t("adult"))
 
 
 def test_create_rejects_expired_offer(auth_client, db):
@@ -369,14 +463,14 @@ def _attempts(c, db, bid) -> dict:
     limiter.reset()
     h = get(c, bid)["terms_hash"]
     return {
-        "travelers": lambda: c.patch(f"{B}/{bid}/travelers", json={"traveler_member_ids": [add_member(db)]}),
+        "travelers": lambda: c.patch(f"{B}/{bid}/travelers", json={"traveler_member_ids": [add_member(db, "מבוגר", "adult")]}),
         "revalidate": lambda: c.post(f"{B}/{bid}/revalidate"),
         "approve": lambda: approve(c, bid, h),
         "submit": lambda: submit(c, bid),
         "reconcile": lambda: c.post(f"{B}/{bid}/reconcile"),
         "cancel": lambda: c.post(f"{B}/{bid}/cancel", json={}),
         "record": lambda: c.post(f"{B}/{bid}/record-confirmation", json={"supplier_reference": "ABC-1234"}),
-        "checkout": lambda: c.get(f"{B}/{bid}/checkout-link"),
+        "checkout": lambda: c.post(f"{B}/{bid}/checkout-link"),
     }
 
 
@@ -817,16 +911,16 @@ def test_provider_reported_price_change_before_approval(auth_client, db):
 def test_travelers_change_invalidates_approval(auth_client, db):
     c = auth_client("owner")
     b = approved(c, db)
-    bid, me, kid = b["id"], member_id(db, c), add_member(db)
+    bid, me, other = b["id"], member_id(db, c), add_member(db, "דודה", "adult")
     same = c.patch(f"{B}/{bid}/travelers", json={"traveler_member_ids": [me]}).json()
     assert same["state"] == "APPROVED" and same["approval"]["valid"] is True  # not a change
 
-    out = c.patch(f"{B}/{bid}/travelers", json={"traveler_member_ids": [me, kid]})
+    out = c.patch(f"{B}/{bid}/travelers", json={"traveler_member_ids": [other]})
     assert out.status_code == 200, out.text
     out = out.json()
-    assert out["state"] == "QUOTE_SELECTED" and out["terms_hash"] != b["terms_hash"] and out["travelers_count"] == 2
+    assert out["state"] == "QUOTE_SELECTED" and out["terms_hash"] != b["terms_hash"] and out["travelers_count"] == 1
     assert out["approval"]["valid"] is False and "הנוסעים" in out["approval"]["invalidation_reason"]
-    assert out["revalidated_at"] is None and "נוסעים (2)" in "\n".join(out["terms_summary"])
+    assert out["revalidated_at"] is None and "נוסעים (1): דודה" in "\n".join(out["terms_summary"])
     err(submit(c, bid), 409, "INVALID_TRANSITION")
     revalidate(c, bid)
     err(approve(c, bid, b["terms_hash"]), 409, "TERMS_CHANGED")
@@ -920,10 +1014,10 @@ def test_hosted_checkout_flow_and_live_execution_always_refused(live, db):
     assert b["execution_mode"] == "HOSTED_CHECKOUT" and b["is_simulation"] is False and b["simulation_scenario"] is None
     assert any("באתר הספק" in line for line in b["terms_summary"]) and not any("סימולציה" in line for line in b["terms_summary"])
 
-    err(c.get(f"{B}/{bid}/checkout-link"), 409, "INVALID_TRANSITION")
+    err(c.post(f"{B}/{bid}/checkout-link"), 409, "INVALID_TRANSITION")
     err(c.post(f"{B}/{bid}/record-confirmation", json={"supplier_reference": "REAL-12345"}), 409, "INVALID_TRANSITION")
     assert revalidate(c, bid)["state"] == "READY_FOR_APPROVAL"
-    err(c.get(f"{B}/{bid}/checkout-link"), 409, "INVALID_TRANSITION")
+    err(c.post(f"{B}/{bid}/checkout-link"), 409, "INVALID_TRANSITION")
     a = approve(c, bid).json()
     assert a["state"] == "APPROVED"
     assert a["can"]["open_checkout"] and a["can"]["record_confirmation"] and a["can"]["submit"] is False
@@ -932,7 +1026,7 @@ def test_hosted_checkout_flow_and_live_execution_always_refused(live, db):
     err(submit(c, bid), 409, "USE_HOSTED_CHECKOUT")
     assert state_of(db, bid) == "APPROVED" and count(db, SimulatedSupplierBooking) == 0
 
-    link = c.get(f"{B}/{bid}/checkout-link")
+    link = c.post(f"{B}/{bid}/checkout-link")
     assert link.status_code == 200, link.text
     assert link.json()["url"] == "https://book.example-travel.com/checkout/abc" and link.json()["warnings"]
     ev = db.query(AuditEvent).filter_by(action="booking.checkout_link", outcome="success").one()
@@ -940,7 +1034,7 @@ def test_hosted_checkout_flow_and_live_execution_always_refused(live, db):
 
     # the adapter starts returning a non-allowlisted URL -> never exposed
     LiveStub.checkout_url = "https://phish.example/checkout"
-    err(c.get(f"{B}/{bid}/checkout-link"), 409, "CHECKOUT_LINK_UNAVAILABLE")
+    err(c.post(f"{B}/{bid}/checkout-link"), 409, "CHECKOUT_LINK_UNAVAILABLE")
     assert count(db, AuditEvent, action="booking.checkout_link", outcome="denied") >= 1
 
     for bad in ("abc", "x" * 65, "REF 123", "REF_123", "<script>", "ref;drop", ""):
@@ -999,7 +1093,7 @@ def _mutations(c, bid, me):
         c.post(f"{B}/{bid}/reconcile"),
         c.post(f"{B}/{bid}/cancel", json={}),
         c.post(f"{B}/{bid}/record-confirmation", json={"supplier_reference": "REAL-12345"}),
-        c.get(f"{B}/{bid}/checkout-link"),
+        c.post(f"{B}/{bid}/checkout-link"),
     ]
 
 
@@ -1024,7 +1118,7 @@ def test_csrf_and_authentication_are_enforced(auth_client, client, db):
     c = auth_client("owner")
     bid = approved(c, db)["id"]
     token = c.headers.pop("X-CSRF-Token")
-    for res in _mutations(c, bid, member_id(db, c))[:-1]:
+    for res in _mutations(c, bid, member_id(db, c)):
         err(res, 403, "CSRF_FAILED")
     c.headers["X-CSRF-Token"] = "wrong"
     err(submit(c, bid), 403, "CSRF_FAILED")
@@ -1054,7 +1148,7 @@ def test_no_endpoint_accepts_a_state(auth_client, db, app):
         ("POST", B + "/{booking_id}/revalidate"), ("POST", B + "/{booking_id}/approve"),
         ("POST", B + "/{booking_id}/submit"), ("POST", B + "/{booking_id}/reconcile"),
         ("POST", B + "/{booking_id}/cancel"), ("POST", B + "/{booking_id}/record-confirmation"),
-        ("GET", B + "/{booking_id}/checkout-link"),
+        ("POST", B + "/{booking_id}/checkout-link"),
     }
 
 
@@ -1097,3 +1191,89 @@ def test_concurrent_double_submit_sends_once(auth_client, db, monkeypatch):
     monkeypatch.setattr(service, "_recheck_before_handoff", original)
     assert submit(c, bid).json()["state"] == "CONFIRMED"
     assert count(db, SimulatedSupplierBooking) == 1 and count(db, Reservation) == 1
+
+
+# ------------------------------------------------------ audit regressions ----
+
+
+REQUOTE_CHANGES = {
+    "title": lambda m: m.__setitem__("title", "טיסה אחרת"),
+    "excluded_notes": lambda m: m["price"].__setitem__("excluded_notes", ["דמי טיפול בשדה — בתשלום במקום"]),
+    "total_status": lambda m: m["price"].__setitem__("total_status", "estimated"),
+    "stops": lambda m: m["details"]["slices"][0].__setitem__("stops", 2),
+    "provider_name": lambda m: m["source"].__setitem__("provider_name", "ספק בשם אחר"),
+    "segments": lambda m: m["details"]["slices"][0]["segments"].append(
+        dict(m["details"]["slices"][0]["segments"][0], flight_number="4321")),
+    "policy_text": lambda m: m["cancellation"].__setitem__("policy_text", "דמי ביטול מלאים"),
+    "fare_brand": lambda m: m["details"].__setitem__("fare_brand", "Basic"),
+}
+
+
+@pytest.mark.parametrize("field", REQUOTE_CHANGES)
+def test_requote_changing_any_displayed_line_invalidates_approval(auth_client, db, monkeypatch, field):
+    """AUD-01: a supplier re-quote that alters anything the approver read is never "unchanged"."""
+    from app.schemas.offers import CanonicalOffer
+
+    c = auth_client("owner")
+    b = approved(c, db)
+
+    def requote(_db, offer):
+        data = offer.model_dump(mode="json")
+        REQUOTE_CHANGES[field](data)
+        return RevalidationResult(status="unchanged", offer_id=offer.id, checked_at=utcnow(), message="ללא שינוי",
+                                  new_total=offer.price.total, refreshed_offer=CanonicalOffer.model_validate(data))
+
+    monkeypatch.setattr(provider_service, "revalidate_offer", requote)
+    err(submit(c, b["id"]), 409, "TERMS_CHANGED")
+    g = get(c, b["id"])
+    assert g["state"] == "QUOTE_SELECTED" and g["terms_hash"] != b["terms_hash"] and g["price_changed"] is False
+    assert g["approval"]["valid"] is False and g["approval"]["invalidated_at"] and g["terms_summary"] != b["terms_summary"]
+    assert count(db, SimulatedSupplierBooking) == 0 and count(db, Reservation) == 0
+    # the explicit revalidate endpoint behaves the same way for a READY intent: back to QUOTE_SELECTED, no approval possible
+    other = create(c, db, n=1)
+    monkeypatch.undo()
+    assert revalidate(c, other["id"])["state"] == "READY_FOR_APPROVAL"
+    monkeypatch.setattr(provider_service, "revalidate_offer", requote)
+    out = revalidate(c, other["id"])
+    assert out["state"] == "QUOTE_SELECTED" and out["terms_hash"] != other["terms_hash"] and not out["can"]["approve"]
+    err(approve(c, other["id"], other["terms_hash"]), 409, "INVALID_TRANSITION")
+
+
+def test_hosted_checkout_requires_revalidation_support(live, db, monkeypatch):
+    """AUD-05: a provider that cannot re-check prices must not start a flow that can never finish."""
+    c, offer_id, adapter = live
+    base_caps = LiveStub.capabilities
+
+    def no_revalidate(self):
+        return base_caps(self).model_copy(update={"supports_revalidate": False})
+
+    monkeypatch.setattr(LiveStub, "capabilities", no_revalidate)
+    e = err(_live_create(c, db, offer_id), 409, "BOOKING_UNAVAILABLE")
+    assert "לאמת את המחיר מראש" in e["message"] and "באתר הספק" in e["message"]
+    assert e["details"] == {"reason": "REVALIDATION_UNSUPPORTED"} and count(db, BookingIntent) == 0
+    monkeypatch.setattr(LiveStub, "capabilities", base_caps)
+    assert _live_create(c, db, offer_id).status_code == 201
+
+
+def test_no_shipped_live_adapter_can_start_hosted_checkout():
+    """Documents reality: today only test adapters satisfy the hosted-checkout preconditions."""
+    registry.reset_registry()
+    for adapter in registry.all_adapters():
+        caps = adapter.capabilities()
+        if caps.mode == "LIVE":
+            assert not (caps.supports_revalidate and caps.supports_hosted_checkout), caps.provider_id
+
+
+def test_checkout_link_is_post_with_csrf(live, db):
+    """AUD-09: the endpoint can change state, so it is an unsafe method."""
+    c, offer_id, _ = live
+    bid = _live_create(c, db, offer_id).json()["id"]
+    revalidate(c, bid)
+    approve(c, bid)
+    assert c.get(f"{B}/{bid}/checkout-link").status_code in (404, 405)
+    token = c.headers.pop("X-CSRF-Token")
+    err(c.post(f"{B}/{bid}/checkout-link"), 403, "CSRF_FAILED")
+    assert count(db, AuditEvent, action="booking.checkout_link") == 0
+    c.headers["X-CSRF-Token"] = token
+    res = c.post(f"{B}/{bid}/checkout-link")
+    assert res.status_code == 200 and set(res.json()) == {"url", "provider_id", "provider_name", "instructions", "warnings"}

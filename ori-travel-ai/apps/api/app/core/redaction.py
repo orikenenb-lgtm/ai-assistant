@@ -29,6 +29,8 @@ SENSITIVE_KEYS = {
 }
 
 _PATTERNS = [
+    # Invitation tokens in URL paths (legacy /invite/<token> links, API preview path)
+    (re.compile(r"(/(?:api/auth/)?invit(?:ations|e)/)[A-Za-z0-9_\-]{10,}"), r"\1[REDACTED]"),
     # Payment card-like numbers (13-19 digits with optional separators)
     (re.compile(r"\b(?:\d[ -]?){13,19}\b"), "[REDACTED_CARD]"),
     # Bearer / API tokens
@@ -88,3 +90,9 @@ def configure_logging(level: int = logging.INFO) -> None:
         logging.basicConfig(level=level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
         for handler in root.handlers:
             handler.addFilter(RedactingFilter())
+    # uvicorn's loggers do not propagate to root: attach the filter to them directly
+    # (the access log contains full request paths).
+    for name in ("uvicorn.access", "uvicorn.error", "uvicorn"):
+        logger = logging.getLogger(name)
+        if not any(isinstance(f, RedactingFilter) for f in logger.filters):
+            logger.addFilter(RedactingFilter())

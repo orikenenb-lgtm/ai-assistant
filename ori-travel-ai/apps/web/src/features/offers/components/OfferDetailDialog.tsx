@@ -5,6 +5,7 @@ import { formatDuration, formatNumber } from '@/lib/format';
 import { CATEGORY_SINGULAR } from '@/lib/labels';
 import type { CanonicalOffer } from '@/lib/schemas/offers';
 import { BOARD_LABELS, CAR_CLASS_LABELS, INTEREST_LABELS, TRANSMISSION_LABELS } from '../labels';
+import { safeExternalUrl } from '@/lib/safeUrl';
 import { StartBookingButton } from '@/features/bookings/components/StartBookingButton';
 import { AddToTripButton } from './AddToTripButton';
 import { AlsoOfferedBy } from './AlsoOfferedBy';
@@ -192,15 +193,7 @@ export interface OfferDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function safeHref(link: string | null | undefined): string | null {
-  if (!link) return null;
-  try {
-    const u = new URL(link);
-    return u.protocol === 'https:' || u.protocol === 'http:' ? u.toString() : null;
-  } catch {
-    return null;
-  }
-}
+const safeHref = safeExternalUrl;
 
 /** Full offer details: itinerary/specs, price breakdown, cancellation, score, source. */
 export function OfferDetailDialog({ offer, onOpenChange }: OfferDetailDialogProps) {

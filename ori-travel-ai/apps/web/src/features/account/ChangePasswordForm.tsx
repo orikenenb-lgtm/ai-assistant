@@ -55,7 +55,7 @@ export function ChangePasswordForm() {
           error={errors.next}
           hint={
             <>
-              לפחות 10 תווים ושני סוגי תווים (אותיות, ספרות, סימנים). {next && <strong data-testid="strength">חוזק: {STRENGTH[check.score] || 'חלשה'}</strong>}
+              לפחות 10 תווים ושלושה סוגי תווים (אותיות קטנות, גדולות, ספרות, סימנים) — או משפט סיסמה של 16 תווים ומעלה. {next && <strong data-testid="strength">חוזק: {STRENGTH[check.score] || 'חלשה'}</strong>}
             </>
           }
         >

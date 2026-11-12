@@ -9,10 +9,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.core.config import get_settings
 from app.core.errors import install_error_handlers
-from app.core.middleware import RequestContextMiddleware
+from app.core.middleware import BodySizeLimitMiddleware, RequestContextMiddleware
 from app.core.redaction import configure_logging
 from app.modules.ai.router import router as ai_router
 from app.modules.audit.router import router as audit_router
@@ -64,6 +65,9 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging()
+    problems = settings.production_problems()
+    if problems:
+        raise RuntimeError("Refusing to start with unsafe production settings: " + "; ".join(problems))
     app = FastAPI(
         title="Ori Travel AI API",
         version="1.0.0",
@@ -75,6 +79,9 @@ def create_app() -> FastAPI:
     )
     install_error_handlers(app)
     app.add_middleware(RequestContextMiddleware)
+    # Middleware added later runs first: body-size limit, then Host validation, then CORS.
+    app.add_middleware(BodySizeLimitMiddleware)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_host_list)
     if settings.cors_origin_list:
         app.add_middleware(
             CORSMiddleware,

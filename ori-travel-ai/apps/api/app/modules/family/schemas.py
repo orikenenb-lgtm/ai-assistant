@@ -34,6 +34,12 @@ class MemberCreate(ApiModel):
     age_group: AgeGroup
     is_minor: bool | None = None
 
+    @model_validator(mode="after")
+    def _consistent(self):
+        if self.is_minor is not None and self.is_minor != (self.age_group != "adult"):
+            raise ValueError("קבוצת הגיל וסימון הקטין אינם עקביים")
+        return self
+
     @field_validator("display_name")
     @classmethod
     def _strip(cls, v: str) -> str:

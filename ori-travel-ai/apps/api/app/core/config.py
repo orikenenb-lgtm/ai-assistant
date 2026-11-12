@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{(API_ROOT / 'data' / 'ori_travel.db').as_posix()}"
     # Comma separated list of exact origins. Never "*".
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    # Host header allowlist (TrustedHostMiddleware). Add your LAN hostname/IP only when
+    # you deliberately expose the app on your network (and use HTTPS there).
+    allowed_hosts: str = "localhost,127.0.0.1"
     # Serve the built web app (apps/web/dist) from FastAPI when present.
     serve_web: bool = True
     web_dist_dir: str = str(PROJECT_ROOT / "apps" / "web" / "dist")
@@ -108,6 +111,22 @@ class Settings(BaseSettings):
         if "*" in v:
             raise ValueError("Wildcard CORS origins are not allowed")
         return v
+
+    @property
+    def allowed_host_list(self) -> list[str]:
+        return [h.strip() for h in self.allowed_hosts.split(",") if h.strip()]
+
+    def production_problems(self) -> list[str]:
+        """Settings that are unsafe for an internet-facing (production) deployment."""
+        problems: list[str] = []
+        if self.env == "production":
+            if not self.cookie_secure:
+                problems.append("ORI_COOKIE_SECURE must be true in production (HTTPS only)")
+            if not self.data_key:
+                problems.append("ORI_DATA_KEY must be set in production")
+            if any(h in ("*", "") for h in self.allowed_host_list):
+                problems.append("ORI_ALLOWED_HOSTS must list explicit host names")
+        return problems
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -14,7 +14,7 @@ from sqlalchemy import Boolean, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
-from app.models._common import JSONType, created_at_col, pk, updated_at_col
+from app.models._common import created_at_col, pk, updated_at_col
 
 
 class FamilyMember(Base):
@@ -58,14 +58,16 @@ class TravelerProfile(Base):
     passport_number_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
     passport_expiry_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
     frequent_flyer_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Health-related / personal fields are encrypted too (notes, accessibility as JSON,
+    # gender, nationality).
+    gender_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    nationality_enc: Mapped[str | None] = mapped_column(Text, nullable=True)  # ISO-3166 alpha-2
+    notes_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    accessibility_needs_enc: Mapped[str | None] = mapped_column(Text, nullable=True)  # encrypted JSON list
     # ---- non-identifying preferences (clear text) ----
-    nationality: Mapped[str | None] = mapped_column(String(2), nullable=True)  # ISO-3166 alpha-2
-    gender: Mapped[str | None] = mapped_column(String(16), nullable=True)
     seat_preference: Mapped[str | None] = mapped_column(String(16), nullable=True)
     meal_preference: Mapped[str | None] = mapped_column(String(32), nullable=True)  # e.g. kosher
     kosher_required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    accessibility_needs: Mapped[list[str]] = mapped_column(JSONType, nullable=False, default=list)
-    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()
 

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/travelers", tags=["travelers"])
 
 @router.get("", response_model=list[TravelerSummary])
 def list_travelers(ctx: AuthContext = Depends(current_user), db: Session = Depends(get_db)):
-    return service.list_travelers(db)
+    return service.list_travelers(db, ctx)
 
 
 @router.get("/{member_id}", response_model=TravelerDetail)

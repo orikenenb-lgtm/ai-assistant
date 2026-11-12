@@ -11,9 +11,11 @@ from sqlalchemy.orm import Session
 from app.core.audit import record_audit
 from app.core.config import get_settings
 from app.core.db import utcnow
-from app.core.errors import BadRequestError, ConflictError, NotFoundError
+from app.core.deps import AuthContext
+from app.core.errors import AppError, BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from app.core.security import new_token, sha256_hex
 from app.models.auth import ROLE_ADULT, ROLE_OWNER, AuthSession, Invitation, User
+from app.models.booking import Approval, BookingIntent, Reservation
 from app.models.family import FamilyMember
 from app.modules.auth.service import normalize_email
 from app.modules.family.schemas import (
@@ -26,6 +28,15 @@ from app.modules.family.schemas import (
     MemberUserOut,
     UserUpdate,
 )
+
+DELETED_NAME = "[נמחק]"
+
+
+class UnprocessableError(AppError):
+    status_code = 422
+    code = "VALIDATION_ERROR"
+    default_message = "חלק מהשדות אינם תקינים"
+
 
 ATTESTATION_MSG = "תפקיד מבוגר/ת או בעל/ת חשבון מחייב אישור שהאדם בגיר"
 
@@ -64,8 +75,15 @@ def _out(db: Session, member: FamilyMember) -> MemberOut:
     return member_out(member, user)
 
 
+def _resolve_minor(age_group: str, is_minor: bool | None) -> bool:
+    expected = age_group != "adult"
+    if is_minor is not None and is_minor != expected:
+        raise UnprocessableError("קבוצת הגיל וסימון הקטין אינם עקביים (ילד/תינוק חייבים להיות קטינים, מבוגר אינו קטין)")
+    return expected
+
+
 def create_member(db: Session, actor: User, body: MemberCreate, request: Request | None) -> MemberOut:
-    is_minor = body.is_minor if body.is_minor is not None else body.age_group != "adult"
+    is_minor = _resolve_minor(body.age_group, body.is_minor)
     member = FamilyMember(
         display_name=body.display_name,
         relation=body.relation.strip() if body.relation else None,
@@ -81,8 +99,11 @@ def create_member(db: Session, actor: User, body: MemberCreate, request: Request
     return _out(db, member)
 
 
-def update_member(db: Session, actor: User, member_id: str, body: MemberUpdate, request: Request | None) -> MemberOut:
+def update_member(db: Session, ctx: AuthContext, member_id: str, body: MemberUpdate, request: Request | None) -> MemberOut:
+    actor = ctx.user
     member = get_member(db, member_id)
+    if member.user_id and member.user_id != actor.id and not ctx.is_owner:
+        raise ForbiddenError("רשומה של בן/בת משפחה עם חשבון יכולה להיערך רק על ידי המשתמש/ת עצמו/ה או בעל/ת החשבון")
     data = body.model_dump(exclude_unset=True)
     if "display_name" in data and data["display_name"] is None:
         raise BadRequestError("שם אינו יכול להיות ריק")
@@ -90,6 +111,8 @@ def update_member(db: Session, actor: User, member_id: str, body: MemberUpdate, 
         raise BadRequestError("קבוצת גיל אינה יכולה להיות ריקה")
     if "is_minor" in data and data["is_minor"] is None:
         data.pop("is_minor")
+    if "age_group" in data or "is_minor" in data:
+        data["is_minor"] = _resolve_minor(data.get("age_group", member.age_group), data.get("is_minor"))
     if "relation" in data and data["relation"] is not None:
         data["relation"] = data["relation"].strip() or None
     for k, v in data.items():
@@ -115,6 +138,7 @@ def delete_member(db: Session, actor: User, member_id: str, request: Request | N
         if linked is not None and linked.role == ROLE_OWNER and linked.is_active:
             raise ConflictError("לא ניתן למחוק בן/בת משפחה המקושר/ת לבעל/ת חשבון פעיל/ה", code="MEMBER_LINKED_TO_OWNER")
     had_profile = member.traveler_profile is not None
+    scrubbed = _scrub_member_name(db, member)
     db.delete(member)  # cascades to the traveler profile (data deletion)
     record_audit(
         db,
@@ -122,10 +146,43 @@ def delete_member(db: Session, actor: User, member_id: str, request: Request | N
         actor_user_id=actor.id,
         entity_type="family_member",
         entity_id=member_id,
-        details={"traveler_profile_deleted": had_profile},
+        details={"traveler_profile_deleted": had_profile, "scrubbed_records": scrubbed},
         request=request,
     )
     db.commit()
+
+
+def _scrub_member_name(db: Session, member: FamilyMember) -> int:
+    """Replace the member's display name in stored booking records (ids are kept).
+
+    Touches booking_intents.travelers, reservations.details.travelers and the human-readable
+    approvals.summary (approval evidence; only the name text is replaced).
+    """
+    name = member.display_name
+    count = 0
+    intents = list(db.scalars(select(BookingIntent)))
+    scrub_ids: set[str] = set()
+    for intent in intents:
+        if any(t.get("family_member_id") == member.id for t in intent.travelers or []):
+            intent.travelers = [
+                {**t, "display_name": DELETED_NAME} if t.get("family_member_id") == member.id else t for t in intent.travelers
+            ]
+            scrub_ids.add(intent.id)
+            count += 1
+    if scrub_ids:
+        for res in db.scalars(select(Reservation).where(Reservation.booking_intent_id.in_(scrub_ids))):
+            details = dict(res.details or {})
+            details["travelers"] = [
+                {**t, "display_name": DELETED_NAME} if t.get("family_member_id") == member.id else t
+                for t in details.get("travelers") or []
+            ]
+            res.details = details
+            count += 1
+        for appr in db.scalars(select(Approval).where(Approval.booking_intent_id.in_(scrub_ids))):
+            if name and name in appr.summary:
+                appr.summary = appr.summary.replace(name, DELETED_NAME)
+                count += 1
+    return count
 
 
 # ---------------- users ----------------
@@ -195,6 +252,26 @@ def update_user(db: Session, actor: User, user_id: str, body: UserUpdate, reques
     return target
 
 
+def delete_user(db: Session, ctx: AuthContext, user_id: str, request: Request | None) -> None:
+    target = db.get(User, user_id)
+    if target is None:
+        raise NotFoundError("המשתמש/ת לא נמצא/ה")
+    if target.id == ctx.user_id:
+        raise ConflictError("לא ניתן למחוק את החשבון של עצמך", code="CANNOT_DELETE_SELF")
+    if target.role == ROLE_OWNER:
+        raise ConflictError("לא ניתן למחוק בעל/ת חשבון", code="CANNOT_DELETE_OWNER")
+    if target.is_active:
+        raise ConflictError("יש להשבית את המשתמש/ת לפני המחיקה", code="USER_STILL_ACTIVE")
+    if not ctx.recently_reauthenticated:
+        raise ForbiddenError("נדרש אימות סיסמה מחדש למחיקת משתמש", code="REAUTH_REQUIRED")
+    db.execute(update(AuthSession).where(AuthSession.user_id == target.id, AuthSession.revoked_at.is_(None)).values(revoked_at=utcnow()))
+    db.execute(update(FamilyMember).where(FamilyMember.user_id == target.id).values(user_id=None))
+    db.execute(update(Invitation).where(Invitation.accepted_user_id == target.id).values(accepted_user_id=None))
+    record_audit(db, "family.user_delete", actor_user_id=ctx.user_id, entity_type="user", entity_id=target.id, request=request)
+    db.delete(target)
+    db.commit()
+
+
 # ---------------- invitations ----------------
 
 
@@ -239,6 +316,8 @@ def create_invitation(db: Session, actor: User, body: InvitationCreate, request:
             raise NotFoundError("בן/בת המשפחה לא נמצא/ה")
         if member.user_id is not None:
             raise ConflictError("לבן/בת המשפחה כבר יש משתמש/ת מקושר/ת", code="MEMBER_HAS_USER")
+        if member.is_minor and body.role in (ROLE_OWNER, ROLE_ADULT):
+            raise BadRequestError("לא ניתן להזמין קטין/ה בתפקיד מבוגר/ת או בעל/ת חשבון", code="MINOR_CANNOT_BE_ADULT")
 
     now = utcnow()
     # A new invitation replaces any pending one for the same email.

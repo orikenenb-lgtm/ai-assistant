@@ -98,7 +98,8 @@ def _traveler_ids(intent: BookingIntent) -> list[str]:
 
 
 def current_terms_hash(intent: BookingIntent) -> str:
-    return compute_terms_hash(intent.offer_snapshot, _traveler_ids(intent), intent.current_amount_minor, intent.currency)
+    return compute_terms_hash(intent.offer_snapshot, intent.travelers or [], intent.current_amount_minor, intent.currency,
+                              intent.execution_mode)
 
 
 def _load_travelers(db: Session, member_ids: list[str]) -> list[dict[str, Any]]:
@@ -115,6 +116,53 @@ def _load_travelers(db: Session, member_ids: list[str]) -> list[dict[str, Any]]:
         }
         for i in member_ids
     ]
+
+
+_GROUPS = ("adult", "child", "infant")
+_GROUP_PLURAL_HE = {"adult": "מבוגרים", "child": "ילדים", "infant": "תינוקות"}
+
+
+def _counts_text(counts: dict[str, int]) -> str:
+    return ", ".join(f"{int(counts.get(g) or 0)} {_GROUP_PLURAL_HE[g]}" for g in _GROUPS)
+
+
+def _validate_composition(details: dict[str, Any], travelers: list[dict[str, Any]]) -> None:
+    """The travelers must be exactly who the offer was priced for (AUD-04)."""
+    have = dict.fromkeys(_GROUPS, 0)
+    other = 0
+    for t in travelers:
+        if t.get("age_group") in have:
+            have[t["age_group"]] += 1
+        else:
+            other += 1
+
+    def mismatch(message: str, expected: dict[str, int]) -> BadRequestError:
+        return BadRequestError(message, code="TRAVELER_MISMATCH", details={"expected": expected, "selected": have})
+
+    if other:
+        raise mismatch("לאחד הנוסעים שנבחרו לא מוגדרת קבוצת גיל (מבוגר, ילד או תינוק). יש לעדכן את פרטי בן המשפחה.", {})
+    kind = details.get("kind")
+    if kind in ("flight", "activity"):
+        raw = details.get("passengers" if kind == "flight" else "participants") or {}
+        if kind == "activity" and not raw:
+            want = None  # the supplier did not state who the price is for
+        else:
+            want = {g: int(raw.get(g) or 0) for g in _GROUPS}
+            unknown = sum(int(v or 0) for k, v in raw.items() if k not in _GROUPS)
+            if unknown or want != have:
+                what = "הטיסה" if kind == "flight" else "הפעילות"
+                raise mismatch(f"{what} תומחרה עבור {_counts_text(want)}, אך נבחרו {_counts_text(have)}. "
+                               "יש לבחור נוסעים תואמים או לבצע חיפוש חדש.", want)
+        if have["infant"] and not have["adult"]:
+            raise mismatch("תינוק חייב להיות מלווה במבוגר אחד לפחות.", want or {})
+    elif kind == "hotel":
+        want = {"adult": int(details.get("adults") or 0), "child": int(details.get("children") or 0)}
+        got = {"adult": have["adult"], "child": have["child"] + have["infant"]}
+        if want != got:
+            raise mismatch(f"החדר תומחר עבור {want['adult']} מבוגרים ו-{want['child']} ילדים, אך נבחרו "
+                           f"{got['adult']} מבוגרים ו-{got['child']} ילדים. יש לבחור אורחים תואמים או לבצע חיפוש חדש.", want)
+    if not have["adult"]:
+        raise mismatch("נדרש לפחות נוסע מבוגר אחד בהזמנה.", {"adult": 1})
 
 
 # ---------------------------------------------------------------- approvals ----
@@ -236,8 +284,23 @@ def _execution_mode(offer: CanonicalOffer) -> str:
         and registry.is_usable(adapter)
         and adapter.is_allowed_deep_link(options.hosted_checkout_url)
     ):
+        if not _supports_revalidate(adapter):
+            # Without a supplier re-check the intent could never leave QUOTE_SELECTED (AUD-05).
+            raise ConflictError(
+                "לא ניתן להכין הזמנה להצעה זו: הספק אינו מאפשר לאמת את המחיר מראש. "
+                "אפשר להמשיך ישירות באתר הספק דרך הקישור שבהצעה; המחיר והתנאים הסופיים ייקבעו שם.",
+                code="BOOKING_UNAVAILABLE",
+                details={"reason": "REVALIDATION_UNSUPPORTED"},
+            )
         return MODE_HOSTED
     raise unavailable
+
+
+def _supports_revalidate(adapter: Any) -> bool:
+    try:
+        return bool(adapter.capabilities().supports_revalidate)
+    except Exception:
+        return False
 
 
 def create_intent(db: Session, ctx: AuthContext, body: BookingCreate, request: Request | None) -> BookingOut:
@@ -248,6 +311,7 @@ def create_intent(db: Session, ctx: AuthContext, body: BookingCreate, request: R
     if body.simulation_scenario is not None and mode != MODE_SIMULATION:
         raise BadRequestError("תרחיש סימולציה מותר רק בהזמנת הדגמה", code="SCENARIO_NOT_ALLOWED")
     travelers = _load_travelers(db, body.traveler_member_ids)
+    _validate_composition(offer.details.model_dump(mode="json"), travelers)
     if body.trip_id is not None and db.get(Trip, body.trip_id) is None:
         raise NotFoundError("הטיול לא נמצא", code="TRIP_NOT_FOUND")
 
@@ -270,7 +334,7 @@ def create_intent(db: Session, ctx: AuthContext, body: BookingCreate, request: R
         simulation_scenario=(body.simulation_scenario or "success") if mode == MODE_SIMULATION else None,
         history=[],
     )
-    intent.terms_hash = compute_terms_hash(snapshot, body.traveler_member_ids, amount_minor, total.currency)
+    intent.terms_hash = compute_terms_hash(snapshot, travelers, amount_minor, total.currency, mode)
     db.add(intent)
     db.flush()
     record_audit(db, "booking.create", actor_user_id=ctx.user_id, entity_type=ENTITY, entity_id=intent.id,
@@ -293,7 +357,9 @@ def update_travelers(db: Session, ctx: AuthContext, intent_id: str, member_ids: 
     _ensure_not_expired(db, intent, ctx.user_id, request)
     if sorted(member_ids) == sorted(_traveler_ids(intent)):
         return to_out(db, intent, ctx, notice="רשימת הנוסעים לא השתנתה.")
-    intent.travelers = _load_travelers(db, member_ids)
+    travelers = _load_travelers(db, member_ids)
+    _validate_composition((intent.offer_snapshot or {}).get("details") or {}, travelers)
+    intent.travelers = travelers
     intent.terms_hash = current_terms_hash(intent)
     intent.revalidated_at = None
     reason = "רשימת הנוסעים השתנתה"
@@ -379,7 +445,7 @@ def _apply_check(intent: BookingIntent, result: RevalidationResult) -> _Check:
             new_minor, new_currency = claimed, result.new_total.currency
             if result.refreshed_offer is None:
                 snapshot.setdefault("price", {})["total"] = result.new_total.model_dump(mode="json")
-        new_hash = compute_terms_hash(snapshot, _traveler_ids(intent), new_minor, new_currency)
+        new_hash = compute_terms_hash(snapshot, intent.travelers or [], new_minor, new_currency, intent.execution_mode)
     except Exception as exc:
         log.warning("unusable revalidation answer for booking %s: %s", intent.id, type(exc).__name__)
         base.message = "התקבלה תשובה לא תקינה מהספק. המחיר לא אומת."

@@ -6,7 +6,7 @@ from datetime import timedelta
 from typing import Any
 
 from fastapi import Request
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.app_settings import get_setting, set_setting
@@ -14,6 +14,8 @@ from app.core.audit import record_audit
 from app.core.config import get_settings
 from app.core.crypto import encryption_available
 from app.core.db import utcnow
+from app.models.alerts import Notification
+from app.models.auth import AuthSession, Invitation
 from app.models.booking import BookingIntent
 from app.models.search import Offer, PriceSnapshot, SavedOffer, SearchRequest
 from app.models.system import AuditEvent
@@ -89,7 +91,47 @@ def run_retention(db: Session, actor_id: str, request: Request | None) -> Retent
     searches = db.execute(delete(SearchRequest).where(SearchRequest.created_at < search_cutoff)).rowcount or 0
     audits = db.execute(delete(AuditEvent).where(AuditEvent.created_at < audit_cutoff)).rowcount or 0
 
-    out = RetentionRunOut(search_requests_deleted=searches, offers_deleted=offers, audit_events_deleted=audits)
+    grace = now - timedelta(days=30)
+    sessions = db.execute(
+        delete(AuthSession).where(or_(AuthSession.revoked_at < grace, AuthSession.expires_at < grace))
+    ).rowcount or 0
+    invitations = db.execute(
+        delete(Invitation).where(
+            or_(
+                Invitation.accepted_at < grace,
+                Invitation.revoked_at < grace,
+                and_(Invitation.accepted_at.is_(None), Invitation.expires_at < grace),
+            )
+        )
+    ).rowcount or 0
+    notifications = db.execute(
+        delete(Notification).where(Notification.read_at.is_not(None), Notification.created_at < search_cutoff)
+    ).rowcount or 0
+    # Old price snapshots go, except the most recent one of every alert.
+    keep: set[str] = set()
+    for alert_id in set(db.scalars(select(PriceSnapshot.alert_id).where(PriceSnapshot.alert_id.is_not(None)))):
+        latest = db.scalar(
+            select(PriceSnapshot.id)
+            .where(PriceSnapshot.alert_id == alert_id)
+            .order_by(PriceSnapshot.captured_at.desc(), PriceSnapshot.id.desc())
+            .limit(1)
+        )
+        if latest:
+            keep.add(latest)
+    snap_stmt = delete(PriceSnapshot).where(PriceSnapshot.captured_at < search_cutoff)
+    if keep:
+        snap_stmt = snap_stmt.where(PriceSnapshot.id.not_in(keep))
+    snapshots = db.execute(snap_stmt).rowcount or 0
+
+    out = RetentionRunOut(
+        search_requests_deleted=searches,
+        offers_deleted=offers,
+        audit_events_deleted=audits,
+        sessions_deleted=sessions,
+        invitations_deleted=invitations,
+        notifications_deleted=notifications,
+        price_snapshots_deleted=snapshots,
+    )
     record_audit(
         db,
         "settings.retention_run",

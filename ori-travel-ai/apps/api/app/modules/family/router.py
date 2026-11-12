@@ -38,7 +38,7 @@ def create_member(body: MemberCreate, request: Request, ctx: AuthContext = Depen
 def update_member(
     member_id: str, body: MemberUpdate, request: Request, ctx: AuthContext = Depends(require_editor), db: Session = Depends(get_db)
 ):
-    return service.update_member(db, ctx.user, member_id, body, request)
+    return service.update_member(db, ctx, member_id, body, request)
 
 
 @router.delete("/members/{member_id}", response_model=OkResponse)
@@ -76,4 +76,10 @@ def revoke_invitation(
     invitation_id: str, request: Request, ctx: AuthContext = Depends(require_owner), db: Session = Depends(get_db)
 ):
     service.revoke_invitation(db, ctx.user, invitation_id, request)
+    return OkResponse()
+
+
+@router.delete("/users/{user_id}", response_model=OkResponse)
+def delete_user(user_id: str, request: Request, ctx: AuthContext = Depends(require_owner), db: Session = Depends(get_db)):
+    service.delete_user(db, ctx, user_id, request)
     return OkResponse()

@@ -11,6 +11,7 @@ has not declared.
 
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -19,6 +20,8 @@ from urllib.parse import urlsplit
 
 from app.schemas.common import ApiModel, Category, DataMode
 from app.schemas.offers import CanonicalOffer, Money
+
+_HOST_RE = re.compile(r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}")
 
 ProviderHealthStatus = Literal["OK", "DEGRADED", "FAILED", "NOT_CONFIGURED", "DISABLED"]
 
@@ -155,8 +158,18 @@ class ProviderAdapter(ABC):
         return category in self.capabilities().categories
 
     def is_allowed_deep_link(self, url: str | None) -> bool:
-        """Only https links to explicitly allowlisted provider domains are allowed."""
-        if not url:
+        """Only plain https links to explicitly allowlisted provider domains are allowed.
+
+        Browsers and Python's urlsplit disagree on some inputs (e.g. a backslash in the
+        authority: ``https://evil.com\\.viator.com`` is evil.com to a browser), so anything
+        ambiguous is rejected outright: backslashes, whitespace/control characters,
+        non-ASCII, percent-encoding in the host, userinfo, explicit ports and IP literals.
+        """
+        if not url or len(url) > 2048:
+            return False
+        if any(ch in url for ch in ("\\", "\t", "\n", "\r", " ")) or not url.isascii():
+            return False
+        if any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in url):
             return False
         try:
             parts = urlsplit(url)
@@ -164,5 +177,10 @@ class ProviderAdapter(ABC):
             return False
         if parts.scheme != "https" or not parts.hostname or parts.username or parts.password:
             return False
-        host = parts.hostname.lower()
+        netloc = parts.netloc.lower()
+        if "@" in netloc or "%" in netloc or ":" in netloc:
+            return False
+        host = parts.hostname.lower().rstrip(".")
+        if not _HOST_RE.fullmatch(host) or host.replace(".", "").isdigit():
+            return False
         return any(host == d or host.endswith("." + d) for d in self.capabilities().deep_link_domains)

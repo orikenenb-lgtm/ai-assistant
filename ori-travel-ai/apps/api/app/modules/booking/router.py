@@ -133,7 +133,7 @@ def record_confirmation(booking_id: str, body: RecordConfirmationRequest, reques
                     lambda: service.record_confirmation(db, ctx, booking_id, body.supplier_reference, body.notes, request))
 
 
-@router.get("/api/bookings/{booking_id}/checkout-link", response_model=CheckoutLinkOut)
+@router.post("/api/bookings/{booking_id}/checkout-link", response_model=CheckoutLinkOut)
 def checkout_link(booking_id: str, request: Request, ctx: AuthContext = Depends(booking_adult),
                   db: Session = Depends(get_db)):
     return _guarded(db, ctx, request, "checkout_link", booking_id,

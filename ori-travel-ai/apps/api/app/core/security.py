@@ -39,8 +39,24 @@ def needs_rehash(password_hash: str) -> bool:
         return True
 
 
+# A small offline list of very common passwords / patterns (lower-case, compared after normalisation)
+_COMMON_PASSWORDS = frozenset(
+    {
+        "password", "password1", "password123", "passw0rd", "qwerty", "qwerty123", "qwertyuiop",
+        "123456", "1234567", "12345678", "123456789", "1234567890", "111111", "000000", "abc123",
+        "iloveyou", "letmein", "welcome", "admin", "admin123", "monkey", "dragon", "football",
+        "sunshine", "princess", "shalom", "israel", "israel123", "telaviv", "jerusalem",
+    }
+)
+
+
 def validate_password_strength(password: str) -> str | None:
-    """Return a Hebrew error message, or None when the password is acceptable."""
+    """Return a Hebrew error message, or None when the password is acceptable.
+
+    Rules: at least 10 characters; at least 3 of 4 character classes (lower, upper,
+    digit, symbol) — or a long passphrase of 16+ characters; no single character may
+    make up half of the password; not a common password.
+    """
     if len(password) < MIN_PASSWORD_LENGTH:
         return f"הסיסמה חייבת להכיל לפחות {MIN_PASSWORD_LENGTH} תווים"
     if len(password) > MAX_PASSWORD_LENGTH:
@@ -53,8 +69,14 @@ def validate_password_strength(password: str) -> str | None:
             any(not c.isalnum() for c in password),
         ]
     )
-    if classes < 2:
-        return "הסיסמה צריכה לשלב לפחות שני סוגי תווים (אותיות, ספרות, סימנים)"
+    if classes < 3 and len(password) < 16:
+        return "הסיסמה צריכה לשלב לפחות שלושה סוגי תווים (אותיות קטנות, גדולות, ספרות, סימנים) — או להיות משפט סיסמה של 16 תווים ומעלה"
+    most_common = max(password.count(c) for c in set(password))
+    if most_common * 2 >= len(password):
+        return "הסיסמה חוזרת על אותו תו יותר מדי פעמים"
+    normalized = "".join(c for c in password.lower() if c.isalnum())
+    if normalized in _COMMON_PASSWORDS or password.lower() in _COMMON_PASSWORDS:
+        return "זו סיסמה נפוצה מדי — בחרו סיסמה אחרת"
     return None
 
 

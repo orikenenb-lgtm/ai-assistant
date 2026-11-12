@@ -331,10 +331,14 @@ def _normalize_run(run: _Run, category: Category) -> None:
 
 
 def dedupe_offers(offers: list[CanonicalOffer]) -> tuple[list[CanonicalOffer], int]:
-    """Keep the cheapest offer per (dedupe_key, currency); others listed in also_offered_by."""
-    groups: dict[tuple[str, str], list[CanonicalOffer]] = {}
+    """Keep the cheapest offer per (dedupe_key, currency, demo-or-real); others listed in also_offered_by.
+
+    DEMO offers are never merged with real (LIVE/CACHED) ones, so fixture data can
+    never hide a real supplier offer (or vice versa).
+    """
+    groups: dict[tuple[str, str, bool], list[CanonicalOffer]] = {}
     for o in offers:
-        groups.setdefault((o.dedupe_key, o.price.total.currency), []).append(o)
+        groups.setdefault((o.dedupe_key, o.price.total.currency, o.source.mode == "DEMO"), []).append(o)
     out: list[CanonicalOffer] = []
     for group in groups.values():
         group.sort(key=lambda o: (o.price.total.amount, o.source.provider_id, o.source.supplier_offer_id))

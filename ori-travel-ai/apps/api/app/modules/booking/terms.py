@@ -16,7 +16,7 @@ from typing import Any
 
 from app.core.money import CURRENCY_SYMBOLS, from_minor
 
-TERMS_VERSION = 1
+TERMS_VERSION = 2
 
 BOARD_LABELS_HE = {
     "room_only": "לינה בלבד",
@@ -70,22 +70,47 @@ def _product(details: dict[str, Any]) -> dict[str, Any]:
     return {"kind": kind, "raw": details}
 
 
-def canonical_terms(snapshot: dict[str, Any], traveler_ids: list[str], amount_minor: int, currency: str) -> dict[str, Any]:
+def _traveler_key(t: dict[str, Any]) -> str:
+    return str(t.get("family_member_id"))
+
+
+def canonical_terms(snapshot: dict[str, Any], travelers: list[dict[str, Any]], amount_minor: int, currency: str,
+                    execution_mode: str) -> dict[str, Any]:
+    """Everything an approval is bound to.
+
+    Besides the structured product fields this includes the EXACT lines of
+    ``build_terms_summary`` — whatever the approver reads is hashed, so a
+    re-quote that alters any displayed line (title, exclusions, estimated
+    price flag, stops, supplier name, ...) can never pass as "unchanged".
+    Travelers are ordered by id so the hash does not depend on input order.
+    """
     source = snapshot.get("source") or {}
+    price = snapshot.get("price") or {}
+    ordered = sorted(travelers, key=_traveler_key)
     return {
         "v": TERMS_VERSION,
         "provider_id": source.get("provider_id"),
+        "provider_name": source.get("provider_name"),
         "supplier_offer_id": source.get("supplier_offer_id"),
         "category": snapshot.get("category"),
+        "title": snapshot.get("title"),
+        "execution_mode": execution_mode,
         "product": _product(snapshot.get("details") or {}),
-        "price": {"total_minor": int(amount_minor), "currency": currency},
+        "price": {
+            "total_minor": int(amount_minor),
+            "currency": currency,
+            "total_status": price.get("total_status"),
+            "excluded_notes": list(price.get("excluded_notes") or []),
+        },
         "cancellation": snapshot.get("cancellation") or {},
-        "travelers": sorted(traveler_ids),
+        "travelers": [_traveler_key(t) for t in ordered],
+        "summary": build_terms_summary(snapshot, ordered, amount_minor, currency, execution_mode),
     }
 
 
-def compute_terms_hash(snapshot: dict[str, Any], traveler_ids: list[str], amount_minor: int, currency: str) -> str:
-    doc = canonical_terms(snapshot, traveler_ids, amount_minor, currency)
+def compute_terms_hash(snapshot: dict[str, Any], travelers: list[dict[str, Any]], amount_minor: int, currency: str,
+                       execution_mode: str) -> str:
+    doc = canonical_terms(snapshot, travelers, amount_minor, currency, execution_mode)
     payload = json.dumps(doc, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 

@@ -14,6 +14,7 @@ from app.modules.auth.schemas import (
     AcceptInvitationRequest,
     ChangePasswordRequest,
     InvitationPreview,
+    InvitationTokenBody,
     LoginRequest,
     ReauthRequest,
     SessionOut,
@@ -72,12 +73,23 @@ def reauth(body: ReauthRequest, request: Request, ctx: AuthContext = Depends(cur
     return OkResponse()
 
 
-@router.get("/invitations/{token}", response_model=InvitationPreview)
-def preview_invitation(token: str, request: Request, db: Session = Depends(get_db)) -> InvitationPreview:
+def _preview(token: str, request: Request, db: Session) -> InvitationPreview:
     if not limiter.hit(f"inv-preview:{client_ip(request)}", limit=20, window_seconds=300):
         raise RateLimitedError()
     inv = service.find_active_invitation(db, token)
     return InvitationPreview(email=inv.email, display_name=inv.display_name, role=inv.role, expires_at=inv.expires_at)
+
+
+@router.post("/invitations/preview", response_model=InvitationPreview)
+def preview_invitation(body: InvitationTokenBody, request: Request, db: Session = Depends(get_db)) -> InvitationPreview:
+    """Preferred: the token travels in the JSON body, never in a URL (URLs end up in logs)."""
+    return _preview(body.token, request, db)
+
+
+@router.get("/invitations/{token}", response_model=InvitationPreview, deprecated=True)
+def preview_invitation_legacy(token: str, request: Request, db: Session = Depends(get_db)) -> InvitationPreview:
+    """Legacy path-based preview (kept for compatibility; paths are redacted in all logs)."""
+    return _preview(token, request, db)
 
 
 @router.post("/invitations/accept", response_model=SessionOut)

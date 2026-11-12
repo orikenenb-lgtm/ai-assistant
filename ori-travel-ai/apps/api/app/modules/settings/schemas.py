@@ -76,3 +76,7 @@ class RetentionRunOut(ApiModel):
     search_requests_deleted: int
     offers_deleted: int
     audit_events_deleted: int
+    sessions_deleted: int = 0
+    invitations_deleted: int = 0
+    notifications_deleted: int = 0
+    price_snapshots_deleted: int = 0

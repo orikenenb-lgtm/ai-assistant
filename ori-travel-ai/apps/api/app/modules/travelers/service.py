@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 
 from fastapi import Request
@@ -74,48 +75,57 @@ def _expiry_month(profile: TravelerProfile) -> tuple[str | None, date | None]:
     return f"{d.year:04d}-{d.month:02d}", d
 
 
-def _summary_fields(profile: TravelerProfile, member: FamilyMember, *, strict: bool) -> dict:
-    passport_masked = None
-    if profile.passport_number_enc:
-        try:
-            passport_masked = crypto.mask(_dec(profile.passport_number_enc))
-        except ServiceUnavailableError:
-            if strict:
-                raise
-    expiry_month = None
-    if profile.passport_expiry_enc:
-        try:
-            expiry_month, _ = _expiry_month(profile)
-        except ServiceUnavailableError:
-            if strict:
-                raise
-    return {
+def _dec_safe(value: str | None, strict: bool) -> str | None:
+    try:
+        return _dec(value)
+    except ServiceUnavailableError:
+        if strict:
+            raise
+        return None
+
+
+def _summary_fields(profile: TravelerProfile, member: FamilyMember, *, editor: bool, strict: bool) -> dict:
+    fields: dict = {
         "member_id": member.id,
         "display_name": member.display_name,
         "has_passport": bool(profile.passport_number_enc),
-        "passport_masked": passport_masked,
-        "passport_expiry_month": expiry_month,
-        "nationality": profile.nationality,
         "seat_preference": profile.seat_preference,
         "meal_preference": profile.meal_preference,
         "kosher_required": profile.kosher_required,
-        "accessibility_needs": list(profile.accessibility_needs or []),
         "updated_at": profile.updated_at,
     }
+    if not editor:
+        return fields
+    passport = _dec_safe(profile.passport_number_enc, strict)
+    fields["passport_masked"] = crypto.mask(passport) if passport else None
+    month = None
+    if profile.passport_expiry_enc:
+        try:
+            month, _ = _expiry_month(profile)
+        except ServiceUnavailableError:
+            if strict:
+                raise
+    fields["passport_expiry_month"] = month
+    fields["nationality"] = _dec_safe(profile.nationality_enc, strict)
+    raw = _dec_safe(profile.accessibility_needs_enc, strict)
+    fields["accessibility_needs"] = json.loads(raw) if raw else []
+    return fields
 
 
-def list_travelers(db: Session) -> list[TravelerSummary]:
+def list_travelers(db: Session, ctx: AuthContext) -> list[TravelerSummary]:
     rows = db.execute(
         select(TravelerProfile, FamilyMember)
         .join(FamilyMember, FamilyMember.id == TravelerProfile.family_member_id)
         .order_by(FamilyMember.created_at, FamilyMember.id)
     ).all()
-    return [TravelerSummary(**_summary_fields(p, m, strict=False)) for p, m in rows]
+    editor = _is_editor(ctx)
+    return [TravelerSummary(**_summary_fields(p, m, editor=editor, strict=False)) for p, m in rows]
 
 
 def _detail(ctx: AuthContext, profile: TravelerProfile, member: FamilyMember) -> TravelerDetail:
-    fields = _summary_fields(profile, member, strict=True)
-    if not _is_editor(ctx):
+    editor = _is_editor(ctx)
+    fields = _summary_fields(profile, member, editor=editor, strict=True)
+    if not editor:
         return TravelerDetail(**fields, detail_level="masked")
     dob_raw = _dec(profile.date_of_birth_enc)
     dob = date.fromisoformat(dob_raw) if dob_raw else None
@@ -128,8 +138,8 @@ def _detail(ctx: AuthContext, profile: TravelerProfile, member: FamilyMember) ->
         date_of_birth=dob,
         passport_expiry=expiry,
         has_frequent_flyer=bool(profile.frequent_flyer_enc),
-        gender=profile.gender,
-        notes=profile.notes,
+        gender=_dec(profile.gender_enc),
+        notes=_dec(profile.notes_enc),
         age_group_suggestion=age_group_for(dob) if dob else None,
     )
 
@@ -150,6 +160,10 @@ def upsert_traveler(db: Session, ctx: AuthContext, member_id: str, body: Travele
     passport = _enc(body.passport_number) if "passport_number" in provided else None
     expiry = _enc(body.passport_expiry.isoformat()) if body.passport_expiry else None
     ff = _enc(body.frequent_flyer) if "frequent_flyer" in provided else None
+    nationality = _enc(body.nationality)
+    gender = _enc(body.gender)
+    notes = _enc(body.notes)
+    needs = _enc(json.dumps(body.accessibility_needs, ensure_ascii=False)) if body.accessibility_needs else None
 
     profile = db.scalar(select(TravelerProfile).where(TravelerProfile.family_member_id == member_id))
     created = profile is None
@@ -166,13 +180,13 @@ def upsert_traveler(db: Session, ctx: AuthContext, member_id: str, body: Travele
         profile.passport_expiry_enc = expiry
     if "frequent_flyer" in provided:
         profile.frequent_flyer_enc = ff
-    profile.nationality = body.nationality
-    profile.gender = body.gender
+    profile.nationality_enc = nationality
+    profile.gender_enc = gender
     profile.seat_preference = body.seat_preference
     profile.meal_preference = body.meal_preference
     profile.kosher_required = body.kosher_required
-    profile.accessibility_needs = body.accessibility_needs
-    profile.notes = body.notes
+    profile.accessibility_needs_enc = needs
+    profile.notes_enc = notes
     db.flush()
     record_audit(
         db,
@@ -190,6 +204,19 @@ def upsert_traveler(db: Session, ctx: AuthContext, member_id: str, body: Travele
 
 def delete_traveler(db: Session, ctx: AuthContext, member_id: str, request: Request | None) -> None:
     _get_member(db, member_id)
+    if not ctx.recently_reauthenticated:
+        record_audit(
+            db,
+            "traveler.delete",
+            actor_user_id=ctx.user_id,
+            entity_type="family_member",
+            entity_id=member_id,
+            outcome="denied",
+            details={"reason": "reauth_required"},
+            request=request,
+            commit=True,
+        )
+        raise ForbiddenError("נדרש אימות סיסמה מחדש למחיקת פרופיל מטייל", code="REAUTH_REQUIRED")
     profile = _get_profile(db, member_id)
     pid = profile.id
     db.delete(profile)

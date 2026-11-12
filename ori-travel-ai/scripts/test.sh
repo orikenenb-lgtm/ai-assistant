@@ -45,7 +45,7 @@ if [ "$DO_E2E" -eq 1 ]; then
     free_port "$port" || { err "port $port busy"; return 1; }
     export ORI_DATABASE_URL="sqlite:///$tmp/e2e.db" ORI_OWNER_PASSWORD="E2e-Passw0rd-Local-1"
     (cd "$API_DIR" && "$PY" -m app.cli migrate && "$PY" -m app.cli create-owner --email owner@e2e.test --name "בעלים" --password-env ORI_OWNER_PASSWORD) || return 1
-    (cd "$API_DIR" && exec "$PY" -m uvicorn app.main:app --host 127.0.0.1 --port "$port") &
+    (cd "$API_DIR" && exec "$PY" -m uvicorn app.main:app --no-proxy-headers --host 127.0.0.1 --port "$port") &
     pid=$!
     for _ in $(seq 1 40); do curl -fsS "http://127.0.0.1:$port/api/health" >/dev/null 2>&1 && break; sleep 0.5; done
     (cd "$WEB_DIR" && E2E_BASE_URL="http://127.0.0.1:$port" E2E_OWNER_EMAIL=owner@e2e.test npm run e2e) || rc=$?

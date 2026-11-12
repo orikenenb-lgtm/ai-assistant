@@ -7,16 +7,12 @@ import { bookingKeys, fetchCheckoutLink } from '../api';
 import { SUPPLIER_REFERENCE_PATTERN } from '../labels';
 import { useBookingActions } from '../hooks';
 import { PlainTextLine } from './PlainTextLine';
+import { safeExternalUrl } from '@/lib/safeUrl';
 import type { Feedback } from './useFeedback';
 
 /** Only https URLs are ever opened (the server additionally enforces the provider's domain allowlist). */
 export function safeCheckoutUrl(raw: string): string | null {
-  try {
-    const u = new URL(raw);
-    return u.protocol === 'https:' ? u.toString() : null;
-  } catch {
-    return null;
-  }
+  return safeExternalUrl(raw);
 }
 
 function RecordConfirmationForm({ booking, feedback }: { booking: Booking; feedback: Feedback }) {

@@ -103,18 +103,20 @@ class TravelerUpsert(ApiModel):
 
 
 class TravelerSummary(ApiModel):
-    """Masked list entry: no names, no date of birth, no document numbers."""
+    """List entry. Viewers only get the non-sensitive fields; sensitive ones are null."""
 
     member_id: str
     display_name: str
+    has_profile: bool = True
     has_passport: bool
+    kosher_required: bool = False
+    seat_preference: str | None = None
+    meal_preference: str | None = None
+    # Owner/adult only (null for viewers):
     passport_masked: str | None = None
     passport_expiry_month: str | None = None  # "YYYY-MM"
     nationality: str | None = None
-    seat_preference: str | None = None
-    meal_preference: str | None = None
-    kosher_required: bool = False
-    accessibility_needs: list[str] = Field(default_factory=list)
+    accessibility_needs: list[str] | None = None
     updated_at: datetime
 
 

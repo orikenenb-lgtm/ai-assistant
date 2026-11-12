@@ -39,7 +39,7 @@ def seed_demo(db: Session) -> str:
             db.flush()
             created += 1
         if db.scalar(select(TravelerProfile).where(TravelerProfile.family_member_id == member.id)) is None:
-            db.add(TravelerProfile(family_member_id=member.id, accessibility_needs=[], **spec["prefs"]))
+            db.add(TravelerProfile(family_member_id=member.id, **spec["prefs"]))
             profiles += 1
     db.commit()
     if created == 0 and profiles == 0:
