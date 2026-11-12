@@ -36,6 +36,17 @@ async function shot(page: Page, name: string, target?: Locator | null, extraMask
   await page.addStyleTag({ content: NO_MOTION_CSS });
   // Element captures scroll the element into view; sticky/fixed bars (top bar, mobile tab bar) would cover it.
   if (target) await page.addStyleTag({ content: 'header, .sticky, .fixed { position: static !important; }' });
+  // Full-page captures include lazy images far below the fold (login travel story): load + decode them all first,
+  // otherwise they pop in while Playwright compares consecutive frames.
+  // App pages lazy-load their decorative travel backdrop (features/scenery): wait for it before capturing.
+  if (await page.locator('#main').count()) {
+    await page.locator('[data-testid=page-scenery]').waitFor({ state: 'attached', timeout: 5_000 }).catch(() => {});
+  }
+  await page.evaluate(async () => {
+    const imgs = Array.from(document.querySelectorAll('img'));
+    imgs.forEach((img) => (img.loading = 'eager'));
+    await Promise.all(imgs.map((img) => (img.complete ? img.decode().catch(() => {}) : new Promise((r) => img.addEventListener('load', r, { once: true }) || img.addEventListener('error', r, { once: true })))));
+  });
   await settle(page);
   await markDynamic(page);
   const opts = {
