@@ -145,6 +145,15 @@ def _setup(adapter: ProviderAdapter) -> tuple[str | None, str]:
     )
 
 
+def reported_mode(adapter: ProviderAdapter) -> str:
+    """LIVE adapters connected to their supplier's TEST environment are reported as SANDBOX."""
+    mode = adapter.capabilities().mode
+    sandbox = getattr(adapter, "is_sandbox", None)
+    if mode == "LIVE" and callable(sandbox) and registry.is_usable(adapter) and sandbox():
+        return "SANDBOX"
+    return mode
+
+
 def status_for(db: Session, adapter: ProviderAdapter, cfg: ProviderConfiguration | None,
                last_run: str | None = None) -> ProviderStatusOut:
     caps = adapter.capabilities()
@@ -152,7 +161,7 @@ def status_for(db: Session, adapter: ProviderAdapter, cfg: ProviderConfiguration
     return ProviderStatusOut(
         provider_id=caps.provider_id,
         display_name=caps.display_name,
-        mode=caps.mode,
+        mode=reported_mode(adapter),
         categories=caps.categories,
         status=compute_status(adapter, cfg, last_run),
         enabled=True if cfg is None else bool(cfg.enabled),
@@ -274,7 +283,7 @@ def diagnostics(db: Session, days: int = 30) -> DiagnosticsOut:
             ProviderDiagnosticsOut(
                 provider_id=pid,
                 display_name=caps.display_name,
-                mode=caps.mode,
+                mode=reported_mode(adapter),
                 status=compute_status(adapter, configs.get(pid), last_run.status if last_run else None),
                 runs=len(attempted),
                 ok_runs=len(ok),

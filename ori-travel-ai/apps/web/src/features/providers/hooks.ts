@@ -52,17 +52,25 @@ export function useUpdateProvider() {
  * - "MIXED": at least one usable LIVE provider plus enabled DEMO providers
  * - "LIVE": only LIVE providers enabled
  */
-export type DataModeSummary = { mode: 'DEMO' | 'MIXED' | 'LIVE'; known: boolean; liveCount: number; demoCount: number };
+export type DataModeSummary = {
+  /** SANDBOX = no live provider, but at least one real supplier API in its test environment. */
+  mode: 'DEMO' | 'SANDBOX' | 'MIXED' | 'LIVE';
+  known: boolean;
+  liveCount: number;
+  demoCount: number;
+  sandboxCount: number;
+};
 
 export function summarizeDataMode(providers: ProviderStatus[] | undefined): DataModeSummary {
-  if (!providers) return { mode: 'DEMO', known: false, liveCount: 0, demoCount: 0 };
+  if (!providers) return { mode: 'DEMO', known: false, liveCount: 0, demoCount: 0, sandboxCount: 0 };
   const usable = providers.filter(
     (p) => p.enabled && p.configured && p.status !== 'DISABLED' && p.status !== 'NOT_CONFIGURED' && p.status !== 'FAILED',
   );
   const liveCount = usable.filter((p) => providerMode(p) === 'LIVE').length;
-  const demoCount = usable.filter((p) => providerMode(p) !== 'LIVE').length;
-  const mode = liveCount === 0 ? 'DEMO' : demoCount > 0 ? 'MIXED' : 'LIVE';
-  return { mode, known: true, liveCount, demoCount };
+  const sandboxCount = usable.filter((p) => providerMode(p) === 'SANDBOX').length;
+  const demoCount = usable.filter((p) => providerMode(p) !== 'LIVE' && providerMode(p) !== 'SANDBOX').length;
+  const mode = liveCount > 0 ? (demoCount + sandboxCount > 0 ? 'MIXED' : 'LIVE') : sandboxCount > 0 ? 'SANDBOX' : 'DEMO';
+  return { mode, known: true, liveCount, demoCount, sandboxCount };
 }
 
 export function useDataModeSummary(): DataModeSummary {

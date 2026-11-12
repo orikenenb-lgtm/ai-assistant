@@ -102,3 +102,10 @@ def test_sandbox_offers_rank_after_offers_the_family_can_act_on(monkeypatch):
     modes = [o.source.mode for o in ranked]
     assert modes == sorted(modes, key=lambda m: m == "SANDBOX")
     assert [o.score.rank for o in ranked] == list(range(1, len(ranked) + 1))
+
+
+def test_provider_status_reports_sandbox_for_a_test_token(monkeypatch, auth_client):
+    enable_live(monkeypatch, ORI_DUFFEL_ACCESS_TOKEN=TOKEN)
+    providers = {p["provider_id"]: p for p in auth_client("owner").get("/api/providers").json()}
+    assert providers["duffel"]["mode"] == "SANDBOX"
+    assert providers["demo_skyline"]["mode"] == "DEMO"

@@ -1,4 +1,4 @@
-import { FlaskConical, Radio } from 'lucide-react';
+import { FlaskConical, Radio, TestTube } from 'lucide-react';
 import { Badge, Tooltip } from '@/components/ui';
 import { cn } from '@/lib/cn';
 import { useDataModeSummary } from '../hooks';
@@ -8,6 +8,11 @@ const COPY = {
     label: 'מצב הדגמה',
     short: 'הדגמה',
     text: 'כל התוצאות במערכת הן נתוני הדגמה: ספקים, מחירים וזמינות אינם אמיתיים ולא ניתן להזמין אותם.',
+  },
+  SANDBOX: {
+    label: 'בדיקה + הדגמה',
+    short: 'בדיקה',
+    text: 'אין ספק חי. חלק מהספקים מחוברים לסביבת הבדיקה (Sandbox) שלהם — נתוני בדיקה, לא מחירים אמיתיים — והשאר מחזירים נתוני הדגמה. אי אפשר להזמין אף אחד מהם.',
   },
   MIXED: {
     label: 'חי + הדגמה',
@@ -25,7 +30,7 @@ const COPY = {
 export function DataModeIndicator({ className }: { className?: string }) {
   const summary = useDataModeSummary();
   const copy = COPY[summary.mode];
-  const Icon = summary.mode === 'DEMO' ? FlaskConical : Radio;
+  const Icon = summary.mode === 'DEMO' ? FlaskConical : summary.mode === 'SANDBOX' ? TestTube : Radio;
   const description = summary.known
     ? copy.text
     : `${COPY.DEMO.text} (לא ניתן היה לאמת את מצב הספקים כרגע; ברירת המחדל של המערכת היא נתוני הדגמה.)`;
@@ -33,7 +38,7 @@ export function DataModeIndicator({ className }: { className?: string }) {
   return (
     <Tooltip content={description} side="bottom">
       <Badge
-        tone={summary.mode === 'DEMO' ? 'demo' : summary.mode === 'LIVE' ? 'success' : 'info'}
+        tone={summary.mode === 'DEMO' ? 'demo' : summary.mode === 'SANDBOX' ? 'warn' : summary.mode === 'LIVE' ? 'success' : 'info'}
         tabIndex={0}
         data-testid="data-mode-indicator"
         data-mode={summary.mode}
