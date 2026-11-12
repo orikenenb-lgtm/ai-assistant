@@ -62,14 +62,15 @@ test.describe('הגדרות', () => {
       // Out-of-range input is clamped and the other weights are redistributed: the sum never leaves 100.
       await region.getByRole('spinbutton', { name: 'עלות' }).fill('150');
       await region.getByRole('spinbutton', { name: 'עלות' }).blur();
-      expect((await values()).reduce((a, b) => a + b, 0)).toBe(100);
+      await expect.poll(async () => (await values()).reduce((a, b) => a + b, 0)).toBe(100);
       await expect(total).toContainText('100 / 100');
 
       await region.getByRole('spinbutton', { name: 'איכות' }).fill('33');
       await region.getByRole('spinbutton', { name: 'איכות' }).blur();
-      expect((await values()).reduce((a, b) => a + b, 0)).toBe(100);
+      await expect.poll(async () => (await values()).reduce((a, b) => a + b, 0)).toBe(100);
 
       await region.getByRole('button', { name: 'הכי זול' }).click();
+      await expect.poll(async () => { const v = await values(); return v[0] > v[1]; }).toBe(true); // preset applied
       const cheap = await values();
       expect(cheap.reduce((a, b) => a + b, 0)).toBe(100);
       expect(cheap[0]).toBeGreaterThan(cheap[1]); // cost dominates the "cheapest" preset
