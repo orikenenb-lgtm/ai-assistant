@@ -69,6 +69,8 @@ export interface ChildAgesEditorProps {
 
 export function ChildAgesEditor({ ages, onChange, max, error, className }: ChildAgesEditorProps) {
   const hasInfant = ages.some((a) => a < 2);
+  // Unique per editor instance: a hotel search renders one editor per room (BUG-E2E-02).
+  const idBase = useId();
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       <span className="text-sm font-medium text-fg">ילדים (לפי גיל)</span>
@@ -76,11 +78,11 @@ export function ChildAgesEditor({ ages, onChange, max, error, className }: Child
         <ul className="flex flex-wrap gap-2">
           {ages.map((age, i) => (
             <li key={i} className="flex items-center gap-1 rounded-lg border border-line bg-surface-sunken p-1.5 ps-2.5">
-              <label htmlFor={`child-age-${i}`} className="text-xs text-fg-muted">
+              <label htmlFor={`${idBase}-child-age-${i}`} className="text-xs text-fg-muted">
                 ילד/ה {i + 1}
               </label>
               <NativeSelect
-                id={`child-age-${i}`}
+                id={`${idBase}-child-age-${i}`}
                 aria-label={`גיל ילד ${i + 1}`}
                 className="h-8 w-32 text-sm"
                 value={String(age)}
@@ -502,7 +504,7 @@ export function SegmentedChoice<T extends string>({
             aria-checked={value === o.value}
             onClick={() => onChange(o.value)}
             className={cn(
-              'h-9 rounded-md px-4 text-sm font-medium transition-colors',
+              'touch-target h-9 rounded-md px-4 text-sm font-medium transition-colors',
               value === o.value ? 'bg-surface text-fg shadow-sm' : 'text-fg-muted hover:text-fg',
             )}
           >
@@ -568,7 +570,7 @@ export function SearchFormShell({
         <div className="flex flex-col gap-4">
           <button
             type="button"
-            className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+            className="touch-target inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
             aria-expanded={advOpen}
             aria-controls={advId}
             onClick={() => setAdvOpen((v) => !v)}

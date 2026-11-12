@@ -182,7 +182,7 @@ export function FlightSearchForm({ initial, pending, serverErrors, onSubmit }: S
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <button
           type="button"
-          className="inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-1 text-sm font-medium text-accent hover:text-accent-hover"
+          className="touch-target inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-1 text-sm font-medium text-accent hover:text-accent-hover"
           aria-expanded={moreOpen}
           aria-controls={moreId}
           onClick={() => setMoreOpen((v) => !v)}

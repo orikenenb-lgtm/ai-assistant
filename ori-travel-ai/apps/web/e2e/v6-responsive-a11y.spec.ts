@@ -273,6 +273,19 @@ test.describe('V6 נגישות, מקלדת, ערכות צבעים ותנועה',
     expect(durations, 'no transition/animation longer than 50ms under reduced motion').toEqual([]);
   });
 
+  // BUG-E2E-02 (a11y, low): ChildAgesEditor builds ids as `child-age-${index}`, so two hotel rooms that each have a child
+  // render the same id twice; the visible label's `for` then points at an ambiguous target (the aria-label still names the
+  // select, so it is not unlabeled -- but duplicate ids are invalid HTML and break label clicks). Fix: useId() per editor.
+  test('V6-17d טופס מלונות עם ילד בכל חדר: אין מזהים כפולים (BUG-E2E-02 תוקן)', async ({ page }) => {
+    await page.goto('/search/hotels');
+    const room = (n: number) => page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 3, name: `חדר ${n}` }) });
+    await room(1).getByRole('button', { name: 'הוספת ילד' }).click();
+    await page.getByRole('button', { name: 'הוספת חדר' }).click();
+    await room(2).getByRole('button', { name: 'הוספת ילד' }).click();
+    await expect(page.getByLabel('גיל ילד 1')).toHaveCount(2);
+    expect(await duplicateIds(page), 'duplicate ids on the hotel form').toEqual([]);
+  });
+
   test('V6-17c מצב כהה: מתג ערכת הצבעים משנה את html, נשמר ברענון, ומנוגדות הטקסט עומדת ב-AA', async ({ page, api }) => {
     const search = await apiFlightSearch(api, { destination: 'FCO', depart: CAL_DEPART, nights: 7, adults: 2 });
     await page.goto(`/search/flights?search_id=${search.search_id}`);

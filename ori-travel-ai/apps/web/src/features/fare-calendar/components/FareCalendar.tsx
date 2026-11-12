@@ -1,6 +1,6 @@
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Grid3x3, Info } from 'lucide-react';
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { Button, Callout, ErrorState, FreshnessText, ModeBadge, MoneyText, Skeleton } from '@/components/ui';
+import { Badge, Button, Callout, ErrorState, FreshnessText, ModeBadge, MoneyText, Skeleton } from '@/components/ui';
 import { cabinLabel } from '@/features/offers/labels';
 import { addDaysIso, todayIso } from '@/features/search/forms/common';
 import { MD_UP, prefersReducedMotion, readPref, useMediaQuery, writePref } from '@/features/search/useMediaQuery';
@@ -604,7 +604,12 @@ function Notes({ data, pageCoverageNote }: { data: FareCalendarResponse; pageCov
             {data.sources.map((s) => (
               <li key={s.provider_id} className="flex flex-wrap items-center gap-1.5">
                 <span className="font-medium text-fg-muted">{s.provider_name}</span>
-                {s.mode && <ModeBadge mode={s.mode} size="sm" showTooltip={false} />}
+                {s.mode === 'LIVE' && s.status !== 'CACHED' ? (
+                  // A real provider that did not price anything here must never look like live data.
+                  <Badge tone="neutral">ספק אמיתי — {s.status === 'NOT_CONFIGURED' ? 'לא מחובר' : 'לא נשאל בלוח'}</Badge>
+                ) : (
+                  s.mode && <ModeBadge mode={s.mode} size="sm" showTooltip={false} />
+                )}
                 {s.message && <span>— {s.message}</span>}
               </li>
             ))}

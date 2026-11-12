@@ -107,6 +107,8 @@ export function Segmented<V extends string = string>({
                 'peer-checked:bg-surface peer-checked:font-semibold peer-checked:text-fg peer-checked:shadow-xs peer-checked:ring-1 peer-checked:ring-line-strong',
                 'peer-disabled:opacity-50 [&_svg]:shrink-0',
                 SIZES[size],
+                // Touch screens: the tapped <label> (and its visible pill) is at least 44px tall.
+                'pointer-coarse:min-h-touch',
               )}
             >
               {option.icon && <span aria-hidden="true" className="inline-flex">{option.icon}</span>}

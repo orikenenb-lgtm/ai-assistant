@@ -45,7 +45,6 @@ for (const theme of ['light', 'dark'] as Theme[]) {
 }
 
 test('A11Y-03 dark theme: fare-calendar day numbers on tangerine cells reach 4.5:1', async ({ browser }) => {
-  test.fail(true, 'A11Y-03: day number #c4ccd8 on #8a4613 = 4.37:1 (needs 4.5:1) in the dark fare calendar');
   const { ctx, page } = await openPage(browser, { width: 'desktop', theme: 'dark' });
   await A11Y_SCREENS.find((s) => s.id === 'flights-results')!.open(page, f);
   const all = (await page.evaluate(CONTRAST_JS)) as ContrastSample[];
@@ -83,7 +82,6 @@ for (const theme of ['light', 'dark'] as Theme[]) {
 }
 
 test('A11Y-05 every interactive element is at least 44x44 CSS px at 390px (settings page sample)', async ({ browser }) => {
-  test.fail(true, 'A11Y-05: ~16 controls (inline text links, small selects/inputs/range sliders, 20px checkboxes, details/summary) are < 44px');
   const { ctx, page } = await openPage(browser, { width: 'mobile', theme: 'light' });
   await A11Y_SCREENS.find((s) => s.id === 'settings')!.open(page, f);
   const v = (await page.evaluate(TOUCH_JS)) as TouchViolation[];

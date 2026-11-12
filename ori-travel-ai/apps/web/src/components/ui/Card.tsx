@@ -51,7 +51,7 @@ export function CardHeader({ title, description, icon, actions, level = 2, class
           {description && <p className="mt-0.5 text-sm text-fg-muted">{description}</p>}
         </div>
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && <div className="touch-targets flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
   );
 }

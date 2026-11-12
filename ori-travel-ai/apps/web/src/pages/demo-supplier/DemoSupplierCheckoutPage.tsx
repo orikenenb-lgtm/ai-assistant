@@ -26,7 +26,7 @@ function DemoBanner() {
       className="flex items-center justify-center gap-3 border-b-4 border-dashed border-sand-500 bg-sand-100 px-4 py-4 text-center text-sand-900"
     >
       <FlaskConical className="size-7 shrink-0" aria-hidden="true" />
-      <p className="text-2xl font-extrabold">{DEMO_BANNER_TEXT}</p>
+      <h1 className="text-2xl font-extrabold">{DEMO_BANNER_TEXT}</h1>
     </div>
   );
 }
@@ -35,7 +35,7 @@ function BackToBooking({ bookingId }: { bookingId?: string }) {
   return (
     <Link
       to={bookingId ? `/bookings/${encodeURIComponent(bookingId)}` : '/bookings'}
-      className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent underline-offset-4 hover:underline"
+      className="touch-target inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent underline-offset-4 hover:underline"
       data-testid="back-to-booking"
     >
       <ArrowRight className="size-4 ltr:rotate-180" aria-hidden="true" />
@@ -133,7 +133,7 @@ function Checkout({ data }: { data: DemoCheckout }) {
           <p className="text-sm text-fg-muted">{data.message}</p>
           {data.can_complete ? (
             <div>
-              <Button size="lg" variant="accent" loading={complete.isPending} onClick={() => complete.mutate()} data-testid="demo-supplier-complete">
+              <Button size="lg" variant="accent" wrap loading={complete.isPending} onClick={() => complete.mutate()} data-testid="demo-supplier-complete">
                 סימולציה: השלמת ההזמנה אצל הספק (ללא תשלום)
               </Button>
             </div>

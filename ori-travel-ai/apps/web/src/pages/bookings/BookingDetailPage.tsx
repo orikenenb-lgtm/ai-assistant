@@ -10,7 +10,7 @@ export default function BookingDetailPage() {
   const booking = query.data;
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
-      <Link to="/bookings" className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent underline-offset-4 hover:underline">
+      <Link to="/bookings" className="touch-target inline-flex w-fit items-center gap-1.5 text-sm font-medium text-accent underline-offset-4 hover:underline">
         <ArrowRight className="size-4 ltr:rotate-180" aria-hidden="true" />
         כל ההזמנות
       </Link>

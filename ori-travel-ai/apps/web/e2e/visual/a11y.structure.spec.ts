@@ -54,7 +54,6 @@ for (const theme of ['light', 'dark'] as Theme[]) {
 
 test.describe('known product bugs (test.fail = confirmed, reported in docs/release/accessibility-report.md)', () => {
   test('A11Y-01 DEMO supplier page has exactly one h1', async ({ browser }) => {
-    test.fail(true, 'A11Y-01: /demo-supplier/checkout renders its title in a <div>, there is no <h1>');
     const { ctx, page } = await openPage(browser, { width: 'desktop', theme: 'light' });
     await page.goto(f.checkoutUrl);
     await expect(page.getByText('דף ספק לדוגמה — DEMO, אין חיוב').first()).toBeVisible();
@@ -63,7 +62,6 @@ test.describe('known product bugs (test.fail = confirmed, reported in docs/relea
   });
 
   test('A11Y-02 DEMO supplier page has no horizontal overflow at 390px', async ({ browser }) => {
-    test.fail(true, 'A11Y-02: scrollWidth is 42px wider than the 390px viewport (header text does not wrap)');
     const { ctx, page } = await openPage(browser, { width: 'mobile', theme: 'light' });
     await page.goto(f.checkoutUrl);
     await expect(page.getByText('דף ספק לדוגמה — DEMO, אין חיוב').first()).toBeVisible();
@@ -79,7 +77,6 @@ for (const vw of [720, 320]) {
   test.describe(`reflow at ${vw}px (${vw === 720 ? '200% zoom' : 'smallest phone'})`, () => {
     for (const s of A11Y_SCREENS) {
       test(`${s.id}: no horizontal scroll, primary action reachable`, async ({ browser }) => {
-        test.fail(s.id === 'demo-supplier' && vw === 320, 'A11Y-02: the DEMO supplier header overflows horizontally below ~400px');
         const { ctx, page } = await openPage(browser, { width: vw, theme: 'light', anonymous: s.anon, height: vw === 720 ? 450 : 700 });
         try {
           await s.open(page, f);

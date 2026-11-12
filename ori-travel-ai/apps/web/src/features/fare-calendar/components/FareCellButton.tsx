@@ -104,7 +104,7 @@ export function FareCellButton({
     >
       {variant === 'grid' && (
         <span className="flex w-full items-start justify-between gap-1">
-          <span className={cn('text-xs font-semibold tabular-nums', outOfRange ? 'text-ink-300' : 'text-ink-700')}>{dayOfMonth(depart)}</span>
+          <span className={cn('text-xs font-semibold tabular-nums', outOfRange ? 'text-ink-300' : 'text-heat-fg-muted')}>{dayOfMonth(depart)}</span>
           {best && (
             <span className="inline-flex items-center gap-0.5 rounded-full bg-white/80 px-1 text-2xs font-semibold text-tangerine-800">
               <Star className="size-2.5 fill-current" aria-hidden="true" />
@@ -115,7 +115,7 @@ export function FareCellButton({
       )}
       {variant === 'strip' && (
         <>
-          <span className="text-2xs font-medium text-ink-600">{WEEKDAY_SHORT[weekday(depart)]}</span>
+          <span className="text-2xs font-medium text-heat-fg-muted">{WEEKDAY_SHORT[weekday(depart)]}</span>
           <span className="text-xs font-semibold tabular-nums">
             {dayOfMonth(depart)}.{Number(depart.slice(5, 7))}
           </span>

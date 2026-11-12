@@ -35,7 +35,7 @@ export function ProviderStatusStrip({ providers, className }: { providers: Provi
             {answered} מתוך {providers.length} ענו
           </span>
         </h2>
-        <Link to="/providers" className="text-xs font-medium text-accent underline-offset-4 hover:underline">
+        <Link to="/providers" className="touch-target text-xs font-medium text-accent underline-offset-4 hover:underline">
           ניהול ספקים ואבחון
         </Link>
       </div>

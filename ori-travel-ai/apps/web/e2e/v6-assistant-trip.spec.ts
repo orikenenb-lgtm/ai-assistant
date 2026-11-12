@@ -94,17 +94,14 @@ test.describe('V6 עוזר AI ובונה הטיולים', () => {
     expect(second).not.toMatch(/\d\s*(?:₪|ש"ח|שקל)/);
   });
 
-  // BUG-E2E-01 (assistant, low/medium): in basic (no-model) mode the summary quotes the CHEAPEST and the SHORTEST offer, but only
-  // the first four offers by RANK are sent as cards (`resp.offers[:CARDS_PER_SEARCH]`, ai/service.py:233), so the quoted price
-  // often has no card ("הפרטים המלאים בכרטיסים" is then untrue). Nothing is fabricated -- the price is a real server price --
-  // but the user cannot see or open the offer. DEMO data is deterministic per date, not per run, so the test walks departure
-  // dates (bounded) until it finds a reply that quotes a price without a card, then asserts the contract the scenario demands.
-  test('V6-10b כל מחיר שמופיע בטקסט התשובה מופיע גם בכרטיס -- באג ידוע BUG-E2E-01', async ({ scratchApi: api }, testInfo) => {
-    test.fail(true, 'BUG-E2E-01: the basic-mode reply quotes the cheapest/shortest offer without sending its card');
+  // BUG-E2E-01 (fixed): the basic (no-model) summary names the cheapest / top-ranked / shortest offer; every offer it
+  // names is now sent as a card first (ai/service.py `_summary_cards`). DEMO data is deterministic per date, so the test
+  // walks a bounded set of departure dates and requires that NO reply quotes a price without a card.
+  test('V6-10b כל מחיר שמופיע בטקסט התשובה מופיע גם בכרטיס (BUG-E2E-01 תוקן)', async ({ scratchApi: api }, testInfo) => {
     test.setTimeout(90_000);
-    let violation: { price: number; day: number } | null = null;
+    const violations: { price: number; day: number }[] = [];
     let tried = 0;
-    for (let i = 0; i < 18 && !violation; i++) {
+    for (let i = 0; i < 12; i++) {
       const d = new Date(Date.now() + (rnd(40, 200) + i) * 86_400_000);
       const res = await api.post('/api/ai/chat', { message: `טיסה מתל אביב לרומא ב-${d.getDate()} ב${MONTHS[d.getMonth()]} לשני מבוגרים`, history: [] });
       if (!res.ok()) break;
@@ -114,11 +111,11 @@ test.describe('V6 עוזר AI ובונה הטיולים', () => {
       const cardTotals = (reply.cards as Json[]).map((c) => Number(c.price.total.amount));
       const quoted = [...(reply.text as string).matchAll(/(\d[\d,]*(?:\.\d+)?)\s*(?:₪|ILS)/g)].map((m) => Number(m[1].replace(/,/g, '')));
       const missing = quoted.find((p) => !cardTotals.some((t) => Math.abs(t - p) < 0.011));
-      if (missing !== undefined) violation = { price: missing, day: i };
+      if (missing !== undefined) violations.push({ price: missing, day: i });
     }
     testInfo.annotations.push({ type: 'searches-tried', description: String(tried) });
-    test.skip(violation === null, `data-dependent: no reply with an un-carded price among ${tried} DEMO searches (the bug shows in ~1 of 5 replies)`);
-    expect(violation, `a reply quoted a price that no card shows (${JSON.stringify(violation)})`).toBeNull();
+    expect(tried, 'at least a few DEMO searches ran').toBeGreaterThan(2);
+    expect(violations, `replies quoted prices that no card shows: ${JSON.stringify(violations)}`).toEqual([]);
   });
 
   test('V6-11 בונה הטיולים: תקציב מחושב, חפיפה בין טיסות מציגה אישור (ביטול ⇒ לא נוסף, אישור ⇒ נוסף עם תג חפיפה)', async ({ page, api, ownerApi }) => {

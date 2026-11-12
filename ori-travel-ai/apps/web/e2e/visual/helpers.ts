@@ -117,7 +117,7 @@ export async function ensureFixtures(): Promise<Fixtures> {
       checkoutUrl = link.url ?? link.checkout_url ?? link.hosted_checkout_url ?? '';
       if (checkoutUrl) break;
     } catch (_e) {
-      console.log("hosted fail", String(_e).slice(0, 300));
+      console.warn("hosted checkout fixture attempt failed:", String(_e).slice(0, 300));
     }
   }
   await api.dispose();

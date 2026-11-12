@@ -164,33 +164,53 @@ def summarize_search(resp: SearchResponse, *, label: bool = True) -> str:
         lines.append(f"• המדורגת ראשונה לפי העדפות המשפחה: {offer_label(best)} — {fmt_money(best.price.total)}{score}")
     third = _third_pick(offers)
     if third:
-        lines.append(third)
+        lines.append(third[0])
     lines.append(f"הפרטים המלאים בכרטיסים. {BOOKING_NOTE}")
     return "\n".join(lines)
 
 
-def _third_pick(offers: list[CanonicalOffer]) -> str | None:
+def _third_pick(offers: list[CanonicalOffer]) -> tuple[str, CanonicalOffer] | None:
     d0 = offers[0].details
     if isinstance(d0, FlightDetails):
         o = min(offers, key=lambda x: (x.details.total_duration_minutes, x.price.total.amount))  # type: ignore[union-attr]
-        return f"• הקצרה ביותר: {offer_label(o)} — {fmt_duration(o.details.total_duration_minutes)}, {fmt_money(o.price.total)}"  # type: ignore[union-attr]
+        return (f"• הקצרה ביותר: {offer_label(o)} — {fmt_duration(o.details.total_duration_minutes)}, "  # type: ignore[union-attr]
+                f"{fmt_money(o.price.total)}", o)
     if isinstance(d0, HotelDetails):
         located = [x for x in offers if x.details.distance_to_center_km is not None]  # type: ignore[union-attr]
         if not located:
             return None
         o = min(located, key=lambda x: (x.details.distance_to_center_km, x.price.total.amount))  # type: ignore[union-attr]
         return (f"• הקרובה ביותר למרכז: {offer_label(o)} — {o.details.distance_to_center_km:g} ק״מ מהמרכז, "  # type: ignore[union-attr]
-                f"{fmt_money(o.price.total)}")
+                f"{fmt_money(o.price.total)}", o)
     if isinstance(d0, CarDetails):
         autos = [x for x in offers if x.details.transmission == "automatic"]  # type: ignore[union-attr]
         if not autos:
             return None
         o = min(autos, key=lambda x: (x.price.total.amount, x.id))
-        return f"• האוטומטי הזול ביותר: {offer_label(o)} — {fmt_money(o.price.total)}"
+        return f"• האוטומטי הזול ביותר: {offer_label(o)} — {fmt_money(o.price.total)}", o
     if isinstance(d0, ActivityDetails):
         rated = [x for x in offers if x.details.rating is not None]  # type: ignore[union-attr]
         if not rated:
             return None
         o = max(rated, key=lambda x: (x.details.rating, -x.price.total.amount))  # type: ignore[union-attr]
-        return f"• בעלת הדירוג הגבוה ביותר: {offer_label(o)} — {o.details.rating:g}/5, {fmt_money(o.price.total)}"  # type: ignore[union-attr]
+        return f"• בעלת הדירוג הגבוה ביותר: {offer_label(o)} — {o.details.rating:g}/5, {fmt_money(o.price.total)}", o  # type: ignore[union-attr]
     return None
+
+
+def summary_picks(resp: SearchResponse) -> list[CanonicalOffer]:
+    """The offers the deterministic summary names (cheapest, top-ranked, third pick), in order.
+
+    The fallback chat must show a card for every offer its text mentions (BUG-E2E-01), so the
+    service puts these first in ``reply.cards``.
+    """
+    offers = resp.offers
+    if not offers:
+        return []
+    pool = _comparable(offers, resp.params.get("currency"))
+    picks = [min(pool, key=lambda o: (o.price.total.amount, o.id))]
+    picks.append(next((o for o in offers if o.score is not None and o.score.rank == 1), offers[0]))
+    third = _third_pick(offers)
+    if third:
+        picks.append(third[1])
+    seen: set[str] = set()
+    return [o for o in picks if not (o.id in seen or seen.add(o.id))]

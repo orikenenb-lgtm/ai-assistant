@@ -140,6 +140,9 @@
   --color-heat-high: #ffd2b0; /* highest third */
   --color-heat-none: var(--color-ink-50); /* searched, no offers */
   --color-heat-unknown: var(--color-white); /* not searched */
+  /* Text on heat cells (any tier/state, both themes): primary + secondary (day number, weekday). */
+  --color-heat-fg: var(--color-ink-900); /* ≥ 8.9:1 light, ≥ 6.2:1 dark on every heat fill */
+  --color-heat-fg-muted: var(--color-ink-700); /* ≥ 5.6:1 light; dark override below ≥ 5.5:1 */
 
   /* Semantic: surfaces, lines, text — prefer these in feature code */
   --color-canvas: #f6f7f9; /* page background (cool near-white) */
@@ -346,6 +349,8 @@
     --color-heat-low: #123e57;
     --color-heat-mid: #40381a;
     --color-heat-high: #4a2d1c;
+    /* ink-700 (#c4ccd8) is only 4.37:1 on heat-best #8a4613 (A11Y-03) — secondary cell text is brighter in dark. */
+    --color-heat-fg-muted: #dde3ec;
 
     --color-canvas: #0e141d;
     --color-surface: #151c27;
@@ -441,12 +446,19 @@
    * Touch targets: on coarse pointers an invisible ::after grows the hit area to at
    * least 44×44px without changing the visual size. `position: relative` lives in
    * this layer so a utility like `absolute` on the same element still wins.
+   * Applied generically too: every <summary> (disclosure toggles are never inline text), and
+   * links inside containers marked `.touch-targets` (PageHeader eyebrow/actions, CardHeader
+   * actions) — compact helper links like "ספקים ואבחון" / "כל הטיולים".
    */
-  .touch-target {
+  .touch-target,
+  .touch-targets :is(a[href], summary),
+  summary {
     position: relative;
   }
   @media (pointer: coarse) {
-    .touch-target::after {
+    .touch-target::after,
+    .touch-targets :is(a[href], summary)::after,
+    summary::after {
       content: '';
       position: absolute;
       top: 50%;

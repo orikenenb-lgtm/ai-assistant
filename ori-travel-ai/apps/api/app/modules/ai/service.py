@@ -52,7 +52,14 @@ from app.modules.ai.schemas import (
     PlanTripResponse,
     ToolCallOut,
 )
-from app.modules.ai.summary import BOOKING_NOTE, DEMO_WARNING, FALLBACK_LABEL, describe_slots, summarize_search
+from app.modules.ai.summary import (
+    BOOKING_NOTE,
+    DEMO_WARNING,
+    FALLBACK_LABEL,
+    describe_slots,
+    summarize_search,
+    summary_picks,
+)
 from app.modules.providers.data.geo import resolve_city
 from app.modules.search.service import parse_search_params, run_search
 from app.schemas.offers import CanonicalOffer
@@ -64,6 +71,20 @@ CHAT_RATE_LIMIT, CHAT_RATE_WINDOW = 20, 600
 PARSE_RATE_LIMIT, PARSE_RATE_WINDOW = 60, 600
 PLAN_RATE_LIMIT, PLAN_RATE_WINDOW = 10, 600
 CARDS_PER_SEARCH = 4
+
+
+def _summary_cards(resp: SearchResponse) -> list[CanonicalOffer]:
+    """Every offer named in the deterministic summary first, then the top-ranked ones (BUG-E2E-01)."""
+    cards: list[CanonicalOffer] = []
+    seen: set[str] = set()
+    for offer in [*summary_picks(resp), *resp.offers]:
+        if offer.id in seen:
+            continue
+        seen.add(offer.id)
+        cards.append(offer)
+        if len(cards) >= max(CARDS_PER_SEARCH, len(summary_picks(resp))):
+            break
+    return cards
 MAX_CARDS = 12
 HISTORY_USER_MESSAGES_FOR_SLOTS = 3
 
@@ -114,11 +135,13 @@ class _ModelFailed(Exception):
         self.calls = calls or []
 
 
-def _cards(searches: list[SearchResponse], extra: list[CanonicalOffer] | None = None) -> list[CanonicalOffer]:
+def _cards(searches: list[SearchResponse], extra: list[CanonicalOffer] | None = None, *,
+           summary: bool = False) -> list[CanonicalOffer]:
+    """Cards from server data. With ``summary=True`` (deterministic text), every offer the text names comes first."""
     out: list[CanonicalOffer] = []
     seen: set[str] = set()
     for resp in searches:
-        for offer in resp.offers[:CARDS_PER_SEARCH]:
+        for offer in (_summary_cards(resp) if summary else resp.offers[:CARDS_PER_SEARCH]):
             if offer.id not in seen:
                 seen.add(offer.id)
                 out.append(offer)
@@ -230,7 +253,7 @@ def _fallback_chat(db: Session, user: User, req: ChatRequest, trip: Trip | None,
         resp = run_search(db, user.id, parsed.model, origin="ai")
         text = summarize_search(resp)
         warnings = [*parsed.assumptions, *_search_warnings([resp])]
-        reply = ChatReply(text=text, mode="fallback", cards=resp.offers[:CARDS_PER_SEARCH], search_ids=[resp.search_id],
+        reply = ChatReply(text=text, mode="fallback", cards=_summary_cards(resp), search_ids=[resp.search_id],
                           warnings=_dedupe(warnings), grounding=Grounding())
         return ChatResponse(reply=reply, tool_calls=[ToolCallOut(name=SEARCH_TOOL_BY_CATEGORY[resp.category], status="ok")])
 
@@ -246,7 +269,7 @@ def _fallback_chat(db: Session, user: User, req: ChatRequest, trip: Trip | None,
 def _summarize_state(state: tools.TurnState, calls: list[ToolCallOut]) -> ChatResponse:
     text = "\n\n".join(summarize_search(s) for s in state.searches)
     saved = [state.shown[i] for i in state.saved if i in state.shown]
-    reply = ChatReply(text=text, mode="fallback", cards=_cards(state.searches, saved),
+    reply = ChatReply(text=text, mode="fallback", cards=_cards(state.searches, saved, summary=True),
                       search_ids=[s.search_id for s in state.searches], warnings=_search_warnings(state.searches),
                       grounding=Grounding())
     return ChatResponse(reply=reply, tool_calls=calls)
@@ -322,7 +345,9 @@ def _model_chat(db: Session, user: User, req: ChatRequest, client: LLMClient, tr
         warnings.append(MSG_MARKET_CLAIM)
     if state.rejected:
         warnings.append(MSG_REJECTED_TOOL)
+    used_summary = False
     if not text.strip():
+        used_summary = bool(state.searches)
         text = "\n\n".join(summarize_search(s, label=False) for s in state.searches) if state.searches else (
             "לא הצלחתי לנסח תשובה. אפשר לנסח את הבקשה מחדש?")
 
@@ -332,7 +357,7 @@ def _model_chat(db: Session, user: User, req: ChatRequest, client: LLMClient, tr
         if last.endswith("?"):
             clarifying = last[-300:]
     saved = [state.shown[i] for i in state.saved if i in state.shown]
-    reply = ChatReply(text=text, mode="model", cards=_cards(state.searches, saved),
+    reply = ChatReply(text=text, mode="model", cards=_cards(state.searches, saved, summary=used_summary),
                       search_ids=[s.search_id for s in state.searches], clarifying_question=clarifying,
                       warnings=_dedupe(warnings), grounding=Grounding(ok=g.ok, removed_claims=g.removed_claims))
     return ChatResponse(reply=reply, tool_calls=calls)

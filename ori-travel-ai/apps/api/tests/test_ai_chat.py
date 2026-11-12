@@ -467,3 +467,23 @@ def test_parse_endpoint_works_without_a_model(auth_client):
     assert partial["params"] is None and partial["missing_fields"] == ["check_in"]
     assert partial["clarifying_question"] == "מאיזה תאריך ולכמה לילות?"
     assert c.post("/api/ai/parse", json={"text": "א" * 2001}).status_code == 422
+
+
+def test_fallback_cards_cover_every_offer_named_in_the_summary(auth_client):
+    """BUG-E2E-01: every price quoted by the deterministic summary must have a card."""
+    import re
+    from datetime import date, timedelta
+
+    c = auth_client("adult")
+    misses = 0
+    for offset in range(20, 32):
+        d = date.today() + timedelta(days=offset)
+        res = c.post("/api/ai/chat", json={"message": f"טיסה מתל אביב לרומא ב-{d.day}/{d.month} לשני מבוגרים", "history": []})
+        if res.status_code == 429:
+            break
+        assert res.status_code == 200, res.text
+        reply = res.json()["reply"]
+        card_totals = {card["price"]["total"]["amount"] for card in reply["cards"]}
+        quoted = {m.replace(",", "") for m in re.findall(r"(\d[\d,]*\.\d{2}) ₪", reply["text"])}
+        misses += len(quoted - card_totals)
+    assert misses == 0

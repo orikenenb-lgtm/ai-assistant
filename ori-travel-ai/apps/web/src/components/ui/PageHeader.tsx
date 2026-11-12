@@ -42,12 +42,12 @@ export function PageHeader({
             </span>
           )}
           <div className="min-w-0">
-            {eyebrow && <p className="mb-1 text-xs font-semibold text-accent-strong">{eyebrow}</p>}
+            {eyebrow && <p className="touch-targets mb-1 text-xs font-semibold text-accent-strong">{eyebrow}</p>}
             <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-[1.75rem]">{title}</h1>
             {description && <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-fg-muted sm:text-base">{description}</p>}
           </div>
         </div>
-        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        {actions && <div className="touch-targets flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
       {children}
     </header>

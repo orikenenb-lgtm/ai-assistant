@@ -28,21 +28,31 @@ const SIZES: Record<ButtonSize, string> = {
   lg: 'h-12 gap-2 px-6 text-base',
 };
 
+/** `wrap`: same minimum height, but the label may break onto several lines (long Hebrew labels on phones). */
+const WRAP_SIZES: Record<ButtonSize, string> = {
+  sm: 'min-h-8 gap-1.5 px-3 py-1 text-sm',
+  md: 'min-h-10 gap-2 px-4 py-2 text-sm',
+  lg: 'min-h-12 gap-2 px-6 py-2.5 text-base',
+};
+
 export interface ButtonStyleOptions {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
+  /** Allow the label to wrap instead of overflowing narrow screens (default false = single line). */
+  wrap?: boolean;
   className?: string;
 }
 
 /** Class string for button-looking elements (links, Radix triggers). */
-export function buttonClasses({ variant = 'primary', size = 'md', fullWidth, className }: ButtonStyleOptions = {}) {
+export function buttonClasses({ variant = 'primary', size = 'md', fullWidth, wrap = false, className }: ButtonStyleOptions = {}) {
   return cn(
-    'touch-target inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-md font-medium',
+    'touch-target inline-flex shrink-0 select-none items-center justify-center rounded-md font-medium',
+    wrap ? 'max-w-full whitespace-normal text-center leading-snug' : 'whitespace-nowrap',
     'transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:pointer-events-none aria-disabled:opacity-55',
     '[&_svg]:size-4 [&_svg]:shrink-0',
     VARIANTS[variant],
-    variant === 'link' ? 'h-auto px-0 text-sm' : SIZES[size],
+    variant === 'link' ? 'h-auto px-0 text-sm' : (wrap ? WRAP_SIZES : SIZES)[size],
     fullWidth && 'w-full',
     className,
   );
@@ -60,6 +70,7 @@ export function Button({
   variant,
   size,
   fullWidth,
+  wrap,
   loading = false,
   loadingText,
   leadingIcon,
@@ -73,7 +84,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={buttonClasses({ variant, size, fullWidth, className })}
+      className={buttonClasses({ variant, size, fullWidth, wrap, className })}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...rest}
@@ -95,6 +106,7 @@ export function ButtonLink({
   variant,
   size,
   fullWidth,
+  wrap,
   leadingIcon,
   trailingIcon,
   className,
@@ -102,7 +114,7 @@ export function ButtonLink({
   ...rest
 }: ButtonLinkProps) {
   return (
-    <Link className={buttonClasses({ variant, size, fullWidth, className: className as string | undefined })} {...rest}>
+    <Link className={buttonClasses({ variant, size, fullWidth, wrap, className: className as string | undefined })} {...rest}>
       {leadingIcon}
       {children}
       {trailingIcon}

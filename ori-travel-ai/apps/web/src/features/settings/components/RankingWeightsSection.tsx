@@ -49,7 +49,7 @@ export function RankingWeightsSection({ settings, editable }: { settings: Settin
                   disabled={!editable}
                   dir="ltr"
                   onChange={(e) => setDraft(rebalance(weights, f, Number(e.target.value)))}
-                  className="h-9 w-20 rounded-md border border-control bg-surface px-2 text-center text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-focus disabled:bg-ink-50"
+                  className="h-9 w-20 rounded-md border border-control bg-surface px-2 text-center text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-focus disabled:bg-ink-50 pointer-coarse:h-touch"
                 />
               </div>
               <input
@@ -61,7 +61,7 @@ export function RankingWeightsSection({ settings, editable }: { settings: Settin
                 disabled={!editable}
                 aria-label={`משקל ${FACTOR_LABELS[f]}`}
                 onChange={(e) => setDraft(rebalance(weights, f, Number(e.target.value)))}
-                className="w-full accent-sea-600"
+                className="w-full accent-sea-600 pointer-coarse:h-touch"
               />
               <p className="text-xs text-fg-subtle">{FACTOR_HELP[f]}</p>
             </li>
