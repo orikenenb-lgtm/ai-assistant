@@ -11,13 +11,13 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from functools import lru_cache
 from typing import Any, ClassVar
 
 from app.modules.providers.base import BookingOptions, ProviderCapabilities, ProviderUnsupportedError
-from app.modules.providers.data.geo import CITIES, City, offset_point, resolve_city
+from app.modules.providers.data.geo import CITIES, City, city_zone, offset_point, resolve_city
 from app.modules.providers.demo.common import DemoAdapter, dec, round_dec, seeded_rng, supplier_id, unit, usd
 from app.schemas.common import ApiModel, Category
 from app.schemas.offers import CanonicalOffer
@@ -85,7 +85,7 @@ LANDMARKS: dict[str, tuple[Template, ...]] = {
             _T("מוזיאון המדע NEMO", "museum", 180, _D(22), _D("1"), 0, True, ("10:00",))),
     "PRG": (_T("סיור בטירת פראג ובגשר קארל", "tour", 180, _D(35), _D("0.5"), 0, True, ("09:30", "14:00")),),
     "BUD": (_T("שיט ערב על הדנובה", "water", 60, _D(25), _D("0.5"), 0, True, ("19:00", "20:30")),
-            _T("מרחצאות סצ'ני — כניסה יומית", "water", 240, _D(40), _D("0.7"), 0, True, ("09:00",))),
+            _T("מרחצאות סצ'ני — כניסה יומית", "water", 240, _D(40), _D("0.7"), 14, True, ("09:00",))),
     "DXB": (_T("עלייה לבורג' ח'ליפה — קומות 124-125", "tour", 90, _D(50), _D("0.75"), 0, True, ("10:00", "16:00", "18:00")),
             _T("ספארי מדבר משפחתי עם ארוחת ערב", "adventure", 360, _D(65), _D("0.7"), 3, True, ("15:00",))),
     "LCA": (_T("שיט בסירה שקופה למפרץ", "water", 120, _D(35), _D("0.5"), 0, True, ("10:00", "14:00")),),
@@ -127,6 +127,7 @@ def catalog(city_code: str) -> tuple[Product, ...]:
         lat, lon = offset_point(city.lat, city.lon, rng.uniform(0.1, 3.5), rng.uniform(0, 360))
         langs = ("עברית", "אנגלית") if "בעברית" in t.name or "דובר עברית" in t.name else LANGS[rng.randrange(len(LANGS))]
         access = ("נגיש לכיסאות גלגלים",) if t.category in ("museum", "culture", "water") and rng.random() < 0.6 else ()
+        access = _extra_access(f"{city.code}-{i + 1:02d}", t, access)
         products.append(
             Product(
                 code=f"{city.code}-{i + 1:02d}",
@@ -144,6 +145,32 @@ def catalog(city_code: str) -> tuple[Product, ...]:
             )
         )
     return tuple(products)
+
+
+# Extra DEMO accessibility facts (fixture data, fictional operators). Decided by an independent hash of the
+# product code, so the seeded catalog stream above (prices, ratings, operators) is unchanged.
+_ACCESS_EXTRAS: tuple[tuple[str, tuple[str, ...], float], ...] = (
+    ("נגיש לכיסאות גלגלים", ("tour", "family", "shopping", "food"), 0.35),
+    ("מתאים לעגלות ילדים", ("museum", "tour", "family", "shopping", "culture", "water"), 0.55),
+    ("שירותים נגישים", ("museum", "family", "culture", "food"), 0.5),
+    ("לולאת השראה / הדרכה כתובה ללקויי שמיעה", ("museum", "culture"), 0.3),
+)
+
+
+def _extra_access(code: str, t: Template, base: tuple[str, ...]) -> tuple[str, ...]:
+    if t.category in ("adventure", "outdoor", "nightlife"):
+        return base  # rope parks, bike tours and bar crawls stay without accessibility claims
+    out = list(base)
+    for label, categories, share in _ACCESS_EXTRAS:
+        if t.category in categories and label not in out and unit("activity-access", code, label) < share:
+            out.append(label)
+    return tuple(out)
+
+
+def _free_cancellation_deadline(city: City, first_day: date, start: str) -> datetime:
+    """24 hours before the first available start, in the activity's local time zone (aware datetime)."""
+    hours, minutes = (int(x) for x in start.split(":"))
+    return datetime.combine(first_day, time(hours, minutes), tzinfo=city_zone(city)) - timedelta(hours=24)
 
 
 def _participants(params: ActivitySearchParams) -> dict[str, int]:
@@ -206,7 +233,10 @@ class DemoActivityAdapter(DemoAdapter):
         if parts["infant"]:
             warnings.append("ילדים מתחת לגיל 3 נכנסים ללא תשלום (לפי תנאי ההדגמה)")
         if t.refundable:
-            cancellation = {"refundable": True, "free_cancellation_until": None, "changeable": True, "change_fee": None,
+            # Matches the policy text: 24h before the earliest start the offer can be booked for.
+            cancellation = {"refundable": True,
+                            "free_cancellation_until": _free_cancellation_deadline(city, available[0], t.starts[0]),
+                            "changeable": True, "change_fee": None,
                             "policy_text": "ביטול חינם עד 24 שעות לפני מועד הפעילות (תנאי הדגמה)"}
         else:
             cancellation = {"refundable": False, "free_cancellation_until": None, "changeable": False, "change_fee": None,

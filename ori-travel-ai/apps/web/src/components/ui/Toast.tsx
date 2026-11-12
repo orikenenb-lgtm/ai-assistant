@@ -25,10 +25,10 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const TONE_STYLES: Record<ToastTone, { box: string; icon: ReactNode }> = {
-  info: { box: 'border-harbor-200', icon: <Info className="text-harbor-600" /> },
-  success: { box: 'border-moss-200', icon: <CircleCheck className="text-moss-600" /> },
-  warn: { box: 'border-amber-200', icon: <TriangleAlert className="text-amber-600" /> },
-  danger: { box: 'border-coral-200', icon: <CircleAlert className="text-coral-600" /> },
+  info: { box: 'border-line border-s-harbor-500', icon: <Info className="text-harbor-600" /> },
+  success: { box: 'border-line border-s-moss-500', icon: <CircleCheck className="text-moss-600" /> },
+  warn: { box: 'border-line border-s-amber-500', icon: <TriangleAlert className="text-amber-600" /> },
+  danger: { box: 'border-line border-s-coral-500', icon: <CircleAlert className="text-coral-600" /> },
 };
 
 const MAX_VISIBLE = 4;
@@ -84,7 +84,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={t.id}
             role={t.tone === 'danger' ? 'alert' : 'status'}
             className={cn(
-              'pointer-events-auto flex items-start gap-3 rounded-lg border bg-surface p-4 shadow-lg animate-toast-in',
+              'pointer-events-auto flex items-start gap-3 rounded-xl border border-s-4 bg-surface p-4 shadow-lg animate-toast-in',
               TONE_STYLES[t.tone].box,
             )}
           >
@@ -98,7 +98,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={() => dismiss(t.id)}
-              className="-m-1 grid size-7 shrink-0 place-items-center rounded-md text-fg-subtle hover:bg-ink-50 hover:text-fg"
+              className="touch-target -m-1 grid size-8 shrink-0 place-items-center rounded-md text-fg-subtle hover:bg-surface-hover hover:text-fg"
               aria-label="סגירת ההודעה"
             >
               <X className="size-4" aria-hidden="true" />

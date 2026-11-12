@@ -44,13 +44,15 @@ if [ "$DO_E2E" -eq 1 ]; then
     tmp="$(mktemp -d)"; port=8765
     free_port "$port" || { err "port $port busy"; return 1; }
     export ORI_DATABASE_URL="sqlite:///$tmp/e2e.db" ORI_OWNER_PASSWORD="E2e-Passw0rd-Local-1"
+    # Throwaway encryption key for the throwaway DB (traveler-profile specs need one)
+    ORI_DATA_KEY="$(cd "$API_DIR" && "$PY" -m app.cli gen-key)"; export ORI_DATA_KEY
     (cd "$API_DIR" && "$PY" -m app.cli migrate && "$PY" -m app.cli create-owner --email owner@e2e.test --name "בעלים" --password-env ORI_OWNER_PASSWORD) || return 1
     (cd "$API_DIR" && exec "$PY" -m uvicorn app.main:app --no-proxy-headers --host 127.0.0.1 --port "$port") &
     pid=$!
     for _ in $(seq 1 40); do curl -fsS "http://127.0.0.1:$port/api/health" >/dev/null 2>&1 && break; sleep 0.5; done
     (cd "$WEB_DIR" && E2E_BASE_URL="http://127.0.0.1:$port" E2E_OWNER_EMAIL=owner@e2e.test npm run e2e) || rc=$?
     kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true
-    unset ORI_OWNER_PASSWORD; rm -rf "$tmp"
+    unset ORI_OWNER_PASSWORD ORI_DATA_KEY; rm -rf "$tmp"
     return "$rc"
   }
   [ -f "$WEB_DIR/dist/index.html" ] || (cd "$WEB_DIR" && npm run build)

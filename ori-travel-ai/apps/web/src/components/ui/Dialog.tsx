@@ -1,12 +1,37 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import { useState, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { errorMessage } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { Button } from './Button';
 import { Callout } from './Callout';
 
 const SIZES = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' } as const;
+
+/**
+ * Focus return for dialogs opened from a plain button with controlled `open` (no Radix
+ * Trigger): Radix only returns focus to its own Trigger, so focus would fall to <body>.
+ * We remember the element that had focus when the dialog opened (layout effect — before
+ * Radix moves focus inside in its passive effect) and restore it on close.
+ */
+export function useReturnFocus(open: boolean | undefined, enabled = true) {
+  const openerRef = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    if (!enabled || !open) return;
+    const active = document.activeElement;
+    openerRef.current = active instanceof HTMLElement && active !== document.body ? active : null;
+  }, [open, enabled]);
+  return useCallback(
+    (event: Event) => {
+      const opener = openerRef.current;
+      openerRef.current = null;
+      if (!enabled || !opener || !opener.isConnected) return; // fall back to Radix's default
+      event.preventDefault();
+      opener.focus({ preventScroll: true });
+    },
+    [enabled],
+  );
+}
 
 export interface DialogProps {
   open?: boolean;
@@ -35,15 +60,17 @@ export function Dialog({
   hideCloseButton = false,
   className,
 }: DialogProps) {
+  const onCloseAutoFocus = useReturnFocus(open, !trigger);
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger>}
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-ink-950/50 p-4 backdrop-blur-[2px] animate-fade-in">
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-scrim/45 p-4 backdrop-blur-[2px] animate-fade-in">
           <DialogPrimitive.Content
             {...(description ? {} : { 'aria-describedby': undefined })}
+            onCloseAutoFocus={onCloseAutoFocus}
             className={cn(
-              'relative w-full rounded-2xl border border-line bg-surface p-6 text-fg shadow-lg animate-pop-in focus:outline-none',
+              'relative w-full rounded-2xl border border-line bg-surface p-5 text-fg shadow-lg animate-pop-in focus:outline-none sm:p-6',
               SIZES[size],
               className,
             )}
@@ -60,7 +87,7 @@ export function Dialog({
             {footer && <div className="mt-6 flex flex-wrap-reverse justify-end gap-2 sm:flex-nowrap">{footer}</div>}
             {!hideCloseButton && (
               <DialogPrimitive.Close
-                className="absolute end-4 top-4 grid size-8 place-items-center rounded-md text-fg-subtle transition-colors hover:bg-ink-50 hover:text-fg"
+                className="touch-target absolute end-3 top-3 grid size-9 place-items-center rounded-md text-fg-subtle transition-colors hover:bg-surface-hover hover:text-fg sm:end-4 sm:top-4"
                 aria-label="סגירה"
               >
                 <X className="size-5" aria-hidden="true" />
@@ -158,25 +185,37 @@ export interface DrawerProps {
   title: string;
   hideTitle?: boolean;
   children: ReactNode;
+  /** Renders a close (X) button in the top inline-end corner (default false). */
+  showCloseButton?: boolean;
   className?: string;
 }
 
 /** Side sheet that slides in from the inline-start edge (right in RTL). */
-export function Drawer({ open, onOpenChange, title, hideTitle = false, children, className }: DrawerProps) {
+export function Drawer({ open, onOpenChange, title, hideTitle = false, children, showCloseButton = false, className }: DrawerProps) {
+  const onCloseAutoFocus = useReturnFocus(open);
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink-950/50 animate-fade-in" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-scrim/45 animate-fade-in" />
         <DialogPrimitive.Content
           aria-describedby={undefined}
+          onCloseAutoFocus={onCloseAutoFocus}
           className={cn(
-            'fixed inset-y-0 start-0 z-50 flex w-[min(20rem,86vw)] flex-col shadow-lg animate-slide-in-start focus:outline-none',
+            'fixed inset-y-0 start-0 z-50 flex w-[min(20rem,86vw)] flex-col border-e border-line bg-surface text-fg shadow-lg animate-slide-in-start focus:outline-none',
             className,
           )}
         >
           <DialogPrimitive.Title className={cn(hideTitle ? 'sr-only' : 'px-5 pt-5 text-lg font-semibold')}>
             {title}
           </DialogPrimitive.Title>
+          {showCloseButton && (
+            <DialogPrimitive.Close
+              className="touch-target absolute end-3 top-3 z-10 grid size-10 place-items-center rounded-md text-fg-subtle transition-colors hover:bg-surface-hover hover:text-fg"
+              aria-label="סגירה"
+            >
+              <X className="size-5" aria-hidden="true" />
+            </DialogPrimitive.Close>
+          )}
           {children}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

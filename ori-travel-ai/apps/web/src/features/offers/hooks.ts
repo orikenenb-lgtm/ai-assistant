@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
+import { overlapConflict } from '@/features/trips/formUtils';
 import { isApiError } from '@/lib/api';
 import { addOfferToTrip, fetchOffer, offerKeys, saveOffer } from './api';
 
@@ -54,16 +55,28 @@ export function useSaveOffer() {
   });
 }
 
+export interface AddOfferToTripVars {
+  tripId: string;
+  offerId: string;
+  tripTitle?: string;
+  /** Resend after the user confirmed an ITEM_OVERLAP warning. */
+  allowOverlap?: boolean;
+}
+
+/**
+ * Adds an offer to a trip. A 409 `ITEM_OVERLAP` is re-thrown WITHOUT a toast so the caller can ask the user and
+ * retry with `allowOverlap: true` (see AddToTripButton); any other 409 means the offer is already in the trip.
+ */
 export function useAddOfferToTrip() {
   const { toast } = useToast();
   const qc = useQueryClient();
-  return useMutation<'added' | 'already', unknown, { tripId: string; offerId: string; tripTitle?: string }>({
-    mutationFn: async ({ tripId, offerId }) => {
+  return useMutation<'added' | 'already', unknown, AddOfferToTripVars>({
+    mutationFn: async ({ tripId, offerId, allowOverlap }) => {
       try {
-        await addOfferToTrip({ tripId, offerId });
+        await addOfferToTrip({ tripId, offerId, allowOverlap });
         return 'added';
       } catch (e) {
-        if (isApiError(e) && e.status === 409) return 'already';
+        if (isApiError(e) && e.status === 409 && !overlapConflict(e)) return 'already';
         throw e;
       }
     },
@@ -77,7 +90,9 @@ export function useAddOfferToTrip() {
           : { title: 'ההצעה כבר בטיול', description: 'היא כבר מופיעה בטיול שנבחר.', tone: 'info' },
       );
     },
-    onError: (e) => {
+    onError: (e, vars) => {
+      // Overlap → handled by the caller's confirm dialog; a failed confirmed retry is shown inside that dialog.
+      if (overlapConflict(e) || vars.allowOverlap) return;
       if (isApiError(e) && e.status === 404) {
         toast({ title: 'הוספה לטיול עדיין לא זמינה', description: 'הטיול או השירות לא נמצאו בשרת.', tone: 'warn' });
       } else {

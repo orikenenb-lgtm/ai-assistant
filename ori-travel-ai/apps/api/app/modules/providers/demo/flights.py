@@ -15,7 +15,7 @@ EMPTY (both DEMO providers return zero offers) on:
    when BOTH airports are in ``DAILY_SERVICE_AIRPORTS`` (Ben Gurion + the main
    year-round hubs/capitals: ATH, LCA, FCO, CDG, LHR, JFK, ...). Trunk routes
    operate every day. Every other route (Greek/Spanish islands, secondary
-   airports, Eilat, long-haul leisure, ...) is *thin*: it has 1-3 weekdays
+   airports, Eilat, long-haul leisure, ...) is *thin*: it has 1-2 weekdays
    without service, seeded by the UNORDERED airport pair (same weekdays in
    both directions, like a real out-and-back rotation). Example: TLV-RHO.
 2. **Sold-out dates on thin routes.** About 1 in 12 remaining dates of a thin
@@ -126,7 +126,7 @@ DAILY_SERVICE_AIRPORTS = frozenset({
     "BER", "MAD", "BCN", "IST", "DXB", "AUH", "JFK", "BKK",
 })
 SOLD_OUT_RATE = 1 / 12  # share of otherwise-operating dates of a THIN route that are sold out (per cabin)
-_NON_OPERATING_DAY_COUNTS = (1, 2, 2, 3)  # weekdays without service on a thin route (seeded choice)
+_NON_OPERATING_DAY_COUNTS = (1, 2)  # weekdays without service on a thin route (seeded choice)
 ServiceStatus = Literal["operating", "no_service", "sold_out"]
 
 

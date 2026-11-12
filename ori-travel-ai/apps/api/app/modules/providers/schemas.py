@@ -57,6 +57,21 @@ class ProviderDiagnosticsOut(ApiModel):
     last_run_status: str | None = None
 
 
+class AirportOut(ApiModel):
+    """One airport of the offline geo dataset (V6 contract §3)."""
+
+    code: str  # IATA airport code
+    city_code: str  # IATA city / metropolitan code
+    name_he: str
+    name_en: str
+    city_he: str
+    city_en: str
+    country_code: str  # ISO 3166-1 alpha-2
+    lat: float
+    lon: float
+    timezone: str  # IANA
+
+
 class DiagnosticsOut(ApiModel):
     window_days: int
     generated_at: datetime

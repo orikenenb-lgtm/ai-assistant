@@ -27,6 +27,8 @@ export const routes: RouteObject[] = [
       {
         element: <RequireAuth />,
         children: [
+          // In-app DEMO supplier page (provider-redirect practice). Signed-in only; outside the app shell on purpose.
+          { path: 'demo-supplier/checkout', ...page(() => import('@/pages/demo-supplier/DemoSupplierCheckoutPage')) },
           {
             element: <AppShell />,
             errorElement: <RouteErrorBoundary />,

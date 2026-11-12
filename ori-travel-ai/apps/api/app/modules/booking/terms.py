@@ -17,7 +17,8 @@ from typing import Any
 
 from app.core.money import CURRENCY_SYMBOLS, from_minor
 
-TERMS_VERSION = 2
+# v3: summary lines are fully Hebrew (cabin / car class labels, baggage wording, money as "718.70 ₪").
+TERMS_VERSION = 3
 
 BOARD_LABELS_HE = {
     "room_only": "לינה בלבד",
@@ -26,6 +27,10 @@ BOARD_LABELS_HE = {
     "full_board": "פנסיון מלא",
     "all_inclusive": "הכול כלול",
 }
+# Same wording as the web client (apps/web/src/features/offers/labels.ts). Unknown values are shown as given.
+CABIN_LABELS_HE = {"economy": "אקונומי", "premium_economy": "פרימיום אקונומי", "business": "עסקים", "first": "ראשונה"}
+CAR_CLASS_LABELS_HE = {"mini": "מיני", "economy": "חסכוני", "compact": "קומפקטי", "midsize": "משפחתי קטן",
+                       "fullsize": "משפחתי גדול", "suv": "רכב שטח / SUV", "van": "ואן", "premium": "פרימיום"}
 AGE_GROUP_LABELS_HE = {"adult": "מבוגר/ת", "child": "ילד/ה", "infant": "תינוק/ת"}
 
 
@@ -121,9 +126,8 @@ def compute_terms_hash(snapshot: dict[str, Any], travelers: list[dict[str, Any]]
 
 def format_money(amount_minor: int, currency: str) -> str:
     amount = from_minor(amount_minor, currency)
-    symbol = CURRENCY_SYMBOLS.get(currency)
-    text = f"{amount:,} {currency}"
-    return f"{text} ({symbol})" if symbol else text
+    # One consistent form everywhere: "718.70 ₪" (currency code only when there is no symbol).
+    return f"{amount:,} {CURRENCY_SYMBOLS.get(currency) or currency}"
 
 
 def _dt(value: Any) -> str:
@@ -145,6 +149,16 @@ def _d(value: Any) -> str:
         return str(value)
 
 
+def _pieces(count: Any) -> str:
+    if count is None:
+        return "לא ידוע"
+    try:
+        n = int(count)
+    except (TypeError, ValueError):
+        return str(count)
+    return "לא כלול" if n <= 0 else ("כלול" if n == 1 else f"כלול ({n} פריטים)")
+
+
 def _what_when(details: dict[str, Any]) -> list[str]:
     kind = details.get("kind")
     lines: list[str] = []
@@ -158,14 +172,15 @@ def _what_when(details: dict[str, Any]) -> list[str]:
                 f"נחיתה {_dt(s.get('arriving_at'))} ({stops_text}; {flights})"
             )
         brand = details.get("fare_brand")
-        lines.append(f"מחלקה: {details.get('cabin')}" + (f", תעריף: {brand}" if brand else ""))
+        cabin = details.get("cabin")
+        lines.append(f"מחלקה: {CABIN_LABELS_HE.get(cabin, cabin)}" + (f", תעריף: {brand}" if brand else ""))
         bag = details.get("baggage") or {}
         carry, checked = bag.get("carry_on_included"), bag.get("checked_included")
         lines.append(
             "כבודה: "
-            + ("טרולי — לא ידוע" if carry is None else f"טרולי — {carry}")
+            + f"טרולי — {_pieces(carry)}"
             + ", "
-            + ("מזוודה לבטן המטוס — לא ידוע" if checked is None else f"מזוודה לבטן המטוס — {checked}")
+            + f"מזוודה לבטן המטוס — {_pieces(checked)}"
         )
     elif kind == "hotel":
         lines.append(f"מלון: {details.get('hotel_name')} ({details.get('city')})")
@@ -176,7 +191,8 @@ def _what_when(details: dict[str, Any]) -> list[str]:
             f"{details.get('adults')} מבוגרים, {details.get('children')} ילדים)"
         )
     elif kind == "car":
-        lines.append(f"רכב: {details.get('vendor')} — {details.get('car_class')} ({details.get('model_example')} או דומה)")
+        car_class = details.get("car_class")
+        lines.append(f"רכב: {details.get('vendor')} — {CAR_CLASS_LABELS_HE.get(car_class, car_class)} ({details.get('model_example')} או דומה)")
         lines.append(f"איסוף: {details.get('pickup_location')}, {_dt(details.get('pickup_at'))}")
         lines.append(f"החזרה: {details.get('dropoff_location')}, {_dt(details.get('dropoff_at'))}")
     elif kind == "activity":

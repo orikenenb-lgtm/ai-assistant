@@ -4,6 +4,7 @@ import {
   BookingPageSchema,
   BookingSchema,
   CheckoutLinkSchema,
+  DemoCheckoutSchema,
   type BookingCreateBody,
 } from '@/lib/schemas/bookings';
 
@@ -47,3 +48,14 @@ export const recordConfirmation = (id: string, body: { supplier_reference: strin
 
 // POST: revealing the link re-checks the price and may change state, so it is CSRF-protected.
 export const fetchCheckoutLink = (id: string) => api.post(`${base(id)}/checkout-link`, undefined, { schema: CheckoutLinkSchema });
+
+// ---- DEMO supplier page (in-app stand-in for a supplier's own site; no payment, no charge) ----
+
+export const demoCheckoutKeys = {
+  detail: (ref: string) => ['demo-supplier', 'checkout', ref] as const,
+};
+
+export const fetchDemoCheckout = (ref: string) => api.get('/api/demo-supplier/checkout', { query: { ref }, schema: DemoCheckoutSchema });
+
+/** The DEMO supplier issues a reference. This does NOT confirm the booking — the reference must be recorded on it. */
+export const completeDemoCheckout = (ref: string) => api.post('/api/demo-supplier/checkout/complete', { ref }, { schema: DemoCheckoutSchema });

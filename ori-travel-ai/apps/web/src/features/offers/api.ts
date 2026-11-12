@@ -24,6 +24,11 @@ export function saveOffer(input: { offerId: string; note?: string; tripId?: stri
   );
 }
 
-export function addOfferToTrip(input: { tripId: string; offerId: string }) {
-  return api.post(`/api/trips/${encodeURIComponent(input.tripId)}/items/from-offer`, { offer_id: input.offerId }, { schema: AnyResponse });
+/**
+ * POST /api/trips/{id}/items/from-offer. A 409 `ITEM_OVERLAP` means the new item(s) would overlap forbidden items
+ * (flight×flight, activity×flight, …); resending with `allowOverlap` saves it anyway (still flagged by the server).
+ */
+export function addOfferToTrip(input: { tripId: string; offerId: string; allowOverlap?: boolean }) {
+  const body = input.allowOverlap ? { offer_id: input.offerId, allow_overlap: true } : { offer_id: input.offerId };
+  return api.post(`/api/trips/${encodeURIComponent(input.tripId)}/items/from-offer`, body, { schema: AnyResponse });
 }

@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -94,10 +94,11 @@ def create_app() -> FastAPI:
         app.include_router(r)
 
     @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], include_in_schema=False)
-    def api_not_found(path: str):
+    def api_not_found(path: str, request: Request):
+        request_id = getattr(request.state, "request_id", None)
         return JSONResponse(
             status_code=404,
-            content={"error": {"code": "NOT_FOUND", "message": "הנתיב לא נמצא", "details": None, "request_id": None}},
+            content={"error": {"code": "NOT_FOUND", "message": "הנתיב לא נמצא", "details": None, "request_id": request_id}},
         )
 
     _mount_web(app, settings.web_dist_dir if settings.serve_web else None)

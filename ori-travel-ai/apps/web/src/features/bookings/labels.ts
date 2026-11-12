@@ -61,3 +61,10 @@ export const FILTER_STATES: BookingState[] = [
 ];
 
 export const SUPPLIER_REFERENCE_PATTERN = /^[A-Za-z0-9-]{4,64}$/;
+
+/** Shown for a hosted-checkout booking that is approved but has no recorded supplier reference yet. Never "confirmed". */
+export const AWAITING_SUPPLIER_LABEL = 'ממתין להשלמה באתר הספק';
+
+export function isAwaitingSupplier(b: { state: string; execution_mode: ExecutionMode }): boolean {
+  return b.execution_mode === 'HOSTED_CHECKOUT' && b.state === 'APPROVED';
+}

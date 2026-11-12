@@ -3,17 +3,23 @@ import { Link, type LinkProps } from 'react-router';
 import { cn } from '@/lib/cn';
 import { Spinner } from './Spinner';
 
-export type ButtonVariant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'danger' | 'link';
+export type ButtonVariant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'danger' | 'link' | 'deal';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
+/**
+ * Hierarchy: primary (solid accent — one per view) > accent (tonal accent) > secondary
+ * (outline) > ghost. `deal` is reserved for the featured/best-deal panel (tangerine).
+ */
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-ink-900 text-white shadow-xs hover:bg-ink-800 active:bg-ink-950',
-  accent: 'bg-sea-600 text-white shadow-xs hover:bg-sea-700 active:bg-sea-800',
+  primary: 'bg-accent text-accent-fg shadow-xs hover:bg-accent-hover active:bg-sea-800',
+  accent:
+    'border border-accent-line bg-accent-soft text-accent-strong hover:border-sea-300 hover:bg-sea-100 active:bg-sea-100',
   secondary:
-    'border border-line-strong bg-surface text-fg shadow-xs hover:border-sand-400 hover:bg-sand-50 active:bg-sand-100',
-  ghost: 'text-fg-muted hover:bg-ink-50 hover:text-fg active:bg-ink-100',
+    'border border-line-strong bg-surface text-fg shadow-xs hover:border-ink-300 hover:bg-surface-hover active:bg-surface-sunken',
+  ghost: 'text-fg-muted hover:bg-surface-hover hover:text-fg active:bg-surface-sunken',
   danger: 'bg-coral-600 text-white shadow-xs hover:bg-coral-700 active:bg-coral-700',
   link: 'text-accent underline-offset-4 hover:underline hover:text-accent-hover',
+  deal: 'bg-deal-strong text-white shadow-xs hover:bg-deal active:bg-tangerine-800',
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -32,7 +38,7 @@ export interface ButtonStyleOptions {
 /** Class string for button-looking elements (links, Radix triggers). */
 export function buttonClasses({ variant = 'primary', size = 'md', fullWidth, className }: ButtonStyleOptions = {}) {
   return cn(
-    'inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-md font-medium',
+    'touch-target inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-md font-medium',
     'transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:pointer-events-none aria-disabled:opacity-55',
     '[&_svg]:size-4 [&_svg]:shrink-0',
     VARIANTS[variant],

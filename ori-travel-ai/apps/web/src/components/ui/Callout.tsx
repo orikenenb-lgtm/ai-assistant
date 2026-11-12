@@ -22,12 +22,12 @@ export interface CalloutProps extends Omit<ComponentProps<'div'>, 'title'> {
 export function Callout({ tone = 'info', title, icon, action, className, children, ...rest }: CalloutProps) {
   const t = TONES[tone];
   return (
-    <div className={cn('flex gap-3 rounded-lg border p-4 text-sm leading-relaxed', t.box, className)} {...rest}>
+    <div className={cn('flex gap-3 rounded-lg border px-4 py-3.5 text-sm leading-relaxed', t.box, className)} {...rest}>
       <span className={cn('mt-0.5 shrink-0 [&_svg]:size-5', t.icon)} aria-hidden="true">
         {icon ?? <t.Icon />}
       </span>
       <div className="min-w-0 flex-1">
-        {title && <p className="font-semibold">{title}</p>}
+        {title && <p className={cn('font-semibold', tone === 'neutral' && 'text-fg')}>{title}</p>}
         {children && <div className={cn(title && 'mt-1')}>{children}</div>}
         {action && <div className="mt-3">{action}</div>}
       </div>

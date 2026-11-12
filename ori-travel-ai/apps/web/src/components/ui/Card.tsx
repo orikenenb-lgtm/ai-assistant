@@ -14,8 +14,8 @@ export function Card({ as: Comp = 'div', padding = 'md', interactive = false, cl
   return (
     <Comp
       className={cn(
-        'rounded-xl border border-line bg-surface shadow-sm',
-        interactive && 'transition-shadow duration-200 hover:border-line-strong hover:shadow-md',
+        'rounded-xl border border-line bg-surface shadow-xs',
+        interactive && 'transition-[box-shadow,border-color] duration-200 hover:border-line-strong hover:shadow-md',
         PADDING[padding],
         className,
       )}
@@ -40,7 +40,7 @@ export function CardHeader({ title, description, icon, actions, level = 2, class
       <div className="flex min-w-0 items-start gap-3">
         {icon && (
           <span
-            className="grid size-9 shrink-0 place-items-center rounded-lg bg-sea-50 text-sea-700 [&_svg]:size-[1.125rem]"
+            className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent-strong [&_svg]:size-[1.125rem]"
             aria-hidden="true"
           >
             {icon}

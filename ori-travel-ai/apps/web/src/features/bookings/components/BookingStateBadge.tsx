@@ -18,3 +18,12 @@ export function SimulationBadge() {
     </Badge>
   );
 }
+
+/** DEMO supplier with hosted checkout: fictional supplier, nothing real is booked or charged. */
+export function DemoSupplierBadge() {
+  return (
+    <Badge tone="demo" size="sm" data-testid="demo-supplier-badge">
+      <FlaskConical aria-hidden="true" /> ספק לדוגמה (DEMO)
+    </Badge>
+  );
+}

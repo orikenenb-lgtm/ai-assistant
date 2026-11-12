@@ -59,9 +59,13 @@ try {
             New-Item -ItemType Directory -Force -Path $tmp | Out-Null
             $server = $null
             $savedDb = $env:ORI_DATABASE_URL
+            $savedKey = $env:ORI_DATA_KEY
             try {
                 $env:ORI_DATABASE_URL = 'sqlite:///' + ((Join-Path $tmp 'e2e.db') -replace '\\', '/')
                 $env:ORI_OWNER_PASSWORD = 'E2e-Passw0rd-Local-1'   # throwaway test-only value
+                # Throwaway encryption key for the throwaway DB (traveler-profile specs need one)
+                Push-Location $script:ApiDir
+                try { $env:ORI_DATA_KEY = ((& $py -m app.cli gen-key) | Select-Object -Last 1).Trim() } finally { Pop-Location }
                 Invoke-Native -Exe $py -Arguments @('-m', 'app.cli', 'migrate') -WorkingDirectory $script:ApiDir
                 Invoke-Native -Exe $py -Arguments @('-m', 'app.cli', 'create-owner', '--email', 'owner@e2e.test', '--name', 'E2E Owner', '--password-env', 'ORI_OWNER_PASSWORD') -WorkingDirectory $script:ApiDir
                 $server = Start-Process -FilePath $py -ArgumentList "-m uvicorn app.main:app --no-proxy-headers --host 127.0.0.1 --port $e2ePort" -WorkingDirectory $script:ApiDir -NoNewWindow -PassThru
@@ -79,6 +83,7 @@ try {
                 Remove-Item Env:\ORI_OWNER_PASSWORD -ErrorAction SilentlyContinue
                 Remove-Item Env:\E2E_BASE_URL -ErrorAction SilentlyContinue
                 if ($null -ne $savedDb) { $env:ORI_DATABASE_URL = $savedDb } else { Remove-Item Env:\ORI_DATABASE_URL -ErrorAction SilentlyContinue }
+                if ($null -ne $savedKey) { $env:ORI_DATA_KEY = $savedKey } else { Remove-Item Env:\ORI_DATA_KEY -ErrorAction SilentlyContinue }
                 Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
             }
         }

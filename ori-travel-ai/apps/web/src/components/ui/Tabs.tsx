@@ -24,8 +24,9 @@ export function TabsTrigger({ className, ...rest }: ComponentProps<typeof TabsPr
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        'inline-flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3.5 text-sm font-medium text-fg-muted',
-        'transition-colors hover:text-fg data-[state=active]:bg-surface data-[state=active]:text-fg data-[state=active]:shadow-sm',
+        'touch-target inline-flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3.5 text-sm font-medium text-fg-muted',
+        'transition-colors hover:text-fg data-[state=active]:bg-surface data-[state=active]:font-semibold data-[state=active]:text-fg data-[state=active]:shadow-sm',
+        'data-[state=active]:ring-1 data-[state=active]:ring-line',
         'disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4',
         className,
       )}

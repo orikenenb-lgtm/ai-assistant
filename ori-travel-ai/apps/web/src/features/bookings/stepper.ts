@@ -1,4 +1,4 @@
-import type { BookingState, HistoryEntry } from '@/lib/schemas/bookings';
+import type { BookingState, ExecutionMode, HistoryEntry } from '@/lib/schemas/bookings';
 
 export const MAIN_STEPS = [
   { key: 'QUOTE_SELECTED', label: 'נבחרה הצעה' },
@@ -36,7 +36,14 @@ export interface StepperModel {
  * Maps the server state (+ history, for terminal side states) onto the main flow.
  * Side states keep the steps reached so far as "done" and mark the point of failure.
  */
-export function buildStepper(state: BookingState | string, history: HistoryEntry[] = []): StepperModel {
+/** Hosted checkout: the user completes on the supplier's site, so "approved" is a waiting step — not a booking. */
+const HOSTED_LABELS: Record<string, string> = {
+  APPROVED: 'תנאים אושרו — ממתין לספק',
+  SUBMITTING: 'השלמה באתר הספק',
+  CONFIRMED: 'אסמכתת ספק נרשמה',
+};
+
+export function buildStepper(state: BookingState | string, history: HistoryEntry[] = [], mode?: ExecutionMode): StepperModel {
   const side = isSideState(state) ? state : null;
   let reached: number;
   if (side) {
@@ -61,7 +68,8 @@ export function buildStepper(state: BookingState | string, history: HistoryEntry
     } else if (i < reached) status = 'done';
     else if (i === reached) status = 'current';
     else status = 'todo';
-    return { key: s.key, label: s.label, status };
+    const label = mode === 'HOSTED_CHECKOUT' ? (HOSTED_LABELS[s.key] ?? s.label) : s.label;
+    return { key: s.key, label, status };
   });
   return { steps, side };
 }

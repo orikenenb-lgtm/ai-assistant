@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { Button, Callout, Checkbox, Dialog, Field, MoneyText, NativeSelect, Skeleton } from '@/components/ui';
 import { familyKeys, fetchMembers } from '@/features/family/api';
 import { SourceLine, useOffer } from '@/features/offers';
+import { fetchProviders, providerKeys } from '@/features/providers/api';
 import { fetchSaved, savedKeys } from '@/features/saved/api';
 import { fetchTrips, tripKeys } from '@/features/trips/api';
 import { isApiError } from '@/lib/api';
@@ -34,6 +35,8 @@ export function StartBookingDialog({ initialOfferId, onClose }: StartBookingDial
   const [selected, setSelected] = useState<string[]>([]);
   const [tripId, setTripId] = useState('');
   const [scenario, setScenario] = useState<SimulationScenario>('success');
+  const [mode, setMode] = useState<'SIMULATION' | 'HOSTED_CHECKOUT'>('SIMULATION');
+  const providers = useQuery({ queryKey: providerKeys.list, queryFn: fetchProviders, staleTime: 60_000 });
   const [problem, setProblem] = useState<ReturnType<typeof describeBookingError> | null>(null);
 
   // The offer to show: prefer the saved copy, otherwise ask the server.
@@ -55,6 +58,10 @@ export function StartBookingDialog({ initialOfferId, onClose }: StartBookingDial
   }, [saved.data, initialOfferId, offer]);
 
   const isDemo = offer?.source.mode === 'DEMO';
+  // A DEMO provider that also has a DEMO supplier page ("complete on the supplier's site" practice run).
+  const provider = providers.data?.find((p) => p.provider_id === offer?.source.provider_id);
+  const demoRedirectAvailable = isDemo && (provider?.mode ?? provider?.capabilities?.mode) === 'DEMO' && provider?.capabilities?.supports_hosted_checkout === true;
+  const hosted = demoRedirectAvailable && mode === 'HOSTED_CHECKOUT';
   const offerMissing = !savedMatch && offerQuery.isError && isApiError(offerQuery.error) && offerQuery.error.status === 404;
   const canSubmit = !!offerId && selected.length >= 1 && selected.length <= MAX_TRAVELERS && !create.isPending && !offerMissing;
 
@@ -65,7 +72,7 @@ export function StartBookingDialog({ initialOfferId, onClose }: StartBookingDial
         offer_id: offerId,
         traveler_member_ids: selected,
         ...(tripId ? { trip_id: tripId } : {}),
-        ...(isDemo ? { simulation_scenario: scenario } : {}),
+        ...(hosted ? { execution_mode: 'HOSTED_CHECKOUT' as const } : isDemo ? { simulation_scenario: scenario } : {}),
       });
       onClose();
       void navigate(`/bookings/${encodeURIComponent(booking.id)}`);
@@ -166,7 +173,29 @@ export function StartBookingDialog({ initialOfferId, onClose }: StartBookingDial
           </Field>
         )}
 
-        {isDemo && (
+        {demoRedirectAvailable && (
+          <fieldset className="flex flex-col gap-2" data-testid="execution-mode-choice">
+            <legend className="text-sm font-medium text-fg">איך להשלים את ההזמנה (הדגמה)</legend>
+            <label className="flex items-start gap-2 rounded-lg border border-line p-3 text-sm">
+              <input type="radio" name="execution-mode" className="mt-1" checked={mode === 'SIMULATION'} onChange={() => setMode('SIMULATION')} />
+              <span>
+                <span className="font-semibold">סימולציה</span>
+                <span className="block text-xs text-fg-subtle">שליחה לספק מדומה מתוך המערכת. אין הזמנה אמיתית ואין חיוב.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 rounded-lg border border-line p-3 text-sm">
+              <input type="radio" name="execution-mode" className="mt-1" checked={mode === 'HOSTED_CHECKOUT'} onChange={() => setMode('HOSTED_CHECKOUT')} />
+              <span>
+                <span className="font-semibold">השלמה בדף ספק לדוגמה (DEMO)</span>
+                <span className="block text-xs text-fg-subtle">
+                  מדמה מעבר לאתר הספק: אחרי אישור התנאים ייפתח דף ספק לדוגמה בתוך המערכת, ובסיומו רושמים כאן את האסמכתה. אין הזמנה אמיתית ואין חיוב.
+                </span>
+              </span>
+            </label>
+          </fieldset>
+        )}
+
+        {isDemo && !hosted && (
           <Field label="תרחיש סימולציה" hint={SCENARIO_LABELS[scenario].description}>
             <NativeSelect
               value={scenario}

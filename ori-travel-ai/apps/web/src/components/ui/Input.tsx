@@ -3,12 +3,16 @@ import type { ComponentProps } from 'react';
 import { cn } from '@/lib/cn';
 import { useFieldControl } from './Field';
 
+/**
+ * Shared look for text inputs / selects / textareas. On touch devices (coarse pointer)
+ * controls grow to 44px and use 16px text (prevents iOS zoom-on-focus).
+ */
 export const controlClasses = cn(
-  'w-full rounded-md border border-control bg-surface text-sm text-fg shadow-xs',
+  'w-full rounded-md border border-control bg-surface text-sm text-fg shadow-xs pointer-coarse:text-base',
   'placeholder:text-fg-subtle transition-colors duration-150 hover:border-ink-500',
-  'focus-visible:border-sea-500 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-focus',
+  'focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-focus',
   'aria-[invalid=true]:border-coral-600 aria-[invalid=true]:focus-visible:outline-coral-600',
-  'disabled:cursor-not-allowed disabled:border-ink-200 disabled:bg-ink-50 disabled:text-fg-subtle',
+  'disabled:cursor-not-allowed disabled:border-ink-200 disabled:bg-surface-sunken disabled:text-fg-subtle',
 );
 
 export type InputProps = ComponentProps<'input'>;
@@ -16,7 +20,7 @@ export type InputProps = ComponentProps<'input'>;
 /** Text-like input. Place inside <Field> for label/hint/error wiring. */
 export function Input({ className, ...props }: InputProps) {
   const merged = useFieldControl(props);
-  return <input className={cn(controlClasses, 'h-10 px-3', className)} {...merged} />;
+  return <input className={cn(controlClasses, 'h-10 px-3 pointer-coarse:min-h-touch', className)} {...merged} />;
 }
 
 export type TextareaProps = ComponentProps<'textarea'>;
@@ -42,7 +46,7 @@ export function NativeSelect({ className, options, placeholder, children, ...pro
   const merged = useFieldControl(props);
   return (
     <div className="relative">
-      <select className={cn(controlClasses, 'h-10 appearance-none ps-3 pe-9', className)} {...merged}>
+      <select className={cn(controlClasses, 'h-10 appearance-none ps-3 pe-9 pointer-coarse:min-h-touch', className)} {...merged}>
         {placeholder !== undefined && (
           <option value="" disabled>
             {placeholder}

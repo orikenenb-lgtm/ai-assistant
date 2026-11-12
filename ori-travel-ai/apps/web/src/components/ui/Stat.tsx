@@ -12,7 +12,7 @@ export interface StatProps {
 
 const TONE_ICON: Record<NonNullable<StatProps['tone']>, string> = {
   default: 'bg-ink-50 text-ink-700',
-  accent: 'bg-sea-50 text-sea-700',
+  accent: 'bg-accent-soft text-accent-strong',
   warn: 'bg-amber-50 text-amber-700',
   danger: 'bg-coral-50 text-coral-700',
 };
@@ -28,7 +28,7 @@ export function Stat({ label, value, hint, icon, tone = 'default', className }: 
       )}
       <dl className="min-w-0">
         <dt className="text-xs font-medium text-fg-muted">{label}</dt>
-        <dd className="mt-0.5 text-xl font-bold text-fg tabular-nums">{value}</dd>
+        <dd className="mt-0.5 text-xl font-bold text-fg price-nums">{value}</dd>
         {hint && <dd className="mt-0.5 text-xs text-fg-subtle">{hint}</dd>}
       </dl>
     </div>

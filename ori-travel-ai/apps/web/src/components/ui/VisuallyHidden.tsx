@@ -12,7 +12,7 @@ export function Kbd({ className, ...rest }: ComponentProps<'kbd'>) {
     <kbd
       dir="ltr"
       className={cn(
-        'inline-flex min-w-6 items-center justify-center rounded border border-line-strong bg-surface px-1.5 font-mono text-xs text-fg-muted shadow-xs',
+        'inline-flex min-w-6 items-center justify-center rounded border border-line-strong border-b-2 bg-surface px-1.5 font-mono text-xs text-fg-muted',
         className,
       )}
       {...rest}

@@ -1,6 +1,6 @@
 import { AlertTriangle, Ban, Check, CircleHelp, Clock } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import type { HistoryEntry } from '@/lib/schemas/bookings';
+import type { ExecutionMode, HistoryEntry } from '@/lib/schemas/bookings';
 import { STATE_LABELS, isBookingState } from '../labels';
 import { buildStepper, type SideState } from '../stepper';
 
@@ -12,8 +12,8 @@ const SIDE_STYLE: Record<SideState, { cls: string; Icon: typeof Ban }> = {
 };
 
 /** State-machine stepper: the main flow plus a clearly separate side-state chip (expired / failed / unknown / cancelled). */
-export function BookingStepper({ state, history }: { state: string; history: HistoryEntry[] }) {
-  const model = buildStepper(state, history);
+export function BookingStepper({ state, history, mode }: { state: string; history: HistoryEntry[]; mode?: ExecutionMode }) {
+  const model = buildStepper(state, history, mode);
   return (
     <div className="flex flex-col gap-3" data-testid="booking-stepper">
       <ol className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" aria-label="שלבי ההזמנה">

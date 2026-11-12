@@ -46,6 +46,8 @@ export const BookingSummarySchema = z.object({
   provider_name: z.string(),
   execution_mode: ExecutionModeSchema,
   is_simulation: z.boolean(),
+  /** The supplier is a DEMO (fictional) provider: nothing real is booked or charged in any execution mode. */
+  is_demo: z.boolean().default(false),
   current_price: MoneySchema,
   price_changed: z.boolean(),
   offer_expired: z.boolean().default(false),
@@ -135,12 +137,38 @@ export const CheckoutLinkSchema = z.object({
   provider_name: z.string(),
   instructions: z.string(),
   warnings: z.array(z.string()).default([]),
+  /** DEMO supplier: `url` is the in-app page `/demo-supplier/checkout?ref=…` (same origin), never an external site. */
+  is_demo: z.boolean().default(false),
 });
 export type CheckoutLink = z.infer<typeof CheckoutLinkSchema>;
+
+/** The only relative checkout URL the client will ever follow — mirrors the server allowlist exactly. */
+export const DEMO_CHECKOUT_URL_PATTERN = /^\/demo-supplier\/checkout\?ref=[A-Za-z0-9_-]{16,64}$/;
+export const DEMO_CHECKOUT_REF_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
+
+/** In-app DEMO supplier page payload (`GET /api/demo-supplier/checkout`). No payment fields exist. */
+export const DemoCheckoutSchema = z.object({
+  ref: z.string(),
+  status: z.enum(['OPEN', 'COMPLETED', 'EXPIRED']),
+  is_demo: z.literal(true),
+  provider_id: z.string(),
+  provider_name: z.string(),
+  booking_id: z.string(),
+  title: z.string(),
+  summary: z.array(z.string()).default([]),
+  price: MoneySchema,
+  supplier_reference: z.string().nullable().optional(),
+  recorded: z.boolean().default(false),
+  can_complete: z.boolean().default(false),
+  message: z.string(),
+});
+export type DemoCheckout = z.infer<typeof DemoCheckoutSchema>;
 
 export interface BookingCreateBody {
   offer_id: string;
   traveler_member_ids: string[];
   trip_id?: string;
   simulation_scenario?: SimulationScenario;
+  /** Optional choice between the modes the provider supports; the server validates it. Never LIVE. */
+  execution_mode?: 'SIMULATION' | 'HOSTED_CHECKOUT';
 }

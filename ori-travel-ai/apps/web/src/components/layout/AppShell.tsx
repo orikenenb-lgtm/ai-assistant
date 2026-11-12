@@ -15,7 +15,7 @@ function SkipLink() {
         main?.focus();
         main?.scrollIntoView({ block: 'start' });
       }}
-      className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-[90] focus:rounded-md focus:bg-ink-900 focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+      className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-[90] focus:rounded-md focus:bg-accent focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-accent-fg focus:shadow-lg"
     >
       דילוג לתוכן הראשי
     </a>
@@ -31,7 +31,7 @@ function PageFallback() {
 }
 
 /**
- * Authenticated layout: right-side (RTL inline-start) sidebar on desktop,
+ * Authenticated layout (light): white right-side (RTL inline-start) sidebar on desktop,
  * drawer + bottom tab bar on mobile, sticky top bar, focus moved to <main> on navigation.
  */
 export function AppShell() {
@@ -62,17 +62,11 @@ export function AppShell() {
     <div className="min-h-dvh bg-canvas">
       <SkipLink />
 
-      <aside className="surface-dark bg-horizon fixed inset-y-0 start-0 z-40 hidden w-[var(--spacing-sidebar)] text-white lg:block">
+      <aside className="fixed inset-y-0 start-0 z-40 hidden w-[var(--spacing-sidebar)] border-e border-line bg-surface lg:block">
         <SidebarNav />
       </aside>
 
-      <Drawer
-        open={menuOpen}
-        onOpenChange={setMenuOpen}
-        title="תפריט ניווט"
-        hideTitle
-        className="surface-dark bg-horizon text-white lg:hidden"
-      >
+      <Drawer open={menuOpen} onOpenChange={setMenuOpen} title="תפריט ניווט" hideTitle showCloseButton className="lg:hidden">
         <SidebarNav onNavigate={() => setMenuOpen(false)} />
       </Drawer>
 
@@ -82,7 +76,7 @@ export function AppShell() {
           id="main"
           ref={mainRef}
           tabIndex={-1}
-          className="mx-auto w-full max-w-6xl flex-1 px-4 pb-[calc(var(--spacing-tabbar)+2.5rem)] pt-6 focus:outline-none sm:px-6 lg:px-10 lg:pb-14 lg:pt-8"
+          className="mx-auto w-full max-w-7xl flex-1 px-4 pb-[calc(var(--spacing-tabbar)+2.5rem)] pt-6 focus:outline-none sm:px-6 lg:px-10 lg:pb-14 lg:pt-8"
         >
           <Suspense fallback={<PageFallback />}>
             <Outlet />

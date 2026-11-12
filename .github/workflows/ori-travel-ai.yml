@@ -45,6 +45,10 @@ jobs:
         env:
           ORI_DATABASE_URL: sqlite:///${{ runner.temp }}/ori-ci.db
         run: python -m app.cli migrate
+      - name: Migrations match the models (alembic check)
+        env:
+          ORI_DATABASE_URL: sqlite:///${{ runner.temp }}/ori-ci.db
+        run: python -m alembic check
 
   api-postgres:
     name: api · migrations (PostgreSQL 16)

@@ -6,11 +6,13 @@ import { AuthContext } from '@/features/auth/context';
 import { OfferCard, OfferDetailDialog } from '@/features/offers';
 import { CanonicalOfferSchema, type CanonicalOffer } from '@/lib/schemas/offers';
 import type { Booking } from '@/lib/schemas/bookings';
+import { isAwaitingSupplier } from '../labels';
 import { ActionsSection } from './ActionsSection';
 import { ApprovalPanel } from './ApprovalPanel';
 import { BookingStepper } from './BookingStepper';
 import { ExecutionBanner } from './ExecutionBanner';
 import { HistoryTimeline } from './HistoryTimeline';
+import { HostedCheckoutPanel } from './HostedCheckoutPanel';
 import { CancelledPanel, ConfirmedPanel, ExpiredPanel, FailedPanel, UnknownPanel } from './OutcomePanels';
 import { PriceSection } from './PriceSection';
 import { SubmitPanel } from './SubmitPanel';
@@ -40,6 +42,8 @@ export function BookingReview({ booking }: { booking: Booking }) {
   const snapshot = parseSnapshot(booking.offer);
   const readOnly = readOnlyReason(user);
   const { can, state } = booking;
+  // Hosted checkout, approved, no supplier reference yet: shown as "waiting", never as confirmed.
+  const awaitingSupplier = isAwaitingSupplier(booking);
 
   useEffect(() => {
     if (feedback.problem) alertRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -47,8 +51,8 @@ export function BookingReview({ booking }: { booking: Booking }) {
 
   return (
     <div className="flex flex-col gap-6" data-testid="booking-review">
-      <ExecutionBanner mode={booking.execution_mode} />
-      <BookingStepper state={state} history={booking.history} />
+      <ExecutionBanner mode={booking.execution_mode} demo={booking.is_demo} />
+      <BookingStepper state={state} history={booking.history} mode={booking.execution_mode} />
 
       <div ref={alertRef} className="flex flex-col gap-3" aria-live="polite">
         {feedback.problem && (
@@ -94,7 +98,8 @@ export function BookingReview({ booking }: { booking: Booking }) {
 
       {can.approve && <ApprovalPanel key={booking.terms_hash} booking={booking} feedback={feedback} />}
       {can.submit && <SubmitPanel booking={booking} feedback={feedback} />}
-      {state === 'APPROVED' && !can.submit && booking.approval && (
+      {(awaitingSupplier || can.open_checkout || can.record_confirmation) && <HostedCheckoutPanel booking={booking} feedback={feedback} />}
+      {state === 'APPROVED' && !can.submit && !awaitingSupplier && booking.approval && (
         <Callout tone="success" title="התנאים אושרו" data-testid="approved-note">
           אושר על ידי {booking.approval.approved_by ?? '—'} בסך <MoneyText value={booking.approval.amount} />
           {booking.approval.valid ? (

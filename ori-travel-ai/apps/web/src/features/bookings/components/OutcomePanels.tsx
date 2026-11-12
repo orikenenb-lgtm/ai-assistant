@@ -11,12 +11,21 @@ import type { Feedback } from './useFeedback';
 export function ConfirmedPanel({ booking }: { booking: Booking }) {
   const ref = booking.reservation?.supplier_reference ?? booking.supplier_reference;
   const sim = booking.is_simulation || booking.reservation?.mode === 'SIMULATION';
+  const hosted = !sim && (booking.execution_mode === 'HOSTED_CHECKOUT' || booking.reservation?.mode === 'HOSTED_CHECKOUT');
+  const demoHosted = hosted && booking.is_demo;
+  const title = sim
+    ? 'ההזמנה אושרה — בסימולציה'
+    : demoHosted
+      ? 'נרשמה אסמכתה של ספק לדוגמה (DEMO)'
+      : hosted
+        ? 'נרשמה אסמכתת הספק'
+        : 'ההזמנה אושרה על ידי הספק';
   return (
     <Card as="section" padding="md" className="border-2 border-moss-600 bg-moss-50" data-testid="confirmed-panel">
       <CardHeader
-        title={sim ? 'ההזמנה אושרה — בסימולציה' : 'ההזמנה אושרה על ידי הספק'}
+        title={title}
         icon={<CircleCheck />}
-        actions={sim ? <Badge tone="demo">אסמכתה מדומה</Badge> : undefined}
+        actions={sim ? <Badge tone="demo">אסמכתה מדומה</Badge> : demoHosted ? <Badge tone="demo">אסמכתת הדגמה — אין חיוב</Badge> : undefined}
       />
       <p className="text-xs text-moss-700">אסמכתת ספק</p>
       <p className="mb-3 break-all text-3xl font-extrabold tracking-wide text-moss-700" dir="ltr" data-testid="supplier-reference">
@@ -25,6 +34,16 @@ export function ConfirmedPanel({ booking }: { booking: Booking }) {
       {sim && (
         <p className="mb-3 text-sm font-medium text-moss-700">
           זו סימולציה: האסמכתה שייכת לספק מדומה, לא בוצעה הזמנה אמיתית ולא בוצע חיוב.
+        </p>
+      )}
+      {demoHosted && (
+        <p className="mb-3 text-sm font-medium text-moss-700" data-testid="demo-reference-note">
+          זו הדגמה: האסמכתה הונפקה בדף ספק לדוגמה ואומתה מולו. לא בוצעה הזמנה אמיתית ולא בוצע חיוב.
+        </p>
+      )}
+      {hosted && !demoHosted && (
+        <p className="mb-3 text-sm font-medium text-moss-700" data-testid="manual-reference-note">
+          האסמכתה הוזנה ידנית אחרי השלמת ההזמנה באתר הספק. המערכת לא אימתה אותה מול הספק.
         </p>
       )}
       {booking.reservation && (

@@ -69,6 +69,14 @@ export function describeBookingError(error: unknown): BookingProblem {
       return { ...base, title: 'ההזמנה מושלמת באתר הספק', tone: 'warn', mustReread: true };
     case 'CANCEL_WITH_SUPPLIER':
       return { ...base, title: 'לא ניתן לבטל דרך המערכת', tone: 'warn', mustReread: true };
+    case 'SUPPLIER_REFERENCE_NOT_FOUND':
+      return { ...base, title: 'האסמכתה לא אומתה — ההזמנה לא אושרה', tone: 'danger' };
+    case 'REFERENCE_ALREADY_USED':
+      return { ...base, title: 'האסמכתה כבר רשומה להזמנה אחרת', tone: 'danger' };
+    case 'CHECKOUT_LINK_UNAVAILABLE':
+      return { ...base, title: 'אין קישור מאושר לאתר הספק', tone: 'danger', mustReread: true };
+    case 'CHECKOUT_SESSION_EXPIRED':
+      return { ...base, title: 'דף הספק כבר אינו תקף', tone: 'warn' };
     case 'BOOKING_UNAVAILABLE':
       return { ...base, title: 'ההזמנה אינה זמינה', tone: 'warn', mustReread: true };
     case 'LIVE_EXECUTION_DISABLED':

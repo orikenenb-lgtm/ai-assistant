@@ -26,3 +26,13 @@ describe('buildStepper', () => {
     expect(m.steps.some((s) => s.status === 'current')).toBe(false);
   });
 });
+
+describe('buildStepper for hosted checkout', () => {
+  it('labels the approved step as waiting for the supplier, never as a booking', () => {
+    const { steps } = buildStepper('APPROVED', [], 'HOSTED_CHECKOUT');
+    const current = steps.find((s) => s.status === 'current');
+    expect(current?.label).toBe('תנאים אושרו — ממתין לספק');
+    expect(steps.at(-1)).toMatchObject({ label: 'אסמכתת ספק נרשמה', status: 'todo' });
+    expect(buildStepper('APPROVED', [], 'SIMULATION').steps.find((s) => s.status === 'current')?.label).toBe('אושר');
+  });
+});

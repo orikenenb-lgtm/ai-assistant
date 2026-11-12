@@ -36,15 +36,17 @@ export function Switch({ label, description, id, className, disabled, ...rest }:
         disabled={disabled}
         aria-describedby={descId}
         className={cn(
-          'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent',
-          'bg-ink-300 transition-colors duration-150 data-[state=checked]:bg-sea-600',
+          'touch-target inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent',
+          // Off track ink-400 = 3.45:1 vs surface (≥ 3:1 non-text contrast); on = accent.
+          'bg-ink-400 transition-colors duration-150 data-[state=checked]:bg-accent',
           'disabled:cursor-not-allowed disabled:opacity-55',
         )}
         {...rest}
       >
         <SwitchPrimitive.Thumb
           className={cn(
-            'pointer-events-none block size-5 rounded-full bg-white shadow-sm transition-transform duration-150',
+            // Thumb stays white in both themes (like a physical switch).
+            'pointer-events-none block size-5 rounded-full bg-[#fff] shadow-sm transition-transform duration-150',
             'data-[state=checked]:translate-x-5 rtl:data-[state=checked]:-translate-x-5',
           )}
         />

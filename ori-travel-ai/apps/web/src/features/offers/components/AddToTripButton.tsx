@@ -1,10 +1,11 @@
 import { CalendarPlus, Luggage } from 'lucide-react';
 import { useContext, useState } from 'react';
 import { Link } from 'react-router';
-import { Button, Callout, DateRange, Dialog, EmptyState, Skeleton, type ButtonProps } from '@/components/ui';
+import { Button, Callout, ConfirmDialog, DateRange, Dialog, EmptyState, Skeleton, type ButtonProps } from '@/components/ui';
 import { canEdit } from '@/features/auth';
 import { AuthContext } from '@/features/auth/context';
 import { fetchTrips, tripKeys } from '@/features/trips/api';
+import { overlapConflict, overlapPrompt } from '@/features/trips/formUtils';
 import { useQuery } from '@tanstack/react-query';
 import { isApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -14,11 +15,15 @@ export interface AddToTripButtonProps extends Pick<ButtonProps, 'size' | 'varian
   offerId: string;
 }
 
-/** Trip picker (GET /api/trips) → POST /api/trips/{id}/items/from-offer. Hidden for viewers (server enforces). */
+/**
+ * Trip picker (GET /api/trips) → POST /api/trips/{id}/items/from-offer. Hidden for viewers (server enforces).
+ * A 409 ITEM_OVERLAP opens a confirmation; confirming resends with `allow_overlap: true`, cancelling sends nothing.
+ */
 export function AddToTripButton({ offerId, size = 'sm', variant = 'secondary', className }: AddToTripButtonProps) {
   const user = useContext(AuthContext)?.user ?? null;
   const [open, setOpen] = useState(false);
   const [tripId, setTripId] = useState<string | null>(null);
+  const [overlap, setOverlap] = useState<{ tripId: string; tripTitle?: string; prompt: string; message: string } | null>(null);
   const trips = useQuery({ queryKey: tripKeys.list, queryFn: fetchTrips, enabled: open && canEdit(user) });
   const add = useAddOfferToTrip();
 
@@ -28,6 +33,7 @@ export function AddToTripButton({ offerId, size = 'sm', variant = 'secondary', c
   const list = trips.data ?? [];
 
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(next) => {
@@ -52,7 +58,16 @@ export function AddToTripButton({ offerId, size = 'sm', variant = 'secondary', c
             onClick={() => {
               if (!tripId) return;
               const trip = list.find((t) => t.id === tripId);
-              add.mutate({ tripId, offerId, tripTitle: trip?.title }, { onSuccess: () => setOpen(false) });
+              add.mutate(
+                { tripId, offerId, tripTitle: trip?.title },
+                {
+                  onSuccess: () => setOpen(false),
+                  onError: (e) => {
+                    const conflict = overlapConflict(e);
+                    if (conflict) setOverlap({ tripId, tripTitle: trip?.title, prompt: overlapPrompt(conflict.title), message: conflict.message });
+                  },
+                },
+              );
             }}
           >
             הוספה
@@ -117,6 +132,24 @@ export function AddToTripButton({ offerId, size = 'sm', variant = 'secondary', c
         </fieldset>
       )}
     </Dialog>
+    <ConfirmDialog
+      open={overlap !== null}
+      onOpenChange={(next) => {
+        if (!next) setOverlap(null);
+      }}
+      title="חפיפה עם פריט אחר בטיול"
+      description={overlap?.prompt}
+      confirmLabel="הוספה בכל זאת"
+      cancelLabel="ביטול"
+      onConfirm={async () => {
+        if (!overlap) return;
+        await add.mutateAsync({ tripId: overlap.tripId, offerId, tripTitle: overlap.tripTitle, allowOverlap: true });
+        setOpen(false);
+      }}
+    >
+      {overlap?.message && overlap.message !== overlap.prompt && <p className="text-sm leading-relaxed text-fg-muted">{overlap.message}</p>}
+    </ConfirmDialog>
+    </>
   );
 }
 

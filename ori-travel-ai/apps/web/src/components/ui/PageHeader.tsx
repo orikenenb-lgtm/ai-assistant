@@ -35,15 +35,15 @@ export function PageHeader({
         <div className="flex min-w-0 items-start gap-3.5">
           {icon && (
             <span
-              className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-xl bg-ink-900 text-sun-400 shadow-sm [&_svg]:size-5"
+              className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-xl border border-accent-line bg-accent-soft text-accent-strong [&_svg]:size-5"
               aria-hidden="true"
             >
               {icon}
             </span>
           )}
           <div className="min-w-0">
-            {eyebrow && <p className="mb-0.5 text-xs font-semibold tracking-wide text-sea-700">{eyebrow}</p>}
-            <h1 className="text-2xl font-bold text-fg sm:text-3xl">{title}</h1>
+            {eyebrow && <p className="mb-1 text-xs font-semibold text-accent-strong">{eyebrow}</p>}
+            <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-[1.75rem]">{title}</h1>
             {description && <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-fg-muted sm:text-base">{description}</p>}
           </div>
         </div>

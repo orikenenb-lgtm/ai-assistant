@@ -102,6 +102,10 @@ def error_body(code: str, message: str, details: Any, request: Request) -> dict:
 def _clean_validation_errors(errors: list[dict]) -> list[dict]:
     cleaned = []
     for e in errors:
+        if e.get("type") == "json_invalid":
+            # loc holds a character offset, not a field name
+            cleaned.append({"field": "", "message": "גוף הבקשה אינו JSON תקין", "type": "json_invalid"})
+            continue
         loc = [str(p) for p in e.get("loc", []) if p not in ("body",)]
         cleaned.append({"field": ".".join(loc), "message": e.get("msg", ""), "type": e.get("type")})
     return cleaned

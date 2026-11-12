@@ -27,7 +27,7 @@ export function ErrorState({ error, title, message, onRetry, retrying, compact =
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border border-coral-200 bg-coral-50/60 text-center',
+        'flex flex-col items-center justify-center rounded-xl border border-coral-200 bg-coral-50 text-center',
         compact ? 'gap-2 px-4 py-5' : 'gap-3 px-6 py-10',
         className,
       )}

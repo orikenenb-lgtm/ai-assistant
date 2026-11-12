@@ -113,3 +113,12 @@ def test_demo_never_hides_live_offer_in_dedupe(db, make_user):
     )
     kept, merged = service.dedupe_offers([demo, live])
     assert merged == 0 and {o.source.mode for o in kept} == {"DEMO", "LIVE"}
+
+
+def test_api_404_and_bad_json_envelopes(client):
+    res = client.get("/api/definitely-missing")
+    assert res.status_code == 404 and res.json()["error"]["request_id"]
+    bad = client.post("/api/auth/login", content=b'{"email": "a@b.co", "password": ', headers={"Content-Type": "application/json"})
+    assert bad.status_code == 422
+    detail = bad.json()["error"]["details"][0]
+    assert detail["type"] == "json_invalid" and detail["field"] == ""

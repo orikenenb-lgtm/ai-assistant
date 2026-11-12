@@ -3,7 +3,10 @@ export { StartBookingButton, type StartBookingButtonProps } from './components/S
 export { StartBookingDialog } from './components/StartBookingDialog';
 export { BookingReview } from './components/BookingReview';
 export { BookingsList } from './components/BookingsList';
-export { BookingStateBadge, SimulationBadge } from './components/BookingStateBadge';
+export { BookingStateBadge, DemoSupplierBadge, SimulationBadge } from './components/BookingStateBadge';
+export { checkoutTarget } from './checkoutUrl';
+export { completeDemoCheckout, demoCheckoutKeys, fetchDemoCheckout } from './api';
+export { describeBookingError } from './errors';
 export { bookingKeys } from './api';
 export { useBooking, useBookings } from './hooks';
 export * from './labels';

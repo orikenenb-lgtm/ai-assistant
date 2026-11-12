@@ -14,7 +14,7 @@ export function EmptyState({ title, description, icon, action, compact = false, 
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border border-dashed border-line-strong bg-sand-50 text-center',
+        'flex flex-col items-center justify-center rounded-xl border border-dashed border-line-strong bg-surface text-center',
         compact ? 'gap-2 px-4 py-6' : 'gap-3 px-6 py-12',
         className,
       )}
@@ -22,7 +22,7 @@ export function EmptyState({ title, description, icon, action, compact = false, 
       {icon && (
         <span
           className={cn(
-            'grid place-items-center rounded-full bg-sea-50 text-sea-700',
+            'grid place-items-center rounded-full bg-accent-soft text-accent-strong',
             compact ? 'size-10 [&_svg]:size-5' : 'size-14 [&_svg]:size-7',
           )}
           aria-hidden="true"

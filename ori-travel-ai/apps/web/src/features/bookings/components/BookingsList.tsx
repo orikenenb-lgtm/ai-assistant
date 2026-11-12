@@ -4,7 +4,7 @@ import { DataTable, DateText, EmptyState, MoneyText, Pagination, type DataTableC
 import { CATEGORY_SINGULAR } from '@/lib/labels';
 import type { BookingSummary } from '@/lib/schemas/bookings';
 import { PAGE_SIZE } from '../api';
-import { BookingStateBadge, SimulationBadge } from './BookingStateBadge';
+import { BookingStateBadge, DemoSupplierBadge, SimulationBadge } from './BookingStateBadge';
 
 const columns: DataTableColumn<BookingSummary>[] = [
   {
@@ -26,6 +26,7 @@ const columns: DataTableColumn<BookingSummary>[] = [
       <div className="flex flex-wrap items-center gap-1.5">
         <BookingStateBadge state={b.state} label={b.state_label} />
         {b.is_simulation && <SimulationBadge />}
+        {b.is_demo && !b.is_simulation && <DemoSupplierBadge />}
         {b.price_changed && b.state !== 'CONFIRMED' && (
           <span className="text-xs font-medium text-amber-700">המחיר השתנה</span>
         )}

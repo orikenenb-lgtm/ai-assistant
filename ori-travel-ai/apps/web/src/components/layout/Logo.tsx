@@ -1,5 +1,6 @@
 import { cn } from '@/lib/cn';
 
+/** Brand mark (fixed colours: it is the same artwork in both themes). */
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={cn('size-9 shrink-0', className)} aria-hidden="true">
@@ -25,15 +26,15 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-/** Brand lockup. `tone="light"` for dark surfaces. */
+/** Brand lockup. Default tone follows the theme (fg / accent); `tone="light"` for dark islands. */
 export function Logo({ tone = 'dark', compact = false, className }: { tone?: 'dark' | 'light'; compact?: boolean; className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <LogoMark className={tone === 'light' ? 'ring-1 ring-white/15 rounded-[0.6rem]' : undefined} />
+      <LogoMark className={cn('rounded-[0.6rem]', tone === 'light' ? 'ring-1 ring-white/15' : 'dark:ring-1 dark:ring-line-strong')} />
       <span className="flex flex-col leading-none" dir="ltr">
-        <span className={cn('text-lg font-bold tracking-tight', tone === 'light' ? 'text-white' : 'text-ink-900')}>Ori</span>
+        <span className={cn('text-lg font-bold tracking-tight', tone === 'light' ? 'text-white' : 'text-fg')}>Ori</span>
         {!compact && (
-          <span className={cn('mt-0.5 text-[0.7rem] font-medium tracking-wide', tone === 'light' ? 'text-sun-300' : 'text-sea-700')}>
+          <span className={cn('mt-0.5 text-[0.7rem] font-medium tracking-wide', tone === 'light' ? 'text-sun-300' : 'text-accent-strong')}>
             Travel AI
           </span>
         )}

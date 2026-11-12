@@ -13,7 +13,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="ניווט מהיר"
-      className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur lg:hidden"
+      className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md lg:hidden"
     >
       <ul className="mx-auto grid h-[var(--spacing-tabbar)] max-w-lg grid-cols-5">
         {TAB_ITEMS.map((item) => {
@@ -26,13 +26,13 @@ export function MobileTabBar() {
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'flex flex-1 flex-col items-center justify-center gap-1 text-[0.7rem] font-medium transition-colors',
-                  active ? 'text-sea-700' : 'text-fg-muted hover:text-fg',
+                  active ? 'font-semibold text-accent-strong' : 'text-fg-muted hover:text-fg',
                 )}
               >
                 <span
                   className={cn(
                     'grid h-7 w-12 place-items-center rounded-full transition-colors',
-                    active ? 'bg-sea-50' : 'bg-transparent',
+                    active ? 'bg-accent-soft' : 'bg-transparent',
                   )}
                   aria-hidden="true"
                 >

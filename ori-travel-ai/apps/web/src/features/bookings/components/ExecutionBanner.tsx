@@ -3,7 +3,7 @@ import { Callout } from '@/components/ui';
 import type { ExecutionMode } from '@/lib/schemas/bookings';
 
 /** The most prominent element of the review screen: what will (not) happen. */
-export function ExecutionBanner({ mode }: { mode: ExecutionMode }) {
+export function ExecutionBanner({ mode, demo = false }: { mode: ExecutionMode; demo?: boolean }) {
   if (mode === 'SIMULATION') {
     return (
       <div
@@ -16,6 +16,26 @@ export function ExecutionBanner({ mode }: { mode: ExecutionMode }) {
         <div>
           <p className="text-lg font-bold">סימולציה — לא תתבצע רכישה אמיתית</p>
           <p className="mt-0.5 text-sm">הספק מדומה, הנתונים הם נתוני הדגמה, ולא יבוצע חיוב בשום כרטיס.</p>
+        </div>
+      </div>
+    );
+  }
+  if (mode === 'HOSTED_CHECKOUT' && demo) {
+    return (
+      <div
+        data-testid="execution-banner"
+        data-mode="HOSTED_CHECKOUT"
+        data-demo="true"
+        role="note"
+        className="flex items-start gap-3 rounded-xl border-2 border-dashed border-sand-500 bg-sand-100 p-4 text-sand-900"
+      >
+        <Store className="mt-0.5 size-6 shrink-0" aria-hidden="true" />
+        <div>
+          <p className="text-lg font-bold">הדגמה (DEMO) — ההזמנה תושלם בדף ספק לדוגמה; אין חיוב</p>
+          <p className="mt-0.5 text-sm">
+            אחרי אישור התנאים ייפתח דף ספק לדוגמה בתוך המערכת. לא מתבצעת הזמנה אמיתית ולא מחויב שום כרטיס. בסיום תרשמו כאן את האסמכתה לדוגמה —
+            ורק אז ההזמנה תסומן כמאושרת.
+          </p>
         </div>
       </div>
     );
