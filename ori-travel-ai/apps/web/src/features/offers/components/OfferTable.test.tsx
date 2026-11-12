@@ -44,7 +44,8 @@ describe('OfferTable', () => {
     expect(first).toContain('16:45');
     expect(first).toContain('ישירה');
     const second = clean(rows[1].textContent);
-    expect(second).toContain('מזוודה לבטן (23 ק״ג)');
+    expect(second).toContain('מזוודה לבטן');
+    expect(second).toContain('23 ק״ג · טרולי');
     expect(second).toContain('ניתן להחזר');
     expect(rows[1]).not.toHaveAttribute('data-featured');
 

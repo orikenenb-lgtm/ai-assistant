@@ -1,4 +1,4 @@
-import { ArrowDownUp, ArrowUp, CircleCheck, CircleHelp, CircleX, Luggage, MapPin, Maximize2 } from 'lucide-react';
+import { ArrowDownUp, ArrowUp, CircleCheck, CircleHelp, CircleX, Luggage, MapPin } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button, DateText, FreshnessText, ModeBadge, MoneyText } from '@/components/ui';
 import { cn } from '@/lib/cn';
@@ -31,8 +31,8 @@ export interface OfferTableProps {
   className?: string;
 }
 
-const TH = 'whitespace-nowrap px-3 py-2.5 text-start text-xs font-semibold text-fg-muted';
-const TD = 'px-3 py-3 align-top text-sm text-fg';
+const TH = 'whitespace-nowrap px-2.5 py-2.5 text-start text-xs font-semibold text-fg-muted';
+const TD = 'px-2.5 py-3 align-top text-sm text-fg';
 
 function SortHeader({ label, sortKey, sort, onSort, hint }: { label: string; sortKey: TableSortKey; sort?: string; onSort?: (k: TableSortKey) => void; hint: string }) {
   const active = sort === sortKey;
@@ -89,7 +89,10 @@ function CancellationCell({ offer }: { offer: CanonicalOffer }) {
       icon: <CircleCheck className="size-4 shrink-0" aria-hidden="true" />,
       text: (
         <>
-          ביטול חינם עד <DateText value={offer.cancellation.free_cancellation_until} preset="date-short" timeZone="source" />
+          ביטול חינם
+          <span className="block font-normal text-fg-muted">
+            עד <DateText value={offer.cancellation.free_cancellation_until} preset="date-short" timeZone="source" />
+          </span>
         </>
       ),
       cls: 'text-moss-700',
@@ -100,7 +103,7 @@ function CancellationCell({ offer }: { offer: CanonicalOffer }) {
   };
   const m = map[kind];
   return (
-    <span className={cn('inline-flex items-start gap-1 text-xs font-medium', m.cls)}>
+    <span className={cn('inline-flex items-start gap-1 whitespace-nowrap text-xs font-medium', m.cls)}>
       {m.icon}
       <span>{m.text}</span>
     </span>
@@ -112,13 +115,16 @@ function BaggageCell({ offer }: { offer: CanonicalOffer }) {
   const b = offer.details.baggage;
   const checked = b.checked_included;
   const carry = b.carry_on_included;
+  const extra = [checked && checked > 0 && b.checked_bag_weight_kg ? `${b.checked_bag_weight_kg} ק״ג` : null, carry == null ? 'טרולי: לא ידוע' : carry > 0 ? 'טרולי' : 'ללא טרולי']
+    .filter(Boolean)
+    .join(' · ');
   return (
-    <div className="flex flex-col gap-0.5 text-xs">
+    <div className="flex flex-col gap-0.5 whitespace-nowrap text-xs">
       <span className={cn('inline-flex items-center gap-1 font-medium', checked && checked > 0 ? 'text-moss-700' : 'text-fg-muted')}>
         <Luggage className="size-3.5 shrink-0" aria-hidden="true" />
-        {checked == null ? 'מזוודה לבטן: לא ידוע' : checked > 0 ? `${checked === 1 ? 'מזוודה' : `${checked} מזוודות`} לבטן${b.checked_bag_weight_kg ? ` (${b.checked_bag_weight_kg} ק״ג)` : ''}` : 'ללא מזוודה לבטן'}
+        {checked == null ? 'מזוודה: לא ידוע' : checked > 0 ? (checked === 1 ? 'מזוודה לבטן' : `${checked} מזוודות לבטן`) : 'ללא מזוודה לבטן'}
       </span>
-      <span className="text-fg-muted">{carry == null ? 'טרולי: לא ידוע' : carry > 0 ? 'כולל טרולי' : 'ללא טרולי'}</span>
+      <span className="ps-[1.125rem] text-fg-muted">{extra}</span>
     </div>
   );
 }
@@ -137,7 +143,7 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
   const ariaSort = (key: TableSortKey) => (sort === key ? ('ascending' as const) : undefined);
   return (
     <div className={cn('scrollbar-thin w-full max-w-full overflow-x-auto rounded-xl border border-line bg-surface shadow-xs', className)}>
-      <table className="w-full min-w-[54rem] border-collapse" data-testid="results-table" data-category={category}>
+      <table className="w-full min-w-[60rem] border-collapse" data-testid="results-table" data-category={category}>
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="border-b border-line bg-surface-sunken">
@@ -184,7 +190,7 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
                 data-featured={featured || undefined}
                 className={cn('border-b border-line last:border-b-0 transition-colors', featured ? 'bg-deal-soft' : 'hover:bg-surface-sunken/60')}
               >
-                <th scope="row" className={cn(TD, 'min-w-40 max-w-56 text-start font-normal')}>
+                <th scope="row" className={cn(TD, 'min-w-36 max-w-48 text-start font-normal')}>
                   {featured && (
                     <span className="mb-1 inline-flex items-center rounded-full bg-deal-strong px-2 py-0.5 text-2xs font-semibold text-white">הזול בחיפוש</span>
                   )}
@@ -197,7 +203,7 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
                   </span>
                   {o.score?.rank != null && <span className="block text-2xs text-fg-subtle">מקום {o.score.rank} בדירוג</span>}
                 </th>
-                <td className={cn(TD, 'min-w-60')}>
+                <td className={cn(TD, 'min-w-56')}>
                   {d.kind === 'flight' ? (
                     <div className="flex flex-col gap-1.5">
                       {d.slices.map((s, i) => (
@@ -216,7 +222,7 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
                 </td>
                 <td className={cn(TD, 'whitespace-nowrap')}>
                   <MoneyText value={o.price.total} estimated={o.price.total_status === 'estimated'} className={cn('text-base font-bold', featured ? 'text-deal' : 'text-fg')} />
-                  <span className="block text-2xs text-fg-subtle">{o.price.total_status === 'estimated' ? 'משוער' : 'ידוע'}</span>
+                  {o.price.total_status === 'estimated' && <span className="block text-2xs text-amber-700">משוער</span>}
                 </td>
                 <td className={cn(TD, 'whitespace-nowrap')}>
                   {unit ? (
@@ -233,7 +239,7 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
                     <BaggageCell offer={o} />
                   </td>
                 )}
-                <td className={cn(TD, 'min-w-28')}>
+                <td className={TD}>
                   <CancellationCell offer={o} />
                 </td>
                 <td className={cn(TD, 'whitespace-nowrap text-xs text-fg-muted')}>
@@ -259,8 +265,8 @@ export function OfferTable({ offers, category, caption, sort, onSort, onOpenDeta
                         <MapPin className="size-4" aria-hidden="true" />
                       </button>
                     )}
-                    <CompareToggle offerId={o.id} />
-                    <Button size="sm" variant="secondary" leadingIcon={<Maximize2 aria-hidden="true" />} onClick={() => onOpenDetails(o)} aria-label={`פרטים: ${o.title}`}>
+                    <CompareToggle offerId={o.id} compact />
+                    <Button size="sm" variant="primary" onClick={() => onOpenDetails(o)} aria-label={`פרטים: ${o.title}`}>
                       פרטים
                     </Button>
                   </div>

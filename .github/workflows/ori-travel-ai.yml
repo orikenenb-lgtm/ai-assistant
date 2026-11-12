@@ -49,6 +49,16 @@ jobs:
         env:
           ORI_DATABASE_URL: sqlite:///${{ runner.temp }}/ori-ci.db
         run: python -m alembic check
+      - name: Backup / restore helper on the throwaway database
+        env:
+          ORI_DATABASE_URL: sqlite:///${{ runner.temp }}/ori-ci.db
+        run: |
+          python ../../scripts/_backup_db.py --if-pending-migrations --label pre-migrate
+          python ../../scripts/_backup_db.py
+          python ../../scripts/_backup_db.py --restore "$(ls data/backups/ori-ci-2*.db | head -1)"
+      - name: Shellcheck (scripts)
+        working-directory: ori-travel-ai/scripts
+        run: shellcheck -x -S warning *.sh
 
   api-postgres:
     name: api · migrations (PostgreSQL 16)
