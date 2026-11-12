@@ -1,0 +1,352 @@
+/* Login-page scroll story — always light, same warm palette and Heebo display type as the hero. */
+.story {
+  --ink: #1a2420;
+  --ink-soft: #2e3632;
+  --ink-muted: #5b635e;
+  --accent: #156f66;
+  --display: 'Heebo', system-ui, sans-serif;
+  position: relative;
+  overflow-x: clip;
+  background-color: #f3efe6;
+  background-image: linear-gradient(180deg, #f3efe6 0%, #f7f4ee 40%, #ede8dd 100%);
+  color: var(--ink);
+  font-family: var(--display);
+  color-scheme: light;
+}
+
+.story__scene {
+  position: relative;
+  min-height: 92svh;
+  padding: clamp(72px, 10vw, 140px) clamp(20px, 6vw, 96px);
+  display: grid;
+  align-items: center;
+}
+
+.story__copy {
+  position: relative;
+  z-index: 2;
+  max-width: 38rem;
+}
+.story__copy--center {
+  margin-inline: auto;
+  text-align: center;
+}
+.story__title {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(40px, 5.6vw, 92px);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  color: var(--ink-soft);
+}
+.story__title--xl {
+  font-size: clamp(48px, 7vw, 120px);
+}
+.story__line {
+  display: block;
+}
+.story__text {
+  margin-top: 24px;
+  max-width: 34ch;
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+.story__copy--center .story__text {
+  margin-inline: auto;
+}
+
+/* 1 — journey */
+.story__sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(40% 30% at 20% 30%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(35% 25% at 70% 70%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(30% 22% at 85% 20%, rgba(255, 255, 255, 0.6), transparent 70%);
+}
+.story-plane {
+  position: absolute;
+  z-index: 1;
+  /* flies over the open END side; the copy sits on the START side, so they never overlap */
+  inset-inline-start: 40%;
+  top: 8%;
+  width: clamp(280px, 46vw, 760px);
+  pointer-events: none;
+}
+.story-plane img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 30px 34px rgba(20, 35, 57, 0.18));
+}
+.story--journey .story__copy {
+  align-self: end;
+}
+
+/* 2 — plan */
+.story--plan {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: clamp(24px, 4vw, 64px);
+}
+.story__inputs {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.story__inputs li {
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #faf8f3;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    6px 6px 16px rgba(160, 148, 124, 0.25),
+    -6px -6px 16px rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.story-plan__stage {
+  position: relative;
+  height: clamp(320px, 42vw, 560px);
+}
+.story-plan__stage img {
+  position: absolute;
+  height: auto;
+  filter: drop-shadow(0 26px 30px rgba(20, 35, 57, 0.18));
+}
+.story-suitcase {
+  width: 34%;
+  inset-inline-start: 2%;
+  bottom: 4%;
+}
+.story-pass {
+  width: 56%;
+  inset-inline-start: 24%;
+  top: 6%;
+}
+.story-wallet {
+  width: 36%;
+  inset-inline-end: 0;
+  bottom: 0;
+}
+
+/* 3 — destinations */
+.story--world {
+  align-content: center;
+  gap: 48px;
+}
+.story-dests {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 28px);
+}
+.story-dest:nth-child(even) {
+  margin-top: 64px;
+}
+.story-dest__frame {
+  overflow: hidden;
+  border-radius: 22px;
+  aspect-ratio: 3 / 4;
+  box-shadow: 0 24px 40px rgba(20, 35, 57, 0.16);
+}
+.story-dest__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.story-dest__label {
+  display: block;
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+/* 4 — luxury */
+.story--luxe {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: clamp(24px, 5vw, 80px);
+}
+.story-luxe__media {
+  position: relative;
+}
+.story-luxe__main {
+  overflow: hidden;
+  border-radius: 28px;
+  aspect-ratio: 16 / 11;
+  box-shadow: 0 30px 60px rgba(20, 35, 57, 0.18);
+}
+.story-luxe__main img {
+  width: 100%;
+  height: 118%;
+  margin-top: -9%;
+  object-fit: cover;
+  display: block;
+}
+.story-luxe__a,
+.story-luxe__b {
+  position: absolute;
+  width: 36%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 5px solid #faf8f3;
+  box-shadow: 0 20px 40px rgba(20, 35, 57, 0.2);
+}
+.story-luxe__a {
+  inset-inline-end: -6%;
+  top: -8%;
+}
+.story-luxe__b {
+  inset-inline-start: -5%;
+  bottom: -10%;
+}
+
+/* 5 — people */
+.story--people {
+  align-content: center;
+  gap: 56px;
+}
+.story-rows {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 5vw, 72px);
+  max-width: 1100px;
+  width: 100%;
+}
+.story-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(20px, 4vw, 64px);
+}
+.story-row:nth-child(even) .story-row__img {
+  order: 2;
+}
+.story-row__img {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 24px 30px rgba(20, 35, 57, 0.16));
+}
+.story-row__text h3 {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+.story-row__text p {
+  margin: 12px 0 0;
+  max-width: 34ch;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* 6 — final */
+.story--final {
+  align-content: center;
+  justify-items: center;
+  gap: 24px;
+  min-height: 100svh;
+}
+.story-final__obj {
+  width: clamp(240px, 34vw, 520px);
+}
+.story-final__obj img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 26px 30px rgba(20, 35, 57, 0.16));
+}
+.story__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 36px;
+  height: 56px;
+  padding-inline: 40px;
+  border-radius: 999px;
+  background: #f3efe6;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    10px 10px 24px rgba(160, 148, 124, 0.35),
+    -10px -10px 24px rgba(255, 255, 255, 0.95);
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  transition:
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.story__cta:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    6px 6px 14px rgba(160, 148, 124, 0.35),
+    -6px -6px 14px rgba(255, 255, 255, 0.95);
+}
+.story__cta:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+/* Tablet & phone */
+@media (max-width: 1023px) {
+  .story--plan,
+  .story--luxe {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .story-dests {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .story__scene {
+    min-height: auto;
+    padding: 72px 20px;
+  }
+  .story--journey {
+    min-height: 80svh;
+  }
+  .story-plane {
+    inset-inline-start: 10%;
+    top: 8%;
+    width: 78vw;
+  }
+  .story-dest:nth-child(even) {
+    margin-top: 32px;
+  }
+  .story-row {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+  .story-row:nth-child(even) .story-row__img {
+    order: 0;
+  }
+  .story-row__text p {
+    margin-inline: auto;
+  }
+  .story-luxe__a,
+  .story-luxe__b {
+    width: 42%;
+  }
+  .story-luxe__a {
+    inset-inline-end: -2%;
+  }
+  .story-luxe__b {
+    inset-inline-start: -2%;
+  }
+}

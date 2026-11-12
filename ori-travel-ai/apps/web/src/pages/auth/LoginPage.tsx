@@ -4,6 +4,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router';
 import { z } from 'zod';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { LoginHero } from '@/features/landing/LoginHero';
+import { TravelStory } from '@/features/landing/TravelStory';
 import { Button, Callout, Card, Field, Input } from '@/components/ui';
 import { useAuth } from '@/features/auth';
 import { isApiError } from '@/lib/api';
@@ -168,6 +169,8 @@ export default function LoginPage() {
           </p>
         </Card>
       </AuthLayout>
+      {/* Public scroll story below the form; its final CTA returns to the form. */}
+      <TravelStory loginId="main" />
     </>
   );
 }

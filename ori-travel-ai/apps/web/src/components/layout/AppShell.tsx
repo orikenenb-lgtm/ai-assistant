@@ -1,9 +1,12 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { Drawer, Spinner } from '@/components/ui';
 import { MobileTabBar } from './MobileTabBar';
 import { SidebarNav } from './SidebarNav';
 import { TopBar } from './TopBar';
+
+// Decorative per-page travel backdrop (GSAP) — its own chunk, so it never delays the first paint of a page.
+const PageScenery = lazy(() => import('@/features/scenery/PageScenery'));
 
 function SkipLink() {
   return (
@@ -70,13 +73,16 @@ export function AppShell() {
         <SidebarNav onNavigate={() => setMenuOpen(false)} />
       </Drawer>
 
-      <div className="flex min-h-dvh flex-col lg:ps-[var(--spacing-sidebar)]">
+      <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip lg:ps-[var(--spacing-sidebar)]">
         <TopBar onOpenMenu={() => setMenuOpen(true)} />
+        <Suspense fallback={null}>
+          <PageScenery />
+        </Suspense>
         <main
           id="main"
           ref={mainRef}
           tabIndex={-1}
-          className="mx-auto w-full max-w-7xl flex-1 px-4 pb-[calc(var(--spacing-tabbar)+2.5rem)] pt-6 focus:outline-none sm:px-6 lg:px-10 lg:pb-14 lg:pt-8"
+          className="relative z-[1] mx-auto w-full max-w-7xl flex-1 px-4 pb-[calc(var(--spacing-tabbar)+2.5rem)] pt-6 focus:outline-none sm:px-6 lg:px-10 lg:pb-14 lg:pt-8"
         >
           <Suspense fallback={<PageFallback />}>
             <Outlet />

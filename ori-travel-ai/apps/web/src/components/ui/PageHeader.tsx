@@ -30,9 +30,11 @@ export function PageHeader({
 }: PageHeaderProps) {
   useDocumentTitle(documentTitle === undefined ? title : documentTitle);
   return (
-    <header className={cn('mb-6 flex flex-col gap-4 sm:mb-8', className)}>
+    // lg:min-h: a header band tall enough for the page's floating travel object (features/scenery) above the content.
+    <header className={cn('mb-6 flex flex-col justify-end gap-4 sm:mb-8 lg:min-h-[12rem]', className)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3.5">
+        {/* max-md:pe-24 keeps the title/description clear of the page's floating travel object on phones. */}
+        <div className="flex min-w-0 items-start gap-3.5 max-md:pe-24">
           {icon && (
             <span
               className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-xl border border-accent-line bg-accent-soft text-accent-strong [&_svg]:size-5"

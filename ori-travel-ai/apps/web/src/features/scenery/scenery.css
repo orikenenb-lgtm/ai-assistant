@@ -1,0 +1,78 @@
+/* Per-page backdrop. Sits behind <main> (z 0) inside the content column; never captures pointer or focus. */
+.scenery {
+  position: absolute;
+  inset-block-start: var(--spacing-topbar);
+  inset-inline: 0;
+  height: 560px;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Scene: anchored to the reading-END side (left in RTL), faded toward the title side and toward the bottom. */
+.scenery__scene {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  width: min(50%, 820px); /* fully faded before the page title/description column */
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.72;
+  will-change: transform;
+  --scenery-fade-dir: to right;
+  -webkit-mask-image:
+    linear-gradient(var(--scenery-fade-dir), #000 18%, transparent 72%),
+    linear-gradient(to bottom, #000 45%, transparent 96%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(var(--scenery-fade-dir), #000 18%, transparent 72%),
+    linear-gradient(to bottom, #000 45%, transparent 96%);
+  mask-composite: intersect;
+}
+[dir='ltr'] .scenery__scene {
+  --scenery-fade-dir: to left;
+}
+
+/* Floating isolated object over the scene — sized by HEIGHT so tall (suitcase) and wide (airplane) objects both fit
+   the page-header band above the first content card. */
+.scenery__object {
+  position: absolute;
+  /* top part of the 12rem header band: header action buttons sit in its bottom ~48px */
+  inset-block-start: 0;
+  inset-inline-end: clamp(16px, 6vw, 120px);
+  height: clamp(112px, 9.5vw, 140px);
+  will-change: transform;
+}
+.scenery__object-img {
+  display: block;
+  height: 100%;
+  width: auto;
+  filter: drop-shadow(0 22px 26px rgba(20, 35, 57, 0.2));
+}
+
+:root[data-theme='dark'] .scenery__scene {
+  opacity: 0.42;
+}
+
+/* Phones: a shorter band; the scene only shows on the far end side so the title stays on a clean background. */
+@media (max-width: 767px) {
+  .scenery {
+    height: 280px;
+  }
+  .scenery__scene {
+    width: 70%;
+    opacity: 0.5;
+    -webkit-mask-image:
+      linear-gradient(var(--scenery-fade-dir), #000 10%, transparent 75%),
+      linear-gradient(to bottom, #000 35%, transparent 95%);
+    mask-image:
+      linear-gradient(var(--scenery-fade-dir), #000 10%, transparent 75%),
+      linear-gradient(to bottom, #000 35%, transparent 95%);
+  }
+  .scenery__object {
+    inset-block-start: 58px;
+    inset-inline-end: -10px;
+    height: 82px;
+  }
+}
