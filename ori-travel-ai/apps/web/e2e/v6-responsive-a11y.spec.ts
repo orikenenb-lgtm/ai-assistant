@@ -301,6 +301,8 @@ test.describe('V6 נגישות, מקלדת, ערכות צבעים ותנועה',
     await expect(page.getByTestId('fare-calendar')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
     const dark = await textContrast(page, 'h1, h2, [data-testid="fare-cell"][data-status="priced"], [data-testid="fare-cell"][data-status="no_offers"], [data-testid="fare-legend"] li, [data-testid="featured-total"], [data-testid="offer-card"] h3, [data-testid="results-table"] td', 60);
     expect(dark.length).toBeGreaterThan(5);
+    expect(Math.max(...dark.map((r) => r.ratio)), 'sanity: the contrast probe measures real colours').toBeGreaterThan(7);
+    expect(Math.min(...dark.map((r) => r.ratio))).toBeGreaterThan(1.5);
     const low = dark.filter((r) => r.ratio < 4.5);
     expect(low, `dark mode text below 4.5:1: ${JSON.stringify(low.slice(0, 5))}`).toEqual([]);
 

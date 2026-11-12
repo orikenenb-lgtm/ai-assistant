@@ -21,7 +21,15 @@
    tertile tiers, stats, per-provider ``sources`` and honest Hebrew notes.
 
 Nothing is persisted (calendar quotes are not offers). Clicking a cell in the
-UI runs the normal ``POST /api/search/flight`` for its dates.
+UI runs the normal ``POST /api/search/flight`` for its dates. Only valid
+requests count towards the per-user rate limit (validation runs first).
+
+Currency: only quotes in the requested currency can price a cell — nothing is
+ever converted or relabelled. A provider answering only in another currency is
+``UNSUPPORTED`` for that cell (``error_code="CURRENCY_MISMATCH"``, reported in
+``sources[]``). ``offers_count`` groups offers exactly like the normal search's
+dedupe (``service.dedupe_group``: identical offers once; DEMO never merged with
+real offers).
 
 Cell status rules (per cell):
 * ``priced``       — at least one real quote (DEMO now, or CACHED earlier real search).
@@ -71,10 +79,10 @@ from app.modules.search.service import (
     MSG_DISABLED,
     MSG_NOT_CONFIGURED,
     MSG_PROVIDER_ERROR,
-    NO_FULL_COVERAGE,
     _safe_message,
     _translate_errors,
     canonical_params,
+    dedupe_group,
     params_hash,
 )
 from app.schemas.common import Money
@@ -93,6 +101,8 @@ MSG_NO_OFFERS = "לא נמצאו טיסות לתאריך זה אצל הספקי�
 MSG_NOT_SEARCHED_LIVE_ONLY = "לא נבדק — ספקים חיים אינם נשאלים עבור לוח המחירים ואין מחיר שמור מחיפוש קודם לתאריך זה"
 MSG_NOT_SEARCHED_BUDGET = "לא נבדק — חריגה ממגבלת הזמן של לוח המחירים. ניתן להריץ חיפוש רגיל לתאריך זה"
 MSG_NOT_SEARCHED_UNSUPPORTED = "לא נבדק — המסלול אינו נתמך אצל הספקים הזמינים"
+MSG_NOT_SEARCHED_CURRENCY = "לא נבדק — הספקים הזמינים אינם מחזירים מחירים במטבע המבוקש (ללא המרת מטבע)"
+CURRENCY_MISMATCH = "CURRENCY_MISMATCH"
 MSG_TIMEOUT = "הספק לא הגיב בזמן"
 
 
@@ -154,9 +164,11 @@ class _Quote:
 
     status: str  # OK / FAILED / TIMEOUT / UNSUPPORTED / SKIPPED
     cheapest: CanonicalOffer | None = None
-    keys: set[str] = field(default_factory=set)
+    keys: set[tuple[str, str, bool]] = field(default_factory=set)  # service.dedupe_group of matching offers
     error_code: str | None = None
     message: str | None = None
+    # Currencies of offers this provider returned in a currency OTHER than requested (never relabelled/converted)
+    other_currencies: frozenset[str] = frozenset()
 
 
 @dataclass
@@ -183,29 +195,43 @@ def _quote(adapter: ProviderAdapter, params: FlightSearchParams, settings: dict[
         log.warning("calendar provider=%s raised %s", adapter.provider_id, type(exc).__name__)
         return _Quote("FAILED", error_code="PROVIDER_ERROR", message=MSG_PROVIDER_ERROR)
     now = utcnow()
+    currency = params.currency
     matching: list[CanonicalOffer] = []
-    rejected = 0
+    rejected = same_currency = 0
+    other: set[str] = set()
     for raw in raws:
         try:
             offer = adapter.normalize("flight", raw, ctx)
         except Exception:  # noqa: BLE001 - one bad offer must not fail the cell
             rejected += 1
             continue
+        if offer.price.total.currency != currency:
+            # Only quotes in the requested currency are comparable; never relabel or convert (RA-01).
+            other.add(offer.price.total.currency)
+            continue
+        same_currency += 1
         if passes(offer, params, now):
-            matching.append(offer)
+            matching.append(offer if offer.dedupe_key else offer.model_copy(update={"dedupe_key": compute_dedupe_key(offer)}))
     if raws and rejected == len(raws):
         return _Quote("FAILED", error_code="NORMALIZATION_ERROR",
                       message="הנתונים שהתקבלו מהספק לא עברו בדיקת תקינות")
+    if other and not same_currency:
+        return _Quote("UNSUPPORTED", error_code=CURRENCY_MISMATCH, other_currencies=frozenset(other),
+                      message=(f"הספק החזיר מחירים במטבע {', '.join(sorted(other))} ולא ב-{currency} — "
+                               "מחיריו לא נכללו בלוח (ללא המרת מטבע)"))
     matching.sort(key=lambda o: (o.price.total.amount, o.source.supplier_offer_id))
     cheapest: CanonicalOffer | None = None
     for offer in matching:  # fully validate only the cheapest (lightweight path)
         try:
-            cheapest = finalize_offer(adapter, offer)
-            break
+            final = finalize_offer(adapter, offer)
         except Exception as exc:  # noqa: BLE001 - skip an invalid offer, try the next cheapest
             log.warning("calendar provider=%s offer rejected: %s", adapter.provider_id, type(exc).__name__)
-    keys = {o.dedupe_key or compute_dedupe_key(o) for o in matching}
-    return _Quote("OK", cheapest=cheapest, keys=keys)
+            continue
+        if final.price.total.currency == currency:
+            cheapest = final
+            break
+    keys = {dedupe_group(o) for o in matching}
+    return _Quote("OK", cheapest=cheapest, keys=keys, other_currencies=frozenset(other))
 
 
 def _quote_all(cells: list[_Cell], adapters: list[ProviderAdapter], provider_settings: dict[str, dict[str, Any]],
@@ -323,9 +349,9 @@ def _median(amounts: list[Decimal], currency: str) -> Decimal:
 
 def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCalendarResponse:
     started = time.monotonic()
+    req = parse_calendar_request(payload)  # invalid (422) requests do not consume the quota
     if user_id is not None:
         check_calendar_rate_limit(user_id)
-    req = parse_calendar_request(payload)
     currency = req.currency
     nights_axis: list[int | None] = list(req.trip_nights or []) or [None]
 
@@ -362,10 +388,13 @@ def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCal
         candidates = [q.cheapest for q in cell_quotes.values() if q is not None and q.cheapest is not None]
         cell_cached = cached.get(i, [])
         candidates.extend(cell_cached)
+        # Never label a price with a currency it was not quoted in (RA-01)
+        candidates = [o for o in candidates if o.price.total.currency == currency]
         for pid in {o.source.provider_id for o in cell_cached}:
             cached_cells[pid] = cached_cells.get(pid, 0) + 1
-        keys = {(k, True) for q in cell_quotes.values() if q is not None for k in q.keys}
-        keys |= {(o.dedupe_key, False) for o in cell_cached}
+        # Same grouping as the normal search's dedupe: identical offers counted once, DEMO never merged with real
+        keys = {k for q in cell_quotes.values() if q is not None for k in q.keys}
+        keys |= {dedupe_group(o) for o in cell_cached}
         base = {"depart_date": cell.depart, "return_date": cell.ret, "nights": cell.nights,
                 "travelers": req.travelers, "offers_count": len(keys)}
         if candidates:
@@ -394,8 +423,10 @@ def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCal
             out_cells.append(CalendarCell(**base, status="not_searched", message=MSG_NOT_SEARCHED_BUDGET))
         elif any(q.status == "OK" for q in answered):
             out_cells.append(CalendarCell(**base, status="no_offers", message=MSG_NO_OFFERS))
-        elif answered:  # every queried provider: route unsupported
-            out_cells.append(CalendarCell(**base, status="not_searched", message=MSG_NOT_SEARCHED_UNSUPPORTED))
+        elif answered:  # every queried provider: route unsupported / prices only in another currency
+            currency_only = all(q.error_code == CURRENCY_MISMATCH for q in answered)
+            out_cells.append(CalendarCell(**base, status="not_searched", message=(
+                MSG_NOT_SEARCHED_CURRENCY if currency_only else MSG_NOT_SEARCHED_UNSUPPORTED)))
         else:
             out_cells.append(CalendarCell(**base, status="not_searched", message=MSG_NOT_SEARCHED_LIVE_ONLY))
 
@@ -440,6 +471,9 @@ def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCal
             bad = [q for q in own if q.status in ("FAILED", "TIMEOUT")]
             skipped = sum(1 for q in own if q.status == "SKIPPED")
             unsupported = [q for q in own if q.status == "UNSUPPORTED"]
+            excluded = sorted({c for q in own for c in q.other_currencies})
+            currency_note = (f"; הצעות במטבע {', '.join(excluded)} לא נכללו (ללא המרת מטבע)"
+                             if excluded else "")
             if total and len(unsupported) == total:
                 sources.append(CalendarSource(**src, status="UNSUPPORTED", message=unsupported[0].message,
                                               error_code=unsupported[0].error_code))
@@ -454,11 +488,11 @@ def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCal
                     parts.append(f"הספק נכשל או לא הגיב בזמן ב-{len(bad)} מתוך {total} תאריכים")
                 if skipped:
                     parts.append(f"{skipped} תאריכים לא נבדקו (מגבלת זמן)")
-                sources.append(CalendarSource(**src, status="PARTIAL", message="; ".join(parts),
+                sources.append(CalendarSource(**src, status="PARTIAL", message="; ".join(parts) + currency_note,
                                               error_code=bad[0].error_code if bad else None))
             else:
-                sources.append(CalendarSource(**src, status="OK",
-                                              message=f"נתוני הדגמה (סינתטיים) — נבדקו {total} תאריכים"))
+                sources.append(CalendarSource(**src, status="OK", message=(
+                    f"נתוני הדגמה (סינתטיים) — נבדקו {total} תאריכים{currency_note}")))
 
     # ---- notes ----
     who = f"לכל {req.travelers} הנוסעים יחד" if req.travelers > 1 else "לנוסע אחד"
@@ -484,7 +518,6 @@ def flight_calendar(db: Session, user_id: str | None, payload: Any) -> FlightCal
     if failed_names:
         coverage.append(f"ספקים שנכשלו בחלק מהתאריכים או בכולם: {', '.join(failed_names)}.")
     coverage.append("המחיר בלוח הוא נקודת התחלה — המחיר הסופי נקבע בחיפוש הרגיל ובבדיקת ההצעה.")
-    coverage.append(NO_FULL_COVERAGE)
 
     log.info("fare calendar route=%s-%s cells=%d priced=%d providers=%d took_ms=%d", req.origin, req.destination,
              len(cells), counts["priced"], len(demo), int((time.monotonic() - started) * 1000))
