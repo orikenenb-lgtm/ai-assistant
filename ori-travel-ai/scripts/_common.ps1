@@ -67,7 +67,8 @@ function Find-SystemPython {
         if (-not (Get-Command $c.Exe -ErrorAction SilentlyContinue)) { continue }
         try {
             $global:LASTEXITCODE = 0
-            $probe = @($c.Args) + @('-c', 'import sys; print(str(sys.version_info[0]) + "." + str(sys.version_info[1]))')
+            # No double quotes inside the code: Windows PowerShell 5.1 strips them when passing arguments to native exes.
+            $probe = @($c.Args) + @('-c', 'import sys; print(sys.version_info[0], sys.version_info[1], sep=chr(46))')
             $out = & $c.Exe @probe 2>$null
             if ($LASTEXITCODE -ne 0 -or -not $out) { continue }
             $ver = [version](($out | Select-Object -First 1).ToString().Trim())
