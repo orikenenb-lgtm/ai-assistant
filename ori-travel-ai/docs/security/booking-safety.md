@@ -231,3 +231,18 @@
 - אין תפוגה עצמאית ל-session: הוא תקף כל עוד ההזמנה APPROVED עם אישור תקף לאותם תנאים.
 - ה-`ref` אינו סוד שמספיק לבדו: כל הקריאות דורשות התחברות, והשלמה דורשת בגיר מורשה.
 
+
+### 5.10 תיקוני ביקורת השחרור (RA-02, RA-09, RA-10)
+- **RA-02 — אסמכתה שלא אומתה לעולם אינה מוצגת כ"אושר על ידי הספק".** ב-HOSTED_CHECKOUT מול ספק LIVE,
+  `record-confirmation` עדיין מקבל את מה שהמשתמש הקליד (AUD-23), אבל: `state_label` הוא
+  "אסמכתה נרשמה ידנית — לא אומתה מול הספק", `Reservation.status = RECORDED_UNVERIFIED` (ולא `CONFIRMED`),
+  `reference_verified: false` ב-`BookingSummary` וב-`ReservationOut`, וביומן נרשמים `reference_verified: false`
+  ו-`reference_source: "typed_by_user"`. בממשק: לוח ענברי עם תג אזהרה "לא אומת מול הספק", בלי סימון ירוק בשלבים.
+  מסלול ה-DEMO המאומת וסימולציה לא השתנו (`CONFIRMED`, `reference_source: "supplier_ledger"`).
+- **RA-09 — צילום הנוסעים מתרענן.** `revalidate`, `approve`, `submit` ו-`checkout-link` טוענים מחדש את הנוסעים
+  מרשומות המשפחה (`_sync_travelers`). שינוי בקבוצת גיל או בשם, או בן משפחה שנמחק, הוא שינוי מהותי: האישור
+  מבוטל, ההזמנה חוזרת ל-QUOTE_SELECTED וה-hash מחושב מחדש. בדיקת ההרכב (AUD-04) רצה **בכל** קריאה כזאת, כך
+  שהזמנה שהנוסעים שלה לא תואמים להצעה לא יכולה להתקדם (400 `TRAVELER_MISMATCH` / `TRAVELER_NOT_FOUND`;
+  ב-approve/submit/checkout-link שינוי תואם מחזיר 409 `TERMS_CHANGED`).
+- **RA-10 — דף ספק DEMO ישן.** session שהושלם לתנאים שכבר אינם המאושרים (או שההזמנה בוטלה) מוצג כ-`EXPIRED`
+  עם "פג תוקף — … אינה בתוקף", בלי האסמכתה ובלי ההנחיה לרשום אותה.

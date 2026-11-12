@@ -233,26 +233,29 @@ test.describe('V6 נגישות, מקלדת, ערכות צבעים ותנועה',
 
     // prefers-reduced-motion: honoured by the CSS (transitions/animations collapse to ~0) and by the cell hover lift.
     const cell = page.locator('[data-testid="fare-cell"][data-status="priced"]').first();
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await page.reload();
-    await expect(page.getByTestId('fare-calendar')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
-    await cell.hover();
-    await page.waitForTimeout(350);
+    const canHover = await page.evaluate(() => matchMedia('(hover: hover)').matches);
     const lift = (el: Element) => {
       const cs = getComputedStyle(el);
       return `${cs.transform}|${cs.translate}`;
     };
-    const liftedNormal = await cell.evaluate(lift);
-    expect(liftedNormal, 'with motion allowed the hovered cell lifts').not.toMatch(/^none\|(none|0px)?$/);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.reload();
+    await expect(page.getByTestId('fare-calendar')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+    if (canHover) {
+      await cell.hover();
+      await page.waitForTimeout(350);
+      expect(await cell.evaluate(lift), 'with motion allowed the hovered cell lifts').not.toMatch(/^none\|(none|0px)?$/);
+    }
     await page.emulateMedia({ reducedMotion: 'reduce' });
     expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
     await page.mouse.move(0, 0);
     await page.reload();
     await expect(page.getByTestId('fare-calendar')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
-    await cell.hover();
-    await page.waitForTimeout(150);
-    const liftedReduced = await cell.evaluate(lift);
-    expect(liftedReduced, 'with reduced motion the hovered cell does not move').toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))\|(none|0px)?$/);
+    if (canHover) {
+      await cell.hover();
+      await page.waitForTimeout(150);
+      expect(await cell.evaluate(lift), 'with reduced motion the hovered cell does not move').toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))\|(none|0px)?$/);
+    }
     const durations = await page.evaluate(() => {
       const bad: string[] = [];
       for (const el of Array.from(document.querySelectorAll('body *')).slice(0, 1500)) {

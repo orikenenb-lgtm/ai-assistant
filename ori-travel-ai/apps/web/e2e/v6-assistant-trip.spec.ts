@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures-v6';
 import { futureDate, uniq } from './env';
-import { allAmounts, amountIn, apiFlightSearch, rnd } from './v6-helpers';
+import { amountIn, apiFlightSearch, rnd } from './v6-helpers';
 import type { Json } from './api';
 
 const MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];

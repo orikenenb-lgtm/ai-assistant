@@ -101,7 +101,7 @@ export const ReservationSchema = z.object({
   mode: z.string(),
   /** CONFIRMED (verified against the supplier ledger) or RECORDED_UNVERIFIED (typed by the user). */
   status: z.string(),
-  reference_verified: z.boolean().default(true),
+  reference_verified: z.boolean().optional(),
   amount: MoneySchema,
   confirmed_at: IsoDateTimeSchema,
   notes: z.string().nullable().optional(),
