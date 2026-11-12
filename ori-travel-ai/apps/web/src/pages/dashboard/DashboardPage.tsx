@@ -6,6 +6,7 @@ import { ProviderStatusWidget } from '@/features/dashboard/components/ProviderSt
 import { QuickSearch } from '@/features/dashboard/components/QuickSearch';
 import { RecentSearchesWidget } from '@/features/dashboard/components/RecentSearchesWidget';
 import { UpcomingTripsWidget } from '@/features/dashboard/components/UpcomingTripsWidget';
+import { DestinationInspiration } from '@/features/inspiration/DestinationInspiration';
 import { useDataModeSummary } from '@/features/providers/hooks';
 import { formatDate } from '@/lib/format';
 
@@ -43,6 +44,8 @@ export default function DashboardPage() {
         )}
 
         <QuickSearch />
+
+        <DestinationInspiration />
 
         {/* grid-cols-1 = minmax(0,1fr): long nowrap titles must not widen the track (BUG-QA-02). */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
