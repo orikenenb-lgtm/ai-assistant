@@ -35,3 +35,4 @@
 | 2026-11-12 ~13:45 | Agent F2 | הסתיים: מסכי חיפוש ×4, תוצאות, דירוג מחדש, השוואה, ספקים; 93 בדיקות web | sonnet | ✅ |
 | 2026-11-12 ~13:45 | Agent D1 | הסתיים: סקריפטי PS/bash, CI, README, תיעוד תפעול, openapi.json. bash נבדק בפועל; PowerShell **לא הורץ** (אין pwsh) | sonnet | ✅ חלקי |
 | 2026-11-12 ~13:50 | מנהל | bandit: תווי bidi בקוד הומרו ל-escape (הגנת Trojan Source), nosec מוצדק ל-XML של ECB; ruff ב-alembic; תיקון עוגני עזרה; הערות Playwright ל-Windows | — | ✅ |
+| 2026-11-12 ~13:55 | Agent F4 | הופעל (גל 3): צ'אט AI, תכנון טיול, רשימת הזמנות ומסך סקירה ואישור | sonnet | בביצוע |
