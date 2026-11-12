@@ -82,6 +82,10 @@ MSG_OFFER_EXPIRED = "תוקף ההצעה פג. יש לבצע חיפוש חדש �
 MSG_LIVE_DISABLED = "ביצוע הזמנה אמיתית דרך המערכת כבוי. ניתן לבצע סימולציה או להמשיך באתר הספק."
 MSG_APPROVAL_LAPSED = "תוקף האישור פג. יש לבדוק את המחיר ולאשר מחדש."
 MSG_AWAITING_SUPPLIER = "ממתין להשלמה באתר הספק"
+# RA-02: a reference the user typed for a real supplier is recorded, never presented as supplier-confirmed.
+MSG_RECORDED_UNVERIFIED = "אסמכתה נרשמה ידנית — לא אומתה מול הספק"
+RESERVATION_CONFIRMED = "CONFIRMED"
+RESERVATION_UNVERIFIED = "RECORDED_UNVERIFIED"
 MSG_CANCEL_CONFIRMED = "הזמנה שאושרה אצל הספק אינה ניתנת לביטול דרך המערכת. יש לבטל ישירות מול הספק."
 
 
@@ -165,6 +169,45 @@ def _validate_composition(details: dict[str, Any], travelers: list[dict[str, Any
                            f"{got['adult']} מבוגרים ו-{got['child']} ילדים. יש לבחור אורחים תואמים או לבצע חיפוש חדש.", want)
     if not have["adult"]:
         raise mismatch("נדרש לפחות נוסע מבוגר אחד בהזמנה.", {"adult": 1})
+
+
+def _sync_travelers(db: Session, intent: BookingIntent, actor_id: str | None, request: Request | None) -> str | None:
+    """Re-read the travelers from the family records (RA-09).
+
+    The snapshot taken at creation must not outlive the facts: a changed age group / name, or a
+    removed member, is a material change. The approval is invalidated, the intent goes back to
+    QUOTE_SELECTED and the AUD-04 composition check is re-run. Returns the Hebrew reason when
+    something changed (the caller commits), ``None`` otherwise. When the new facts no longer fit
+    the offer the downgrade is committed and the ``AppError`` is raised.
+    """
+    def downgrade(reason: str) -> None:
+        intent.revalidated_at = None
+        invalidated = _invalidate_approvals(db, intent, reason, actor_id, request)
+        record_audit(db, "booking.travelers_changed", actor_user_id=actor_id, entity_type=ENTITY, entity_id=intent.id,
+                     details={"source": "family_record", "travelers": len(intent.travelers or []),
+                              "approval_invalidated": bool(invalidated)}, request=request)
+        if intent.state != sm.QUOTE_SELECTED:
+            sm.transition(db, intent, sm.QUOTE_SELECTED, action="material_change", actor_user_id=actor_id,
+                          reason=reason, request=request)
+
+    try:
+        fresh = _load_travelers(db, _traveler_ids(intent))
+    except BadRequestError:
+        downgrade("אחד הנוסעים כבר אינו קיים במשפחה")
+        db.commit()
+        raise
+    if fresh == list(intent.travelers or []):
+        return None
+    reason = "פרטי הנוסעים (קבוצת גיל או שם) השתנו ברשומות המשפחה"
+    intent.travelers = fresh
+    intent.terms_hash = current_terms_hash(intent)
+    downgrade(reason)
+    try:
+        _validate_composition((intent.offer_snapshot or {}).get("details") or {}, fresh)
+    except BadRequestError:
+        db.commit()
+        raise
+    return reason
 
 
 # ---------------------------------------------------------------- approvals ----
@@ -508,6 +551,7 @@ def revalidate(db: Session, ctx: AuthContext, intent_id: str, request: Request |
         db.commit()
         return to_out(db, intent, ctx, notice=MSG_OFFER_EXPIRED)
 
+    travelers_changed = _sync_travelers(db, intent, actor, request)
     started_in = intent.state
     if started_in == sm.QUOTE_SELECTED:
         sm.transition(db, intent, sm.REVALIDATING, action="revalidate_start", actor_user_id=actor,
@@ -541,11 +585,21 @@ def revalidate(db: Session, ctx: AuthContext, intent_id: str, request: Request |
         record_audit(db, "booking.revalidate", actor_user_id=actor, entity_type=ENTITY, entity_id=intent.id,
                      outcome="failure", details={"result": "error", "state": intent.state}, request=request)
         notice = f"אזהרה: {check.message} המחיר לא אומת וההזמנה נשארה במצבה הקודם."
+    if travelers_changed:
+        notice = f"{travelers_changed}. האישור הקודם (אם היה) בוטל ויש לאשר את התנאים המעודכנים. {notice}"
     db.commit()
     return to_out(db, intent, ctx, notice=notice)
 
 
 # ------------------------------------------------------------------ approve ----
+
+
+def _refuse_if_travelers_changed(db: Session, intent: BookingIntent, actor: str, request: Request | None) -> None:
+    """Approve / submit / hand-off never proceed on a stale traveler snapshot (RA-09)."""
+    reason = _sync_travelers(db, intent, actor, request)
+    if reason:
+        db.commit()
+        raise ConflictError(f"{reason}. האישור בוטל. יש לבדוק מחיר ולאשר את התנאים המעודכנים.", code="TERMS_CHANGED")
 
 
 def _revalidation_fresh(intent: BookingIntent, now: datetime | None = None) -> bool:
@@ -557,6 +611,7 @@ def approve(db: Session, ctx: AuthContext, intent_id: str, terms_hash: str, pass
     intent = get_intent(db, intent_id)
     _require_state(intent, (sm.READY_FOR_APPROVAL,), "לאשר")
     _ensure_not_expired(db, intent, ctx.user_id, request)
+    _refuse_if_travelers_changed(db, intent, ctx.user_id, request)
     if not _revalidation_fresh(intent):
         raise ConflictError("בדיקת המחיר האחרונה אינה עדכנית. יש לבדוק מחיר מחדש לפני האישור.",
                             code="REVALIDATION_REQUIRED")
@@ -602,6 +657,7 @@ def _recheck_before_handoff(db: Session, intent: BookingIntent, actor: str, requ
     nothing is handed to a supplier.
     """
     _ensure_not_expired(db, intent, actor, request)
+    _refuse_if_travelers_changed(db, intent, actor, request)
     if _demote_lapsed_approval(db, intent, actor, request):
         db.commit()
         raise ConflictError(MSG_APPROVAL_LAPSED, code="APPROVAL_EXPIRED")
@@ -650,22 +706,25 @@ def _confirm(db: Session, intent: BookingIntent, reference: str | None, mode: st
     """The only way to reach CONFIRMED — impossible without a supplier reference."""
     if not reference or not reference.strip():
         raise RuntimeError("CONFIRMED requires a supplier reference")
+    # Verified = issued by a supplier we can query (the mock / DEMO supplier ledgers). A reference typed by
+    # the user for a real supplier is only RECORDED (RA-02): distinct reservation status, label and audit detail.
+    verified = demo or mode == MODE_SIMULATION
     intent.supplier_reference = reference
     intent.failure_reason = None
     sm.transition(db, intent, sm.CONFIRMED, action=action, actor_user_id=actor, reason=reason, request=request,
-                  details={"supplier_reference": reference, "mode": mode})
+                  details={"supplier_reference": reference, "mode": mode, "reference_verified": verified,
+                           "reference_source": "supplier_ledger" if verified else "typed_by_user"})
     db.add(Reservation(
         booking_intent_id=intent.id,
         provider_id=intent.provider_id,
         supplier_reference=reference,
         mode=mode,
-        status="CONFIRMED",
+        status=RESERVATION_CONFIRMED if verified else RESERVATION_UNVERIFIED,
         amount_minor=intent.current_amount_minor,
         currency=intent.currency,
         confirmed_at=utcnow(),
         details={"title": _title(intent), "travelers": intent.travelers, "terms_hash": intent.terms_hash,
-                 "is_simulation": mode == MODE_SIMULATION, "is_demo": demo or mode == MODE_SIMULATION,
-                 "reference_verified": demo or mode == MODE_SIMULATION},
+                 "is_simulation": mode == MODE_SIMULATION, "is_demo": verified, "reference_verified": verified},
         notes=notes,
     ))
     if mode == MODE_SIMULATION:
@@ -673,7 +732,7 @@ def _confirm(db: Session, intent: BookingIntent, reference: str | None, mode: st
     elif demo:
         label = "הדגמה: נרשמה אסמכתה של ספק לדוגמה"
     else:
-        label = "נרשם אישור הזמנה מהספק"
+        label = "נרשמה אסמכתת ספק ידנית (לא אומתה)"
     _notify_other_adults(db, actor, label, f"„{_title(intent)}” — אסמכתה {reference}.", intent)
 
 
@@ -930,7 +989,7 @@ def record_confirmation(db: Session, ctx: AuthContext, intent_id: str, supplier_
     db.commit()
     if demo:
         return to_out(db, intent, ctx, notice="אסמכתת ספק ההדגמה אומתה ונרשמה. לא בוצעה הזמנה אמיתית ולא בוצע חיוב.")
-    return to_out(db, intent, ctx, notice="אסמכתת הספק נרשמה.")
+    return to_out(db, intent, ctx, notice="אסמכתת הספק נרשמה כפי שהוזנה. המערכת לא אימתה אותה מול הספק.")
 
 
 # ------------------------------------------------- DEMO supplier page (in-app) ----
@@ -957,9 +1016,20 @@ def _demo_session_open(intent: BookingIntent, session: SimulatedSupplierBooking,
 
 def _demo_checkout_out(intent: BookingIntent, session: SimulatedSupplierBooking, ctx: AuthContext) -> DemoCheckoutOut:
     now = utcnow()
-    completed = session.status == demo_supplier.STATUS_CONFIRMED and bool(session.reference)
-    is_open = not completed and _demo_session_open(intent, session, now)
-    recorded = completed and intent.state == sm.CONFIRMED and intent.supplier_reference == session.reference
+    issued = session.status == demo_supplier.STATUS_CONFIRMED and bool(session.reference)
+    recorded = issued and intent.state == sm.CONFIRMED and intent.supplier_reference == session.reference
+    # RA-10: a reference issued for terms that are no longer the approved ones would be refused by
+    # record-confirmation, so the page must not keep presenting it as something to record.
+    approval = active_approval(intent)
+    still_recordable = (
+        issued
+        and intent.state == sm.APPROVED
+        and demo_supplier.matches_intent(session, intent)
+        and approval is not None
+        and hmac.compare_digest(approval.terms_hash, session.terms_hash)
+    )
+    completed = recorded or still_recordable
+    is_open = not issued and _demo_session_open(intent, session, now)
     if recorded:
         status, message = "COMPLETED", "האסמכתה כבר נרשמה בהזמנה. אין צורך בפעולה נוספת."
     elif completed:
@@ -968,9 +1038,13 @@ def _demo_checkout_out(intent: BookingIntent, session: SimulatedSupplierBooking,
                    "לחזור להזמנה ולרשום אותה שם.")
     elif is_open:
         status, message = "OPEN", "זהו דף ספק לדוגמה. לחיצה על הכפתור מדמה השלמת הזמנה אצל הספק — בלי תשלום ובלי חיוב."
+    elif issued:
+        status = "EXPIRED"
+        message = ("פג תוקף — האסמכתה שהונפקה בדף הזה אינה בתוקף: ההזמנה או התנאים המאושרים השתנו מאז, "
+                   "ולכן היא לא תתקבל. יש לחזור להזמנה, לאשר את התנאים הנוכחיים ולפתוח את דף הספק מחדש.")
     else:
         status = "EXPIRED"
-        message = "הדף הזה כבר אינו תקף: ההזמנה או התנאים המאושרים השתנו. יש לחזור להזמנה ולפתוח את דף הספק מחדש."
+        message = "פג תוקף — הדף הזה כבר אינו בתוקף: ההזמנה או התנאים המאושרים השתנו. יש לחזור להזמנה ולפתוח את דף הספק מחדש."
     show_terms = completed or is_open
     return DemoCheckoutOut(
         ref=demo_supplier.ref_of(session),
@@ -1093,14 +1167,22 @@ def _warnings(intent: BookingIntent, approval: Approval | None, now: datetime) -
         if _is_demo_hosted(intent):
             out.append("האסמכתה שייכת לספק הדגמה ואינה תקפה אצל שום ספק אמיתי. לא בוצעה הזמנה אמיתית ולא בוצע חיוב.")
         else:
-            out.append("האסמכתה הוזנה ידנית ולא אומתה מול הספק.")
+            out.append("האסמכתה הוזנה ידנית ולא אומתה מול הספק. המערכת אינה יודעת אם הספק אישר את ההזמנה — "
+                       "יש לוודא זאת ישירות מול הספק.")
     return out
+
+
+def _reference_unverified(intent: BookingIntent) -> bool:
+    """CONFIRMED only because a user typed a reference for a real supplier's hosted checkout (RA-02)."""
+    return intent.state == sm.CONFIRMED and intent.execution_mode == MODE_HOSTED and not _is_demo_hosted(intent)
 
 
 def _state_label(intent: BookingIntent) -> str:
     # A hosted-checkout intent that is merely APPROVED must never read as a confirmed booking.
     if intent.state == sm.APPROVED and intent.execution_mode == MODE_HOSTED:
         return MSG_AWAITING_SUPPLIER
+    if _reference_unverified(intent):
+        return MSG_RECORDED_UNVERIFIED
     return sm.STATE_LABELS_HE.get(intent.state, intent.state)
 
 
@@ -1116,6 +1198,7 @@ def _summary_fields(intent: BookingIntent) -> dict[str, Any]:
         "execution_mode": intent.execution_mode,
         "is_simulation": intent.execution_mode == MODE_SIMULATION,
         "is_demo": ((intent.offer_snapshot or {}).get("source") or {}).get("mode") == "DEMO",
+        "reference_verified": (not _reference_unverified(intent)) if intent.state == sm.CONFIRMED else None,
         "current_price": _money(intent.current_amount_minor, intent.currency),
         "price_changed": intent.current_amount_minor != intent.quoted_amount_minor,
         "offer_expired": intent.state in sm.EXPIRABLE_STATES and _offer_expired(intent),
@@ -1168,6 +1251,7 @@ def to_out(db: Session, intent: BookingIntent, ctx: AuthContext, *, notice: str 
             supplier_reference=reservation.supplier_reference,
             mode=reservation.mode,
             status=reservation.status,
+            reference_verified=reservation.status != RESERVATION_UNVERIFIED,
             amount=_money(reservation.amount_minor, reservation.currency),
             confirmed_at=reservation.confirmed_at,
             notes=reservation.notes,

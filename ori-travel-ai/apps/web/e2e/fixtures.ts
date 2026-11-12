@@ -33,7 +33,16 @@ async function ensureOwnerState(): Promise<string> {
   return OWNER_STATE;
 }
 
-type Fixtures = { api: Api };
+/**
+ * The fare-calendar endpoint is limited to 10 requests / 10 minutes per user, and every flight-results page asks for it.
+ * Specs that do not care about the calendar get a 404 stub (the UI then shows its "not available" notice); specs that
+ * do (`calendar: 'real'`) hit the real DEMO endpoint, with identical bodies answered from a per-worker cache so a
+ * reload or a re-render never spends another request.
+ */
+export type CalendarMode = 'stub' | 'real';
+const calendarCache = new Map<string, string>();
+
+type Fixtures = { api: Api; calendar: CalendarMode; calendarRoute: void };
 type WorkerFixtures = { ownerState: string };
 
 /** Test with the owner already signed in (storage state) and an `api` client. */
@@ -50,6 +59,34 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
   api: async ({ request }, run) => {
     await run(new Api(request));
   },
+  calendar: ['stub', { option: true }],
+  calendarRoute: [
+    async ({ context, calendar }, run) => {
+      await context.route('**/api/search/flight/calendar', async (route) => {
+        if (calendar === 'stub') {
+          await route.fulfill({
+            status: 404,
+            contentType: 'application/json',
+            body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'stub', details: null, request_id: null } }),
+          });
+          return;
+        }
+        const key = route.request().postData() ?? '';
+        const hit = calendarCache.get(key);
+        if (hit) {
+          await route.fulfill({ status: 200, contentType: 'application/json', body: hit });
+          return;
+        }
+        const res = await route.fetch();
+        const body = await res.text();
+        if (res.status() === 200) calendarCache.set(key, body);
+        await route.fulfill({ response: res, body });
+      });
+      await run();
+      await context.unrouteAll({ behavior: 'ignoreErrors' });
+    },
+    { auto: true },
+  ],
 });
 
 /** Test with no session at all (login page, redirects, public surface). */

@@ -117,6 +117,7 @@ class Reservation(Base):
     supplier_reference: Mapped[str] = mapped_column(String(128), nullable=False)
     # SIMULATION / HOSTED_CHECKOUT (manually recorded) / LIVE
     mode: Mapped[str] = mapped_column(String(24), nullable=False)
+    # CONFIRMED (verified against the supplier ledger) / RECORDED_UNVERIFIED (user-typed, LIVE hosted checkout)
     status: Mapped[str] = mapped_column(String(24), nullable=False, default="CONFIRMED")
     amount_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)

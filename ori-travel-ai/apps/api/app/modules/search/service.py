@@ -331,6 +331,14 @@ def _normalize_run(run: _Run, category: Category) -> None:
         run.message = MSG_DEMO_OK
 
 
+def dedupe_group(offer: CanonicalOffer) -> tuple[str, str, bool]:
+    """Offers sharing this key are the same product: (dedupe_key, currency, demo-or-real).
+
+    Shared by ``dedupe_offers`` and the fare calendar's ``offers_count``.
+    """
+    return (offer.dedupe_key, offer.price.total.currency, offer.source.mode == "DEMO")
+
+
 def dedupe_offers(offers: list[CanonicalOffer]) -> tuple[list[CanonicalOffer], int]:
     """Keep the cheapest offer per (dedupe_key, currency, demo-or-real); others listed in also_offered_by.
 
@@ -339,7 +347,7 @@ def dedupe_offers(offers: list[CanonicalOffer]) -> tuple[list[CanonicalOffer], i
     """
     groups: dict[tuple[str, str, bool], list[CanonicalOffer]] = {}
     for o in offers:
-        groups.setdefault((o.dedupe_key, o.price.total.currency, o.source.mode == "DEMO"), []).append(o)
+        groups.setdefault(dedupe_group(o), []).append(o)
     out: list[CanonicalOffer] = []
     for group in groups.values():
         group.sort(key=lambda o: (o.price.total.amount, o.source.provider_id, o.source.supplier_offer_id))

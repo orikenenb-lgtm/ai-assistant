@@ -3,49 +3,7 @@ import { anon, test } from './fixtures';
 import { hotelSearch, sharedFlightSearch } from './data';
 import { futureDate, uniq } from './env';
 import type { Api } from './api';
-
-/** Runs in the page: elements that are visible but have no accessible name / label. */
-const FIND_UNNAMED = `(() => {
-  const visible = (el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
-  const text = (el) => (el.textContent || '').replace(/\\s+/g, ' ').trim();
-  const byId = (id) => { const n = document.getElementById(id); return n ? text(n) : ''; };
-  const named = (el) => {
-    if ((el.getAttribute('aria-label') || '').trim()) return true;
-    const lb = el.getAttribute('aria-labelledby');
-    if (lb && lb.split(/\\s+/).some((id) => byId(id))) return true;
-    if (el.labels && el.labels.length > 0 && Array.from(el.labels).some((l) => text(l))) return true;
-    if ((el.getAttribute('title') || '').trim()) return true;
-    if (text(el)) return true;
-    const img = el.querySelector('img[alt]:not([alt=""])');
-    return !!img;
-  };
-  const buttons = Array.from(document.querySelectorAll('button, [role="button"], [role="switch"], [role="tab"], [role="menuitem"], a[href]'))
-    .filter((el) => visible(el) && !el.closest('[aria-hidden="true"]') && !named(el));
-  const fields = Array.from(document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea, [role="slider"], [role="combobox"]'))
-    .filter((el) => visible(el) && !el.closest('[aria-hidden="true"]') && !named(el));
-  return {
-    buttons: buttons.map((el) => el.outerHTML.slice(0, 160)),
-    fields: fields.map((el) => el.outerHTML.slice(0, 160)),
-  };
-})()`;
-
-async function expectBasicA11y(page: Page, label: string) {
-  // Exactly one <h1>.
-  await expect(page.locator('h1'), `${label}: exactly one h1`).toHaveCount(1);
-  // Document language and direction.
-  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'he');
-  // Page has a title and a main landmark (except on the bare auth layout).
-  expect((await page.title()).trim().length, `${label}: document title`).toBeGreaterThan(0);
-  const res = (await page.evaluate(FIND_UNNAMED)) as { buttons: string[]; fields: string[] };
-  expect(res.buttons, `${label}: controls without an accessible name`).toEqual([]);
-  expect(res.fields, `${label}: form fields without a label`).toEqual([]);
-}
-
-async function expectNoHorizontalOverflow(page: Page, label: string) {
-  const m = (await page.evaluate('({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth })')) as { sw: number; cw: number };
-  expect(m.sw, `${label}: scrollWidth ${m.sw} must be <= clientWidth ${m.cw} at 390px`).toBeLessThanOrEqual(m.cw);
-}
+import { expectBasicA11y, expectNoHorizontalOverflow } from './a11y';
 
 /** Fixtures for pages that need data: a trip with an item and a booking in review. */
 async function seedPages(api: Api) {
@@ -135,9 +93,8 @@ test.describe('נגישות: מסכים מרכזיים', () => {
   // Cause: the cards sit in `grid gap-6 lg:grid-cols-2` (implicit auto track) so a card's min-content width -- a flex
   // row with a nowrap title -- widens the track; `min-w-0` / `grid-cols-[minmax(0,1fr)]` on the grid fixes it.
   // Remove `test.fail` once fixed (the test will then report "expected to fail but passed").
-  test('לוח הבקרה ב-390px עם חיפושים אחרונים: אין גלישה אופקית -- באג ידוע BUG-QA-02', async ({ page, api }, testInfo) => {
+  test('לוח הבקרה ב-390px עם חיפושים אחרונים: אין גלישה אופקית (BUG-QA-02 תוקן)', async ({ page, api }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'the overflow only reproduces in the mobile (touch, 390px) project');
-    test.fail(true, 'BUG-QA-02: dashboard overflows horizontally at 390px when recent searches exist');
     // A hotel search with a long destination makes the nowrap title of the recent-search row wide.
     await hotelSearch(api, 45, 'Thessaloniki Macedonia Greece');
     await page.goto('/');
@@ -227,8 +184,7 @@ test.describe('נגישות: מסכים מרכזיים', () => {
   // (TripFormDialog, MemberFormDialog, InvitationsSection, StartBookingDialog ...) lose focus to <body> on close
   // instead of returning to the button that opened them. Only dialogs using the `trigger` prop restore focus.
   // Remove `test.fail` once fixed (this test will then report "expected to fail but passed").
-  test('דיאלוג נשלט (יצירת טיול): הפוקוס חוזר לכפתור שפתח אותו -- באג ידוע BUG-QA-01', async ({ page }) => {
-    test.fail(true, 'BUG-QA-01: focus is lost to <body> after closing a controlled dialog');
+  test('דיאלוג נשלט (יצירת טיול): הפוקוס חוזר לכפתור שפתח אותו (BUG-QA-01 תוקן)', async ({ page }) => {
     await page.goto('/trips');
     await expect(page.locator('h1')).toBeVisible();
     const opener = page.getByRole('button', { name: 'טיול חדש' }).first();

@@ -54,6 +54,10 @@ class ApiModel(BaseModel):
         return _strip_nul(data) if isinstance(data, (dict, list, str)) else data
 
 
+# Largest accepted money amount (any currency); far above any real travel price.
+MAX_MONEY_AMOUNT = Decimal("1000000000000")
+
+
 class Money(ApiModel):
     amount: DecimalStr = Field(..., description="Decimal amount as string in JSON, e.g. '123.45'")
     currency: CurrencyCode
@@ -63,6 +67,20 @@ class Money(ApiModel):
     def _supported(cls, v: str) -> str:
         if v not in SUPPORTED_CURRENCIES:
             raise ValueError(f"Unsupported currency {v}")
+        return v
+
+    @field_validator("amount")
+    @classmethod
+    def _bounded(cls, v: Decimal) -> Decimal:
+        # Stored as BIGINT minor units: reject non-finite, absurd or over-precise amounts
+        # with a 422 instead of overflowing the database (release audit RA-03).
+        if not v.is_finite():
+            raise ValueError("סכום אינו תקין")
+        if abs(v) >= MAX_MONEY_AMOUNT:
+            raise ValueError("הסכום גדול מדי")
+        exponent = v.as_tuple().exponent
+        if isinstance(exponent, int) and exponent < -6:
+            raise ValueError("יותר מדי ספרות אחרי הנקודה העשרונית")
         return v
 
     def quantized(self) -> Money:

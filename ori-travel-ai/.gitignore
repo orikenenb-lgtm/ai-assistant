@@ -13,3 +13,7 @@ apps/web/test-results/
 apps/web/playwright-report/
 apps/web/e2e/.auth/
 *.pdf.tmp
+
+# Ad-hoc agent/browser scratch scripts (never commit)
+apps/web/_*.mjs
+apps/web/e2e/_*.mjs

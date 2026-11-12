@@ -131,7 +131,9 @@ class ReservationOut(ApiModel):
     id: str
     supplier_reference: str
     mode: str
+    # CONFIRMED (reference verified against the supplier's ledger) / RECORDED_UNVERIFIED (typed by the user)
     status: str
+    reference_verified: bool = True
     amount: Money
     confirmed_at: datetime
     notes: str | None = None
@@ -149,6 +151,8 @@ class BookingSummary(ApiModel):
     is_simulation: bool
     # The supplier is a DEMO provider (fictional): nothing real is booked or charged in any execution mode
     is_demo: bool = False
+    # Only for CONFIRMED: False when the supplier reference was typed by the user and could not be verified
+    reference_verified: bool | None = None
     current_price: Money
     price_changed: bool
     # The supplier quote has lapsed; the next action attempt will move the intent to EXPIRED

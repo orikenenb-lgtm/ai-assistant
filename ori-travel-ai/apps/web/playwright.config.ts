@@ -13,6 +13,10 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  // Functional specs run by default (`npm run e2e`); visual specs (agent VIS-A11Y) live in e2e/visual and run with
+  // `npm run e2e -- e2e/visual` (or E2E_VISUAL=1). Passing the folder on the CLI still works because the filter
+  // below is only applied when no visual run was requested.
+  testIgnore: process.env.E2E_VISUAL === '1' || process.argv.some((a) => a.replace(/\\/g, '/').includes('e2e/visual')) ? [] : ['**/visual/**'],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

@@ -14,6 +14,7 @@ Exit codes: 0 ok / nothing to do, 2 error (not SQLite, file missing, bad restore
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import sqlite3
 import sys
@@ -79,10 +80,32 @@ def _backup(src: Path, label: str) -> Path:
     while dest.exists():  # two backups within the same second
         dest = dest_dir / f"{src.stem}{mid}-{datetime.now():%Y%m%d-%H%M%S}-{n}.db"
         n += 1
-    with sqlite3.connect(_ro(src), uri=True) as s, sqlite3.connect(dest) as d:
-        s.backup(d)
-        d.execute("PRAGMA journal_mode=DELETE")  # single self-contained file, no -wal/-shm siblings
+    try:
+        with sqlite3.connect(_ro(src), uri=True) as s, sqlite3.connect(dest) as d:
+            s.backup(d)
+            d.execute("PRAGMA journal_mode=DELETE")  # single self-contained file, no -wal/-shm siblings
+    except sqlite3.DatabaseError:
+        # The source is unreadable as SQLite (e.g. corrupt): keep a raw byte copy instead of
+        # aborting, so a restore can still proceed with the damaged file preserved (RA-04).
+        dest.unlink(missing_ok=True)
+        dest = dest.with_name(dest.stem + "-raw" + dest.suffix)
+        shutil.copyfile(src, dest)
+        for suffix in ("-wal", "-shm"):
+            sib = Path(str(src) + suffix)
+            if sib.is_file():
+                shutil.copyfile(sib, Path(str(dest) + suffix))
+    try:
+        os.chmod(dest, 0o600)  # backups contain (encrypted) family data: owner-only
+    except OSError:
+        pass
     return dest
+
+
+def _looks_like_ori_db(path: Path) -> bool:
+    """A restorable backup must be an Ori Travel AI database (RA-05)."""
+    with sqlite3.connect(_ro(path), uri=True) as c:
+        names = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    return {"alembic_version", "users", "family_members"} <= names
 
 
 def main() -> int:
@@ -101,6 +124,8 @@ def main() -> int:
         try:
             if _table_count(bak) == 0:
                 _fail("The backup file has no tables - refusing to restore it.")
+            if not _looks_like_ori_db(bak):
+                _fail("The file is not an Ori Travel AI database backup - refusing to restore it.")
             with sqlite3.connect(_ro(bak), uri=True) as c:
                 if c.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                     _fail("The backup file failed SQLite integrity_check - refusing to restore it.")

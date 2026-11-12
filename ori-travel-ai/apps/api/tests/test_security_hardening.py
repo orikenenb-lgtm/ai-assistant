@@ -129,3 +129,13 @@ def test_request_log_line_has_request_id(client, caplog):
         res = client.get("/api/health", headers={"X-Request-ID": "abcdef1234567890"})
     assert res.headers["x-request-id"] == "abcdef1234567890"
     assert any("rid=abcdef1234567890" in r.getMessage() for r in caplog.records if r.name == "ori.http")
+
+
+def test_huge_money_amount_is_422_not_500(auth_client):
+    c = auth_client("owner")
+    res = c.post("/api/trips", json={"title": "x", "budget": {"amount": "1" + "0" * 30, "currency": "ILS"}})
+    assert res.status_code == 422
+    res = c.post("/api/trips", json={"title": "x", "budget": {"amount": "NaN", "currency": "ILS"}})
+    assert res.status_code == 422
+    ok = c.post("/api/trips", json={"title": "x", "budget": {"amount": "12000.50", "currency": "ILS"}})
+    assert ok.status_code == 201, ok.text
