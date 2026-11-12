@@ -69,3 +69,4 @@
 | 2026-11-12 ~15:10 | Agent QA | הסתיים: 15 קבצי spec, 122 בדיקות E2E (desktop+mobile), 0 כשלים לא צפויים; 8 באגים (2 בינוניים: חזרת פוקוס בדיאלוג, גלישה אופקית בדשבורד במובייל); test-plan.md | sonnet | ✅ |
 | 2026-11-12 ~15:15 | מנהל | ניתוב באגי QA: 01+02 → UX-DS, 03+05+07 → BOOK-REDIRECT, 06 → FE-FLIGHT; תיקון עצמי: 04 (נוסח AI), 08 (request_id ב-404, שגיאת JSON); CI: alembic check; e2e scripts: מפתח הצפנה זמני | — | ✅ |
 | 2026-11-12 ~15:25 | Agent BE-CAL | הסתיים: POST /api/search/flight/calendar, highlights, GET /api/geo/airports, ימי no-service ב-DEMO, ביטול מטמון אחרי שינוי הגדרות ספק; 48 בדיקות חדשות; סוויטה מלאה 838 עוברות; 42 תאים ב-~0.7s | opus | ✅ |
+| 2026-11-12 ~15:30 | Agent DEVOPS-RELEASE | הופעל: התקנה נקייה מ-clone, גיבוי לפני migration, סקירת PowerShell, מסמכי שחרור/rollback/אבחון | sonnet | בביצוע |
