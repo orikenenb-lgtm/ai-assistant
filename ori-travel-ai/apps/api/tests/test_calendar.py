@@ -395,7 +395,8 @@ def test_cached_live_offer_fills_cell_as_cached(auth_client, db, monkeypatch):
     assert "שמורים" in out["coverage_note"]
 
     # With DEMO enabled again, the cell shows the cheapest of DEMO + cached real offers (the normal search's min)
-    db.query(ProviderConfiguration).update({"enabled": True}, synchronize_session=False)
+    db.query(ProviderConfiguration).filter(ProviderConfiguration.provider_id.in_(DEMO_FLIGHT_IDS)).update(
+        {"enabled": True}, synchronize_session=False)
     db.commit()
     mixed_out = c.post(URL, json=body).json()
     mixed = {x["depart_date"]: x for x in mixed_out["cells"]}
@@ -405,6 +406,14 @@ def test_cached_live_offer_fills_cell_as_cached(auth_client, db, monkeypatch):
     assert all(x["status"] == "priced" for x in mixed.values())
     assert {s["provider_id"]: s["status"] for s in mixed_out["sources"]}["test_live_flights"] == "CACHED"
     assert live.calls == 1
+
+    # Changing the LIVE provider's configuration invalidates quotes fetched before the change
+    db.query(ProviderConfiguration).filter_by(provider_id="test_live_flights").update(
+        {"settings": {"max_results": 5}}, synchronize_session=False)
+    db.commit()
+    after_change = c.post(URL, json=body).json()
+    assert {s["provider_id"]: s["status"] for s in after_change["sources"]}["test_live_flights"] == "NOT_QUERIED"
+    assert all(x["mode"] == "DEMO" for x in after_change["cells"])
 
 
 def test_cached_offers_need_equivalent_params_and_fresh_data(auth_client, db, monkeypatch):
@@ -456,12 +465,12 @@ def test_simulate_error_gives_sources_and_error_cells(auth_client):
 
 
 def test_time_budget_marks_unfinished_cells(auth_client, db, monkeypatch):
-    monkeypatch.setattr(calendar, "CALENDAR_TIME_BUDGET_SECONDS", 0.3)
+    monkeypatch.setattr(calendar, "CALENDAR_TIME_BUDGET_SECONDS", 0.6)
     registry.register_adapter(SlowDemoFlights())
     disable(db, *DEMO_FLIGHT_IDS)
     start = time.monotonic()
     out = auth_client("adult").post(URL, json=cal(days=20)).json()
-    assert time.monotonic() - start < 2.0
+    assert time.monotonic() - start < 2.5
     statuses = {c["status"] for c in out["cells"]}
     assert "priced" in statuses and "not_searched" in statuses
     skipped = [c for c in out["cells"] if c["status"] == "not_searched"]

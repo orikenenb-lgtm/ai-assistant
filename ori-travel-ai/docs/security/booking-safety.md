@@ -59,7 +59,7 @@
 1. **מצב משתנה רק דרך `transition()`.** מאזין של SQLAlchemy על `BookingIntent.state` זורק
    `DirectStateAssignmentError` על כל השמה ישירה (חוץ מ-DRAFT בהזמנה חדשה). אין נקודת קצה שמקבלת
    `state`, וכל גופי הבקשות דוחים שדות לא מוכרים (422).
-2. **`terms_hash`** הוא SHA-256 של JSON קנוני (גרסה 2) שכולל שני חלקים:
+2. **`terms_hash`** הוא SHA-256 של JSON קנוני (גרסה 3; ראו §5.7) שכולל שני חלקים:
    (א) שדות מובנים: ספק ושם התצוגה שלו, מזהה הצעה אצל הספק, קטגוריה, כותרת, אופן הביצוע, המוצר המדויק
    (טיסה: מקטעים, מספרי טיסות, זמנים, מחלקה, תעריף, כבודה; מלון: מזהה, חדר, פנסיון, תאריכים, תפוסה; רכב:
    ספק, קבוצה, איסוף והחזרה; פעילות: מזהה ותאריכים), הסכום ביחידות קטנות, המטבע, סטטוס המחיר
@@ -113,13 +113,13 @@
 - **קישור לאתר ספק** (`POST /api/bookings/{id}/checkout-link`, עם CSRF, תיקון AUD-09) נחשף רק במצב APPROVED עם אישור תקף ואחרי בדיקת מחיר מיידית, ורק אם הכתובת עוברת
   את רשימת הדומיינים המאושרים של המתאם. החשיפה נרשמת ביומן (שם המארח בלבד).
 
-- **מסלול HOSTED_CHECKOUT אינו זמין היום עם אף ספק שנמצא בקוד** (AUD-05). יצירת הזמנה כזאת דורשת
+- **מסלול HOSTED_CHECKOUT אינו זמין היום עם אף ספק LIVE שנמצא בקוד** (AUD-05; לספק DEMO ראו §5). יצירת הזמנה כזאת דורשת
   מתאם LIVE שגם מחזיר קישור מאושר לאתר הספק וגם תומך בבדיקת מחיר חוזרת. Viator מחזיר קישור אבל לא תומך
   בבדיקת מחיר, ו-Duffel תומך בבדיקת מחיר אבל לא מחזיר קישור. במקרה הראשון היצירה נדחית עם 409
   `BOOKING_UNAVAILABLE` והודעה שאפשר להמשיך ישירות באתר הספק דרך הקישור שבהצעה ושאי אפשר לאמת את המחיר
   מראש. המסלול ממומש ונבדק **רק מול מתאם בדיקה** (`LiveStub` בבדיקות). בדיקה ייעודית מוודאת שאף מתאם LIVE
   שבקוד לא עומד היום בשני התנאים, כך שהמסמך הזה יתעדכן כשזה ישתנה.
-- **הזמנות שנוצרו לפני גרסה 2 של ה-hash** יקבלו `TERMS_CHANGED` בניסיון אישור או שליחה, וצריך להכין אותן מחדש.
+- **הזמנות שנוצרו לפני הגרסה הנוכחית של ה-hash (3)** יקבלו `TERMS_CHANGED` בניסיון אישור או שליחה, וצריך להכין אותן מחדש.
 
 ### 4.4 בדיקות
 `apps/api/tests/test_booking.py` — 82 בדיקות, ללא רשת. הן מכסות: התאמת טבלת המעברים למפרט ודחיית כל
@@ -135,7 +135,99 @@
 הרצה: `cd apps/api && .venv/bin/python -m pytest tests/test_booking.py -p no:warnings -q`
 
 ### 4.5 מגבלות ידועות
-- האימות מחדש של הסיסמה מוגבל ל-5 ניסיונות ב-5 דקות למשתמש, וגם ניסיונות מוצלחים נספרים.
+- האימות מחדש של הסיסמה מוגבל ל-5 ניסיונות **כושלים** ב-5 דקות למשתמש. ניסיון מוצלח אינו נספר
+  (`check_password_for_step_up` ב-`auth/service.py`; תיקון BUG-QA-07).
 - תוקף הצעת DEMO הוא 30 דקות. מי שלא בודק מחיר בזמן הזה יצטרך לחפש מחדש.
 - ביטול הזמנה מאושרת (CONFIRMED) לא נתמך. יש לבטל מול הספק.
 - הספק המדומה חולק את מסד הנתונים עם המערכת. ספק אמיתי ידרוש executor נפרד ומאושר.
+
+## 5. השלמה בדף ספק לדוגמה (DEMO supplier-hosted checkout) — סוכן BOOK-REDIRECT
+
+> תרחיש V6: **"מעבר לספק מציג את הספק ואף פעם לא טוען שההזמנה אושרה"**, עד שהמשתמש רושם את אסמכתת הספק.
+> הכול DEMO: אין תשלום, אין שדות כרטיס, אין ניווט לאתר חיצוני.
+
+### 5.1 מה נוסף
+| קובץ | תפקיד |
+|---|---|
+| `apps/api/app/modules/providers/demo/activities.py` | `demo_kidventures` מצהיר `supports_hosted_checkout`, ו-`booking_options()` מחזיר גם `/demo-supplier/checkout?ref=…` |
+| `apps/api/app/modules/booking/demo_supplier.py` | "ספק ההדגמה": תבנית ה-URL המותרת, פתיחת session, השלמה, ואימות אסמכתה מול ספר הספק |
+| `apps/api/app/modules/booking/service.py` | בחירת מצב ביצוע, `_handoff_url`, `record_confirmation` עם אימות ל-DEMO, נקודות הקצה של דף הספק |
+| `apps/api/app/modules/booking/router.py` | `GET /api/demo-supplier/checkout`, `POST /api/demo-supplier/checkout/complete` |
+| `apps/web/src/pages/demo-supplier/DemoSupplierCheckoutPage.tsx` | דף הספק לדוגמה (מחוץ למעטפת האפליקציה, עם באנר DEMO) |
+| `apps/web/src/features/bookings/**` | מצב "ממתין להשלמה באתר הספק", פתיחת דף הספק, טופס רישום האסמכתה |
+| `apps/api/tests/test_demo_redirect.py` | 61 בדיקות |
+
+**למה `demo_kidventures` ולא ספק DEMO חדש:** הוא כבר רשום ב-registry (אין צורך לגעת בקבצים של סוכנים אחרים),
+ספקי אטרקציות אמיתיים (Viator) עובדים בדיוק כך, וההצעות שלו ממשיכות לתמוך גם בסימולציה. ברירת המחדל לא
+השתנתה: בלי בקשה מפורשת, הזמנת DEMO היא SIMULATION.
+
+### 5.2 המסלול
+1. `POST /api/bookings` עם `execution_mode: "HOSTED_CHECKOUT"` (שדה אופציונלי חדש). השרת מאשר רק מצב שהמתאם
+   באמת מציע; `"LIVE"` נדחה ב-422. תרחיש סימולציה יחד עם HOSTED_CHECKOUT נדחה (`SCENARIO_NOT_ALLOWED`).
+2. `revalidate` ⇒ READY_FOR_APPROVAL, ואז `approve` (סיסמה + `terms_hash`) ⇒ APPROVED.
+   מרגע זה `state_label` הוא **"ממתין להשלמה באתר הספק"**, ויש אזהרה שההזמנה אינה מאושרת.
+3. `POST /api/bookings/{id}/checkout-link` (CSRF, רק APPROVED עם אישור תקף, אחרי בדיקת מחיר מיידית) פותח
+   session אצל ספק ההדגמה ומחזיר `/demo-supplier/checkout?ref=<אסימון אקראי>` ו-`is_demo: true`.
+4. בדף הספק לדוגמה המשתמש רואה את שם הספק, סיכום ההצעה והמחיר, ולוחץ "סימולציה: השלמת ההזמנה אצל הספק".
+   ספק ההדגמה מנפיק אסמכתה `DEMO-XXXXXXXXXX`. **ההזמנה לא משתנה**: היא נשארת APPROVED, בלי אסמכתה ובלי `Reservation`.
+5. `POST /api/bookings/{id}/record-confirmation` עם האסמכתה ⇒ APPROVED → SUBMITTING → CONFIRMED,
+   ו-`Reservation.mode = HOSTED_CHECKOUT`.
+
+מעברי המצב: `DRAFT → QUOTE_SELECTED → REVALIDATING → READY_FOR_APPROVAL → APPROVED → SUBMITTING → CONFIRMED`.
+לא נוסף מצב חדש ולא נוסף מעבר חדש לטבלה שבסעיף 1.
+
+### 5.3 החריג ברשימת הכתובות המותרות
+- כתובת יחסית מותרת **רק** כשהמתאם במצב DEMO, ורק אם היא תואמת בדיוק ל-
+  `^/demo-supplier/checkout\?ref=[A-Za-z0-9_-]{16,64}$` (`fullmatch`, בלי שורה חדשה בסוף, בלי פרמטרים נוספים).
+- בנוסף, ה-`ref` חייב להיות בדיוק ה-session שהשירות פתח עכשיו להזמנה הזאת. מתאם DEMO לא יכול להפנות
+  ל-session אחר, וגם כתובת https ממתאם DEMO נדחית: DEMO לעולם לא מנווט מחוץ למערכת.
+- לכל מתאם שאינו DEMO ממשיכה לחול `is_allowed_deep_link` הקיימת (https + דומיינים מאושרים). כתובת יחסית
+  לא יכולה לעבור אותה. `ProviderAdapter.is_allowed_deep_link` לא שונתה.
+- AUD-05 נשמר: מתאם LIVE בלי `supports_revalidate` נדחה, וגם מתאם DEMO בלי `supports_revalidate` או בלי
+  `supports_hosted_checkout` לא יכול להתחיל מסלול כזה.
+- צד הלקוח חוזר על אותה בדיקה (`checkoutTarget`): קישור DEMO חייב להתאים לתבנית, וקישור שאינו DEMO חייב להיות https.
+  דף הספק עצמו מקבל רק `?ref=` יחיד בתבנית הזאת, ואחרת מציג "לא נמצא" בלי לפנות לשרת.
+
+### 5.4 אימות האסמכתה
+- **DEMO:** `record-confirmation` דורש שהאסמכתה קיימת בספר של ספק ההדגמה (`simulated_supplier_bookings`,
+  `scenario = "hosted_checkout"`, מפתח `checkout:<ref>`), במצב CONFIRMED, **לאותה הזמנה**, ועם אותם `terms_hash`,
+  סכום ומטבע שאושרו. אסמכתה שגויה, של הזמנה אחרת, של תנאים קודמים או של סימולציה (`SIM-…`) נדחית עם
+  409 `SUPPLIER_REFERENCE_NOT_FOUND`, והמצב נשאר APPROVED. הניסיון נרשם ביומן.
+- **LIVE:** ללא שינוי. האסמכתה היא מה שהמשתמש הקליד ואי אפשר לאמת אותה (החלטה מתועדת, AUD-23). עכשיו
+  ההזמנה מציגה אזהרה "האסמכתה הוזנה ידנית ולא אומתה מול הספק", וב-`Reservation.details` נשמר `reference_verified: false`.
+- ספק ההדגמה מסרב להשלים session אם ההזמנה אינה APPROVED, אם התנאים השתנו, אם תוקף ההצעה או האישור פג,
+  או אם ה-session בוטל (409 `CHECKOUT_SESSION_EXPIRED`). שינוי תנאים מבטל sessions פתוחים קודמים (`VOID`).
+- השלמה חוזרת של אותו session מחזירה את אותה אסמכתה (נגזרת מה-`ref`), ולא מנפיקה אסמכתה שנייה.
+
+### 5.5 הרשאות
+- הנתיב `/demo-supplier/checkout` דורש התחברות (בתוך `RequireAuth`, מחוץ למעטפת האפליקציה). הוא לא ציבורי,
+  כי הוא מציג פרטי הזמנה משפחתיים והפעולה שבו משנה נתונים.
+- `GET /api/demo-supplier/checkout`: כל חבר משפחה מחובר (קריאה בלבד, כמו קריאת הזמנה).
+- `POST /api/demo-supplier/checkout/complete`, `checkout-link` ו-`record-confirmation`: רק בגיר מורשה, עם CSRF.
+
+### 5.6 מה המשתמש רואה
+- ב-APPROVED: לוח "ממתין להשלמה באתר הספק" עם שם הספק, תג "ספק לדוגמה — DEMO, אין חיוב", שלושת השלבים,
+  כפתור המעבר וטופס האסמכתה. לא מוצגים הלוח הירוק של אישור, אסמכתה או המילים "ההזמנה אושרה".
+- ב-CONFIRMED: "נרשמה אסמכתה של ספק לדוגמה (DEMO)" והבהרה שלא בוצעה הזמנה אמיתית ולא בוצע חיוב.
+- דף הספק: באנר גדול "דף ספק לדוגמה — DEMO, אין חיוב", בלי אף שדה קלט.
+
+### 5.7 שינויים נלווים
+- **`TERMS_VERSION = 3`** (BUG-QA-03): שורות הסיכום כולן בעברית. מחלקת טיסה וקבוצת רכב מתורגמות, כבודה
+  מוצגת כ"כלול / לא כלול / לא ידוע", וסכום מוצג כ-"718.70 ₪" (קוד מטבע רק כשאין סמל). הזמנות פתוחות מגרסה 2
+  יקבלו `TERMS_CHANGED` ויש להכין אותן מחדש.
+- להזמנת HOSTED_CHECKOUT מול ספק DEMO נוספה שורת סיכום ייעודית ("ספק הדגמה: … לא יבוצע חיוב"), והיא חלק מה-hash.
+- `BookingSummary.is_demo` ו-`CheckoutLinkOut.is_demo` נוספו (תוספת בלבד).
+
+### 5.8 בדיקות
+`apps/api/tests/test_demo_redirect.py` (61): מסלול מלא עד CONFIRMED; אסמכתה שגויה, של הזמנה אחרת, של תנאים
+קודמים ושל סימולציה; כתובת יחסית ממתאם שאינו DEMO; 22 ניסיונות open redirect ממתאם DEMO; `ref` של session אחר;
+`checkout-link` רק ב-APPROVED ורק ב-POST עם CSRF; צופה ומשתמש לא מחובר; session שפג; יכולות שלא הוצהרו.
+בצד הלקוח: `checkoutUrl.test.ts`, `HostedCheckout.test.tsx`, `DemoSupplierCheckoutPage.test.tsx`.
+
+הרצה: `cd apps/api && .venv/bin/python -m pytest tests/test_booking.py tests/test_demo_redirect.py -p no:warnings -q`
+
+### 5.9 מגבלות ידועות
+- ספק ההדגמה חולק את מסד הנתונים עם המערכת, כמו הספק המדומה של הסימולציה.
+- אין תפוגה עצמאית ל-session: הוא תקף כל עוד ההזמנה APPROVED עם אישור תקף לאותם תנאים.
+- ה-`ref` אינו סוד שמספיק לבדו: כל הקריאות דורשות התחברות, והשלמה דורשת בגיר מורשה.
+

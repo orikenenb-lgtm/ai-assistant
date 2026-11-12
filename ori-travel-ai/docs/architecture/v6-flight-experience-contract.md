@@ -119,3 +119,16 @@ Optional dark mode via `prefers-color-scheme` + manual toggle (stored in localSt
 try/catch). Touch targets ≥ 44px, WCAG AA, reduced motion. Tokens added by the Director in
 `src/styles/index.css` (tangerine, sky, `deal*`, `heat-*`) are the contract — tune values only with
 contrast checks and document them in `docs/release/design-system.md`.
+
+## 6. As implemented (BE-CAL, additive to §1–§3)
+* Calendar response also has top-level `cabin`; `sources[]` items add `error_code` and `cells_priced`;
+  source statuses: DEMO `OK|PARTIAL|FAILED|UNSUPPORTED`, LIVE `NOT_QUERIED|CACHED`, unused `DISABLED|NOT_CONFIGURED`.
+  `message` is also set on `no_offers` cells. Time budget 8 s, 4 workers, earliest dates first.
+* Tier rule: minimum cell(s) `best`; else r = priced cells strictly cheaper, n = priced cells:
+  `low` if r < n/3, `mid` if r < 2n/3, else `high`.
+* DEMO no-service rule: "trunk" airport pairs (both in `DAILY_SERVICE_AIRPORTS`) run daily; other routes have
+  1–2 seeded weekdays without service plus ~1/12 sold-out dates (both DEMO providers share the market).
+  Demo routes for `no_offers`: TLV→RHO / NCE / LIS / PFO / HER.
+* Search cache now ignores cached searches older than an eligible provider's last configuration change, so
+  `simulate_error` takes effect immediately (E2E supplier-failure scenario).
+* `GET /api/geo/airports` returns 54 airports with `Cache-Control: private, max-age=3600`.

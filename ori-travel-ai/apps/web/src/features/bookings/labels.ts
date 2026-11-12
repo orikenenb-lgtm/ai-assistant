@@ -68,3 +68,9 @@ export const AWAITING_SUPPLIER_LABEL = 'ממתין להשלמה באתר הספ�
 export function isAwaitingSupplier(b: { state: string; execution_mode: ExecutionMode }): boolean {
   return b.execution_mode === 'HOSTED_CHECKOUT' && b.state === 'APPROVED';
 }
+
+/** Reservation status as stored by the server (never shown raw). */
+export const RESERVATION_STATUS_LABELS: Record<string, string> = {
+  CONFIRMED: 'נרשמה אסמכתת ספק',
+  CANCELLED: 'בוטל',
+};

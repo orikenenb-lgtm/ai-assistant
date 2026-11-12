@@ -6,6 +6,7 @@ import { AuthContext } from '@/features/auth/context';
 import { OfferCard, OfferDetailDialog } from '@/features/offers';
 import { CanonicalOfferSchema, type CanonicalOffer } from '@/lib/schemas/offers';
 import type { Booking } from '@/lib/schemas/bookings';
+import { problemBody } from '../errors';
 import { isAwaitingSupplier } from '../labels';
 import { ActionsSection } from './ActionsSection';
 import { ApprovalPanel } from './ApprovalPanel';
@@ -57,7 +58,7 @@ export function BookingReview({ booking }: { booking: Booking }) {
       <div ref={alertRef} className="flex flex-col gap-3" aria-live="polite">
         {feedback.problem && (
           <Callout tone={feedback.problem.tone} title={feedback.problem.title} role="alert" data-testid="booking-problem">
-            <p>{feedback.problem.message}</p>
+            {problemBody(feedback.problem) && <p>{problemBody(feedback.problem)}</p>}
             {feedback.problem.priceDiff && (
               <p className="mt-1 font-semibold">
                 <MoneyText value={feedback.problem.priceDiff.oldPrice} /> ← <MoneyText value={feedback.problem.priceDiff.newPrice} />
@@ -147,7 +148,7 @@ export function BookingReview({ booking }: { booking: Booking }) {
       </Card>
       <OfferDetailDialog offer={details} onOpenChange={(o) => !o && setDetails(null)} />
 
-      <HistoryTimeline history={booking.history} />
+      <HistoryTimeline history={booking.history} mode={booking.execution_mode} />
     </div>
   );
 }

@@ -14,10 +14,11 @@ export function fetchAirports(signal?: AbortSignal) {
 }
 
 /** Static reference data: fetched once per session. A 404 (older server) is not retried. */
-export function useAirports() {
+export function useAirports(enabled = true) {
   return useQuery({
     queryKey: geoKeys.airports,
     queryFn: ({ signal }) => fetchAirports(signal),
+    enabled,
     staleTime: Infinity,
     gcTime: Infinity,
     retry: (count, error) => !(isApiError(error) && error.status < 500) && count < 1,
@@ -26,15 +27,24 @@ export function useAirports() {
 }
 
 /** Places for the flight combobox: the server dataset when available, otherwise the bundled client list. */
-export function useFlightPlaces(): readonly Place[] {
-  const { data } = useAirports();
+export function useFlightPlaces(enabled = true): readonly Place[] {
+  const { data } = useAirports(enabled);
   return useMemo(() => (data && data.length > 0 ? placesFromGeo(data) : PLACES), [data]);
 }
 
 export type AirportIndex = ReadonlyMap<string, GeoAirport>;
 
 /** Code → airport (with coordinates). `null` while loading or when the endpoint is unavailable (the map is then hidden). */
-export function useAirportIndex(): AirportIndex | null {
-  const { data } = useAirports();
+export function useAirportIndex(enabled = true): AirportIndex | null {
+  const { data } = useAirports(enabled);
   return useMemo(() => (data && data.length > 0 ? new Map(data.map((a) => [a.code, a])) : null), [data]);
+}
+
+/** Hebrew city name for an IATA code (server dataset first, then the bundled list). */
+export function usePlaceName(enabled = true): (code: string) => string | undefined {
+  const places = useFlightPlaces(enabled);
+  return useMemo(() => {
+    const byCode = new Map(places.map((p) => [p.code, p.city]));
+    return (code: string) => byCode.get(code) ?? PLACES.find((p) => p.code === code)?.city;
+  }, [places]);
 }

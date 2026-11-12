@@ -162,7 +162,11 @@ describe('booking review screen', () => {
       await userEvent.click(await screen.findByRole('checkbox', { name: /קראתי ואני מאשר/ }));
       await userEvent.type(screen.getByLabelText(/סיסמה/), 'bad');
       await userEvent.click(screen.getByRole('button', { name: 'אישור התנאים' }));
-      expect(await screen.findByTestId('booking-problem')).toHaveTextContent('הסיסמה שגויה');
+      const problem = await screen.findByTestId('booking-problem');
+      expect(problem).toHaveTextContent('הסיסמה שגויה');
+      // BUG-QA-05: the sentence appears once (title), followed by an explanation — not repeated as the body
+      expect(problem.textContent?.split('הסיסמה שגויה')).toHaveLength(2);
+      expect(problem).toHaveTextContent('התנאים לא אושרו');
       expect(screen.getByTestId('approval-panel')).toBeInTheDocument();
       expect(screen.getByLabelText(/סיסמה/)).toHaveValue('');
     });

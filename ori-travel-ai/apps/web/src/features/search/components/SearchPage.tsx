@@ -2,10 +2,12 @@ import { Search } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Navigate, useSearchParams } from 'react-router';
 import { Card, EmptyState, ErrorState, PageHeader, Skeleton, ButtonLink } from '@/components/ui';
-import { isApiError } from '@/lib/api';
+import { FareCalendar, calendarBaseFromParams, cellKey, routeKey, searchBodyForCell, type SelectedCalendarCell } from '@/features/fare-calendar';
+import { errorMessage, isApiError } from '@/lib/api';
 import { CATEGORY_SEARCH_PATH } from '@/lib/labels';
 import type { Category } from '@/lib/schemas/common';
 import type { SearchResponse } from '@/lib/schemas/search';
+import { usePlaceName } from '../airportsApi';
 import { useRunSearch, useSearchResult } from '../hooks';
 import { serverFieldErrors } from '../forms/common';
 import { activityFromParams, defaultActivityState } from '../forms/activity';
@@ -78,15 +80,40 @@ export function SearchPage({ category, title, description, icon }: SearchPagePro
   const run = useRunSearch(category);
   const [formOpen, setFormOpen] = useState(!searchId);
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+  const isFlight = category === 'flight';
+  const placeName = usePlaceName(isFlight);
+  // Fare calendar: kept across date changes made from the calendar itself; re-centred after a form search.
+  const [calendarSeed, setCalendarSeed] = useState('');
+  const [pendingCell, setPendingCell] = useState<string | null>(null);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [focusResultsFor, setFocusResultsFor] = useState<string | null>(null);
 
   function submit(body: Record<string, unknown>) {
     setServerErrors({});
+    setCalendarError(null);
     run.mutate(body, {
       onSuccess: (data) => {
         setParams({ search_id: data.search_id });
         setFormOpen(false);
+        setCalendarSeed(data.search_id);
       },
       onError: (e) => setServerErrors(serverFieldErrors(e)),
+    });
+  }
+
+  /** A calendar cell runs the normal flight search for exactly those dates (same route, party, cabin, bags). */
+  function selectCalendarCell(cell: SelectedCalendarCell) {
+    if (!base.data || run.isPending) return;
+    setCalendarError(null);
+    setPendingCell(cellKey(cell.depart_date, cell.nights));
+    run.mutate(searchBodyForCell(base.data.params, cell), {
+      onSuccess: (data) => {
+        setParams({ search_id: data.search_id });
+        setFormOpen(false);
+        setFocusResultsFor(data.search_id);
+      },
+      onError: (e) => setCalendarError(errorMessage(e, 'החיפוש נכשל. נסו שוב.')),
+      onSettled: () => setPendingCell(null),
     });
   }
 
@@ -97,7 +124,8 @@ export function SearchPage({ category, title, description, icon }: SearchPagePro
 
   const showForm = formOpen || (!!searchId && base.isError);
   const showFormCard = showForm || (!base.data && !(searchId && base.isPending));
-  const rateLimited = isApiError(run.error) && run.error.status === 429;
+  const rateLimited = isApiError(run.error) && run.error.status === 429 && !calendarError;
+  const calendarBase = isFlight && base.data?.category === 'flight' ? calendarBaseFromParams(base.data.params) : null;
 
   return (
     <>
@@ -120,12 +148,30 @@ export function SearchPage({ category, title, description, icon }: SearchPagePro
             />
           </Card>
         ) : base.data ? (
-          <SearchSummaryBar data={base.data} onEdit={() => setFormOpen(true)} />
+          <SearchSummaryBar data={base.data} onEdit={() => setFormOpen(true)} placeName={isFlight ? placeName : undefined} />
         ) : null}
+
+        {calendarBase && base.data && (
+          <FareCalendar
+            key={`${routeKey(calendarBase)}|${calendarSeed}`}
+            params={base.data.params}
+            onSelect={selectCalendarCell}
+            pendingKey={pendingCell}
+            selectError={calendarError}
+            placeName={placeName}
+            pageCoverageNote={base.data.coverage_note}
+          />
+        )}
 
         {searchId ? (
           base.data ? (
-            <SearchResults key={base.data.search_id} base={base.data} onEditSearch={() => setFormOpen(true)} />
+            <SearchResults
+              key={base.data.search_id}
+              base={base.data}
+              onEditSearch={() => setFormOpen(true)}
+              pending={pendingCell !== null}
+              autoFocus={focusResultsFor === base.data.search_id}
+            />
           ) : base.isPending ? (
             <ResultsSkeleton />
           ) : isApiError(base.error) && base.error.status === 404 ? (

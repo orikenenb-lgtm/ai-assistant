@@ -86,10 +86,17 @@ export function describeBookingError(error: unknown): BookingProblem {
     case 'BOOKING_NOT_ALLOWED':
       return { ...base, title: 'אין הרשאה להכין הזמנות', tone: 'danger' };
     case 'REAUTH_FAILED':
-      return { ...base, title: 'הסיסמה שגויה', message: error.message || 'הסיסמה שהוזנה אינה נכונה. לא בוצע אישור.', tone: 'danger' };
+      // The server message is the same two words as the title — say what it means instead of repeating it (BUG-QA-05).
+      return { ...base, title: 'הסיסמה שגויה', message: 'הסיסמה שהוזנה אינה נכונה. התנאים לא אושרו — אפשר לנסות שוב.', tone: 'danger' };
     case 'RATE_LIMITED':
       return { ...base, title: 'יותר מדי ניסיונות', tone: 'warn' };
     default:
       return { ...base, title: 'הפעולה לא הושלמה', tone: 'danger' };
   }
+}
+
+/** Never show the same sentence as both the title and the body of an alert. */
+export function problemBody(problem: Pick<BookingProblem, 'title' | 'message'>): string | null {
+  const norm = (t: string) => t.trim().replace(/[.!\s]+$/u, '');
+  return norm(problem.message) && norm(problem.message) !== norm(problem.title) ? problem.message : null;
 }

@@ -192,7 +192,9 @@ def _what_when(details: dict[str, Any]) -> list[str]:
         )
     elif kind == "car":
         car_class = details.get("car_class")
-        lines.append(f"רכב: {details.get('vendor')} — {CAR_CLASS_LABELS_HE.get(car_class, car_class)} ({details.get('model_example')} או דומה)")
+        model = str(details.get("model_example") or "").strip()
+        similar = model if model.endswith("או דומה") else f"{model} או דומה"
+        lines.append(f"רכב: {details.get('vendor')} — {CAR_CLASS_LABELS_HE.get(car_class, car_class)} ({similar})")
         lines.append(f"איסוף: {details.get('pickup_location')}, {_dt(details.get('pickup_at'))}")
         lines.append(f"החזרה: {details.get('dropoff_location')}, {_dt(details.get('dropoff_at'))}")
     elif kind == "activity":

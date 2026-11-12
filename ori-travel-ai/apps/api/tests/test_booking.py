@@ -14,6 +14,7 @@ from sqlalchemy import select, update
 from app.core.config import get_settings, reset_settings_cache
 from app.core.db import utcnow
 from app.core.errors import BadRequestError, ConflictError
+from app.core.money import CURRENCY_SYMBOLS
 from app.core.ratelimit import limiter
 from app.models import Approval, AuditEvent, BookingIntent, FamilyMember, Notification, Offer, Reservation
 from app.models.booking import BOOKING_STATES, SimulatedSupplierBooking
@@ -250,7 +251,13 @@ def test_terms_summary_is_hebrew_and_complete_for_every_category(auth_client, db
     text = "\n".join(lines)
     assert lines[0].startswith("מה מזמינים:")
     assert f"נוסעים (1): {c.user.display_name}" in text
-    assert "מחיר כולל:" in text and b["current_price"]["currency"] in text
+    currency = b["current_price"]["currency"]
+    assert "מחיר כולל:" in text and (CURRENCY_SYMBOLS.get(currency) or currency) in text
+    # BUG-QA-03: no raw enum values / ISO codes next to a symbol inside the Hebrew lines
+    assert f"{currency} (" not in text and "None" not in text and "True" not in text
+    for raw in ("economy", "business", "room_only", "midsize", "compact", "automatic"):
+        assert raw not in text.replace(b["offer"]["source"]["supplier_offer_id"], "")
+    assert "או דומה או דומה" not in text
     assert "ביטול:" in text and "ספק:" in text and "סימולציה בלבד" in text
     assert lines == build_terms_summary(b["offer"], b["travelers"], round(Decimal(b["current_price"]["amount"]) * 100),
                                         b["current_price"]["currency"], "SIMULATION") or b["current_price"]["currency"] in ("JPY", "KRW")

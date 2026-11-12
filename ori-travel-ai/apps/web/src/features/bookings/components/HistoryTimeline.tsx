@@ -1,12 +1,17 @@
 import { History } from 'lucide-react';
 import { Card, CardHeader, DateText } from '@/components/ui';
-import type { HistoryEntry } from '@/lib/schemas/bookings';
+import type { ExecutionMode, HistoryEntry } from '@/lib/schemas/bookings';
 import { STATE_LABELS, isBookingState } from '../labels';
 import { PlainTextLine } from './PlainTextLine';
 
-const label = (s: string | null | undefined) => (s ? (isBookingState(s) ? STATE_LABELS[s] : s) : 'התחלה');
+/** Hosted checkout: "approved" means the TERMS were approved — it must not read as an approved booking. */
+const HOSTED: Record<string, string> = { APPROVED: 'תנאים אושרו — ממתין לספק', SUBMITTING: 'הושלם באתר הספק' };
 
-export function HistoryTimeline({ history }: { history: HistoryEntry[] }) {
+const labelFor = (mode?: ExecutionMode) => (s: string | null | undefined) =>
+  s ? ((mode === 'HOSTED_CHECKOUT' ? HOSTED[s] : undefined) ?? (isBookingState(s) ? STATE_LABELS[s] : s)) : 'התחלה';
+
+export function HistoryTimeline({ history, mode }: { history: HistoryEntry[]; mode?: ExecutionMode }) {
+  const label = labelFor(mode);
   return (
     <Card as="section" padding="md">
       <CardHeader title="היסטוריה" icon={<History />} />

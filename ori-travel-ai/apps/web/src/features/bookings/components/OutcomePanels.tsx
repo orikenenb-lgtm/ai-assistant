@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Badge, Button, Callout, Card, CardHeader, DateText, MoneyText } from '@/components/ui';
 import { CATEGORY_SEARCH_PATH } from '@/lib/labels';
 import type { Booking } from '@/lib/schemas/bookings';
-import { MODE_LABELS } from '../labels';
+import { MODE_LABELS, RESERVATION_STATUS_LABELS } from '../labels';
 import { useBookingActions } from '../hooks';
 import { PlainTextLine } from './PlainTextLine';
 import type { Feedback } from './useFeedback';
@@ -66,7 +66,7 @@ export function ConfirmedPanel({ booking }: { booking: Booking }) {
           </div>
           <div>
             <dt className="text-xs text-fg-subtle">סטטוס</dt>
-            <dd>{booking.reservation.status}</dd>
+            <dd data-testid="reservation-status">{RESERVATION_STATUS_LABELS[booking.reservation.status] ?? booking.state_label}</dd>
           </div>
           {booking.reservation.notes && (
             <div className="sm:col-span-2 lg:col-span-4">

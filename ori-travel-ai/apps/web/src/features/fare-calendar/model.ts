@@ -104,9 +104,22 @@ export function searchableRange(today: string): { from: string; to: string } {
   return { from: today, to: addDaysIso(today, MAX_DAYS_AHEAD) };
 }
 
-export function inRange(iso: string, today: string): boolean {
+/** A depart date can be searched when it and its return (depart + nights) are within today … one year ahead. */
+export function inRange(iso: string, today: string, nights: number | null = null): boolean {
   const r = searchableRange(today);
-  return iso >= r.from && iso <= r.to;
+  return iso >= r.from && addDaysIso(iso, nights ?? 0) <= r.to;
+}
+
+/**
+ * Sentences of `note` that are not already shown elsewhere on the page (`shown`), so an honesty statement such as
+ * "אין התחייבות לכיסוי מלא…" appears once, not twice.
+ */
+export function withoutRepeatedSentences(note: string, shown: string | null | undefined): string {
+  if (!shown) return note;
+  return note
+    .split(/(?<=[.!?])\s+/)
+    .filter((s) => s.trim() && !shown.includes(s.trim()))
+    .join(' ');
 }
 
 function baseRequest(b: CalendarBase): Omit<FareCalendarRequest, 'depart_from' | 'depart_to' | 'trip_nights'> {
@@ -127,8 +140,9 @@ export function monthRequest(b: CalendarBase, month: string, today: string): Far
   if (!nightsSupported(b.nights)) return null;
   const days = monthDays(month);
   const r = searchableRange(today);
+  const lastDepart = addDaysIso(r.to, -(b.nights ?? 0));
   const from = days[0] < r.from ? r.from : days[0];
-  const to = days[days.length - 1] > r.to ? r.to : days[days.length - 1];
+  const to = days[days.length - 1] > lastDepart ? lastDepart : days[days.length - 1];
   if (from > to) return null;
   return { ...baseRequest(b), depart_from: from, depart_to: to, trip_nights: b.nights === null ? [] : [b.nights] };
 }
@@ -149,9 +163,10 @@ export function matrixStartFor(depart: string, today: string): string {
 export function matrixRequest(b: CalendarBase, start: string, nights: number[], today: string): FareCalendarRequest | null {
   if (b.nights === null) return null;
   const r = searchableRange(today);
+  const lastDepart = addDaysIso(r.to, -Math.max(...nights));
   const from = start < r.from ? r.from : start;
   let to = addDaysIso(from, MATRIX_SIZE - 1);
-  if (to > r.to) to = r.to;
+  if (to > lastDepart) to = lastDepart;
   if (from > to) return null;
   return { ...baseRequest(b), depart_from: from, depart_to: to, trip_nights: nights };
 }

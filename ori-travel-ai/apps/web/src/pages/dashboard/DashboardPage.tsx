@@ -44,7 +44,8 @@ export default function DashboardPage() {
 
         <QuickSearch />
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        {/* grid-cols-1 = minmax(0,1fr): long nowrap titles must not widen the track (BUG-QA-02). */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           <RecentSearchesWidget />
           <UpcomingTripsWidget />
         </div>
