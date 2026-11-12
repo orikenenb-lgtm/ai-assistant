@@ -48,11 +48,13 @@
 | גל | סוכנים שהופעלו בפועל | סטטוס |
 |---|---|---|
 | 0 | המנהל בלבד: סביבה, חוזים, ליבת API, אימות | ✅ הושלם, 17/17 בדיקות עוברות |
-| 1 | B1, B2, F1, R1 (4 במקביל) | בביצוע |
-| 2 | B3, B4, B5, B6, F2 (מתוכנן) | ממתין |
-| 3 | F3, F4, D1 (מתוכנן) | ממתין |
-| 4 | QA, AUD (מתוכנן) | ממתין |
-| 5 | המנהל: תיקונים, אימות סופי, תיעוד | ממתין |
+| 1 | B1, B2, F1, R1 (4 במקביל) | ✅ |
+| 2 | B3, B4, B5, B6, F2 | ✅ |
+| 3 | F3, F4, D1 | ✅ |
+| 4 | QA, AUD | ✅ |
+| 5 | המנהל + חידוש B1/B4/B5/F3: תיקוני ביקורת | ✅ |
+| V6-A | BE-CAL, FE-FLIGHT, UX-DS, BE-TRIPS, BOOK-REDIRECT, PROV-ANALYST, DEVOPS-RELEASE | ✅ |
+| V6-B | E2E-V6, VIS-A11Y, RELEASE-AUDIT + תיקונים | ✅ |
 
 הספירה הסופית של הסוכנים שהופעלו בפועל מופיעה בסוף [agent-activity-log.md](agent-activity-log.md).
 
@@ -70,7 +72,7 @@
 | 05 | React/TypeScript Engineer | FE-FLIGHT, BE-TRIPS (ממשק טיולים), BOOK-REDIRECT (ממשק הזמנות) |
 | 06 | Design System Specialist | UX-DS |
 | 07 | Mobile/RTL/Accessibility | UX-DS (+ בדיקות נגישות ב-E2E) |
-| 08 | Visual Regression & UX Tester | VIS-A11Y (מתוכנן לגל B) |
+| 08 | Visual Regression & UX Tester | VIS-A11Y |
 | 09 | Backend Lead | הסשן הראשי (ליבה, תיקוני ביקורת) |
 | 10 | FastAPI Engineer | BE-TRIPS |
 | 11 | Database/Migrations | הסשן הראשי (Alembic, parity מול PostgreSQL 16) |
@@ -88,8 +90,8 @@
 | 23 | Booking Lead | BOOK-REDIRECT |
 | 24 | Payment/Checkout Safety | BOOK-REDIRECT |
 | 25 | AppSec/Privacy | הסשן הראשי (תיקוני ביקורת) + AUD |
-| 26 | Threat Modeling/Abuse Testing | AUD (V3) + RELEASE-AUDIT (מתוכנן) |
+| 26 | Threat Modeling/Abuse Testing | AUD (V3) + RELEASE-AUDIT |
 | 27 | QA Automation Lead | QA |
-| 28 | E2E/Browser Test Engineer | QA + E2E-V6 (מתוכנן) |
-| 29 | Windows/DevOps/Performance | D1 (V3) + DEVOPS-RELEASE (מתוכנן) |
-| 30 | Independent Release Auditor | RELEASE-AUDIT (fable, מתוכנן, לא כותב קוד) |
+| 28 | E2E/Browser Test Engineer | QA + E2E-V6 |
+| 29 | Windows/DevOps/Performance | D1 (V3) + DEVOPS-RELEASE |
+| 30 | Independent Release Auditor | RELEASE-AUDIT (fable, לא כותב קוד) |

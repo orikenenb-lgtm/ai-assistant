@@ -16,8 +16,8 @@
 | העדפה (תווית של בעל החשבון) | alias בכלי | שימוש בפועל |
 |---|---|---|
 | Opus 5.5: מנהל, ארכיטקט, ראשי צוותים, אינטגרציה קשה | `opus` (וגם הסשן הראשי) | הסשן הראשי, B2, B5, F1, BE-CAL, FE-FLIGHT, UX-DS |
-| Fable 5.2: ביקורות אבטחה והזמנות קריטיות | `fable` | B4 (בטיחות הזמנות), AUD (ביקורת בלתי-תלויה), BOOK-REDIRECT, RELEASE-AUDIT (מתוכנן) |
-| Sonnet 5.5: קוד ממוקד, בדיקות, תיעוד | `sonnet` | R1, B1, B3, B6, F2, F3, F4, D1, QA, BE-TRIPS, PROV-ANALYST, E2E ו-DevOps (מתוכנן) |
+| Fable 5.2: ביקורות אבטחה והזמנות קריטיות | `fable` | B4 (בטיחות הזמנות), AUD (ביקורת בלתי-תלויה), BOOK-REDIRECT, RELEASE-AUDIT |
+| Sonnet 5.5: קוד ממוקד, בדיקות, תיעוד | `sonnet` | R1, B1, B3, B6, F2, F3, F4, D1, QA, BE-TRIPS, PROV-ANALYST, DEVOPS-RELEASE, E2E-V6, VIS-A11Y |
 | Haiku | `haiku` | לא בשימוש. אין משימה שבה החיסכון מצדיק את הסיכון לאיכות |
 
 ## מדיניות חיסכון

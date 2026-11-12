@@ -77,3 +77,7 @@ docs             ארכיטקטורה, אבטחה, תפעול
 ```
 
 CI: `.github/workflows/ori-travel-ai.yml` (בדיקות API על SQLite ו-PostgreSQL, web, e2e, בדיקות אבטחה).
+
+## דוח מצב
+
+הדוח הסופי, כולל מה עובד ומה הדגמה, תוצאות הבדיקות, מטריצת הספקים והפעולות שנדרשות מבעל החשבון: [`docs/release/FINAL_REPORT_HE.md`](docs/release/FINAL_REPORT_HE.md)

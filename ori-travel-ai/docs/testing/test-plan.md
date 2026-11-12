@@ -15,8 +15,8 @@
 | רמה | כלי | מה היא מכסה | היקף נוכחי | איפה |
 |---|---|---|---|---|
 | סטטית | ruff, `tsc -b`, ESLint (אפס אזהרות) | סגנון, טיפוסים; **גם `apps/web/e2e/**` עובר typecheck ו-lint** | — | CI: `api`, `web` |
-| יחידה — API | pytest (SQLite בזיכרון/קובץ זמני) | מודלים, שירותים, נקודות קצה, הרשאות, הצפנה, מכונת מצבי הזמנה, ספקי DEMO, AI במצב fallback, אבטחה | `<<API>>` בדיקות | `apps/api/tests/test_*.py` |
-| יחידה — web | Vitest + Testing Library (jsdom) | רכיבי UI, טפסים וולידציה, סכמות Zod, מצבי טעינה/שגיאה | `<<WEB>>` בדיקות | `apps/web/src/**/*.test.ts(x)` |
+| יחידה — API | pytest (SQLite בזיכרון/קובץ זמני) | מודלים, שירותים, נקודות קצה, הרשאות, הצפנה, מכונת מצבי הזמנה, ספקי DEMO, AI במצב fallback, אבטחה | **890** בדיקות (SQLite ו-PostgreSQL 16, 2026-11-12) | `apps/api/tests/test_*.py` |
+| יחידה — web | Vitest + Testing Library (jsdom) | רכיבי UI, טפסים וולידציה, סכמות Zod, מצבי טעינה/שגיאה | **254** בדיקות (42 קבצים, 2026-11-12) | `apps/web/src/**/*.test.ts(x)` |
 | E2E | Playwright 1.63.0 (Chromium), 2 פרויקטים: `desktop` 1440 ו-`mobile` 390 (Pixel 7) | מסעות משתמש אמיתיים בדפדפן מול ה-API האמיתי שמגיש את ה-build; נגישות בסיסית; כותרות אבטחה; תרחישי כשל; **20 תרחישי V6** (סעיף 12) | 21 קבצי spec, 85 בדיקות לכל פרויקט (170 בסך הכול; 61 ישנות + 24 של V6) | `apps/web/e2e/*.spec.ts` (פונקציונלי). בדיקות ויזואליות: `apps/web/e2e/visual/**` (סוכן VIS-A11Y, לא רצות כברירת מחדל) |
 | תאימות PostgreSQL | pytest מלא + `alembic upgrade/downgrade` מול PostgreSQL 16 | שהסכמה וה-SQL עובדים גם מחוץ ל-SQLite | רץ ידנית ע"י ה-Director (כל חבילת ה-API + round trip); ב-CI רק migrate + round trip | CI: `api-postgres` |
 | אבטחה סטטית | pip-audit, bandit (medium+), npm audit (high+) | תלויות וקוד API | — | CI: `security` |
@@ -239,7 +239,7 @@ apps/web/e2e/
 ## 8. תוצאות אחרונות (2026-11-12, סבב V6)
 
 > סביבה: Linux (sandbox), Node 22, Playwright 1.63.0 / Chromium מותקן מראש, SQLite, ה-API שמגיש את `apps/web/dist` (build טרי אחרי עיצוב V6), ספקי DEMO, `ORI_ENV=development`. כל ריצה על DB חדש, שרת שהופעל מחדש (מגבלות הקצב בזיכרון), פרויקט אחד בכל ריצה (`workers: 1`).
-> תוצאות ה-API/Vitest/PostgreSQL בטבלה הקודמת (`<<API>>`, `<<WEB>>`) אינן באחריות סבב זה ולא עודכנו כאן.
+> תוצאות ה-API, Vitest ו-PostgreSQL עודכנו ע״י המנהל בטבלה שבסעיף 2 ובסעיף 8א.
 
 | בדיקות | תוצאה |
 |---|---|
@@ -256,6 +256,29 @@ apps/web/e2e/
 * חובה להפעיל מחדש את ה-API בין ריצות מלאות (מגבלות קצב בזיכרון התהליך). `scripts` של ה-E2E כבר עושים זאת.
 * **לא נבדק ב-Windows**: הרצת `setup.ps1` / `start.ps1` (ראו V6-19 ובסעיף 10).
 
+## 8א. אימות סופי של המנהל (עץ העבודה הסופי, 2026-11-12)
+
+הבדיקות רצו ברצף, וכל שלב קיבל DB נקי ושרת משלו. הלוגים המלאים נשמרו ב-scratchpad של הסשן.
+
+| שלב | פקודה (מקוצרת) | תוצאה |
+|---|---|---|
+| API: ruff | `ruff check app tests alembic` | ✅ All checks passed |
+| API: bandit | `bandit -r app -ll -q` | ✅ 0 ממצאים ברמה בינונית ומעלה |
+| API: pip-audit | `pip_audit -r requirements.txt` | ✅ No known vulnerabilities |
+| API: migrations | `app.cli migrate` + `alembic check` | ✅ No new upgrade operations |
+| API: pytest על SQLite | `pytest tests -o addopts= -q` | ✅ **890 passed** (2:45) |
+| API: pytest על PostgreSQL 16 | `ORI_TEST_DATABASE_URL=postgresql+psycopg://…` | ✅ **890 passed** (5:18) |
+| web | `typecheck`, `lint`, `vitest run`, `build` | ✅ 0 שגיאות, **254 passed**, build עבר |
+| נגישות | `playwright test e2e/visual/a11y --project=desktop` | ✅ **148 passed** (בלי חריגים ידועים) |
+| E2E, סבב 1 | desktop ו-mobile ברצף מול שרת אחד | ⚠️ 151 עברו, **17 נכשלו**, כולם במובייל ובגלל 429. מכסת החיפוש של המשתמש (30 בעשר דקות) נגמרה. **זו בעיית תשתית ולא באג במוצר** |
+| תיקון | `ORI_SEARCH_RATE_LIMIT` ו-`ORI_CALENDAR_RATE_LIMIT` ניתנים להגדרה (ברירת מחדל 30 ו-10, ללא שינוי, ויש לכך בדיקה). בשרתי E2E זמניים ב-CI, `test.sh` ו-`test.ps1` המכסה מוגבהת | — |
+| E2E, סבב 2 | desktop ו-mobile **בריצה אחת** מול שרת אחד, כמו ב-CI | ✅ **168 passed, 2 skipped** בכוונה, 0 failed (4.9 דקות) |
+| ויזואלי, סבב 1 | `visual.spec.ts` על DB נקי | ⚠️ 54/58: ה-baseline של dashboard נלכד ב-DB עם נתונים מצטברים (ההבדל בגובה) |
+| ויזואלי: יצירה מחדש | `-g dashboard --update-snapshots` לפי הנוהל הקנוני (DB נקי, visual רץ ראשון) | ✅ 4 baselines של dashboard נוצרו מחדש |
+| ויזואלי: אימות | ריצה מלאה על DB נקי נוסף | ✅ **58/58** |
+
+**מה לא אומת:** הרצת PowerShell (אין `pwsh`), ריצת GitHub Actions אמיתית, ספקים חיים, מודל LLM אמיתי, Safari ו-Firefox.
+
 ## 9. ממצאים פתוחים (באגים שה-E2E גילה)
 
 | מזהה | חומרה | תחום | תיאור | חשוד ב- | כיסוי בבדיקה |
@@ -264,21 +287,21 @@ apps/web/e2e/
 | BUG-QA-02 (**תוקן ב-V6**) | בינונית | פריסה (נייד) | בלוח הבקרה, כשיש לפחות חיפוש אחד אחרון, הדף רחב מ-390px (scrollWidth 409 > 390) ולכן כל המעטפת כולל סרגל הלשוניות התחתון גולשת לצדדים. הסיבה: הכרטיסים בתוך `grid gap-6 lg:grid-cols-2` (טראק auto) ושורת חיפוש עם `truncate`/nowrap מרחיבה את ה-min-content של הטראק. תיקון: `grid-cols-[minmax(0,1fr)]` או `min-w-0` על ילדי ה-grid | `apps/web/src/pages/dashboard/DashboardPage.tsx:47` | `a11y-smoke.spec` — עכשיו בדיקה רגילה (עוברת) |
 | BUG-QA-03 (לפי `booking-safety.md` §5.7 תוקן ב-`TERMS_VERSION=3`; לא נבדק מחדש ב-E2E) | נמוכה | i18n | ערכי enum באנגלית בתוך משפטים בעברית: שורת התנאים "מחלקה: economy, תעריף: לייט" (`terms_summary`); "סטטוס: CONFIRMED" בכרטיס אישור ההזמנה; "718.70 ILS (₪)" בהודעת שינוי מחיר | `apps/api/app/modules/booking/terms.py` (שורת המחלקה ב-`summary`, ו-`format_money` שמחזיר "ILS (₪)"), `apps/web/src/features/bookings/components/OutcomePanels.tsx:68` (שדה "סטטוס" מציג את ה-enum הגולמי) | לא מכוסה (גלוי בצילום מסך) |
 | BUG-QA-04 (הטקסט כבר אינו בקוד — נראה שתוקן; לא נבדק ב-E2E) | נמוכה | ניסוח / שקיפות | מצב ריק של העוזר: "...ויציג הצעות **אמיתיות** מהתוצאות" — בעוד שכל ההצעות הן DEMO. מטעה ביחס למדיניות "אין הצעות אמיתיות" | `apps/web/src/features/assistant/components/ChatPanel.tsx:103` | לא מכוסה |
-| BUG-QA-05 | נמוכה | UX | סיסמה שגויה באישור הזמנה: ההתראה מציגה את "הסיסמה שגויה" פעמיים (כותרת + גוף זהים) | `features/bookings/components/ApprovalPanel.tsx` / `useFeedback.ts` | לא מכוסה |
+| BUG-QA-05 (**תוקן**, BOOK-REDIRECT: `problemBody()`) | נמוכה | UX | סיסמה שגויה באישור הזמנה: ההתראה מציגה את "הסיסמה שגויה" פעמיים (כותרת + גוף זהים) | `features/bookings/components/ApprovalPanel.tsx` / `useFeedback.ts` | לא מכוסה |
 | BUG-QA-06 (נראה שתוקן: `countLabel` — V6-07 מאמת "2 חדרים · 3 מבוגרים · ילד אחד") | נמוכה | ניסוח | פרטי מלון: "אורחים: 1 חדרים · 2 מבוגרים" (ריבוי/יחיד) | `apps/web/src/features/offers/components/OfferDetailDialog.tsx:92` | לא מכוסה |
-| BUG-QA-07 | נמוכה | תיעוד | `docs/security/booking-safety.md` §4.5 קובע שגם ניסיונות אימות מוצלחים נספרים; הקוד (`check_password_for_step_up`) סופר רק כשלונות. התיעוד מיושן | `docs/security/booking-safety.md` | — |
-| BUG-QA-08 | נמוכה | API | (א) 404 על נתיב `/api/...` לא קיים מחזיר `request_id: null` במעטפת השגיאה; (ב) שגיאת JSON שבור מחזירה `field: "9"` (אינדקס תו) במקום שם שדה | `apps/api/app/main.py:100` (מטפל 404 עם `request_id: None`), מטפל RequestValidationError | `security-headers.spec` בודק מבנה, לא ערכים |
+| BUG-QA-07 (**תוקן** ב-`booking-safety.md` §4.5) | נמוכה | תיעוד | `docs/security/booking-safety.md` §4.5 קובע שגם ניסיונות אימות מוצלחים נספרים; הקוד (`check_password_for_step_up`) סופר רק כשלונות. התיעוד מיושן | `docs/security/booking-safety.md` | — |
+| BUG-QA-08 (**תוקן**: `request_id` ב-404, הודעה עברית ל-`json_invalid`, וגם `rid=` בלוג; `test_security_hardening.py`) | נמוכה | API | (א) 404 על נתיב `/api/...` לא קיים מחזיר `request_id: null` במעטפת השגיאה; (ב) שגיאת JSON שבור מחזירה `field: "9"` (אינדקס תו) במקום שם שדה | `apps/api/app/main.py:100` (מטפל 404 עם `request_id: None`), מטפל RequestValidationError | `security-headers.spec` בודק מבנה, לא ערכים |
 
 **ממצאים חדשים מסבב V6:**
 
 | מזהה | חומרה | תחום | תיאור | חשוד ב- | כיסוי בבדיקה |
 |---|---|---|---|---|---|
-| BUG-E2E-01 | נמוכה-בינונית | עוזר AI (מצב בסיסי) | הטקסט מצטט את ההצעה **הזולה ביותר** ואת **הקצרה ביותר** ("• הזולה ביותר: … — 2,553.14 ₪"), אבל נשלחים כרטיסים רק ל-4 ההצעות הראשונות **בדירוג** (`resp.offers[:4]`). בכ-1 מכל 5 תשובות המחיר המצוטט (אמיתי, מהשרת) לא מופיע באף כרטיס, והמשפט "הפרטים המלאים בכרטיסים" לא נכון. לא מדובר במחיר מומצא, אבל המשתמש לא יכול לפתוח את ההצעה שצוטטה. צעדים: `POST /api/ai/chat` "טיסה מתל אביב לרומא ב-… לשני מבוגרים" על כמה תאריכים. צפוי: כל מחיר בטקסט מופיע בכרטיס. בפועל: מחיר ה-"הזולה ביותר" חסר בכרטיסים | `apps/api/app/modules/ai/service.py:233` (`cards=resp.offers[:CARDS_PER_SEARCH]`) מול `apps/api/app/modules/ai/summary.py:160-175` (cheapest / third pick). תיקון: להוסיף ל-`cards` את ההצעות שהסיכום מצטט | `v6-assistant-trip.spec` V6-10b — `test.fail` (סורק עד 18 תאריכים; אם לא נמצא מקרה — מדולג) |
-| BUG-E2E-02 | נמוכה | נגישות | `ChildAgesEditor` יוצר `id="child-age-${i}"`; בטופס מלונות עם ילד בשני חדרים אותו מזהה מופיע פעמיים (HTML לא תקין, התווית הנראית "ילד/ה 1" מצביעה על יעד דו-משמעי; `aria-label` עדיין נותן שם נגיש) | `apps/web/src/features/search/components/formControls.tsx` (`ChildAgesEditor`, ~שורה 79-84). תיקון: `useId()` לכל עורך | `v6-responsive-a11y.spec` V6-17d — `test.fail` |
+| BUG-E2E-01 (**תוקן**: `_summary_cards`; V6-10b הפכה לבדיקה רגילה + `test_fallback_cards_cover_every_offer_named_in_the_summary`) | נמוכה-בינונית | עוזר AI (מצב בסיסי) | הטקסט מצטט את ההצעה **הזולה ביותר** ואת **הקצרה ביותר** ("• הזולה ביותר: … — 2,553.14 ₪"), אבל נשלחים כרטיסים רק ל-4 ההצעות הראשונות **בדירוג** (`resp.offers[:4]`). בכ-1 מכל 5 תשובות המחיר המצוטט (אמיתי, מהשרת) לא מופיע באף כרטיס, והמשפט "הפרטים המלאים בכרטיסים" לא נכון. לא מדובר במחיר מומצא, אבל המשתמש לא יכול לפתוח את ההצעה שצוטטה. צעדים: `POST /api/ai/chat` "טיסה מתל אביב לרומא ב-… לשני מבוגרים" על כמה תאריכים. צפוי: כל מחיר בטקסט מופיע בכרטיס. בפועל: מחיר ה-"הזולה ביותר" חסר בכרטיסים | `apps/api/app/modules/ai/service.py:233` (`cards=resp.offers[:CARDS_PER_SEARCH]`) מול `apps/api/app/modules/ai/summary.py:160-175` (cheapest / third pick). תיקון: להוסיף ל-`cards` את ההצעות שהסיכום מצטט | `v6-assistant-trip.spec` V6-10b — `test.fail` (סורק עד 18 תאריכים; אם לא נמצא מקרה — מדולג) |
+| BUG-E2E-02 (**תוקן**: `useId()`; V6-17d בדיקה רגילה) | נמוכה | נגישות | `ChildAgesEditor` יוצר `id="child-age-${i}"`; בטופס מלונות עם ילד בשני חדרים אותו מזהה מופיע פעמיים (HTML לא תקין, התווית הנראית "ילד/ה 1" מצביעה על יעד דו-משמעי; `aria-label` עדיין נותן שם נגיש) | `apps/web/src/features/search/components/formControls.tsx` (`ChildAgesEditor`, ~שורה 79-84). תיקון: `useId()` לכל עורך | `v6-responsive-a11y.spec` V6-17d — `test.fail` |
 
 תצפיות V6 (לא באגים, לשיקול דעת):
 
-* **תווית "חי" על ספקים אמיתיים שאינם מחוברים**: בדף "ספקים ואבחון" וברשימת "איך לקרוא את הלוח" שבלוח המחירים מוצג תג `מקור נתונים: חי` ליד ספקים כמו Duffel — אבל תמיד יחד עם "לא מחובר". זו תווית *סוג* ספק ולא טענה לנתונים חיים; הבדיקות (V6-20) מחייבות את שני הדברים יחד. כדאי לשקול ניסוח כמו "ספק חי (לא מחובר)" כדי שלא ייקרא כטענה.
+* **(טופל בלוח המחירים: "ספק אמיתי — לא מחובר/לא נשאל בלוח")** **תווית "חי" על ספקים אמיתיים שאינם מחוברים**: בדף "ספקים ואבחון" וברשימת "איך לקרוא את הלוח" שבלוח המחירים מוצג תג `מקור נתונים: חי` ליד ספקים כמו Duffel — אבל תמיד יחד עם "לא מחובר". זו תווית *סוג* ספק ולא טענה לנתונים חיים; הבדיקות (V6-20) מחייבות את שני הדברים יחד. כדאי לשקול ניסוח כמו "ספק חי (לא מחובר)" כדי שלא ייקרא כטענה.
 * לוח המחירים נקרא אוטומטית בכל עמוד תוצאות טיסה ומוגבל ל-10 קריאות ב-10 דק' למשתמש — משתמש שמדפדף בין חודשים ובין תוצאות יגיע למגבלה מהר (הממשק מציג הודעה ברורה "הגעתם למגבלת הבדיקות של לוח המחירים").
 * בדיאלוג פרטי הצעה, Escape הראשון נצרך לעיתים ע"י tooltip פתוח של תג ה-DEMO (לא באג — התנהגות Radix, הבדיקות סוגרות בלולאה).
 
