@@ -30,6 +30,12 @@ for _k in list(os.environ):
     if _k.startswith("ORI_") and any(s in _k for s in ("TOKEN", "API_KEY", "SECRET", "CLIENT_ID")):
         del os.environ[_k]
 
+# Tests must never read the developer's apps/api/.env: it can hold real provider tokens and local
+# switches (ORI_FX_LIVE_ENABLED, ORI_AI_PROVIDER, ...) that would change results or reach the network.
+from app.core.config import Settings  # noqa: E402
+
+Settings.model_config["env_file"] = None
+
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
