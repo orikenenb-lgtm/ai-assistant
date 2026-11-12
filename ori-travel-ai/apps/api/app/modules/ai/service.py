@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
@@ -32,9 +31,10 @@ from app.models.trips import Trip
 from app.modules.ai import tools
 from app.modules.ai.grounding import GroundingResult, amounts_from_text, ground_text
 from app.modules.ai.intent import (
-    CATEGORY_HE,
+    QUESTIONS,
     ParseResult,
     Slots,
+    extract_slots,
     find_places,
     normalize,
     parse_conversation,
@@ -103,11 +103,14 @@ WEEKDAYS = ["שני", "שלישי", "רביעי", "חמישי", "שישי", "ש�
 # ---------------------------------------------------------------- helpers ----
 
 
-@dataclass
 class _ModelFailed(Exception):
-    message: str
-    state: tools.TurnState | None = None
-    calls: list[ToolCallOut] = field(default_factory=list)
+    """The model failed mid-turn; carries whatever tool work already happened."""
+
+    def __init__(self, message: str, state: tools.TurnState | None = None, calls: list[ToolCallOut] | None = None):
+        super().__init__(message)
+        self.message = message
+        self.state = state
+        self.calls = calls or []
 
 
 def _cards(searches: list[SearchResponse], extra: list[CanonicalOffer] | None = None) -> list[CanonicalOffer]:
@@ -215,7 +218,11 @@ def chat(db: Session, user: User, req: ChatRequest, client: LLMClient, *, reques
 
 
 def _fallback_chat(db: Session, user: User, req: ChatRequest, trip: Trip | None, today: date) -> ChatResponse:
+    # Earlier user messages fill slots only when this message adds something itself, so a bare
+    # "תודה" after a completed search does not silently repeat that search.
     user_messages = [h.content for h in req.history if h.role == "user"][-HISTORY_USER_MESSAGES_FOR_SLOTS:]
+    if extract_slots(req.message, today).is_empty():
+        user_messages = []
     base = slots_from_trip(trip, today) if trip is not None else None
     parsed: ParseResult = parse_conversation([*user_messages, req.message], today=today, base=base)
     if parsed.complete:
@@ -226,21 +233,13 @@ def _fallback_chat(db: Session, user: User, req: ChatRequest, trip: Trip | None,
                           warnings=_dedupe(warnings), grounding=Grounding())
         return ChatResponse(reply=reply, tool_calls=[ToolCallOut(name=SEARCH_TOOL_BY_CATEGORY[resp.category], status="ok")])
 
-    question = parsed.clarifying_question or tools_question_default()
+    question = parsed.clarifying_question or QUESTIONS["category"]
     understood = describe_slots(parsed.slots)
-    if understood and parsed.slots.category:
-        text = f"({FALLBACK_LABEL})\nהבנתי: {understood}.\n{question}"
-    elif understood:
-        text = f"({FALLBACK_LABEL})\nהבנתי: {understood}.\n{question}"
-    else:
-        text = f"({FALLBACK_LABEL})\n{HELP_TEXT}\n{question}"
+    intro = f"הבנתי: {understood}." if understood else HELP_TEXT
+    text = f"({FALLBACK_LABEL})\n{intro}\n{question}"
     reply = ChatReply(text=text, mode="fallback", clarifying_question=question, warnings=_dedupe(parsed.errors),
                       grounding=Grounding())
     return ChatResponse(reply=reply, tool_calls=[])
-
-
-def tools_question_default() -> str:
-    return "מה לחפש — טיסות, מלון, רכב או אטרקציות?"
 
 
 def _summarize_state(state: tools.TurnState, calls: list[ToolCallOut]) -> ChatResponse:
@@ -381,5 +380,3 @@ def plan_trip(db: Session, user: User, req: PlanTripRequest, client: LLMClient, 
         interests=interests, warnings=_dedupe(warnings), grounding=grounding,
     )
 
-
-__all__ = ["CATEGORY_HE", "chat", "parse", "plan_trip"]

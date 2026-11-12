@@ -1,8 +1,9 @@
 import { CalendarPlus, Luggage } from 'lucide-react';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Link } from 'react-router';
 import { Button, Callout, DateRange, Dialog, EmptyState, Skeleton, type ButtonProps } from '@/components/ui';
-import { canEdit, useAuth } from '@/features/auth';
+import { canEdit } from '@/features/auth';
+import { AuthContext } from '@/features/auth/context';
 import { fetchTrips, tripKeys } from '@/features/trips/api';
 import { useQuery } from '@tanstack/react-query';
 import { isApiError } from '@/lib/api';
@@ -15,7 +16,7 @@ export interface AddToTripButtonProps extends Pick<ButtonProps, 'size' | 'varian
 
 /** Trip picker (GET /api/trips) → POST /api/trips/{id}/items/from-offer. Hidden for viewers (server enforces). */
 export function AddToTripButton({ offerId, size = 'sm', variant = 'secondary', className }: AddToTripButtonProps) {
-  const { user } = useAuth();
+  const user = useContext(AuthContext)?.user ?? null;
   const [open, setOpen] = useState(false);
   const [tripId, setTripId] = useState<string | null>(null);
   const trips = useQuery({ queryKey: tripKeys.list, queryFn: fetchTrips, enabled: open && canEdit(user) });

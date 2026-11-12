@@ -43,7 +43,7 @@ WEEKDAY = ["שני", "שלישי", "רביעי", "חמישי", "שישי", "שב
 FOOTER_DEMO = "הופק ע״י Ori Travel AI — נתוני DEMO אינם מחירים אמיתיים"
 FOOTER_PLAIN = "הופק ע״י Ori Travel AI"
 
-_CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f‎‏‪-‮⁦-⁩]")
+_CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\u200e\u200f\u202a-\u202e\u2066-\u2069]")
 _fonts_lock = Lock()
 _fonts_ready = False
 

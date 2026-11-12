@@ -41,7 +41,11 @@ export function ProviderCard({ provider: p, canCheck, isOwner }: ProviderCardPro
             {name}
           </h3>
           <p className="mt-1 flex flex-wrap items-center gap-1.5">
-            {mode && <ModeBadge mode={mode} />}
+            {mode && (p.status === 'NOT_CONFIGURED' || p.status === 'DISABLED') && mode === 'LIVE' ? (
+              <Badge tone="neutral">ספק אמיתי (חי)</Badge>
+            ) : (
+              mode && <ModeBadge mode={mode} />
+            )}
             <ModeBadge mode={p.status} />
             {providerCategories(p).map((c) => (
               <Badge key={c} tone="neutral" size="sm">
@@ -62,7 +66,7 @@ export function ProviderCard({ provider: p, canCheck, isOwner }: ProviderCardPro
       {p.status === 'NOT_CONFIGURED' && (
         <p className="rounded-lg bg-surface-sunken p-3 text-sm leading-relaxed text-fg-muted">
           <strong className="font-semibold text-fg">לא מחובר:</strong> הספק מחכה לפרטי גישה בשרת, ולכן הוא לא משתתף בחיפושים. זה לא תקלה.{' '}
-          <Link to="/help#providers" className="font-medium text-accent underline-offset-4 hover:underline">
+          <Link to="/help#connect-providers" className="font-medium text-accent underline-offset-4 hover:underline">
             איך מחברים ספק?
           </Link>
         </p>

@@ -18,10 +18,11 @@ Env vars for dev: `VITE_API_TARGET` (API origin, e.g. `http://127.0.0.1:8010`), 
 The proxy keeps the browser `Host` header (`changeOrigin: false`) because the API's
 Origin check compares `Origin` with `Host` for unsafe requests — do not change it.
 
-Playwright is pinned to **1.63.0** to match the pre-installed Chromium in
-`/opt/pw-browsers`. Never run `playwright install`. All dependencies (including
-`leaflet`/`react-leaflet` for the optional map) are already installed — do not run
-`npm install` concurrently with other agents; ask the lead if a new package is essential.
+Playwright is pinned to **1.63.0**. In the cloud build sandbox Chromium is
+pre-installed in `/opt/pw-browsers`, so `playwright install` is not needed there.
+**On Windows / a fresh machine / CI**, install the browser once:
+`npx playwright install chromium` (CI uses `--with-deps`). All dependencies (including
+`leaflet`/`react-leaflet` for the optional map) are listed in `package.json`; install with `npm ci`.
 
 ## Folder structure
 

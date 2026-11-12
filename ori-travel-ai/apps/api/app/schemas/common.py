@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal
-from typing import Annotated, Generic, Literal, TypeVar
+from typing import Annotated, Any, Generic, Literal, TypeVar
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, PlainSerializer, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, PlainSerializer, field_validator, model_validator
 
 from app.core.money import SUPPORTED_CURRENCIES, quantize
 
@@ -32,8 +32,26 @@ def _validate_email(v: str) -> str:
 EmailAddress = Annotated[str, AfterValidator(_validate_email)]
 
 
+def _strip_nul(value: Any, depth: int = 0) -> Any:
+    """Remove NUL characters from all incoming strings (PostgreSQL rejects them in text)."""
+    if depth > 20:
+        return value
+    if isinstance(value, str):
+        return value.replace("\x00", "") if "\x00" in value else value
+    if isinstance(value, dict):
+        return {(_strip_nul(k, depth + 1)): _strip_nul(v, depth + 1) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_strip_nul(v, depth + 1) for v in value]
+    return value
+
+
 class ApiModel(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _no_nul_chars(cls, data: Any) -> Any:
+        return _strip_nul(data) if isinstance(data, (dict, list, str)) else data
 
 
 class Money(ApiModel):

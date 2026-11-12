@@ -22,8 +22,10 @@ export function ScoreBadge({ score, className }: { score: ScoreBreakdown; classN
       title={score.comparable ? 'ציון כולל (0–100)' : 'לא ניתן לדרג מול הצעות אחרות'}
     >
       <span className="sr-only">ציון כולל:</span>
-      {score.total}
-      <span className="text-2xs font-normal text-ink-200">/100</span>
+      <bdi dir="ltr" className="inline-flex items-baseline gap-0.5">
+        {score.total}
+        <span className="text-2xs font-normal text-ink-200">/100</span>
+      </bdi>
     </span>
   );
 }

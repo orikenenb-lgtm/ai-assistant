@@ -118,7 +118,7 @@ def parse_ecb_xml(data: bytes) -> EcbRates:
     if "<!doctype" in lowered or "<!entity" in lowered:
         raise FxParseError("DOCTYPE/ENTITY declarations are not allowed")
     try:
-        root = ET.fromstring(data)  # noqa: S314 - DOCTYPE/ENTITY rejected above, size limited
+        root = ET.fromstring(data)  # noqa: S314  # nosec B314 - DOCTYPE/ENTITY rejected above, size-limited, trusted ECB host only
     except ET.ParseError:
         raise FxParseError("malformed xml") from None
     day: date | None = None

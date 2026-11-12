@@ -2,10 +2,10 @@ import { TriangleAlert, Wallet } from 'lucide-react';
 import { QueryState } from '@/components/QueryState';
 import { Badge, Callout, Card, CardHeader, MoneyText } from '@/components/ui';
 import type { Budget, BudgetCurrencyRow } from '@/lib/schemas/trips';
+import { isZeroAmount } from '../datetime';
 import { useTripBudget } from '../hooks';
 import { kindLabel } from '../labels';
 
-const isZero = (v: string) => /^-?0+(\.0+)?$/.test(v);
 
 function CurrencyBlock({ row }: { row: BudgetCurrencyRow }) {
   return (
@@ -21,7 +21,7 @@ function CurrencyBlock({ row }: { row: BudgetCurrencyRow }) {
         </dd>
         <dt>הערכה</dt>
         <dd className="text-end">
-          <MoneyText amount={row.estimated} currency={row.currency} estimated={!isZero(row.estimated)} />
+          <MoneyText amount={row.estimated} currency={row.currency} estimated={!isZeroAmount(row.estimated)} />
         </dd>
         <dt>לא נכלל</dt>
         <dd className="text-end">

@@ -17,7 +17,9 @@ import pytest
 from cryptography.fernet import Fernet
 
 os.environ["ORI_ENV"] = "test"
-os.environ["ORI_DATABASE_URL"] = "sqlite://"
+# Default: in-memory SQLite. Set ORI_TEST_DATABASE_URL to run the suite against
+# PostgreSQL (parity check), e.g. postgresql+psycopg://postgres@127.0.0.1:5432/ori_test
+os.environ["ORI_DATABASE_URL"] = os.environ.get("ORI_TEST_DATABASE_URL", "sqlite://")
 os.environ["ORI_SERVE_WEB"] = "false"
 os.environ["ORI_DATA_KEY"] = Fernet.generate_key().decode()
 os.environ["ORI_AI_PROVIDER"] = "none"

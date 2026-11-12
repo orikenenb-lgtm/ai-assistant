@@ -1,7 +1,8 @@
 import { ArrowDown, ArrowUp, MapPin, Pencil, Trash2, TriangleAlert } from 'lucide-react';
 import { Badge, DateText, IconButton, ModeBadge, MoneyText } from '@/components/ui';
-import type { TripDetail, TripItem } from '@/lib/schemas/trips';
-import { COST_STATUS_LABELS, kindIcon, kindLabel } from '../labels';
+import type { ItemKind, TripDetail, TripItem } from '@/lib/schemas/trips';
+import { COST_STATUS_LABELS, ITEM_KIND_ICONS, kindLabel } from '../labels';
+import { Circle } from 'lucide-react';
 
 const COST_TONE = { known: 'success', estimate: 'warn', excluded: 'muted' } as const;
 
@@ -19,8 +20,12 @@ export interface ItemRowProps {
   onDelete: () => void;
 }
 
+function KindIcon({ kind }: { kind: string }) {
+  const Icon = ITEM_KIND_ICONS[kind as ItemKind] ?? Circle;
+  return <Icon className="size-[1.125rem]" />;
+}
+
 export function ItemRow({ item, trip, editable, canMoveUp, canMoveDown, moveHint, busy, onMove, onEdit, onDelete }: ItemRowProps) {
-  const Icon = kindIcon(item.kind);
   const zone = item.timezone ?? trip.timezone ?? 'UTC';
   const showEnd = item.end_at && item.start_at;
   const costStatus = (item.cost_status in COST_TONE ? item.cost_status : 'estimate') as keyof typeof COST_TONE;
@@ -32,7 +37,7 @@ export function ItemRow({ item, trip, editable, canMoveUp, canMoveDown, moveHint
     >
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-sea-50 text-sea-700" aria-hidden="true">
-          <Icon className="size-[1.125rem]" />
+          <KindIcon kind={item.kind} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -57,7 +62,7 @@ export function ItemRow({ item, trip, editable, canMoveUp, canMoveDown, moveHint
                   <DateText value={item.end_at} preset="time" timeZone={zone} />
                 </>
               )}
-              <span className="ms-2 text-xs text-fg-subtle" dir="ltr">
+              <span className="mx-2 text-xs text-fg-subtle" dir="ltr">
                 {zone}
               </span>
             </p>

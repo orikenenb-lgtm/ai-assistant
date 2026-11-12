@@ -70,7 +70,7 @@ export function ProviderStatusStrip({ providers, className }: { providers: Provi
       {hasNotConfigured && (
         <p className="text-xs leading-relaxed text-fg-muted">
           "לא מחובר" אומר שחסרים פרטי גישה לספק אמיתי, ולכן אין ממנו תוצאות — זה לא תקלה.{' '}
-          <Link to="/help#providers" className="font-medium text-accent underline-offset-4 hover:underline">
+          <Link to="/help#connect-providers" className="font-medium text-accent underline-offset-4 hover:underline">
             איך מחברים ספק?
           </Link>
         </p>

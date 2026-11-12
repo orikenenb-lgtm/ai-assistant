@@ -78,7 +78,8 @@ _INTERESTS: dict[str, str] = {
     "museum": rf"{NB}{PFX}(?:מוזיאון|מוזיאונים|גלריה|גלריות){NE}|\bmuseums?\b|\bgaller(?:y|ies)\b",
     "tour": rf"{NB}{PFX}(?:סיור|סיורים|סיור מודרך|מדריך){NE}|\b(?:guided )?tours?\b",
     "outdoor": rf"{NB}{PFX}(?:טבע|אופניים|טיולי טבע|הליכה|מסלול){NE}|\b(?:outdoors?|nature|hiking|biking|bike)\b",
-    "family": rf"{NB}{PFX}(?:משפחתי|משפחתיות|משפחתית|לילדים|פארק שעשועים|לונה פארק){NE}|\bfamily\b(?!\s+of)|\b(?:kids activities|for kids)\b",
+    "family": rf"{NB}{PFX}(?:משפחתי|משפחתיות|משפחתית|לילדים|פארק שעשועים|לונה פארק){NE}"
+              r"|\bfamily\b(?!\s+of)|\b(?:kids activities|for kids)\b",
     "food": rf"{NB}{PFX}(?:אוכל|קולינרי|קולינריה|בישול|טעימות|מסעדות){NE}|\b(?:food|culinary|cooking|tasting)\b",
     "water": rf"{NB}{PFX}(?:מים|ים|שיט|חוף|חופים|פארק מים|שנורקל){NE}|\b(?:water|beach|boat|cruise|snorkel(?:ing)?)\b",
     "nightlife": rf"{NB}{PFX}(?:חיי לילה|ברים|מועדונים|מסיבות){NE}|\b(?:nightlife|bars|clubs)\b",
@@ -145,6 +146,10 @@ class Slots:
         # A newly mentioned destination invalidates an older country-only hint.
         if newer.destination is not None:
             out.country_hint = None
+        # A new duration without new dates re-derives the end date from the (older) start date.
+        if (newer.nights is not None or newer.days is not None) and newer.start_date is None and newer.end_date is None:
+            out.end_date = None
+            out.nights, out.days = newer.nights, newer.days
         return out
 
     def is_empty(self) -> bool:
@@ -603,8 +608,8 @@ _RE_DRIVER = re.compile(r"נהג(?:ת)?\s+(?:בן|בת|בגיל)\s+(\d{2})|drive
 _RE_ADULTS = re.compile(r"(?<!\d)(\d{1,2})\s*(?:מבוגרים|מבוגרות|מבוגר|מבוגרת|adults?|grown[- ]?ups)", re.IGNORECASE)
 _RE_ADULT_ONE = re.compile(rf"(?<![{HEB}])(?:מבוגר|מבוגרת)\s+1(?!\d)")
 _RE_KIDS = re.compile(rf"(?<!\d)(\d{{1,2}})\s*(?:ילדים|ילדות|ילד|ילדה|kids?|children|child)(?![{HEB}])", re.IGNORECASE)
-_RE_KID_SINGLE = re.compile(rf"(?<![{HEB}])(?:ו|ועם\s+|עם\s+)?(?:ילד|ילדה|הילד|הילדה|הבן|הבת)(?![{HEB}])|\b(?:a|our|my)\s+(?:child|kid|son|daughter)\b",
-                            re.IGNORECASE)
+_RE_KID_SINGLE = re.compile(rf"(?<![{HEB}])(?:ו|ועם\s+|עם\s+)?(?:ילד|ילדה|הילד|הילדה|הבן|הבת)(?![{HEB}])"
+                            r"|\b(?:a|our|my)\s+(?:child|kid|son|daughter)\b", re.IGNORECASE)
 _RE_KIDS_UNKNOWN = re.compile(rf"(?<![{HEB}])(?:ו|ה|וה|עם\s+ה?|ועם\s+ה?)?(?:ילדים|ילדות)(?![{HEB}])|\b(?:the\s+)?(?:kids|children)\b",
                               re.IGNORECASE)
 _RE_INFANTS = re.compile(rf"(?<!\d)(\d)\s*(?:תינוקות|תינוק|תינוקת|infants?|babies|baby)(?![{HEB}])", re.IGNORECASE)
@@ -709,8 +714,8 @@ _FLAG_PATTERNS: list[tuple[str, Any, re.Pattern[str]]] = [
     ("board", "breakfast", re.compile(r"ארוחת\s+בוקר|ארוחות\s+בוקר|\bbreakfast\b|\bB&B\b", re.IGNORECASE)),
     ("free_cancellation", True, re.compile(r"ביטול\s+(?:חינם|ללא\s+עלות|בחינם)|\bfree\s+cancell?ation\b|\brefundable\b",
                                            re.IGNORECASE)),
-    ("kosher", True, re.compile(rf"(?<![{HEB}])(?:כשר|כשרה|כשרות|אוכל\s+כשר)(?![{HEB}])|\bkosher\b", re.IGNORECASE)),
-    ("accessible", True, re.compile(rf"(?<![{HEB}])(?:נגיש|נגישה|נגישים|נגישות)(?![{HEB}])|כיס(?:א|ה)\s+גלגלים|\bwheelchair\b|"
+    ("kosher", True, re.compile(rf"(?<![{HEB}])(?:ו|וה|ה|ב)?(?:כשר|כשרה|כשרות|אוכל\s+כשר)(?![{HEB}])|\bkosher\b", re.IGNORECASE)),
+    ("accessible", True, re.compile(rf"(?<![{HEB}])(?:ו|וה|ה|ב)?(?:נגיש|נגישה|נגישים|נגישות)(?![{HEB}])|כיס(?:א|ה)\s+גלגלים|\bwheelchair\b|"
                                     r"\baccessib(?:le|ility)\b", re.IGNORECASE)),
     ("transmission", "automatic", re.compile(r"אוטומט|\bautomatic\b|\bauto\s+transmission\b", re.IGNORECASE)),
     ("transmission", "manual", re.compile(rf"(?<![{HEB}])(?:ידני|גיר\s+ידני|הילוכים)(?![{HEB}])|\bmanual\b|\bstick\s*shift\b",

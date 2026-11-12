@@ -7,8 +7,9 @@ import { defineConfig, devices } from '@playwright/test';
  * dev server; set E2E_BASE_URL to test the FastAPI-served build instead
  * (e.g. E2E_BASE_URL=http://127.0.0.1:8000).
  *
- * Chromium is pre-installed (PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers) and
- * pinned to @playwright/test 1.63.0 — do not run `playwright install`.
+ * @playwright/test is pinned to 1.63.0. In the cloud build sandbox Chromium is
+ * pre-installed (/opt/pw-browsers). On Windows, a fresh machine or CI run
+ * `npx playwright install chromium` once.
  */
 export default defineConfig({
   testDir: './e2e',

@@ -159,10 +159,17 @@ def revoke_other_sessions(db: Session, user_id: str, keep_session_id: str | None
 
 
 def check_password_for_step_up(db: Session, user: User, password: str, request: Request | None) -> None:
-    """Verify the password again for sensitive actions (with throttling)."""
-    if not limiter.hit(f"reauth:{user.id}", limit=5, window_seconds=300):
-        raise RateLimitedError("יותר מדי ניסיונות אימות. נסו שוב בעוד מספר דקות")
+    """Verify the password again for sensitive actions.
+
+    Only FAILED attempts count towards the limit (5 per 5 minutes), so a family
+    member approving several bookings in a row is not locked out, while password
+    guessing through step-up endpoints is still throttled.
+    """
+    key = f"reauth-fail:{user.id}"
+    if limiter.is_blocked(key, limit=5, window_seconds=300):
+        raise RateLimitedError("יותר מדי ניסיונות אימות שגויים. נסו שוב בעוד מספר דקות")
     if not verify_password(user.password_hash, password):
+        limiter.hit(key, limit=1_000_000, window_seconds=300)
         record_audit(db, "auth.reauth", actor_user_id=user.id, outcome="failure", request=request, commit=True)
         raise UnauthorizedError("הסיסמה שגויה", code="REAUTH_FAILED")
 

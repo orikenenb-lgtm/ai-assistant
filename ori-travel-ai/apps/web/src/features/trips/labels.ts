@@ -25,10 +25,6 @@ export function kindLabel(kind: string): string {
   return ITEM_KIND_LABELS[kind as ItemKind] ?? kind;
 }
 
-export function kindIcon(kind: string): LucideIcon {
-  return ITEM_KIND_ICONS[kind as ItemKind] ?? Circle;
-}
-
 export const COST_STATUS_LABELS: Record<ItemCostStatus, string> = {
   known: 'ידוע',
   estimate: 'הערכה',

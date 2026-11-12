@@ -26,7 +26,7 @@ export default function ProvidersPage() {
         <Callout tone="info" title="מה זה ״לא מחובר״?">
           ספקים אמיתיים (למשל Duffel או Amadeus) דורשים פרטי גישה שמוגדרים בשרת בלבד. עד שהוגדרו הם מסומנים ״לא מחובר״ ולא מחזירים תוצאות. ספקי הדגמה מחזירים
           נתונים סינתטיים, ומסומנים תמיד ב״הדגמה״.{' '}
-          <Link to="/help#providers" className="font-medium underline underline-offset-4">
+          <Link to="/help#connect-providers" className="font-medium underline underline-offset-4">
             לעזרה בחיבור ספק
           </Link>
         </Callout>

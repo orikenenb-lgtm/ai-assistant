@@ -48,3 +48,8 @@ export function todayIso(): string {
   const day = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${m}-${day}`;
 }
+
+/** True for "0", "0.00", "-0" … (decimal strings; no float math). */
+export function isZeroAmount(v: string): boolean {
+  return /^-?0+(\.0+)?$/.test(v.trim());
+}

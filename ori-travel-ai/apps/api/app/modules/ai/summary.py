@@ -125,7 +125,8 @@ def offer_label(o: CanonicalOffer) -> str:
         stars = f" {d.star_rating:g}★" if d.star_rating else ""
         return f"{d.hotel_name}{stars}"
     if isinstance(d, CarDetails):
-        return f"{d.model_example} · {d.vendor} ({CAR_CLASS_HE.get(d.car_class, d.car_class)}, {'אוטומט' if d.transmission == 'automatic' else 'ידני'})"
+        gear = "אוטומט" if d.transmission == "automatic" else "ידני"
+        return f"{d.model_example} · {d.vendor} ({CAR_CLASS_HE.get(d.car_class, d.car_class)}, {gear})"
     if isinstance(d, ActivityDetails):
         return d.name
     return o.title

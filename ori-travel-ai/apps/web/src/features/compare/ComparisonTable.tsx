@@ -23,7 +23,7 @@ export function ComparisonTable({ group, showFx, caption, onRemove }: Comparison
   const sections = [...new Set(rows.map((r) => r.section))];
 
   return (
-    <div className="scrollbar-thin w-full max-w-full overflow-x-auto rounded-xl border border-line bg-surface shadow-xs">
+    <div className="scrollbar-thin relative w-full max-w-full overflow-x-auto rounded-xl border border-line bg-surface shadow-xs">
       <table className="w-full min-w-max border-collapse text-sm" data-testid="comparison-table" data-category={group.category} data-currency={group.currency}>
         <caption className="sr-only">{caption}</caption>
         <thead>
@@ -62,7 +62,7 @@ export function ComparisonTable({ group, showFx, caption, onRemove }: Comparison
           {sections.map((section) => (
             <Fragment key={section}>
               <tr>
-                <th scope="colgroup" colSpan={offers.length + 1} className="sticky start-0 border-b border-line bg-surface-sunken px-3 py-1.5 text-start text-xs font-bold text-fg">
+                <th scope="colgroup" colSpan={offers.length + 1} className="border-b border-line bg-surface-sunken px-3 py-1.5 text-start text-xs font-bold text-fg">
                   {section}
                 </th>
               </tr>

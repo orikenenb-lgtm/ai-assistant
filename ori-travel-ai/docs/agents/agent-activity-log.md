@@ -28,3 +28,10 @@
 | 2026-11-12 ~13:15 | Agent B6 | הסתיים: Duffel (מתאם מלא, מצב test + תקרת חיפושים יומית), Viator (affiliate, מחיר "החל מ" כהערכה), Amadeus מושבת (הופסק), Booking/Expedia placeholders, ECB FX אופציונלי. נבדק מול MockTransport בלבד | sonnet | ✅ (מאומת מול fixtures בלבד) |
 | 2026-11-12 ~13:18 | מנהל | עדכון 3 בדיקות ישנות של B2 שבדקו placeholder של Duffel → כעת בודקות Booking/Amadeus אינרטיים; 100% ירוק בבדיקות ספקים/חיפוש/live | — | ✅ |
 | 2026-11-12 ~13:22 | Agent D1 | הופעל: סקריפטי PowerShell/bash, CI, תיעוד תפעול, README | sonnet | בביצוע |
+| 2026-11-12 ~13:30 | Agent B4 | הסתיים: מכונת מצבים להזמנה, terms_hash, אישור עם סיסמה, idempotency, ספק מדומה, reconcile, חסימת LIVE. 69 בדיקות | fable | ✅ |
+| 2026-11-12 ~13:35 | מנהל | migration ראשוני 0001 (22 טבלאות): upgrade/check/downgrade/upgrade עברו ב-SQLite **וב-PostgreSQL 16 מקומי** | — | ✅ |
+| 2026-11-12 ~13:40 | מנהל | הרצת כל סוויטת ה-API מול PostgreSQL → נמצא באג אמיתי (תו NUL גורם ל-500 ב-PG) → תוקן ב-ApiModel; כל הסוויטה ירוקה מול PG (ללא בדיקות AI שבתהליך) | — | ✅ |
+| 2026-11-12 ~13:40 | מנהל | reauth: רק ניסיונות כושלים נספרים (בקשת B4) | — | ✅ |
+| 2026-11-12 ~13:45 | Agent F2 | הסתיים: מסכי חיפוש ×4, תוצאות, דירוג מחדש, השוואה, ספקים; 93 בדיקות web | sonnet | ✅ |
+| 2026-11-12 ~13:45 | Agent D1 | הסתיים: סקריפטי PS/bash, CI, README, תיעוד תפעול, openapi.json. bash נבדק בפועל; PowerShell **לא הורץ** (אין pwsh) | sonnet | ✅ חלקי |
+| 2026-11-12 ~13:50 | מנהל | bandit: תווי bidi בקוד הומרו ל-escape (הגנת Trojan Source), nosec מוצדק ל-XML של ECB; ruff ב-alembic; תיקון עוגני עזרה; הערות Playwright ל-Windows | — | ✅ |

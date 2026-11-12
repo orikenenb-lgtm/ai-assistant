@@ -5,7 +5,6 @@ from __future__ import annotations
 from logging.config import fileConfig
 
 from alembic import context
-
 from app.core.db import get_engine
 from app.models import Base
 

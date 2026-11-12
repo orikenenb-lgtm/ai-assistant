@@ -30,6 +30,15 @@ class RateLimiter:
             q.append(now)
             return True
 
+    def is_blocked(self, key: str, limit: int, window_seconds: float) -> bool:
+        """True when `key` already has `limit` hits in the window (does not register a hit)."""
+        now = time.monotonic()
+        with self._lock:
+            q = self._hits[key]
+            while q and now - q[0] > window_seconds:
+                q.popleft()
+            return len(q) >= limit
+
     def check(self, key: str, limit: int, window_seconds: float, message: str | None = None) -> None:
         if not self.hit(key, limit, window_seconds):
             raise RateLimitedError(message)

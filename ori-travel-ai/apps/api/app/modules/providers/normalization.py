@@ -56,9 +56,9 @@ class NormalizationError(ValueError):
 _TAG_RE = re.compile(r"<[^>]*>")
 _WS_RE = re.compile(r"\s+")
 # Bidi embedding/override/isolate controls can visually spoof text; remove them.
-_BIDI_CONTROLS = {ord(c): None for c in "‪‫‬‭‮⁦⁧⁨⁩"}
+_BIDI_CONTROLS = {ord(c): None for c in "\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069"}
 # Zero-width / format characters other than LRM/RLM/ZWJ/ZWNJ (which Hebrew text may use)
-_KEEP_FORMAT = {"‎", "‏", "‌", "‍"}
+_KEEP_FORMAT = {"\u200e", "\u200f", "\u200c", "\u200d"}
 
 
 def clean_text(value: Any, max_len: int = MAX_TEXT) -> str | None:

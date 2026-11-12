@@ -1,6 +1,6 @@
-import { Scale, Search, Trash2 } from 'lucide-react';
+import { ChevronDown, Scale, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Badge, Button, ButtonLink, Callout, Card, CardHeader, Checkbox, EmptyState, ErrorState, FreshnessText, PageHeader, Skeleton } from '@/components/ui';
+import { Badge, Button, ButtonLink, Callout, Card, Checkbox, EmptyState, ErrorState, FreshnessText, PageHeader, Skeleton } from '@/components/ui';
 import { ComparisonTable } from '@/features/compare/ComparisonTable';
 import { useComparison, useFxRates } from '@/features/compare/hooks';
 import { COMPARE_MAX, COMPARE_MIN, compareSelection, useCompareSelection } from '@/features/offers';
@@ -27,6 +27,7 @@ export default function ComparePage() {
   const selection = useCompareSelection();
   const [weights, setWeights] = useState<Weights | undefined>(undefined);
   const [showFx, setShowFx] = useState(false);
+  const [weightsOpen, setWeightsOpen] = useState(false);
   const comparison = useComparison(selection.ids, weights);
   const fx = useFxRates(showFx);
   const data = comparison.data;
@@ -94,7 +95,7 @@ export default function ComparePage() {
                 </Callout>
               )}
 
-              <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+              <div className="flex flex-col gap-6">
                 <div className="flex min-w-0 flex-col gap-6">
                   {hasFxData && (
                     <Card padding="sm" className="flex flex-col gap-2">
@@ -119,6 +120,22 @@ export default function ComparePage() {
                     </Card>
                   )}
 
+                  <Card padding="sm" className="flex flex-col gap-3">
+                    <button
+                      type="button"
+                      className="flex items-center justify-between gap-2 text-start text-sm font-semibold text-fg"
+                      aria-expanded={weightsOpen}
+                      aria-controls="compare-weights"
+                      onClick={() => setWeightsOpen((v) => !v)}
+                    >
+                      התאמת משקלי הדירוג
+                      <ChevronDown className={weightsOpen ? 'size-4 rotate-180' : 'size-4'} aria-hidden="true" />
+                    </button>
+                    <div id="compare-weights" hidden={!weightsOpen} className="max-w-md">
+                      <RerankPanel key={JSON.stringify(data.weights)} applied={toWeights(data.weights)} pending={comparison.isFetching} onApply={(w) => setWeights(w)} />
+                    </div>
+                  </Card>
+
                   <div className={comparison.isFetching ? 'flex flex-col gap-8 opacity-60 transition-opacity' : 'flex flex-col gap-8'} aria-busy={comparison.isFetching}>
                     {data.groups.map((g) => (
                       <section key={`${g.category}-${g.currency}`} aria-labelledby={`grp-${g.category}-${g.currency}`} className="flex flex-col gap-3">
@@ -142,15 +159,6 @@ export default function ComparePage() {
                   </div>
                 </div>
 
-                <Card className="lg:sticky lg:top-[calc(var(--spacing-topbar)+1rem)]" padding="sm">
-                  <CardHeader level={2} title="משקלי הדירוג" description="משפיעים על ציון ההצעות בהשוואה." />
-                  <RerankPanel
-                    key={JSON.stringify(data.weights)}
-                    applied={toWeights(data.weights)}
-                    pending={comparison.isFetching}
-                    onApply={(w) => setWeights(w)}
-                  />
-                </Card>
               </div>
             </>
           )}

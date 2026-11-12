@@ -2,10 +2,11 @@ import { CalendarDays, Package, Users } from 'lucide-react';
 import { Link } from 'react-router';
 import { Badge, Card, DateRange, MoneyText } from '@/components/ui';
 import type { TripSummary } from '@/lib/schemas/trips';
+import { isZeroAmount } from '../datetime';
 import { tripStatusLabel } from '../labels';
 
 export function TripCard({ trip }: { trip: TripSummary }) {
-  const totals = trip.totals.filter((t) => t.known !== '0' || t.estimated !== '0');
+  const totals = trip.totals.filter((t) => !isZeroAmount(t.known) || !isZeroAmount(t.estimated));
   return (
     <Card as="article" interactive padding="none" data-testid="trip-card" className="relative">
       <div className="flex flex-col gap-3 p-4 sm:p-5">
@@ -51,7 +52,7 @@ export function TripCard({ trip }: { trip: TripSummary }) {
               {totals.map((t) => (
                 <li key={t.currency} className="flex items-baseline gap-1.5">
                   <MoneyText amount={t.known} currency={t.currency} className="font-semibold text-fg" />
-                  {t.estimated !== '0' && (
+                  {!isZeroAmount(t.estimated) && (
                     <span className="text-xs text-fg-muted">
                       + <MoneyText amount={t.estimated} currency={t.currency} estimated /> משוער
                     </span>

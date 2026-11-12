@@ -50,7 +50,7 @@ def _flight_offers(provider_id: str = "demo_skyline"):
         ("&lt;img src=x onerror=alert(1)&gt;Hotel", "Hotel"),
         ("&amp;lt;script&amp;gt;x", "x"),
         ("line1\nline2\x00\x07end", "line1 line2 end"),
-        ("abc‮dcb⁦x", "abcdcbx"),
+        ("abc\u202edcb\u2066x", "abcdcbx"),
         ("  multiple    spaces  ", "multiple spaces"),
         ("", None),
         (None, None),
@@ -64,7 +64,7 @@ def test_clean_text(raw, expected):
 def test_clean_text_caps_length_and_keeps_hebrew_marks():
     assert len(clean_text("א" * 1000, 50)) == 50
     assert clean_text("א" * 1000, 50).endswith("…")
-    assert clean_text("שלום‏עולם") == "שלום‏עולם"  # RLM is legitimate in Hebrew text
+    assert clean_text("שלום\u200fעולם") == "שלום\u200fעולם"  # RLM is legitimate in Hebrew text
 
 
 def test_sanitize_offer_cleans_every_text_field():

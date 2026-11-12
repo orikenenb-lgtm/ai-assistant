@@ -3,7 +3,7 @@
 from app.core.db import Base
 from app.models.alerts import Alert, Notification
 from app.models.auth import ROLE_ADULT, ROLE_OWNER, ROLE_VIEWER, ROLES, AuthSession, Invitation, User
-from app.models.booking import BOOKING_STATES, Approval, BookingIntent, Reservation
+from app.models.booking import BOOKING_STATES, Approval, BookingIntent, Reservation, SimulatedSupplierBooking
 from app.models.family import FamilyMember, TravelerProfile
 from app.models.search import CATEGORIES, Offer, PriceSnapshot, ProviderSearch, SavedOffer, SearchRequest
 from app.models.system import AppSetting, AuditEvent, ProviderConfiguration
@@ -33,6 +33,7 @@ __all__ = [
     "Reservation",
     "SavedOffer",
     "SearchRequest",
+    "SimulatedSupplierBooking",
     "TravelerProfile",
     "Trip",
     "TripItem",
