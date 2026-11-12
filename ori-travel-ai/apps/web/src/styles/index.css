@@ -15,8 +15,8 @@
  * (`bg-sea-50 text-sea-700`, `bg-ink-900 text-white`, …) adapts automatically:
  * light steps become dark steps and vice versa, and `white` becomes the dark
  * surface (text-white on a solid colour stays readable). All text pairs are
- * WCAG AA in both themes — ratios are listed in the design-system doc and are
- * re-checked with scripts in that doc.
+ * WCAG AA in both themes — the full ratio table (light + dark) is in the doc;
+ * re-run the check there whenever a value changes.
  *
  * The default Tailwind palette is intentionally reset (`--color-*: initial`).
  */
@@ -31,7 +31,7 @@
   --color-black: #000000;
 
   /* Ink — slate-navy neutrals for text, icons, lines.
-     ink-900 on white = 15.4:1, ink-600 = 7.5:1, ink-500 = 5.4:1, ink-400 (input borders) = 3.45:1 */
+     ink-900 on white = 15.8:1, ink-600 = 7.55:1, ink-500 = 5.4:1, ink-400 (input borders) = 3.45:1 */
   --color-ink-50: #f3f5f8;
   --color-ink-100: #e6eaf0;
   --color-ink-200: #cdd5e0;
@@ -45,7 +45,7 @@
   --color-ink-950: #0b1526;
 
   /* Sand — warm neutrals, now very subtle (50–200 are almost neutral). Kept for the
-     DEMO language (dashed sand badges/banners). sand-800 on sand-100 = 8.6:1 */
+     DEMO language (dashed sand badges/banners). sand-800 on sand-100 = 8.2:1 */
   --color-sand-50: #f9f8f5;
   --color-sand-100: #f3f0ea;
   --color-sand-200: #e8e2d6;
@@ -70,7 +70,7 @@
   --color-sea-800: #104843;
   --color-sea-900: #0d3935;
 
-  /* Sun — brand highlight (logo, rank-1 marker). ink-950 on sun-400 = 9.3:1 */
+  /* Sun — brand highlight (logo, rank-1 marker). ink-950 on sun-400 = 10.1:1 */
   --color-sun-100: #fbefd9;
   --color-sun-300: #f0cd8f;
   --color-sun-400: #e9b872;

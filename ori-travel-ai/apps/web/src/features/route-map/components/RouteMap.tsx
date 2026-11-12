@@ -214,10 +214,10 @@ export default function RouteMap({ route, subtitle, className }: RouteMapProps) 
         <ol className="flex flex-col gap-1 text-xs text-fg-muted" data-testid="route-legs">
           {route.legs.map((l, i) => (
             <li key={i} className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="font-semibold text-fg">{l.sliceTitle}:</span>
+              <span className="font-semibold text-fg">{l.sliceTitle}:</span>{' '}
               <span>
                 {cityLabel(l.from)} (<span dir="ltr">{l.from.code}</span>) אל {cityLabel(l.to)} (<span dir="ltr">{l.to.code}</span>)
-              </span>
+              </span>{' '}
               <span className="text-fg-subtle">
                 · {l.carrier} <span dir="ltr">{l.flight}</span> · {formatDuration(l.durationMinutes)}
               </span>

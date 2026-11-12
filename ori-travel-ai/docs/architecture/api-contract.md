@@ -223,3 +223,14 @@ reasons[], card}]}], intro, intro_mode:"model"|"template", search_id, interests,
 | Viewers get a reduced traveler shape (no accessibility needs, passport fragments, expiry, nationality) | AUD-07 |
 | Login no longer counts as step-up (`reauth_at` starts empty) | AUD-22 |
 | Host header allowlist `ORI_ALLOWED_HOSTS`; body limit enforced on streamed bytes | AUD-13/14 |
+
+## 6. V6 booking additions (BOOK-REDIRECT)
+* `POST /api/bookings` accepts optional `execution_mode: "SIMULATION" | "HOSTED_CHECKOUT"` (honoured only if the
+  adapter offers it; `"LIVE"` ⇒ 422). DEMO `demo_kidventures` supports a DEMO supplier-hosted checkout.
+* `BookingSummary.is_demo`, `CheckoutLinkOut.is_demo`.
+* `GET /api/demo-supplier/checkout?ref=` (signed-in, read-only) and `POST /api/demo-supplier/checkout/complete`
+  (adult, CSRF) — in-app DEMO supplier page; issues a `DEMO-XXXXXXXXXX` reference recorded in the DEMO ledger.
+* `record-confirmation` for DEMO hosted checkout verifies the reference against the DEMO ledger
+  (409 `SUPPLIER_REFERENCE_NOT_FOUND`); LIVE hosted checkout keeps user-typed references, flagged
+  `reference_verified: false`. New codes: `CHECKOUT_SESSION_EXPIRED`, `CHECKOUT_SESSION_NOT_FOUND`.
+* `TERMS_VERSION` 3 (terms summary fully Hebrew).

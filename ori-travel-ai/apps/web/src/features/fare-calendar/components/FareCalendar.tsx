@@ -8,7 +8,7 @@ import { isApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/format';
 import type { FareCell, FareCalendarResponse } from '@/lib/schemas/calendar';
-import { useFareCalendar } from '../hooks';
+import { useDebouncedValue, useFareCalendar } from '../hooks';
 import {
   addMonths,
   calendarBaseFromParams,
@@ -103,8 +103,12 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
     () => (view === 'month' ? monthRequest(base, month, today) : matrixRequest(base, matrixStart, nightsList, today)),
     [view, base, month, matrixStart, nightsList, today],
   );
-  const q = useFareCalendar(req);
-  const data = q.data;
+  // Structural key: a new search with the same window (e.g. after choosing a cell) reuses the cached calendar at once.
+  const reqKey = req ? JSON.stringify(req) : '';
+  const settledKey = useDebouncedValue(reqKey, 350);
+  const debouncing = settledKey !== reqKey;
+  const q = useFareCalendar(debouncing ? null : req);
+  const data = debouncing ? undefined : q.data;
   const cells = useMemo(() => indexCells(data?.cells ?? []), [data]);
   const selectedKey = cellKey(base.departDate, base.nights);
 
@@ -207,7 +211,7 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
 
   const detailKey = (hoverKey && layoutKeys.includes(hoverKey) ? hoverKey : null) ?? focusKey;
   const modes = new Set((data?.cells ?? []).map((c) => c.mode).filter(Boolean));
-  const loading = !!req && q.isPending;
+  const loading = !!req && (debouncing || q.isPending);
   const prevMonthDisabled = month <= monthOf(range.from);
   const nextMonthDisabled = month >= monthOf(range.to);
   const prevWeekDisabled = departs[0] <= range.from;

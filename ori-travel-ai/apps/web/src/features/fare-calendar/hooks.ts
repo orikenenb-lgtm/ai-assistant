@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import type { FareCalendarRequest } from '@/lib/schemas/calendar';
 import { fareCalendarKeys, fetchFareCalendar } from './api';
 
@@ -17,4 +18,17 @@ export function useFareCalendar(req: FareCalendarRequest | null) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+}
+
+/**
+ * `value` after it stopped changing for `ms` (the first value is returned immediately). Quick month / week clicks
+ * therefore cost one calendar request, not one per click.
+ */
+export function useDebouncedValue<T>(value: T, ms: number): T {
+  const [settled, setSettled] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setSettled(value), ms);
+    return () => clearTimeout(id);
+  }, [value, ms]);
+  return settled;
 }

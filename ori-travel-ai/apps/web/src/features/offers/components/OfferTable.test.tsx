@@ -1,13 +1,14 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { stripBidi } from '@/lib/format';
 import { CanonicalOfferSchema } from '@/lib/schemas/offers';
 import { renderWithProviders } from '@/test/utils';
 import { countLabel, passengersText } from '../index';
 import { makeFlightOffer } from '../testFixtures';
 import { OfferTable } from './OfferTable';
 
-const clean = (s: string | null) => (s ?? '').replace(/[‎‏]/g, '').replace(/ /g, ' ');
+const clean = (s: string | null) => stripBidi(s ?? '');
 
 const withBag = CanonicalOfferSchema.parse({
   ...makeFlightOffer({ id: 'b2', amount: '1500.00', refundable: true, rank: 2 }),
@@ -50,7 +51,7 @@ describe('OfferTable', () => {
     const user = userEvent.setup();
     await user.click(within(rows[1]).getByRole('button', { name: /^פרטים/ }));
     expect(onOpen).toHaveBeenCalledWith(withBag);
-    await user.click(within(table).getByRole('button', { name: /מסלול/ }));
+    await user.click(within(table).getByRole('button', { name: /^מסלול/ }));
     expect(onSort).toHaveBeenCalledWith('duration');
     await user.click(within(rows[0]).getByRole('button', { name: /הצגת המסלול במפה/ }));
     expect(onMap).toHaveBeenCalledWith(offers[0]);

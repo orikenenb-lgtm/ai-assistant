@@ -73,8 +73,8 @@ else
 fi
 
 # 5. migrations -------------------------------------------------------------
-info "Applying database migrations"
-(cd "$API_DIR" && "$PY" -m app.cli migrate)
+# migrate.sh backs the DB up first when it already exists and is behind the code (data/backups/*-pre-migrate-*.db)
+"$SCRIPT_DIR/migrate.sh"
 
 # 6. web ----------------------------------------------------------------------
 if [ "$SKIP_WEB" -eq 0 ]; then

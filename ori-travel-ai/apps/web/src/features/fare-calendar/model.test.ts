@@ -54,9 +54,23 @@ describe('calendar base + requests', () => {
     expect(inRange('2027-11-10', today, 5)).toBe(false);
   });
 
-  it('builds the normal flight search body for a cell (exact dates, no flexibility)', () => {
-    const body = searchBodyForCell({ ...calendarSearchParams, flex_days: 2 }, { depart_date: '2026-12-03', return_date: '2026-12-08', nights: 5 });
-    expect(body).toMatchObject({ origin: 'TLV', destination: 'FCO', depart_date: '2026-12-03', return_date: '2026-12-08', flex_days: 0, adults: 2, children_ages: [7], cabin: 'economy' });
+  it('builds the normal flight search body for a cell with exactly the calendar inputs', () => {
+    const body = searchBodyForCell(
+      { ...calendarSearchParams, flex_days: 2, max_price: '3000', preferred_departure_window: 'morning', max_stops: 1, checked_bags: 1 },
+      { depart_date: '2026-12-03', return_date: '2026-12-08', nights: 5 },
+    );
+    expect(body).toEqual({
+      origin: 'TLV',
+      destination: 'FCO',
+      depart_date: '2026-12-03',
+      return_date: '2026-12-08',
+      adults: 2,
+      children_ages: [7],
+      cabin: 'economy',
+      max_stops: 1,
+      checked_bags: 1,
+      currency: 'ILS',
+    });
     expect(searchBodyForCell(calendarSearchParams, { depart_date: '2026-12-03', return_date: null, nights: 7 }).return_date).toBe('2026-12-10');
   });
 });

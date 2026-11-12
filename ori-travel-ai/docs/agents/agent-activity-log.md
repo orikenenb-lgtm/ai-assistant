@@ -70,3 +70,4 @@
 | 2026-11-12 ~15:15 | מנהל | ניתוב באגי QA: 01+02 → UX-DS, 03+05+07 → BOOK-REDIRECT, 06 → FE-FLIGHT; תיקון עצמי: 04 (נוסח AI), 08 (request_id ב-404, שגיאת JSON); CI: alembic check; e2e scripts: מפתח הצפנה זמני | — | ✅ |
 | 2026-11-12 ~15:25 | Agent BE-CAL | הסתיים: POST /api/search/flight/calendar, highlights, GET /api/geo/airports, ימי no-service ב-DEMO, ביטול מטמון אחרי שינוי הגדרות ספק; 48 בדיקות חדשות; סוויטה מלאה 838 עוברות; 42 תאים ב-~0.7s | opus | ✅ |
 | 2026-11-12 ~15:30 | Agent DEVOPS-RELEASE | הופעל: התקנה נקייה מ-clone, גיבוי לפני migration, סקירת PowerShell, מסמכי שחרור/rollback/אבחון | sonnet | בביצוע |
+| 2026-11-12 ~15:40 | Agent BOOK-REDIRECT | הסתיים: checkout מדומה באתר ספק (demo_kidventures) מקצה לקצה, אימות אסמכתה מול ספר DEMO, 61 בדיקות חדשות (כולל 22 ניסיונות open redirect), תיקוני QA-03/05/07, נתוני אטרקציות; 838 API, 240 web | fable | ✅ |

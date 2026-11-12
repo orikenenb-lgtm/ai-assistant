@@ -181,11 +181,26 @@ export function indexCells(cells: readonly FareCell[]): Map<string, FareCell> {
   return new Map(cells.map((c) => [cellKey(c.depart_date, c.nights), c]));
 }
 
-/** Body for the normal `POST /api/search/flight` when a cell is chosen: same search, exact dates. */
+/**
+ * Body for the normal `POST /api/search/flight` when a cell is chosen. It carries exactly the calendar's own inputs
+ * (route, dates, party, cabin, stops, bags, currency) so the search is the one the cell priced: flexibility, departure
+ * window and budget are not part of the calendar and would change the results (and the provider cache key).
+ */
 export function searchBodyForCell(params: Record<string, unknown>, cell: Pick<FareCell, 'depart_date' | 'return_date' | 'nights'>): Record<string, unknown> {
-  const body = flightBody(flightFromParams(params));
+  const b = flightBody(flightFromParams(params));
   const ret = cell.return_date ?? (cell.nights != null ? addDaysIso(cell.depart_date, cell.nights) : null);
-  return { ...body, depart_date: cell.depart_date, return_date: ret, flex_days: 0 };
+  return {
+    origin: b.origin,
+    destination: b.destination,
+    depart_date: cell.depart_date,
+    return_date: ret,
+    adults: b.adults,
+    children_ages: b.children_ages,
+    cabin: b.cabin,
+    max_stops: b.max_stops,
+    checked_bags: b.checked_bags,
+    currency: b.currency,
+  };
 }
 
 export const STATUS_LABELS: Record<FareCellStatus, string> = {

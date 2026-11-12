@@ -38,6 +38,7 @@ if [ "$MODE" = "app" ]; then
     (cd "$WEB_DIR" && npm run build)
   fi
   ok "Open: http://localhost:$PORT   (Ctrl+C to stop)"
+  [ "$LAN" -eq 0 ] || info "From another device use http://<this-PC-IP>:$PORT and add <this-PC-IP> to ORI_ALLOWED_HOSTS in apps/api/.env (else: 400 Invalid host header)."
   cd "$API_DIR"
   exec "$PY" -m uvicorn app.main:app --no-proxy-headers --host "$HOST" --port "$PORT"
 fi

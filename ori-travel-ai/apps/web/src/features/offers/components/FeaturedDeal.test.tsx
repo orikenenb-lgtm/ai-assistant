@@ -1,13 +1,14 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { stripBidi } from '@/lib/format';
 import { CanonicalOfferSchema, type CanonicalOffer } from '@/lib/schemas/offers';
 import { renderWithProviders } from '@/test/utils';
 import { FEATURED_DEFAULT_NOTE, FEATURED_FILTERED_NOTE, cheapestOffer, dominantCurrency, pickFeatured, travellersCovered } from '../featured';
 import { makeFlightOffer } from '../testFixtures';
 import { FeaturedDeal } from './FeaturedDeal';
 
-const text = (el: HTMLElement) => (el.textContent ?? '').replace(/[‎‏]/g, '').replace(/ /g, ' ');
+const text = (el: HTMLElement) => stripBidi(el.textContent ?? '');
 
 function withCurrency(o: CanonicalOffer, currency: string, amount: string): CanonicalOffer {
   return CanonicalOfferSchema.parse({ ...o, price: { ...o.price, total: { amount, currency } } });
