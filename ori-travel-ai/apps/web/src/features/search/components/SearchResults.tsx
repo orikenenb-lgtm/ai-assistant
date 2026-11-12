@@ -1,7 +1,8 @@
-import { Scale, SlidersHorizontal, X } from 'lucide-react';
+import { BellPlus, Scale, SlidersHorizontal, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { Badge, Button, ButtonLink, Callout, DialogClose, Drawer, EmptyState, ErrorState, NativeSelect } from '@/components/ui';
+import { canEdit, useAuth } from '@/features/auth';
 import { FACTOR_LABELS, FACTOR_ORDER } from '@/features/offers/labels';
 import { OfferCard, OfferDetailDialog, useCompareSelection, COMPARE_MIN } from '@/features/offers';
 import { cn } from '@/lib/cn';
@@ -67,6 +68,7 @@ export interface SearchResultsProps {
 export function SearchResults({ base, onEditSearch }: SearchResultsProps) {
   const category = base.category;
   const [weightsParam, setWeightsParam] = useState<string | undefined>(undefined);
+  const { user } = useAuth();
   const ranked = useSearchResult(base.search_id, weightsParam);
   const data = ranked.data ?? base;
   const rerankFailed = ranked.isError && weightsParam !== undefined;
@@ -145,6 +147,19 @@ export function SearchResults({ base, onEditSearch }: SearchResultsProps) {
         <Callout tone="info" title="כיסוי החיפוש">
           {data.coverage_note}
         </Callout>
+
+        {canEdit(user) && (
+          <div>
+            <ButtonLink
+              to={`/alerts?from_search=${encodeURIComponent(data.search_id)}`}
+              variant="secondary"
+              size="sm"
+              leadingIcon={<BellPlus aria-hidden="true" />}
+            >
+              יצירת התראת מחיר לחיפוש הזה
+            </ButtonLink>
+          </div>
+        )}
 
         <ProviderStatusStrip providers={data.providers} />
 

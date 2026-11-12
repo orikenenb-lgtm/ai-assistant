@@ -12,7 +12,7 @@ const routes = [{ path: '/bookings/:bookingId', element: <BookingDetailPage /> }
 interface Ctx {
   booking: Booking;
   handlers?: Record<string, (init: RequestInit & { url: string }) => Response | Promise<Response>>;
-  user?: Partial<typeof testSession.user>;
+  user?: Partial<Omit<typeof testSession.user, 'role'>> & { role?: 'owner' | 'adult' | 'viewer' };
 }
 
 function setup({ booking, handlers = {}, user }: Ctx) {

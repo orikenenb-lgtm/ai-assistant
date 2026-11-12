@@ -54,17 +54,23 @@ export function ItemRow({ item, trip, editable, canMoveUp, canMoveDown, moveHint
             )}
           </div>
           {item.start_at && (
-            <p className="mt-0.5 text-sm text-fg-muted">
-              <DateText value={item.start_at} preset="time" timeZone={zone} />
-              {showEnd && (
-                <>
-                  {' – '}
-                  <DateText value={item.end_at} preset="time" timeZone={zone} />
-                </>
-              )}
-              <span className="mx-2 text-xs text-fg-subtle" dir="ltr">
-                {zone}
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-fg-muted">
+              {/* Isolate the LTR time range and the IANA zone so bidi never glues them together */}
+              <bdi dir="ltr">
+                <DateText value={item.start_at} preset="time" timeZone={zone} />
+                {showEnd && (
+                  <>
+                    {' – '}
+                    <DateText value={item.end_at} preset="time" timeZone={zone} />
+                  </>
+                )}
+              </bdi>
+              <span aria-hidden="true" className="text-fg-subtle">
+                ·
               </span>
+              <bdi dir="ltr" className="text-xs text-fg-subtle">
+                {zone}
+              </bdi>
             </p>
           )}
           {item.location && (

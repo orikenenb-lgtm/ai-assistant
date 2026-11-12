@@ -38,7 +38,8 @@ export function StartBookingDialog({ initialOfferId, onClose }: StartBookingDial
 
   // The offer to show: prefer the saved copy, otherwise ask the server.
   const savedMatch = saved.data?.find((s) => s.offer_id === offerId);
-  const offerQuery = useOffer(offerId || null, !!offerId && !savedMatch);
+  const savedSettled = saved.isSuccess || saved.isError;
+  const offerQuery = useOffer(offerId || null, !!offerId && savedSettled && !savedMatch);
   const offer: CanonicalOffer | null = savedMatch?.offer ?? offerQuery.data ?? null;
 
   const offerOptions = useMemo(() => {
@@ -54,7 +55,7 @@ export function StartBookingDialog({ initialOfferId, onClose }: StartBookingDial
   }, [saved.data, initialOfferId, offer]);
 
   const isDemo = offer?.source.mode === 'DEMO';
-  const offerMissing = offerQuery.isError && isApiError(offerQuery.error) && offerQuery.error.status === 404;
+  const offerMissing = !savedMatch && offerQuery.isError && isApiError(offerQuery.error) && offerQuery.error.status === 404;
   const canSubmit = !!offerId && selected.length >= 1 && selected.length <= MAX_TRAVELERS && !create.isPending && !offerMissing;
 
   async function submit() {
