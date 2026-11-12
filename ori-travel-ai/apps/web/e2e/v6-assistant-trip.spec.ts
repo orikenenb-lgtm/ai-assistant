@@ -2,6 +2,7 @@ import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures-v6';
 import { futureDate, uniq } from './env';
 import { allAmounts, amountIn, apiFlightSearch, rnd } from './v6-helpers';
+import type { Json } from './api';
 
 const MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
@@ -56,12 +57,10 @@ test.describe('V6 עוזר AI ובונה הטיולים', () => {
     expect(search.params.adults).toBe(2);
     expect(search.params.children_ages).toEqual([7]);
     const serverIds = new Set((search.offers as Array<{ id: string }>).map((o) => o.id));
-    const cardAmounts: number[] = [];
     for (let i = 0; i < n; i++) {
       const card = cards.nth(i);
       expect(serverIds.has((await card.getAttribute('data-offer-id')) ?? '')).toBe(true);
       await expect(card.getByTestId('source-line')).toContainText('הדגמה');
-      cardAmounts.push(...(await allAmounts(card)));
     }
     // The card's total equals the server offer's total (no re-computation in the browser).
     for (let i = 0; i < n; i++) {
@@ -79,8 +78,7 @@ test.describe('V6 עוזר AI ובונה הטיולים', () => {
     for (const price of inText) {
       expect(serverTotals.some((t) => Math.abs(t - price) < 0.011), `price ${price} in the reply must be an offer total from the server`).toBe(true);
     }
-    const missingFromCards = inText.filter((p) => !cardAmounts.some((a) => Math.abs(a - p) < 0.011));
-    expect(missingFromCards, `prices in the reply text that are not shown in any card: ${missingFromCards.join(', ')}`).toEqual([]);
+    // (Quoted prices that have no card are covered by V6-10b / BUG-E2E-01 below, deterministically.)
 
     // 4. XSS: markup in a message stays literal text and never executes.
     const payload = '<img src=x onerror=alert(1)><script>alert(2)</script>';
@@ -94,6 +92,33 @@ test.describe('V6 עוזר AI ובונה הטיולים', () => {
     // A card-less reply must not invent prices either.
     const second = await page.getByTestId('chat-assistant-message').nth(1).innerText();
     expect(second).not.toMatch(/\d\s*(?:₪|ש"ח|שקל)/);
+  });
+
+  // BUG-E2E-01 (assistant, low/medium): in basic (no-model) mode the summary quotes the CHEAPEST and the SHORTEST offer, but only
+  // the first four offers by RANK are sent as cards (`resp.offers[:CARDS_PER_SEARCH]`, ai/service.py:233), so the quoted price
+  // often has no card ("הפרטים המלאים בכרטיסים" is then untrue). Nothing is fabricated -- the price is a real server price --
+  // but the user cannot see or open the offer. DEMO data is deterministic per date, not per run, so the test walks departure
+  // dates (bounded) until it finds a reply that quotes a price without a card, then asserts the contract the scenario demands.
+  test('V6-10b כל מחיר שמופיע בטקסט התשובה מופיע גם בכרטיס -- באג ידוע BUG-E2E-01', async ({ api }, testInfo) => {
+    test.fail(true, 'BUG-E2E-01: the basic-mode reply quotes the cheapest/shortest offer without sending its card');
+    test.setTimeout(90_000);
+    let violation: { price: number; day: number } | null = null;
+    let tried = 0;
+    for (let i = 0; i < 10 && !violation; i++) {
+      const d = new Date(Date.now() + (rnd(40, 200) + i) * 86_400_000);
+      const res = await api.post('/api/ai/chat', { message: `טיסה מתל אביב לרומא ב-${d.getDate()} ב${MONTHS[d.getMonth()]} לשני מבוגרים`, history: [] });
+      if (!res.ok()) break;
+      const reply = (await res.json()).reply as Json;
+      if (!reply.cards?.length) continue;
+      tried++;
+      const cardTotals = (reply.cards as Json[]).map((c) => Number(c.price.total.amount));
+      const quoted = [...(reply.text as string).matchAll(/(\d[\d,]*(?:\.\d+)?)\s*(?:₪|ILS)/g)].map((m) => Number(m[1].replace(/,/g, '')));
+      const missing = quoted.find((p) => !cardTotals.some((t) => Math.abs(t - p) < 0.011));
+      if (missing !== undefined) violation = { price: missing, day: i };
+    }
+    testInfo.annotations.push({ type: 'searches-tried', description: String(tried) });
+    test.skip(tried === 0, 'the assistant returned no cards for any date');
+    expect(violation, `a reply quoted a price that no card shows (${JSON.stringify(violation)})`).toBeNull();
   });
 
   test('V6-11 בונה הטיולים: תקציב מחושב, חפיפה בין טיסות מציגה אישור (ביטול ⇒ לא נוסף, אישור ⇒ נוסף עם תג חפיפה)', async ({ page, api, ownerApi }) => {

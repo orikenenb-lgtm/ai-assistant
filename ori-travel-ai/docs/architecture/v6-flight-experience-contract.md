@@ -132,3 +132,8 @@ contrast checks and document them in `docs/release/design-system.md`.
 * Search cache now ignores cached searches older than an eligible provider's last configuration change, so
   `simulate_error` takes effect immediately (E2E supplier-failure scenario).
 * `GET /api/geo/airports` returns 54 airports with `Cache-Control: private, max-age=3600`.
+* Release-audit follow-up (RA-01): only quotes in the requested currency can price a cell (no conversion,
+  no relabelling); a provider answering only in another currency ⇒ `UNSUPPORTED` with `error_code: CURRENCY_MISMATCH`.
+  Invalid calendar requests no longer consume the rate limit. `offers_count` uses the same dedupe group as the
+  normal search (`service.dedupe_group`). The calendar `coverage_note` no longer repeats the "no full market
+  coverage" sentence — the flights page shows that disclaimer once (search coverage note).

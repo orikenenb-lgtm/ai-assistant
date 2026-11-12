@@ -12,8 +12,18 @@ const SIDE_STYLE: Record<SideState, { cls: string; Icon: typeof Ban }> = {
 };
 
 /** State-machine stepper: the main flow plus a clearly separate side-state chip (expired / failed / unknown / cancelled). */
-export function BookingStepper({ state, history, mode }: { state: string; history: HistoryEntry[]; mode?: ExecutionMode }) {
-  const model = buildStepper(state, history, mode);
+export function BookingStepper({
+  state,
+  history,
+  mode,
+  unverified,
+}: {
+  state: string;
+  history: HistoryEntry[];
+  mode?: ExecutionMode;
+  unverified?: boolean;
+}) {
+  const model = buildStepper(state, history, mode, unverified);
   return (
     <div className="flex flex-col gap-3" data-testid="booking-stepper">
       <ol className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" aria-label="שלבי ההזמנה">

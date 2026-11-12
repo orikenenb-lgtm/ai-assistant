@@ -248,6 +248,23 @@ def test_model_tool_loop_cards_come_from_server_and_invented_price_is_removed(ap
     assert content.startswith('<untrusted_supplier_data tool="search_hotels">') and tools.REMINDER in content
 
 
+def test_market_wide_cheapest_claim_is_rewritten_to_search_scope(app, auth_client):
+    fake = FakeClient([tool_step(call("search_hotels", HOTEL_ARGS)),
+                       LLMResult(text="מצאתי מלונות. זה המלון הזול ביותר בשוק! אין זול מזה.")])
+    use(app, fake)
+    reply = auth_client("adult").post("/api/ai/chat", json={"message": "מלון זול ברומא"}).json()["reply"]
+    assert reply["text"] == "מצאתי מלונות. זה המלון הזול ביותר מבין ההצעות שנמצאו בחיפוש זה!"
+    assert service.MSG_MARKET_CLAIM in reply["warnings"] and reply["grounding"]["ok"] is False
+    assert len(reply["grounding"]["removed_claims"]) == 2
+
+
+def test_market_wide_claim_without_a_search_is_removed(app, auth_client):
+    use(app, FakeClient([LLMResult(text="בדרך כלל אפשר למצוא טיסות. רומא היא היעד הזול ביותר בעולם.")]))
+    reply = auth_client("adult").post("/api/ai/chat", json={"message": "לאן זול לטוס?"}).json()["reply"]
+    assert reply["text"] == "בדרך כלל אפשר למצוא טיסות."
+    assert service.MSG_MARKET_CLAIM in reply["warnings"]
+
+
 def test_model_price_without_any_tool_result_is_removed(app, auth_client):
     use(app, FakeClient([LLMResult(text="טיסה לרומא עולה בדרך כלל 450 ₪. כדאי לבדוק תאריכים.")]))
     reply = auth_client("adult").post("/api/ai/chat", json={"message": "כמה עולה טיסה לרומא?"}).json()["reply"]

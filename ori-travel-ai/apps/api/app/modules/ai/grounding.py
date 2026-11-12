@@ -21,6 +21,16 @@
    "two thousand dollars", "מאות דולרים"), or containing מאה/אלף/hundred/thousand
    in a price sentence, cannot be verified and are always removed.
 
+5. **Market-wide superlatives** — the product may only claim "cheapest among the
+   offers found in this search". A superlative followed by a market scope
+   ("הזול ביותר בשוק", "הכי זול שיש", "cheapest on the market", "lowest price
+   anywhere") has the scope rewritten to "מבין ההצעות שנמצאו בחיפוש זה" /
+   "among the offers found in this search" (only when this turn has search
+   results; otherwise the sentence is removed). Absolute claims with no honest
+   rewrite ("אין זול מזה", "לא תמצאו זול יותר", "best price guaranteed",
+   "unbeatable") remove the sentence. Scoped ("הזול ביותר מבין התוצאות") and
+   negated/hedged ("לא בהכרח הזול ביותר בשוק") phrases are kept.
+
 Invisible format characters (bidi marks, zero-width spaces) are stripped from the
 model text first so they cannot be used to split a number from its currency.
 """
@@ -447,6 +457,81 @@ def _is_booking_claim(sentence: str) -> bool:
     return False
 
 
+# ------------------------------------------------- market-wide claims ----
+
+HONEST_SCOPE_HE = "מבין ההצעות שנמצאו בחיפוש זה"
+HONEST_SCOPE_EN = "among the offers found in this search"
+_SCOPE_WINDOW = 45
+
+_SUPERLATIVE = re.compile(
+    rf"{_HW}(?:ה|ש|וה)?(?:זול(?:ה|ים|ות)?|נמוכ(?:ה|ים|ות)|נמוך|משתלמ(?:ת|ים|ות)|משתלם)\s+ביותר{_HE}"
+    rf"|{_HW}(?:ה|ו)?הכי\s+(?:זול(?:ה|ים|ות)?|נמוכ(?:ה|ים|ות)|נמוך|משתלמ(?:ת|ים|ות)|משתלם){_HE}"
+    rf"|{_HW}(?:ה|ו)?(?:מחיר|עסקה|דיל)\s+(?:ה)?(?:טוב(?:ה)?\s+ביותר|הכי\s+טוב(?:ה)?){_HE}"
+    r"|(?i:\b(?:cheapest|lowest(?:\s+(?:price|fare|rate)s?)?|least\s+expensive|best\s+(?:price|deal|value|rate|fare)s?)\b)"
+)
+# Market scope that follows a superlative (within the same clause).
+_MARKET_SCOPE = re.compile(
+    rf"{_HW}(?:בכל\s+השוק|בשוק(?:\s+כולו)?|בכל\s+העולם|בעולם|בכל\s+מקום(?:\s+אחר)?|בכל\s+האינטרנט|באינטרנט|ברשת|"
+    rf"בכל\s+האתרים|מכל\s+האתרים|מכל\s+החברות|בכל\s+הארץ|בארץ|בישראל|בכל\s+העיר|בעיר|שיש(?:\s+בכלל)?|שקיימ(?:ת|ים|ות)|"
+    rf"שקיים|שתמצאו|שתמצא|שתמצאי|שאפשר\s+למצוא|שניתן\s+למצוא|בכלל|אי\s+פעם|בכל\s+הזמנים|בהיסטוריה|עלי\s+אדמות){_HE}"
+    rf"(?!\s+(?:כאן|פה|מבין|בין\s+ה|ב(?:תוצאות|רשימה|חיפוש)))"
+    r"|(?i:\b(?:on\s+the\s+(?:market|internet|web|planet)|anywhere(?:\s+else)?|in\s+the\s+(?:world|market|country|city|industry)|"
+    r"out\s+there|available\s+anywhere|you(?:'ll|\s+will|\s+can|\s+could)?\s+(?:ever\s+)?find|period|ever|of\s+all\s+time|"
+    r"on\s+earth|in\s+town)\b(?!\s+(?:here|below|above|in\s+(?:these|the|this)\s+(?:results|search|list))))"
+)
+_CLAUSE_BREAK = re.compile(r"[.,;:!?—–()\[\]]")
+# Explicit negation / hedge right before the superlative: an honest disclaimer, keep it.
+_HEDGE_BEFORE = re.compile(
+    rf"(?:{_HW}(?:לא|אין|אינו|אינה|איננו|אינם|בהכרח){_HE}|(?i:\b(?:not|necessarily|never)\b|n't\b))[^.!?]{{0,20}}$"
+)
+# Absolute market claims with no honest rewrite -> remove the sentence. (pattern, honour a preceding negation?)
+_MARKET_ABSOLUTE: list[tuple[re.Pattern[str], bool]] = [
+    (re.compile(p, re.IGNORECASE), neg)
+    for p, neg in (
+        (rf"{_HW}אין\s+(?:\S+\s+){{0,2}}?(?:זול|נמוך|משתלם|טוב)(?:ה|ים|ות)?\s*(?:יותר|מזה|ממנו|ממנה|מזו|מאלה)", False),
+        (rf"{_HW}לא\s+(?:תמצאו|תמצא|תמצאי|תשיגו|תשיג|ניתן\s+למצוא|אפשר\s+למצוא|תמצאו\s+בשום\s+מקום)\s+(?:\S+\s+){{0,3}}?"
+         r"(?:זול|נמוך|משתלם|טוב)(?:ה|ים|ות)?\s+(?:יותר|מזה)", False),
+        (rf"{_HW}(?:ה|ו|וה|ב)?(?:מחיר|מחירים)\s+(?:\S+\s+){{0,3}}?(?:מובטח|מובטחת|מובטחים|בהתחייבות|בערבות){_HE}"
+         rf"|{_HW}(?:מובטח|מובטחת)\s+(?:\S+\s+){{0,2}}?(?:ה|כ)?(?:זול|נמוך|מחיר)|ביותר\s+(?:מובטח|מובטחת){_HE}"
+         rf"|{_HW}(?:הבטחת|ערבות|התחייבות\s+ל)"
+         rf"\s*(?:ה)?(?:מחיר|זול){_HE}|{_HW}(?:שובר(?:י)?\s+(?:ה)?שוק|ללא\s+תחרות|אין\s+לו\s+מתחרים){_HE}", True),
+        (r"\b(?:best|lowest|cheapest)\s+(?:price\s+)?guarantee[ds]?\b|\bguaranteed\s+(?:the\s+)?(?:best|lowest|cheapest)\b"
+         r"|\bprice\s+(?:match|guarantee)\b|\bunbeatable\b|\bnothing\s+beats\b|\bbeats?\s+(?:any|all|every)\s+(?:other\s+)?"
+         r"(?:price|deal|offer)s?\b", True),
+        (r"\b(?:won't|will\s+not|can't|cannot|couldn't|could\s+not)\s+(?:find|get)\s+(?:\w+\s+){0,3}?"
+         r"(?:cheaper|lower|better\s+(?:price|deal))\b|\b(?:can't|cannot)\s+beat\b|\bthere(?:'s|\s+is)\s+no(?:thing)?\s+cheaper\b"
+         r"|\bnothing\s+(?:is\s+)?cheaper\b", False),
+    )
+]
+
+
+def _is_absolute_market_claim(sentence: str) -> bool:
+    for pattern, honour_negation in _MARKET_ABSOLUTE:
+        for m in pattern.finditer(sentence):
+            if not (honour_negation and _HEDGE_BEFORE.search(sentence[: m.start()][-30:])):
+                return True
+    return False
+
+
+def _market_scope_spans(sentence: str) -> list[tuple[int, int, str]]:
+    """(start, end, honest replacement) for market scopes that follow a non-negated superlative."""
+    out: list[tuple[int, int, str]] = []
+    for sup in _SUPERLATIVE.finditer(sentence):
+        if _HEDGE_BEFORE.search(sentence[: sup.start()][-30:]):
+            continue
+        window = sentence[sup.end():sup.end() + _SCOPE_WINDOW]
+        brk = _CLAUSE_BREAK.search(window)
+        if brk:
+            window = window[: brk.start()]
+        scope = _MARKET_SCOPE.search(window)
+        if scope:
+            start, end = sup.end() + scope.start(), sup.end() + scope.end()
+            honest = HONEST_SCOPE_EN if scope.group(0).isascii() else HONEST_SCOPE_HE
+            if not any(start < e and s < end for s, e, _ in out):
+                out.append((start, end, honest))
+    return out
+
+
 # ------------------------------------------------------------- grounding ----
 
 
@@ -458,6 +543,8 @@ class GroundingResult:
     booking_claims_removed: int = 0
     prices_removed: int = 0
     prices_checked: int = 0
+    market_claims_rewritten: int = 0
+    market_claims_removed: int = 0
 
 
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?…])\s+")
@@ -473,8 +560,11 @@ def _clip(s: str, n: int = 300) -> str:
     return s if len(s) <= n else s[: n - 1] + "…"
 
 
-def ground_text(text: str, allowed: Iterable[Amount]) -> GroundingResult:
+def ground_text(text: str, allowed: Iterable[Amount], *, scope_available: bool | None = None) -> GroundingResult:
+    """Ground model text. ``scope_available``: this turn has search results, so a market-wide
+    superlative can be rewritten to "among the offers found in this search" (default: ``bool(allowed)``)."""
     allowed_list = list(allowed)
+    can_rewrite = bool(allowed_list) if scope_available is None else scope_available
     result = GroundingResult(text="")
     out_lines: list[str] = []
     for line in _strip_invisible(text or "").split("\n"):
@@ -487,6 +577,16 @@ def ground_text(text: str, allowed: Iterable[Amount]) -> GroundingResult:
                 result.removed_claims.append(_clip(sentence))
                 result.booking_claims_removed += 1
                 continue
+            scopes = _market_scope_spans(sentence)
+            if _is_absolute_market_claim(sentence) or (scopes and not can_rewrite):
+                result.removed_claims.append(_clip(sentence))
+                result.market_claims_removed += 1
+                continue
+            if scopes:
+                result.removed_claims.append(_clip(sentence))
+                result.market_claims_rewritten += len(scopes)
+                for start, end, honest in sorted(scopes, reverse=True):
+                    sentence = sentence[:start] + honest + sentence[end:]
             kept.append(_ground_sentence(sentence, allowed_list, result))
         out_lines.append(" ".join(kept).rstrip())
     cleaned = "\n".join(out_lines)

@@ -24,7 +24,7 @@ const columns: DataTableColumn<BookingSummary>[] = [
     header: 'מצב',
     cell: (b) => (
       <div className="flex flex-wrap items-center gap-1.5">
-        <BookingStateBadge state={b.state} label={b.state_label} />
+        <BookingStateBadge state={b.state} label={b.state_label} unverified={b.state === 'CONFIRMED' && b.reference_verified === false} />
         {b.is_simulation && <SimulationBadge />}
         {b.is_demo && !b.is_simulation && <DemoSupplierBadge />}
         {b.price_changed && b.state !== 'CONFIRMED' && (

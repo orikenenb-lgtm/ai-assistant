@@ -10,7 +10,7 @@ import pytest
 from sqlalchemy import update
 
 from app.core.db import utcnow
-from app.models import Approval, AuditEvent, BookingIntent, Reservation
+from app.models import Approval, AuditEvent, BookingIntent, FamilyMember, Reservation
 from app.models.booking import SimulatedSupplierBooking
 from app.modules.booking import demo_supplier
 from app.modules.providers import registry
@@ -194,6 +194,12 @@ def test_full_redirect_lifecycle_never_confirmed_before_reference(auth_client, d
     assert d["approval"]["consumed_at"] is not None and not any(d["can"].values())
     row = db.query(Reservation).one()
     assert row.details["is_demo"] is True and row.details["reference_verified"] is True
+    # the verified DEMO flow keeps the ordinary confirmed presentation (RA-02 only touches unverified references)
+    assert row.status == "CONFIRMED" and d["reservation"]["status"] == "CONFIRMED"
+    assert d["reference_verified"] is True and d["reservation"]["reference_verified"] is True
+    assert d["state_label"] == "אושר על ידי הספק"
+    ev = db.query(AuditEvent).filter_by(action="booking.record_confirmation", outcome="success").one()
+    assert ev.details["reference_verified"] is True and ev.details["reference_source"] == "supplier_ledger"
     assert page(c, ref).json()["recorded"] is True
     err(record(c, bid, reference), 409, "INVALID_TRANSITION")
     err(link(c, bid), 409, "INVALID_TRANSITION")
@@ -244,11 +250,35 @@ def test_session_dies_with_the_approved_terms(auth_client, db):
     assert revalidate(c, bid)["state"] == "READY_FOR_APPROVAL"
     assert approve(c, bid).status_code == 200
     err(record(c, bid, old_reference), 409, "SUPPLIER_REFERENCE_NOT_FOUND")
+    # RA-10: the old supplier page no longer offers that reference — it reads as expired
+    stale = page(c, old_ref).json()
+    assert stale["status"] == "EXPIRED" and stale["supplier_reference"] is None and stale["can_complete"] is False
+    assert "פג תוקף" in stale["message"] and "אינה בתוקף" in stale["message"] and old_reference not in str(stale)
+    assert stale["summary"] == [] and stale["recorded"] is False
     new_ref = ref_of(link(c, bid).json()["url"])
     assert new_ref != old_ref
     new_reference = complete(c, new_ref).json()["supplier_reference"]
     assert new_reference != old_reference
+    fresh = page(c, new_ref).json()
+    assert fresh["status"] == "COMPLETED" and fresh["supplier_reference"] == new_reference
     assert record(c, bid, new_reference).json()["state"] == "CONFIRMED"
+    assert page(c, new_ref).json()["recorded"] is True
+    assert page(c, old_ref).json()["status"] == "EXPIRED" and page(c, old_ref).json()["supplier_reference"] is None
+
+
+def test_completed_session_of_a_cancelled_booking_reads_expired(auth_client, db):
+    """RA-10: completed at the DEMO supplier, then the booking is cancelled — the reference is not offered any more."""
+    c = auth_client("owner")
+    bid = hosted_approved(c, db)["id"]
+    ref = ref_of(link(c, bid).json()["url"])
+    reference = complete(c, ref).json()["supplier_reference"]
+    assert page(c, ref).json()["status"] == "COMPLETED"
+    assert c.post(f"{B}/{bid}/cancel").json()["state"] == "CANCELLED"
+    p = page(c, ref).json()
+    assert p["status"] == "EXPIRED" and p["supplier_reference"] is None and "פג תוקף" in p["message"]
+    assert reference not in str(p)
+    assert complete(c, ref).json()["status"] == "EXPIRED"  # replay shows the same honest state, mints nothing new
+    assert count(db, SimulatedSupplierBooking, status="CONFIRMED") == 1
 
 
 def test_stale_session_cannot_be_completed(auth_client, db):
@@ -412,6 +442,14 @@ def test_relative_url_is_rejected_for_non_demo_adapters(live, db):  # noqa: F811
     assert d["state"] == "CONFIRMED" and d["is_demo"] is False
     assert any("הוזנה ידנית" in w and "לא אומתה" in w for w in d["warnings"])
     assert db.query(Reservation).one().details["reference_verified"] is False
+    # RA-02: recorded, but never presented as confirmed by the supplier
+    assert d["state_label"] == "אסמכתה נרשמה ידנית — לא אומתה מול הספק" and "אושר על ידי הספק" not in str(d["state_label"])
+    assert d["reference_verified"] is False and d["reservation"]["reference_verified"] is False
+    assert d["reservation"]["status"] == "RECORDED_UNVERIFIED" and "לא אימתה" in d["notice"]
+    listed = next(i for i in c.get(B).json()["items"] if i["id"] == bid)
+    assert listed["state_label"] == d["state_label"] and listed["reference_verified"] is False
+    ev = db.query(AuditEvent).filter_by(action="booking.record_confirmation", outcome="success").one()
+    assert ev.details["reference_verified"] is False and ev.details["reference_source"] == "typed_by_user"
 
 
 def test_demo_hosted_checkout_needs_declared_capabilities(auth_client, db, monkeypatch):
@@ -492,3 +530,94 @@ def test_minor_traveler_allowed_but_only_adult_books(auth_client, db):
     err(c.post(B, json={"offer_id": offer["id"], "traveler_member_ids": [kid], "execution_mode": "HOSTED_CHECKOUT"}), 400,
         "TRAVELER_MISMATCH")
     assert count(db, BookingIntent) == 0
+
+
+# ------------------------------------------------- RA-09: traveler snapshot ----
+
+
+def _set_member(db, member, **values):
+    sql(db, update(FamilyMember).where(FamilyMember.id == member).values(**values))
+
+
+def test_age_group_change_is_picked_up_on_revalidate(auth_client, db):
+    c = auth_client("owner")
+    me = member_id(db, c)
+    b = c.post(B, json={"offer_id": kid_offer(c)["id"], "traveler_member_ids": [me]}).json()
+    bid = b["id"]
+    assert b["travelers"][0]["age_group"] == "adult"
+    assert revalidate(c, bid)["state"] == "READY_FOR_APPROVAL"
+
+    # the member is re-classified as a child: the offer (1 adult) no longer fits -> AUD-04 check re-run
+    _set_member(db, me, age_group="child", is_minor=True)
+    err(c.post(f"{B}/{bid}/revalidate"), 400, "TRAVELER_MISMATCH")
+    after = get(c, bid)
+    assert after["state"] == "QUOTE_SELECTED" and after["travelers"][0]["age_group"] == "child"
+    assert after["travelers"][0]["is_minor"] is True and after["terms_hash"] != b["terms_hash"]
+    assert any("ילד/ה" in line for line in after["terms_summary"]) and not after["can"]["approve"]
+    assert count(db, AuditEvent, action="booking.travelers_changed") == 1
+    err(c.post(f"{B}/{bid}/revalidate"), 400, "TRAVELER_MISMATCH")  # stays refused until the facts fit again
+
+    _set_member(db, me, age_group="adult", is_minor=False)
+    assert revalidate(c, bid)["state"] == "READY_FOR_APPROVAL"
+
+
+def test_traveler_change_after_approval_invalidates_it_everywhere(auth_client, db):
+    c = auth_client("owner")
+    me = member_id(db, c)
+
+    # submit (simulation): refused, approval cancelled, nothing sent
+    b = c.post(B, json={"offer_id": kid_offer(c)["id"], "traveler_member_ids": [me]}).json()
+    revalidate(c, b["id"])
+    assert approve(c, b["id"]).status_code == 200
+    _set_member(db, me, display_name="שם חדש")
+    e = err(submit(c, b["id"]), 409, "TERMS_CHANGED")
+    assert "הנוסעים" in e["message"]
+    after = get(c, b["id"])
+    assert after["state"] == "QUOTE_SELECTED" and after["approval"]["valid"] is False
+    assert after["approval"]["invalidation_reason"] and after["travelers"][0]["display_name"] == "שם חדש"
+    assert any("שם חדש" in line for line in after["terms_summary"])
+    assert count(db, SimulatedSupplierBooking) == 0
+    assert revalidate(c, b["id"])["state"] == "READY_FOR_APPROVAL"
+    assert approve(c, b["id"]).status_code == 200 and submit(c, b["id"]).json()["state"] == "CONFIRMED"
+
+    # hosted checkout: checkout-link refused the same way; revalidate from APPROVED demotes and says why
+    h = hosted_approved(c, db, 1)
+    _set_member(db, me, display_name="שם שלישי")
+    err(link(c, h["id"]), 409, "TERMS_CHANGED")
+    assert state_of(db, h["id"]) == "QUOTE_SELECTED" and count(db, SimulatedSupplierBooking, scenario="hosted_checkout") == 0
+    revalidate(c, h["id"])
+    approve(c, h["id"])
+    _set_member(db, me, display_name="שם רביעי")
+    out = revalidate(c, h["id"])
+    assert out["state"] == "READY_FOR_APPROVAL" and out["approval"]["valid"] is False and "הנוסעים" in out["notice"]
+    assert out["travelers"][0]["display_name"] == "שם רביעי"
+
+    # approve itself never binds a stale snapshot
+    _set_member(db, me, display_name="שם חמישי")
+    err(approve(c, h["id"], out["terms_hash"]), 409, "TERMS_CHANGED")
+    assert state_of(db, h["id"]) == "QUOTE_SELECTED"
+    assert count(db, Approval, booking_intent_id=h["id"], invalidated_at=None) == 0
+
+    # unchanged family records change nothing
+    revalidate(c, h["id"])
+    assert approve(c, h["id"]).status_code == 200
+    assert revalidate(c, h["id"])["state"] == "APPROVED"
+
+
+def test_removed_family_member_blocks_the_booking(auth_client, db):
+    c = auth_client("owner")
+    me = member_id(db, c)
+    extra = add_member(db, "מבוגר נוסף", "adult")
+    two = {"destination": "ATH", "date_from": future(25), "date_to": future(31), "adults": 2}
+    offer = next(o for o in offers(c, "activity", two))
+    b = c.post(B, json={"offer_id": offer["id"], "traveler_member_ids": [me, extra]})
+    assert b.status_code == 201, b.text
+    bid = b.json()["id"]
+    revalidate(c, bid)
+    assert approve(c, bid).status_code == 200
+    db.query(FamilyMember).filter_by(id=extra).delete()
+    db.commit()
+    err(submit(c, bid), 400, "TRAVELER_NOT_FOUND")
+    assert state_of(db, bid) == "QUOTE_SELECTED" and count(db, Approval, invalidated_at=None) == 0
+    assert count(db, SimulatedSupplierBooking) == 0
+    err(c.post(f"{B}/{bid}/revalidate"), 400, "TRAVELER_NOT_FOUND")

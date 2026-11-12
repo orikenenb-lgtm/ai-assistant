@@ -87,6 +87,13 @@ def test_model_intro_with_price_is_rejected_by_grounding(app, auth_client):
     assert body["grounding"]["ok"] is False and body["grounding"]["removed_claims"]
 
 
+def test_model_intro_with_market_claim_falls_back_to_template(app, auth_client):
+    app.dependency_overrides[get_llm_client] = lambda: FakeClient([LLMResult(text="התוכנית הזולה ביותר בשוק לרומא!")])
+    body = plan(auth_client("adult")).json()
+    assert body["intro_mode"] == "template" and "בשוק" not in body["intro"]
+    assert body["grounding"]["ok"] is False
+
+
 def test_clean_model_intro_is_used(app, auth_client):
     fake = FakeClient([LLMResult(text="חמישה ימים של מוזיאונים וסיורים ברומא, בקצב נוח למשפחה.")])
     app.dependency_overrides[get_llm_client] = lambda: fake

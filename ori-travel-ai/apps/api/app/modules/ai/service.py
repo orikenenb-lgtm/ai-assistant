@@ -71,6 +71,7 @@ MSG_RATE = "הגעתם למגבלת השימוש בעוזר — נסו שוב ב
 MSG_REFUSED = "המודל לא השלים את הבקשה — עברתי למצב בסיסי."
 MSG_GROUNDING = "הוסרו מהתשובה סכומים שלא אומתו מול תוצאות החיפוש בשרת."
 MSG_BOOKING_CLAIM = "העוזר אינו יכול להזמין או לשלם. " + BOOKING_NOTE
+MSG_MARKET_CLAIM = "טענה על \"המחיר הזול ביותר בשוק\" תוקנה או הוסרה — ההשוואה מתייחסת רק להצעות שנמצאו בחיפוש זה."
 MSG_REJECTED_TOOL = "המודל ניסה להפעיל פעולה שאינה מותרת (למשל הזמנה או תשלום) — הפעולה נחסמה."
 MSG_TRIP_NOT_FOUND = "הטיול שצוין בהקשר לא נמצא — ממשיך בלעדיו."
 FORCE_FINAL_NOTE = "[הודעת מערכת: מכסת קריאות הכלים לתור זה נוצלה. ענה עכשיו בעברית על סמך תוצאות הכלים שכבר התקבלו, בלי כלים נוספים.]"
@@ -310,13 +311,15 @@ def _model_chat(db: Session, user: User, req: ChatRequest, client: LLMClient, tr
             forced = True
 
     allowed = [*state.allowed_amounts(), *amounts_from_text(req.message)]
-    g: GroundingResult = ground_text(final_text, allowed)
+    g: GroundingResult = ground_text(final_text, allowed, scope_available=bool(state.searches))
     text = g.text
     warnings = _search_warnings(state.searches)
     if g.prices_removed:
         warnings.append(MSG_GROUNDING)
     if g.booking_claims_removed:
         warnings.append(MSG_BOOKING_CLAIM)
+    if g.market_claims_rewritten or g.market_claims_removed:
+        warnings.append(MSG_MARKET_CLAIM)
     if state.rejected:
         warnings.append(MSG_REJECTED_TOOL)
     if not text.strip():

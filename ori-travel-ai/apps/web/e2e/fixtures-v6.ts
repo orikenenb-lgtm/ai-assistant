@@ -1,4 +1,3 @@
-/* eslint-disable no-empty-pattern -- Playwright fixtures must destructure their first argument */
 import { request as pwRequest } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';

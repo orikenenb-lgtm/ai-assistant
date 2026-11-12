@@ -1,12 +1,15 @@
-import { FlaskConical } from 'lucide-react';
+import { FlaskConical, TriangleAlert } from 'lucide-react';
 import { Badge } from '@/components/ui';
-import { STATE_TONES, isBookingState } from '../labels';
+import { STATE_TONES, UNVERIFIED_REFERENCE_LABEL, isBookingState } from '../labels';
 
-export function BookingStateBadge({ state, label }: { state: string; label?: string }) {
-  const tone = isBookingState(state) ? STATE_TONES[state] : 'neutral';
+export function BookingStateBadge({ state, label, unverified }: { state: string; label?: string; unverified?: boolean }) {
+  // An unverified, hand-typed supplier reference gets a warning badge — never the green "confirmed" one (RA-02).
+  const warn = state === 'CONFIRMED' && (unverified === true || label === UNVERIFIED_REFERENCE_LABEL);
+  const tone = warn ? 'warn' : isBookingState(state) ? STATE_TONES[state] : 'neutral';
   return (
-    <Badge tone={tone} data-testid="state-badge" data-state={state}>
-      {label ?? state}
+    <Badge tone={tone} data-testid="state-badge" data-state={state} data-unverified={warn ? 'true' : undefined}>
+      {warn && <TriangleAlert aria-hidden="true" />}
+      {warn ? UNVERIFIED_REFERENCE_LABEL : (label ?? state)}
     </Badge>
   );
 }

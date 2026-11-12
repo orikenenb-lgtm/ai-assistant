@@ -48,6 +48,8 @@ export const BookingSummarySchema = z.object({
   is_simulation: z.boolean(),
   /** The supplier is a DEMO (fictional) provider: nothing real is booked or charged in any execution mode. */
   is_demo: z.boolean().default(false),
+  /** Only for CONFIRMED: false = the supplier reference was typed by the user and never verified with the supplier. */
+  reference_verified: z.boolean().nullable().optional(),
   current_price: MoneySchema,
   price_changed: z.boolean(),
   offer_expired: z.boolean().default(false),
@@ -97,7 +99,9 @@ export const ReservationSchema = z.object({
   id: z.string(),
   supplier_reference: z.string(),
   mode: z.string(),
+  /** CONFIRMED (verified against the supplier ledger) or RECORDED_UNVERIFIED (typed by the user). */
   status: z.string(),
+  reference_verified: z.boolean().default(true),
   amount: MoneySchema,
   confirmed_at: IsoDateTimeSchema,
   notes: z.string().nullable().optional(),

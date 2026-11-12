@@ -10,8 +10,9 @@ const HOSTED: Record<string, string> = { APPROVED: 'תנאים אושרו — מ
 const labelFor = (mode?: ExecutionMode) => (s: string | null | undefined) =>
   s ? ((mode === 'HOSTED_CHECKOUT' ? HOSTED[s] : undefined) ?? (isBookingState(s) ? STATE_LABELS[s] : s)) : 'התחלה';
 
-export function HistoryTimeline({ history, mode }: { history: HistoryEntry[]; mode?: ExecutionMode }) {
-  const label = labelFor(mode);
+export function HistoryTimeline({ history, mode, unverified }: { history: HistoryEntry[]; mode?: ExecutionMode; unverified?: boolean }) {
+  const base = labelFor(mode);
+  const label = (s: string | null | undefined) => (unverified && s === 'CONFIRMED' ? 'אסמכתה נרשמה ידנית (לא אומתה)' : base(s));
   return (
     <Card as="section" padding="md">
       <CardHeader title="היסטוריה" icon={<History />} />

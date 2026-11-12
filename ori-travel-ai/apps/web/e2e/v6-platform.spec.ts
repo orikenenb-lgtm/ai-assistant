@@ -130,7 +130,7 @@ test.describe('V6 פלטפורמה: אבטחת מארח/מקור והפעלה נ
       await expect(page.getByTestId('data-mode-indicator')).toHaveAttribute('data-mode', 'DEMO');
       await ctx.close();
     } catch (e) {
-      throw new Error(`${(e as Error).message}\n--- server log ---\n${log.join('').slice(-1500)}`);
+      throw new Error(`${(e as Error).message}\n--- server log ---\n${log.join('').slice(-1500)}`, { cause: e });
     } finally {
       server?.kill();
       fs.rmSync(dir, { recursive: true, force: true });

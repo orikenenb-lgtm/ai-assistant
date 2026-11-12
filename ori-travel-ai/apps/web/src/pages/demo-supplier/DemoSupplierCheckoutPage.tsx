@@ -123,7 +123,7 @@ function Checkout({ data }: { data: DemoCheckout }) {
       )}
 
       {data.status === 'EXPIRED' && (
-        <Callout tone="warn" title="הדף כבר אינו תקף" role="alert" data-testid="demo-supplier-expired">
+        <Callout tone="warn" title="פג תוקף — לא בתוקף" role="alert" data-testid="demo-supplier-expired">
           {data.message}
         </Callout>
       )}

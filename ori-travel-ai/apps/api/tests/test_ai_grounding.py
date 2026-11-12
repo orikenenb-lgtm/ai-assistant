@@ -6,7 +6,15 @@ from decimal import Decimal
 
 import pytest
 
-from app.modules.ai.grounding import ANY_CURRENCY, REMOVED_PRICE, amounts_from_text, extract_money, ground_text
+from app.modules.ai.grounding import (
+    ANY_CURRENCY,
+    HONEST_SCOPE_EN,
+    HONEST_SCOPE_HE,
+    REMOVED_PRICE,
+    amounts_from_text,
+    extract_money,
+    ground_text,
+)
 
 
 @pytest.mark.parametrize(
@@ -240,3 +248,84 @@ def test_user_typed_amounts_are_allowed_even_without_currency():
     g = ground_text("הבנתי, תקציב של 3,000 ₪.", allowed)
     assert g.ok and "3,000 ₪" in g.text
     assert amounts_from_text("עד 1.500 € לאדם") == [(Decimal("1500"), "EUR")]
+
+
+# ------------------------------------------------- RA-08 regression tests ----
+# Only "cheapest among the offers found in this search" may be claimed.
+FOUND = [(Decimal("1234"), "ILS")]
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("זה הזול ביותר בשוק.", f"זה הזול ביותר {HONEST_SCOPE_HE}."),
+        ("זה המחיר הכי זול שיש.", f"זה המחיר הכי זול {HONEST_SCOPE_HE}."),
+        ("המלון הזול ביותר בעיר, ב-1,234 ₪.", f"המלון הזול ביותר {HONEST_SCOPE_HE}, ב-1,234 ₪."),
+        ("הטיסה הזולה ביותר בכל העולם!", f"הטיסה הזולה ביותר {HONEST_SCOPE_HE}!"),
+        ("זה המחיר הנמוך ביותר באינטרנט.", f"זה המחיר הנמוך ביותר {HONEST_SCOPE_HE}."),
+        ("זו העסקה הטובה ביותר בשוק.", f"זו העסקה הטובה ביותר {HONEST_SCOPE_HE}."),
+        ("הכי משתלם שתמצאו", f"הכי משתלם {HONEST_SCOPE_HE}"),
+        ("This is the cheapest on the market.", f"This is the cheapest {HONEST_SCOPE_EN}."),
+        ("lowest price anywhere: 1,234 ₪", f"lowest price {HONEST_SCOPE_EN}: 1,234 ₪"),
+        ("It's the cheapest flight you'll find.", f"It's the cheapest flight {HONEST_SCOPE_EN}."),
+        ("the best deal out there", f"the best deal {HONEST_SCOPE_EN}"),
+        ("the cheapest ever!", f"the cheapest {HONEST_SCOPE_EN}!"),
+    ],
+)
+def test_ra08_market_superlatives_are_rewritten_to_search_scope(text, expected):
+    g = ground_text(text, FOUND, scope_available=True)
+    assert g.text == expected
+    assert g.market_claims_rewritten == 1 and not g.ok and g.removed_claims == [text]
+
+
+def test_ra08_market_superlative_without_search_results_is_removed():
+    g = ground_text("מצאתי כמה רעיונות. זה הזול ביותר בשוק.", [])  # no tool results -> no honest scope
+    assert g.text == "מצאתי כמה רעיונות." and g.market_claims_removed == 1
+    g = ground_text("This is the cheapest on the market.", FOUND, scope_available=False)
+    assert g.text == "" and g.market_claims_removed == 1
+
+
+@pytest.mark.parametrize(
+    "claim",
+    [
+        "אין זול מזה!",
+        "לא תמצאו זול יותר.",
+        "לא תמצאו מחיר טוב יותר בשום מקום.",
+        "אין מחיר נמוך יותר.",
+        "המחיר מובטח כזול ביותר.",
+        "מחיר שובר שוק!",
+        "Best price guaranteed.",
+        "Guaranteed lowest price.",
+        "You won't find it cheaper anywhere.",
+        "Unbeatable price!",
+        "Nothing beats this deal.",
+        "There's nothing cheaper.",
+        "We offer a price match.",
+    ],
+)
+def test_ra08_absolute_market_claims_remove_the_sentence(claim):
+    g = ground_text(f"מצאתי כמה אפשרויות. {claim}", FOUND, scope_available=True)
+    assert g.text == "מצאתי כמה אפשרויות."
+    assert g.market_claims_removed == 1 and not g.ok
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "זו ההצעה הזולה ביותר מבין התוצאות.",
+        "הזול ביותר מבין ההצעות שמצאתי עולה 1,234 ₪.",
+        "הזולה ביותר: מלון רומא — 1,234 ₪.",
+        "הזול ביותר שיש בתוצאות הוא 1,234 ₪.",
+        "The cheapest option in these results is 1,234 ₪.",
+        "the cheapest you'll find here",
+        "זה לא בהכרח הזול ביותר בשוק — בדקתי רק את הספקים המחוברים.",
+        "This is not necessarily the cheapest on the market.",
+        "אין התחייבות לכיסוי מלא של השוק.",
+        "לא מצאתי הצעה זולה יותר בחיפוש הזה.",
+        "I can't guarantee the best price.",
+        "המלון הטוב ביותר ברומא לפי הדירוג.",
+    ],
+)
+def test_ra08_scoped_and_hedged_phrases_are_kept(text):
+    g = ground_text(text, FOUND, scope_available=True)
+    assert g.ok and g.text == text, g.text

@@ -78,6 +78,19 @@ describe('DEMO supplier checkout page', () => {
     expect(screen.queryByTestId('demo-supplier-complete')).toBeNull();
   });
 
+  it('RA-10: a session completed for old terms reads "expired" and shows no reference to record', async () => {
+    setup(`/demo-supplier/checkout?ref=${REF}`, {
+      'GET /api/demo-supplier/checkout': () =>
+        jsonResponse(session({ status: 'EXPIRED', can_complete: false, summary: [], supplier_reference: null, message: 'פג תוקף — האסמכתה שהונפקה בדף הזה אינה בתוקף.' })),
+    });
+    const expired = await screen.findByTestId('demo-supplier-expired');
+    expect(expired).toHaveTextContent('פג תוקף — לא בתוקף');
+    expect(expired).toHaveTextContent('אינה בתוקף');
+    expect(screen.queryByTestId('demo-supplier-reference')).toBeNull();
+    expect(screen.queryByTestId('demo-supplier-next-step')).toBeNull();
+    expect(screen.queryByTestId('demo-supplier-complete')).toBeNull();
+  });
+
   it('shows the server refusal when completion is rejected', async () => {
     setup(`/demo-supplier/checkout?ref=${REF}`, {
       'POST /api/demo-supplier/checkout/complete': () => errorResponse(409, 'CHECKOUT_SESSION_EXPIRED', 'דף הספק לדוגמה כבר אינו תקף.'),

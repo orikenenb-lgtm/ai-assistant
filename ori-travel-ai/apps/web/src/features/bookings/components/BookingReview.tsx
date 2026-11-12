@@ -7,7 +7,7 @@ import { OfferCard, OfferDetailDialog } from '@/features/offers';
 import { CanonicalOfferSchema, type CanonicalOffer } from '@/lib/schemas/offers';
 import type { Booking } from '@/lib/schemas/bookings';
 import { problemBody } from '../errors';
-import { isAwaitingSupplier } from '../labels';
+import { isAwaitingSupplier, isReferenceUnverified } from '../labels';
 import { ActionsSection } from './ActionsSection';
 import { ApprovalPanel } from './ApprovalPanel';
 import { BookingStepper } from './BookingStepper';
@@ -53,7 +53,7 @@ export function BookingReview({ booking }: { booking: Booking }) {
   return (
     <div className="flex flex-col gap-6" data-testid="booking-review">
       <ExecutionBanner mode={booking.execution_mode} demo={booking.is_demo} />
-      <BookingStepper state={state} history={booking.history} mode={booking.execution_mode} />
+      <BookingStepper state={state} history={booking.history} mode={booking.execution_mode} unverified={isReferenceUnverified(booking)} />
 
       <div ref={alertRef} className="flex flex-col gap-3" aria-live="polite">
         {feedback.problem && (
@@ -148,7 +148,7 @@ export function BookingReview({ booking }: { booking: Booking }) {
       </Card>
       <OfferDetailDialog offer={details} onOpenChange={(o) => !o && setDetails(null)} />
 
-      <HistoryTimeline history={booking.history} mode={booking.execution_mode} />
+      <HistoryTimeline history={booking.history} mode={booking.execution_mode} unverified={isReferenceUnverified(booking)} />
     </div>
   );
 }

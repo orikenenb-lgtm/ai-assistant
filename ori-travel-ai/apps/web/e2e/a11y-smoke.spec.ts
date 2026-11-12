@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { anon, test } from './fixtures';
 import { hotelSearch, sharedFlightSearch } from './data';
 import { futureDate, uniq } from './env';

@@ -1,9 +1,9 @@
-import { Ban, CircleCheck, CircleHelp, Clock, XCircle } from 'lucide-react';
+import { Ban, CircleCheck, CircleHelp, Clock, TriangleAlert, XCircle } from 'lucide-react';
 import { Link } from 'react-router';
 import { Badge, Button, Callout, Card, CardHeader, DateText, MoneyText } from '@/components/ui';
 import { CATEGORY_SEARCH_PATH } from '@/lib/labels';
 import type { Booking } from '@/lib/schemas/bookings';
-import { MODE_LABELS, RESERVATION_STATUS_LABELS } from '../labels';
+import { MODE_LABELS, RESERVATION_STATUS_LABELS, UNVERIFIED_REFERENCE_LABEL, isReferenceUnverified } from '../labels';
 import { useBookingActions } from '../hooks';
 import { PlainTextLine } from './PlainTextLine';
 import type { Feedback } from './useFeedback';
@@ -13,22 +13,41 @@ export function ConfirmedPanel({ booking }: { booking: Booking }) {
   const sim = booking.is_simulation || booking.reservation?.mode === 'SIMULATION';
   const hosted = !sim && (booking.execution_mode === 'HOSTED_CHECKOUT' || booking.reservation?.mode === 'HOSTED_CHECKOUT');
   const demoHosted = hosted && booking.is_demo;
+  // RA-02: hand-typed reference for a real supplier — recorded, not supplier-confirmed. Amber, never green.
+  const unverified = !sim && !demoHosted && (hosted || isReferenceUnverified(booking));
   const title = sim
     ? 'ההזמנה אושרה — בסימולציה'
     : demoHosted
       ? 'נרשמה אסמכתה של ספק לדוגמה (DEMO)'
-      : hosted
-        ? 'נרשמה אסמכתת הספק'
+      : unverified
+        ? UNVERIFIED_REFERENCE_LABEL
         : 'ההזמנה אושרה על ידי הספק';
+  const tint = unverified ? 'text-amber-700' : 'text-moss-700';
   return (
-    <Card as="section" padding="md" className="border-2 border-moss-600 bg-moss-50" data-testid="confirmed-panel">
+    <Card
+      as="section"
+      padding="md"
+      className={unverified ? 'border-2 border-amber-500 bg-amber-50' : 'border-2 border-moss-600 bg-moss-50'}
+      data-testid="confirmed-panel"
+      data-verified={unverified ? 'false' : 'true'}
+    >
       <CardHeader
         title={title}
-        icon={<CircleCheck />}
-        actions={sim ? <Badge tone="demo">אסמכתה מדומה</Badge> : demoHosted ? <Badge tone="demo">אסמכתת הדגמה — אין חיוב</Badge> : undefined}
+        icon={unverified ? <TriangleAlert /> : <CircleCheck />}
+        actions={
+          sim ? (
+            <Badge tone="demo">אסמכתה מדומה</Badge>
+          ) : demoHosted ? (
+            <Badge tone="demo">אסמכתת הדגמה — אין חיוב</Badge>
+          ) : unverified ? (
+            <Badge tone="warn" data-testid="unverified-badge">
+              <TriangleAlert aria-hidden="true" /> לא אומת מול הספק
+            </Badge>
+          ) : undefined
+        }
       />
-      <p className="text-xs text-moss-700">אסמכתת ספק</p>
-      <p className="mb-3 break-all text-3xl font-extrabold tracking-wide text-moss-700" dir="ltr" data-testid="supplier-reference">
+      <p className={`text-xs ${tint}`}>{unverified ? 'אסמכתה כפי שהוזנה (לא אומתה)' : 'אסמכתת ספק'}</p>
+      <p className={`mb-3 break-all text-3xl font-extrabold tracking-wide ${tint}`} dir="ltr" data-testid="supplier-reference">
         {ref ?? '—'}
       </p>
       {sim && (
@@ -41,9 +60,10 @@ export function ConfirmedPanel({ booking }: { booking: Booking }) {
           זו הדגמה: האסמכתה הונפקה בדף ספק לדוגמה ואומתה מולו. לא בוצעה הזמנה אמיתית ולא בוצע חיוב.
         </p>
       )}
-      {hosted && !demoHosted && (
-        <p className="mb-3 text-sm font-medium text-moss-700" data-testid="manual-reference-note">
-          האסמכתה הוזנה ידנית אחרי השלמת ההזמנה באתר הספק. המערכת לא אימתה אותה מול הספק.
+      {unverified && (
+        <p className="mb-3 text-sm font-medium text-amber-700" data-testid="manual-reference-note">
+          האסמכתה הוזנה ידנית אחרי השלמת ההזמנה באתר הספק. המערכת לא אימתה אותה מול הספק ואינה יודעת אם הספק אישר את ההזמנה — יש לוודא זאת
+          ישירות מול הספק.
         </p>
       )}
       {booking.reservation && (

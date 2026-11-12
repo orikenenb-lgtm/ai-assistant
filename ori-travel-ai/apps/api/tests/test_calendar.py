@@ -11,7 +11,8 @@ import pytest
 from app.core.config import reset_settings_cache
 from app.models import ProviderConfiguration
 from app.modules.providers import registry
-from app.modules.providers.demo import DemoSkylineAdapter
+from app.modules.providers.base import SearchContext
+from app.modules.providers.demo import DemoAuroraAdapter, DemoSkylineAdapter
 from app.modules.providers.demo.flights import non_operating_weekdays, service_status
 from app.modules.providers.service import reset_health_cache
 from app.modules.search import calendar
@@ -79,6 +80,29 @@ class FakeLiveFlights(DemoSkylineAdapter):
     def normalize(self, category, raw, ctx):
         o = super().normalize(category, raw, ctx)
         return o.model_copy(update={"source": o.source.model_copy(update={"mode": "LIVE", "note": None})})
+
+
+class UsdOnlyFlights(DemoAuroraAdapter):
+    """A DEMO reseller that answers in USD whatever currency was requested (audit RA-01)."""
+
+    provider_id = "test_usd_flights"
+    display_name = "ספק דולרי לבדיקה"
+    supplier_prefix = "USD"
+
+    def generate(self, category, params):
+        return super().generate(category, params.model_copy(update={"currency": "USD"}))
+
+
+class MixedCurrencyFlights(DemoAuroraAdapter):
+    """Answers with the requested currency AND a USD copy of every offer."""
+
+    provider_id = "test_mixed_flights"
+    display_name = "ספק רב-מטבעי לבדיקה"
+    supplier_prefix = "MIX"
+
+    def search(self, category, params, ctx):
+        usd = super().search(category, params.model_copy(update={"currency": "USD"}), ctx)
+        return usd + super().search(category, params, ctx)
 
 
 class SlowDemoFlights(DemoSkylineAdapter):
@@ -202,7 +226,9 @@ def test_round_trip_shape_and_sources(auth_client):
     assert all("אינם נשאלים עבור לוח המחירים" in s["message"] for s in live)
     assert out["has_demo"] is True
     assert "נתוני הדגמה" in out["coverage_note"] and "אינם נשאלים" in out["coverage_note"]
-    assert "אין התחייבות לכיסוי מלא" in out["coverage_note"]
+    # The generic full-coverage disclaimer is shown once by the UI, not repeated in the calendar note
+    assert "אין התחייבות לכיסוי מלא" not in out["coverage_note"]
+    assert "נקודת התחלה" in out["coverage_note"]
     assert "הזול ביותר" in out["legend_note"] and "לא נבדק" in out["legend_note"]
     assert out["generated_at"].endswith("Z") or "+00:00" in out["generated_at"]
 
@@ -416,6 +442,68 @@ def test_cached_live_offer_fills_cell_as_cached(auth_client, db, monkeypatch):
     assert all(x["mode"] == "DEMO" for x in after_change["cells"])
 
 
+def test_offers_count_dedupes_like_the_normal_search(auth_client, db, monkeypatch):
+    enable_live(monkeypatch)
+    live = FakeLiveFlights()
+    registry.register_adapter(live)
+    c = auth_client("adult")
+    body = cal(days=2)
+    target = {"depart_date": future(20).isoformat(), "return_date": future(25).isoformat()}
+    first = c.post("/api/search/flight", json=normal_search_body(target, body)).json()
+    # The identical search is served from the cache: the same LIVE offers are stored a second time (as CACHED)
+    second = c.post("/api/search/flight", json=normal_search_body(target, body)).json()
+    assert {p["status"] for p in second["providers"]} >= {"CACHED"}
+    assert len(second["offers"]) == len(first["offers"])
+    live.forbid = True
+    out = c.post(URL, json=body).json()
+    cell = next(x for x in out["cells"] if x["depart_date"] == target["depart_date"])
+    # DEMO offers + cached real offers, each identical offer counted once — exactly the normal search's count
+    assert cell["offers_count"] == len(first["offers"])
+    demo_only = next(x for x in out["cells"] if x["depart_date"] != target["depart_date"])
+    demo_search = c.post("/api/search/flight", json=normal_search_body(demo_only, body)).json()
+    assert demo_only["offers_count"] == len([o for o in demo_search["offers"] if o["source"]["mode"] == "DEMO"])
+
+
+def test_quotes_in_another_currency_are_never_relabelled(auth_client, db):
+    registry.register_adapter(UsdOnlyFlights())
+    c = auth_client("adult")
+    body = cal(days=4)
+    out = c.post(URL, json=body).json()
+    src = {s["provider_id"]: s for s in out["sources"]}["test_usd_flights"]
+    assert src["status"] == "UNSUPPORTED" and src["error_code"] == "CURRENCY_MISMATCH"
+    assert "USD" in src["message"] and "ILS" in src["message"] and src["cells_priced"] == 0
+    for cell in out["cells"]:
+        assert cell["status"] == "priced" and cell["provider_id"] in DEMO_FLIGHT_IDS
+        assert cell["min_total"]["currency"] == "ILS"
+        search = c.post("/api/search/flight", json=normal_search_body(cell, body)).json()
+        ils = [o for o in search["offers"] if o["price"]["total"]["currency"] == "ILS"]
+        usd = [o for o in search["offers"] if o["price"]["total"]["currency"] == "USD"]
+        assert usd and min(Decimal(o["price"]["total"]["amount"]) for o in usd) < Decimal(cell["min_total"]["amount"])
+        assert Decimal(cell["min_total"]["amount"]) == min(Decimal(o["price"]["total"]["amount"]) for o in ils)
+        assert cell["offers_count"] == len(ils)
+
+    # Only the USD provider left: nothing is priced, and no USD amount is ever shown as ILS
+    disable(db, *DEMO_FLIGHT_IDS)
+    only_usd = c.post(URL, json=body).json()
+    assert all(x["status"] == "not_searched" and x["min_total"] is None for x in only_usd["cells"])
+    assert all("במטבע המבוקש" in x["message"] for x in only_usd["cells"])
+    assert only_usd["stats"]["priced"] == 0 and only_usd["stats"]["min"] is None
+
+
+def test_mixed_currency_provider_prices_only_in_requested_currency():
+    registry.register_adapter(MixedCurrencyFlights())
+    adapter = registry.get_adapter("test_mixed_flights")
+    params = search_service.parse_search_params(
+        {"category": "flight", "origin": "TLV", "destination": "ATH", "depart_date": future(30).isoformat()})
+    quote = calendar._quote(adapter, params, {}, 5.0)
+    assert quote.status == "OK" and quote.other_currencies == frozenset({"USD"})
+    assert quote.cheapest is not None and quote.cheapest.price.total.currency == "ILS"
+    ctx = SearchContext(search_id="t", started_at=search_service.utcnow(), timeout_seconds=5)
+    ils_totals = [adapter.normalize("flight", r, ctx).price.total for r in adapter.search("flight", params, ctx)]
+    assert quote.cheapest.price.total.amount == min(m.amount for m in ils_totals if m.currency == "ILS")
+    assert all(k[1] == "ILS" for k in quote.keys)
+
+
 def test_cached_offers_need_equivalent_params_and_fresh_data(auth_client, db, monkeypatch):
     enable_live(monkeypatch)
     live = FakeLiveFlights()
@@ -488,6 +576,16 @@ def test_unknown_airport_cells_are_not_searched(auth_client):
     assert all(c["status"] == "not_searched" for c in out["cells"])
     assert all("אינו נתמך" in c["message"] for c in out["cells"])
     assert {s["status"] for s in out["sources"] if s["mode"] == "DEMO"} == {"UNSUPPORTED"}
+
+
+def test_invalid_requests_do_not_consume_the_rate_limit(auth_client):
+    c = auth_client("adult")
+    for _ in range(calendar.CALENDAR_RATE_LIMIT + 2):
+        assert c.post(URL, json=cal(days=50)).status_code == 422
+    body = cal(days=1, trip_nights=[])
+    for _ in range(calendar.CALENDAR_RATE_LIMIT):
+        assert c.post(URL, json=body).status_code == 200
+    assert c.post(URL, json=body).status_code == 429
 
 
 def test_calendar_rate_limit(auth_client):

@@ -34,6 +34,8 @@ async function markDynamic(page: Page) {
 
 async function shot(page: Page, name: string, target?: Locator | null, extraMask: Locator[] = []) {
   await page.addStyleTag({ content: NO_MOTION_CSS });
+  // Element captures scroll the element into view; sticky/fixed bars (top bar, mobile tab bar) would cover it.
+  if (target) await page.addStyleTag({ content: 'header, .sticky, .fixed { position: static !important; }' });
   await settle(page);
   await markDynamic(page);
   const opts = {

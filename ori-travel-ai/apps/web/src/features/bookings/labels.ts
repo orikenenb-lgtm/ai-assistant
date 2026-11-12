@@ -72,5 +72,18 @@ export function isAwaitingSupplier(b: { state: string; execution_mode: Execution
 /** Reservation status as stored by the server (never shown raw). */
 export const RESERVATION_STATUS_LABELS: Record<string, string> = {
   CONFIRMED: 'נרשמה אסמכתת ספק',
+  RECORDED_UNVERIFIED: 'נרשמה ידנית — לא אומתה',
   CANCELLED: 'בוטל',
 };
+
+/** RA-02: a reference typed by the user for a real supplier is recorded — never shown as confirmed by the supplier. */
+export const UNVERIFIED_REFERENCE_LABEL = 'אסמכתה נרשמה ידנית — לא אומתה מול הספק';
+
+export function isReferenceUnverified(b: {
+  state: string;
+  reference_verified?: boolean | null;
+  reservation?: { reference_verified?: boolean; status?: string } | null;
+}): boolean {
+  if (b.state !== 'CONFIRMED') return false;
+  return b.reference_verified === false || b.reservation?.reference_verified === false || b.reservation?.status === 'RECORDED_UNVERIFIED';
+}

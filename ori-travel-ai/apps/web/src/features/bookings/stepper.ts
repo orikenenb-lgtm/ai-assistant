@@ -43,7 +43,12 @@ const HOSTED_LABELS: Record<string, string> = {
   CONFIRMED: 'אסמכתת ספק נרשמה',
 };
 
-export function buildStepper(state: BookingState | string, history: HistoryEntry[] = [], mode?: ExecutionMode): StepperModel {
+export function buildStepper(
+  state: BookingState | string,
+  history: HistoryEntry[] = [],
+  mode?: ExecutionMode,
+  unverified = false,
+): StepperModel {
   const side = isSideState(state) ? state : null;
   let reached: number;
   if (side) {
@@ -68,7 +73,12 @@ export function buildStepper(state: BookingState | string, history: HistoryEntry
     } else if (i < reached) status = 'done';
     else if (i === reached) status = 'current';
     else status = 'todo';
-    const label = mode === 'HOSTED_CHECKOUT' ? (HOSTED_LABELS[s.key] ?? s.label) : s.label;
+    let label = mode === 'HOSTED_CHECKOUT' ? (HOSTED_LABELS[s.key] ?? s.label) : s.label;
+    // RA-02: a hand-typed, unverified reference never gets the green "confirmed by supplier" tick.
+    if (unverified && s.key === 'CONFIRMED' && state === 'CONFIRMED') {
+      label = 'נרשמה ידנית — לא אומתה';
+      status = 'current';
+    }
     return { key: s.key, label, status };
   });
   return { steps, side };

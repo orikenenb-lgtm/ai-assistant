@@ -150,20 +150,54 @@ describe('hosted checkout (provider redirect) UI states', () => {
     expect(posts).toHaveLength(2);
   });
 
-  it('a real (non-DEMO) supplier reference is labelled as typed by hand and unverified', async () => {
+  it('RA-02: a hand-typed reference for a real supplier is never presented as confirmed by the supplier', async () => {
+    const LABEL = 'אסמכתה נרשמה ידנית — לא אומתה מול הספק';
     setup(
       waiting({
         is_demo: false,
         state: 'CONFIRMED',
-        state_label: 'אושר על ידי הספק',
+        state_label: LABEL,
+        reference_verified: false,
         supplier_reference: 'REAL-12345',
         can: {},
         warnings: ['האסמכתה הוזנה ידנית ולא אומתה מול הספק.'],
+        reservation: {
+          id: 'r1',
+          supplier_reference: 'REAL-12345',
+          mode: 'HOSTED_CHECKOUT',
+          status: 'RECORDED_UNVERIFIED',
+          reference_verified: false,
+          amount: { amount: '1000.00', currency: 'ILS' },
+          confirmed_at: '2026-11-12T10:10:00Z',
+          notes: null,
+        },
       }),
     );
     const panel = await screen.findByTestId('confirmed-panel');
-    expect(panel).toHaveTextContent('נרשמה אסמכתת הספק');
-    expect(within(panel).getByTestId('manual-reference-note')).toHaveTextContent('המערכת לא אימתה אותה מול הספק');
+    expect(panel).toHaveAttribute('data-verified', 'false');
+    expect(panel).toHaveTextContent(LABEL);
+    expect(panel.className).toContain('amber');
+    expect(panel.className).not.toContain('moss');
+    expect(within(panel).getByTestId('unverified-badge')).toHaveTextContent('לא אומת מול הספק');
+    expect(within(panel).getByTestId('manual-reference-note')).toHaveTextContent('אינה יודעת אם הספק אישר את ההזמנה');
+    expect(within(panel).getByTestId('reservation-status')).toHaveTextContent('נרשמה ידנית — לא אומתה');
     expect(screen.queryByTestId('demo-reference-note')).toBeNull();
+    const badge = screen.getByTestId('state-badge');
+    expect(badge).toHaveAttribute('data-unverified', 'true');
+    expect(badge).toHaveTextContent(LABEL);
+    const steps = within(screen.getByTestId('booking-stepper')).getAllByRole('listitem');
+    expect(steps[5]).toHaveTextContent('נרשמה ידנית — לא אומתה');
+    expect(steps[5]).not.toHaveAttribute('data-status', 'done');
+    const text = screen.getByTestId('booking-review').textContent ?? '';
+    for (const claim of ['ההזמנה אושרה', 'אושר על ידי הספק', 'אושר ע״י הספק']) expect(text).not.toContain(claim);
+  });
+
+  it('a verified DEMO reference keeps the ordinary (green) confirmed presentation', async () => {
+    setup(waiting({ state: 'CONFIRMED', state_label: 'אושר על ידי הספק', reference_verified: true, supplier_reference: 'DEMO-0A1B2C3D4E', can: {}, warnings: [] }));
+    const panel = await screen.findByTestId('confirmed-panel');
+    expect(panel).toHaveAttribute('data-verified', 'true');
+    expect(panel.className).toContain('moss');
+    expect(screen.queryByTestId('unverified-badge')).toBeNull();
+    expect(screen.getByTestId('state-badge')).not.toHaveAttribute('data-unverified');
   });
 });

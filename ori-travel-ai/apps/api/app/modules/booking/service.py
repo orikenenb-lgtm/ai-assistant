@@ -196,15 +196,19 @@ def _sync_travelers(db: Session, intent: BookingIntent, actor_id: str | None, re
         downgrade("אחד הנוסעים כבר אינו קיים במשפחה")
         db.commit()
         raise
-    if fresh == list(intent.travelers or []):
-        return None
-    reason = "פרטי הנוסעים (קבוצת גיל או שם) השתנו ברשומות המשפחה"
-    intent.travelers = fresh
-    intent.terms_hash = current_terms_hash(intent)
-    downgrade(reason)
+    reason: str | None = None
+    if fresh != list(intent.travelers or []):
+        reason = "פרטי הנוסעים (קבוצת גיל או שם) השתנו ברשומות המשפחה"
+        intent.travelers = fresh
+        intent.terms_hash = current_terms_hash(intent)
+        downgrade(reason)
+    # The composition is re-checked every time, not only on the call that noticed the change:
+    # an intent whose travelers do not fit the offer can never move forward again.
     try:
         _validate_composition((intent.offer_snapshot or {}).get("details") or {}, fresh)
     except BadRequestError:
+        if reason is None and (intent.state != sm.QUOTE_SELECTED or active_approval(intent) is not None):
+            downgrade("הרכב הנוסעים אינו תואם להצעה")
         db.commit()
         raise
     return reason
