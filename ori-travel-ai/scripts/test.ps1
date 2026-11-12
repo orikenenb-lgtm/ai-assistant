@@ -76,12 +76,14 @@ try {
                 }
                 if (-not $ready) { throw 'API did not become ready for e2e.' }
                 $env:E2E_BASE_URL = "http://127.0.0.1:$e2ePort"
+                $env:E2E_OWNER_EMAIL = 'owner@e2e.test'
                 Invoke-Native -Exe 'npm' -Arguments @('run', 'e2e') -WorkingDirectory $script:WebDir
             }
             finally {
                 if ($null -ne $server -and -not $server.HasExited) { Stop-ProcessTree $server.Id }
                 Remove-Item Env:\ORI_OWNER_PASSWORD -ErrorAction SilentlyContinue
                 Remove-Item Env:\E2E_BASE_URL -ErrorAction SilentlyContinue
+                Remove-Item Env:\E2E_OWNER_EMAIL -ErrorAction SilentlyContinue
                 if ($null -ne $savedDb) { $env:ORI_DATABASE_URL = $savedDb } else { Remove-Item Env:\ORI_DATABASE_URL -ErrorAction SilentlyContinue }
                 if ($null -ne $savedKey) { $env:ORI_DATA_KEY = $savedKey } else { Remove-Item Env:\ORI_DATA_KEY -ErrorAction SilentlyContinue }
                 Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue

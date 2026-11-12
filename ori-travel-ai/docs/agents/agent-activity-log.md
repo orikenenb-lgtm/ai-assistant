@@ -71,3 +71,4 @@
 | 2026-11-12 ~15:25 | Agent BE-CAL | הסתיים: POST /api/search/flight/calendar, highlights, GET /api/geo/airports, ימי no-service ב-DEMO, ביטול מטמון אחרי שינוי הגדרות ספק; 48 בדיקות חדשות; סוויטה מלאה 838 עוברות; 42 תאים ב-~0.7s | opus | ✅ |
 | 2026-11-12 ~15:30 | Agent DEVOPS-RELEASE | הופעל: התקנה נקייה מ-clone, גיבוי לפני migration, סקירת PowerShell, מסמכי שחרור/rollback/אבחון | sonnet | בביצוע |
 | 2026-11-12 ~15:40 | Agent BOOK-REDIRECT | הסתיים: checkout מדומה באתר ספק (demo_kidventures) מקצה לקצה, אימות אסמכתה מול ספר DEMO, 61 בדיקות חדשות (כולל 22 ניסיונות open redirect), תיקוני QA-03/05/07, נתוני אטרקציות; 838 API, 240 web | fable | ✅ |
+| 2026-11-12 ~15:45 | Agent UX-DS | הסתיים: עיצוב בהיר (סרגל לבן, accent טורקיז, tangerine לדילים), dark mode עם בורר, Segmented/Legend, מטרות מגע 44px, 59 זוגות צבע AA בשני המצבים, תיקון BUG-QA-01/02; 209 בדיקות web; 48 צילומי לפני/אחרי | opus | ✅ |

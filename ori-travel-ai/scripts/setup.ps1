@@ -93,8 +93,7 @@ print("generated")
     }
 
     # 5. migrations -----------------------------------------------------------
-    Write-Info 'Applying database migrations / מעדכן מסד נתונים'
-    Invoke-Native -Exe $py -Arguments @('-m', 'app.cli', 'migrate') -WorkingDirectory $script:ApiDir
+    Invoke-SafeMigrate -Python $py
 
     # 6. web -------------------------------------------------------------------
     if (-not $SkipWeb) {

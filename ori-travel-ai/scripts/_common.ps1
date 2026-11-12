@@ -6,6 +6,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
+# Python on Windows would otherwise use the ANSI code page when output is redirected (start.ps1 *> log) and choke on Hebrew.
+$env:PYTHONUTF8 = '1'
 
 $script:RootDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $script:ApiDir  = Join-Path $script:RootDir 'apps\api'
@@ -106,4 +108,18 @@ function Test-PortFree([int]$Port) {
 # Kill a process and its children (Windows). Never throws.
 function Stop-ProcessTree([int]$ProcessId) {
     try { & taskkill.exe /PID $ProcessId /T /F *> $null } catch { }
+}
+
+# Apply DB migrations. When the SQLite database already exists and is behind the code, a timestamped
+# backup (apps\api\data\backups\*-pre-migrate-*.db) is taken FIRST; if the backup fails nothing is migrated.
+function Invoke-SafeMigrate([string]$Python) {
+    Write-Info 'Checking whether a pre-migration backup is needed / בודק אם נדרש גיבוי לפני עדכון המסד'
+    try {
+        Invoke-Native -Exe $Python -Arguments @((Join-Path $PSScriptRoot '_backup_db.py'), '--if-pending-migrations', '--label', 'pre-migrate') -WorkingDirectory $script:ApiDir
+    }
+    catch {
+        throw "Backup failed - migrations were NOT applied. / הגיבוי נכשל, המסד לא עודכן. $($_.Exception.Message)"
+    }
+    Write-Info 'Applying database migrations / מעדכן מסד נתונים'
+    Invoke-Native -Exe $Python -Arguments @('-m', 'app.cli', 'migrate') -WorkingDirectory $script:ApiDir
 }

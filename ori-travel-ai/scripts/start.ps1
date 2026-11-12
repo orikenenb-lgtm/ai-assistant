@@ -52,6 +52,7 @@ try {
             Invoke-Native -Exe 'npm' -Arguments @('run', 'build') -WorkingDirectory $script:WebDir
         }
         Write-Ok "Open / פתחו בדפדפן:  http://localhost:$Port    (Ctrl+C to stop / לעצירה)"
+        if ($Lan) { Write-Info "From another device use http://<this-PC-IP>:$Port and add <this-PC-IP> to ORI_ALLOWED_HOSTS in apps\api\.env (otherwise: 400 Invalid host header). / הוסיפו את כתובת ה-IP של המחשב ל-ORI_ALLOWED_HOSTS." }
         Push-Location -LiteralPath $script:ApiDir
         try {
             $global:LASTEXITCODE = 0

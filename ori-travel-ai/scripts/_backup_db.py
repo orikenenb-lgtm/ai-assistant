@@ -94,7 +94,7 @@ def main() -> int:
     label = "".join(ch for ch in args.label if ch.isalnum() or ch in "-_")
     src = _db_path()
 
-    if args.restore:
+    if args.restore is not None:
         bak = Path(args.restore).expanduser().resolve()
         if not bak.is_file():
             _fail(f"Backup file not found: {bak}")
