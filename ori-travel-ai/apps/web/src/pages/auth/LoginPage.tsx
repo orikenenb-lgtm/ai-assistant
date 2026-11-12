@@ -3,6 +3,7 @@ import { useId, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
 import { z } from 'zod';
 import { AuthLayout } from '@/components/layout/AuthLayout';
+import { LoginHero } from '@/features/landing/LoginHero';
 import { Button, Callout, Card, Field, Input } from '@/components/ui';
 import { useAuth } from '@/features/auth';
 import { isApiError } from '@/lib/api';
@@ -22,7 +23,8 @@ type FieldErrors = Partial<Record<'email' | 'password', string>>;
 
 /** Only same-app paths are allowed as post-login redirects (no open redirects). */
 export function safeRedirect(from: unknown): string {
-  if (typeof from !== 'string' || !from.startsWith('/') || from.startsWith('//') || from.startsWith('/login')) return '/';
+  if (typeof from !== 'string' || !from.startsWith('/') || from.startsWith('//') || from.startsWith('/login'))
+    return '/';
   return from;
 }
 
@@ -90,74 +92,82 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthLayout>
-      <Card padding="lg" className="shadow-md">
-        <h1 id={headingId} className="text-2xl font-bold text-fg">
-          התחברות
-        </h1>
-        <p className="mt-1.5 text-sm text-fg-muted">ברוכים השבים! הכניסה מיועדת לבני המשפחה בלבד.</p>
+    <>
+      {/* The hero holds the page's single <h1>; the login card below is the next section. */}
+      <LoginHero nextId="main" />
+      <AuthLayout>
+        <Card padding="lg" className="shadow-md">
+          <h2 id={headingId} className="text-2xl font-bold text-fg">
+            התחברות
+          </h2>
+          <p className="mt-1.5 text-sm text-fg-muted">ברוכים השבים! הכניסה מיועדת לבני המשפחה בלבד.</p>
 
-        <form className="mt-6 flex flex-col gap-4" noValidate onSubmit={onSubmit} aria-labelledby={headingId}>
-          {formError && (
-            <Callout tone={formError.tone} title={formError.title} role="alert">
-              {formError.message}
-            </Callout>
-          )}
-          <Field label="אימייל" error={fieldErrors.email} required>
-            <Input
-              ref={emailRef}
-              type="email"
-              name="email"
-              dir="ltr"
-              inputMode="email"
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              placeholder="name@family.local"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="text-start"
-            />
-          </Field>
-          <Field label="סיסמה" error={fieldErrors.password} required>
-            <div className="relative">
+          <form className="mt-6 flex flex-col gap-4" noValidate onSubmit={onSubmit} aria-labelledby={headingId}>
+            {formError && (
+              <Callout tone={formError.tone} title={formError.title} role="alert">
+                {formError.message}
+              </Callout>
+            )}
+            <Field label="אימייל" error={fieldErrors.email} required>
               <Input
-                ref={passwordRef}
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pe-11"
+                ref={emailRef}
+                type="email"
+                name="email"
+                dir="ltr"
+                inputMode="email"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="name@family.local"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="text-start"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-e-md text-fg-subtle hover:text-fg"
-                aria-label={showPassword ? 'הסתרת הסיסמה' : 'הצגת הסיסמה'}
-                aria-pressed={showPassword}
-              >
-                {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
-              </button>
-            </div>
-          </Field>
-          <Button
-            type="submit"
-            size="lg"
-            fullWidth
-            loading={submitting}
-            loadingText="מתחבר…"
-            leadingIcon={<LogIn className="rtl:rotate-180" aria-hidden="true" />}
-            className="mt-2"
-          >
-            כניסה
-          </Button>
-        </form>
+            </Field>
+            <Field label="סיסמה" error={fieldErrors.password} required>
+              <div className="relative">
+                <Input
+                  ref={passwordRef}
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pe-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-e-md text-fg-subtle hover:text-fg"
+                  aria-label={showPassword ? 'הסתרת הסיסמה' : 'הצגת הסיסמה'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="size-4" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            </Field>
+            <Button
+              type="submit"
+              size="lg"
+              fullWidth
+              loading={submitting}
+              loadingText="מתחבר…"
+              leadingIcon={<LogIn className="rtl:rotate-180" aria-hidden="true" />}
+              className="mt-2"
+            >
+              כניסה
+            </Button>
+          </form>
 
-        <p className="mt-6 border-t border-line pt-4 text-sm leading-relaxed text-fg-muted">
-          אין לכם חשבון? ההצטרפות אפשרית רק בהזמנה מבעלי החשבון המשפחתי.
-        </p>
-      </Card>
-    </AuthLayout>
+          <p className="mt-6 border-t border-line pt-4 text-sm leading-relaxed text-fg-muted">
+            אין לכם חשבון? ההצטרפות אפשרית רק בהזמנה מבעלי החשבון המשפחתי.
+          </p>
+        </Card>
+      </AuthLayout>
+    </>
   );
 }

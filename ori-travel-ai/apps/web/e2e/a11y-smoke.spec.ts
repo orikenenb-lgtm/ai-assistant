@@ -20,7 +20,7 @@ async function seedPages(api: Api) {
 anon.describe('נגישות: דף ההתחברות (ללא משתמש)', () => {
   anon('מבנה בסיסי, תוויות, ללא גלישה אופקית ב-390px', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { level: 1, name: 'התחברות' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'התחברות' })).toBeVisible();
     await expectBasicA11y(page, 'login');
     // Labels are programmatically associated (click on label focuses the input).
     await page.locator('label').filter({ hasText: /^אימייל/ }).click();

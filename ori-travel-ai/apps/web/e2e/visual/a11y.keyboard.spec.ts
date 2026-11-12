@@ -83,7 +83,8 @@ test('flight search form: tab order follows the visual (RTL) reading order', asy
   await expect(page.getByTestId('flight-search-form')).toBeVisible();
   await settle(page);
   const names: string[] = [];
-  for (let i = 0; i < 40; i++) {
+  // Enough Tab presses to cross the sidebar (it grows with new areas) and the whole form.
+  for (let i = 0; i < 60; i++) {
     await page.keyboard.press('Tab');
     const a = await activeInfo(page);
     if (a?.region === 'form') names.push(a.label || (await page.evaluate("document.activeElement.getAttribute('name')||''")) as string);

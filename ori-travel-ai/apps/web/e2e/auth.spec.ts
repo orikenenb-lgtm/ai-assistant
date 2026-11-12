@@ -5,7 +5,7 @@ import { OWNER_EMAIL, OWNER_PASSWORD } from './env';
 test.describe('אימות והתחברות', () => {
   test('דף ההתחברות: מבנה בסיסי, ללא קישור הרשמה ציבורי', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { level: 1, name: 'התחברות' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'התחברות' })).toBeVisible();
     await expect(page.getByLabel('אימייל')).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
     await expect(page.getByRole('button', { name: 'כניסה' })).toBeVisible();
