@@ -46,3 +46,6 @@
 | 2026-11-12 ~14:50 | Agent QA | הופעל: בדיקות E2E (Playwright, desktop+mobile) מול מערכת אמיתית, נגישות בסיסית, כותרות אבטחה, test-plan | sonnet | בביצוע |
 | 2026-11-12 ~15:30 | Agent B1 (חידוש) | תיקוני ביקורת AUD-07/08/11/12: הצפנת notes/accessibility/gender/nationality, צמצום מידע לצופים, מחיקת משתמש, ניקוי retention מורחב, הרשאות עריכת בן משפחה, reauth למחיקת פרופיל | sonnet | ✅ |
 | 2026-11-12 ~15:32 | מנהל | קישור הזמנה עם fragment (/invite#token); חידוש F3 להתאמת המסכים לשינויי ה-API | — | ✅ |
+| 2026-11-12 ~15:50 | Agent B4 (חידוש) | תיקוני ביקורת AUD-01/04/05/09: terms_hash מכסה כל מה שהמאשר רואה, התאמת הרכב נוסעים להצעה, סירוב hosted-checkout ללא revalidate, checkout-link כ-POST. 82 בדיקות הזמנה | fable | ✅ |
+| 2026-11-12 ~15:55 | Agent F3 (חידוש) | התאמת מסכים: צורת צופה מצומצמת, reauth למחיקות, מחיקת משתמש, age_group⇔is_minor, שגיאות הזמנה, ספירות retention. 152 בדיקות web | sonnet | ✅ |
+| 2026-11-12 ~16:00 | מנהל | checkout-link POST בלקוח; migration 0001 נוצר מחדש ונבדק (SQLite + PostgreSQL 16, round-trip); AUD-22: login לא נחשב reauth | — | ✅ |

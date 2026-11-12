@@ -40,6 +40,7 @@ export type InvitationCreated = z.infer<typeof InvitationCreatedSchema>;
 export const TravelerDetailSchema = z.object({
   member_id: z.string(),
   display_name: z.string(),
+  has_profile: z.boolean().default(true),
   has_passport: z.boolean().default(false),
   passport_masked: z.string().nullable().optional(),
   passport_expiry_month: z.string().nullable().optional(),
@@ -47,7 +48,7 @@ export const TravelerDetailSchema = z.object({
   seat_preference: z.string().nullable().optional(),
   meal_preference: z.string().nullable().optional(),
   kosher_required: z.boolean().default(false),
-  accessibility_needs: z.array(z.string()).default([]),
+  accessibility_needs: z.array(z.string()).nullable().optional(),
   updated_at: IsoDateTimeSchema,
   detail_level: z.enum(['full', 'masked']),
   legal_first_name: z.string().nullable().optional(),

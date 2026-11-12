@@ -274,7 +274,7 @@ describe('booking review screen', () => {
         can: { open_checkout: true, record_confirmation: true, cancel: true },
       }),
       handlers: {
-        'GET /api/bookings/b1/checkout-link': () =>
+        'POST /api/bookings/b1/checkout-link': () =>
           jsonResponse({ url: 'https://supplier.example/checkout?x=1', provider_id: 'p', provider_name: 'ספק', instructions: 'השלימו באתר', warnings: ['בדקו מחיר'] }),
         'POST /api/bookings/b1/record-confirmation': () => jsonResponse(recorded),
       },

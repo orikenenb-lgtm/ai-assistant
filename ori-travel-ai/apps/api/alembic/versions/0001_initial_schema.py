@@ -2,7 +2,7 @@
 
 Revision ID: 0001_initial
 Revises: 
-Create Date: 2026-11-12 12:58:34.857231
+Create Date: 2026-11-12 13:48:01.630386
 """
 
 from __future__ import annotations
@@ -236,13 +236,13 @@ def upgrade() -> None:
     sa.Column('passport_number_enc', sa.Text(), nullable=True),
     sa.Column('passport_expiry_enc', sa.Text(), nullable=True),
     sa.Column('frequent_flyer_enc', sa.Text(), nullable=True),
-    sa.Column('nationality', sa.String(length=2), nullable=True),
-    sa.Column('gender', sa.String(length=16), nullable=True),
+    sa.Column('gender_enc', sa.Text(), nullable=True),
+    sa.Column('nationality_enc', sa.Text(), nullable=True),
+    sa.Column('notes_enc', sa.Text(), nullable=True),
+    sa.Column('accessibility_needs_enc', sa.Text(), nullable=True),
     sa.Column('seat_preference', sa.String(length=16), nullable=True),
     sa.Column('meal_preference', sa.String(length=32), nullable=True),
     sa.Column('kosher_required', sa.Boolean(), nullable=False),
-    sa.Column('accessibility_needs', sa.JSON(), nullable=False),
-    sa.Column('notes', sa.String(length=500), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['family_member_id'], ['family_members.id'], name=op.f('fk_traveler_profiles_family_member_id_family_members'), ondelete='CASCADE'),

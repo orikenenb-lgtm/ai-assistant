@@ -22,6 +22,8 @@ export const fetchUsers = () => api.get('/api/family/users', { schema: z.array(U
 export const updateUser = (id: string, body: Record<string, unknown>) =>
   api.patch(`/api/family/users/${encodeURIComponent(id)}`, body, { schema: UserSchema });
 
+export const deleteUser = (id: string) => api.delete(`/api/family/users/${encodeURIComponent(id)}`, { schema: OkResponseSchema });
+
 export const fetchInvitations = () => api.get('/api/family/invitations', { schema: InvitationListSchema });
 export const createInvitation = (body: Record<string, unknown>) =>
   api.post('/api/family/invitations', body, { schema: InvitationCreatedSchema });

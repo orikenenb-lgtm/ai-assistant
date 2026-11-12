@@ -35,6 +35,9 @@ def test_role_matrix_mutations(auth_client, member_id):
     assert viewer.delete(f"/api/travelers/{member_id}").status_code == 403
     assert viewer.post(f"/api/travelers/{member_id}/passport/reveal").status_code == 403
     assert adult.put(f"/api/travelers/{member_id}", json=PAYLOAD).status_code == 200
+    # Login alone is not step-up authentication (AUD-22): deletion requires /reauth first
+    assert adult.delete(f"/api/travelers/{member_id}").status_code == 403
+    assert adult.post("/api/auth/reauth", json={"password": "Test-Password-123"}).status_code == 200
     assert adult.delete(f"/api/travelers/{member_id}").status_code == 200
     assert adult.delete(f"/api/travelers/{member_id}").status_code == 404
 
@@ -154,6 +157,8 @@ def test_reveal_requires_reauth_and_is_audited(auth_client, member_id, db):
 def test_reveal_without_passport_is_404(auth_client, member_id):
     owner = auth_client("owner")
     owner.put(f"/api/travelers/{member_id}", json={k: v for k, v in PAYLOAD.items() if k != "passport_number"})
+    assert owner.post(f"/api/travelers/{member_id}/passport/reveal").status_code == 403  # no step-up yet
+    assert owner.post("/api/auth/reauth", json={"password": "Test-Password-123"}).status_code == 200
     assert owner.post(f"/api/travelers/{member_id}/passport/reveal").status_code == 404
 
 
@@ -181,6 +186,7 @@ def test_data_with_wrong_key_returns_503_not_500(auth_client, member_id, monkeyp
 def test_audit_has_no_plaintext(auth_client, member_id, db):
     adult = auth_client("adult")
     adult.put(f"/api/travelers/{member_id}", json=PAYLOAD)
+    assert adult.post("/api/auth/reauth", json={"password": "Test-Password-123"}).status_code == 200
     adult.delete(f"/api/travelers/{member_id}")
     dump = str([(e.action, e.details) for e in db.query(AuditEvent).all()])
     assert "traveler.create" in dump and "traveler.delete" in dump

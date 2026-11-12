@@ -3,6 +3,7 @@ import {
   createInvitation,
   createMember,
   deleteMember,
+  deleteUser,
   familyKeys,
   fetchInvitations,
   fetchMembers,
@@ -78,5 +79,16 @@ export function useRevokeInvitation() {
   return useMutation({
     mutationFn: (id: string) => revokeInvitation(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: familyKeys.invitations }),
+  });
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteUser(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: familyKeys.users });
+      void qc.invalidateQueries({ queryKey: familyKeys.members });
+    },
   });
 }

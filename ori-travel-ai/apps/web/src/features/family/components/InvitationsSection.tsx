@@ -3,7 +3,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { QueryState } from '@/components/QueryState';
 import { Badge, Button, Callout, Card, CardHeader, Checkbox, ConfirmDialog, DateText, Dialog, EmptyState, Field, Input, NativeSelect } from '@/components/ui';
 import { serverFieldErrors } from '@/features/trips/formUtils';
-import { errorMessage } from '@/lib/api';
+import { errorMessage, isApiError } from '@/lib/api';
 import { ROLE_LABELS } from '@/lib/labels';
 import { ROLES, type Role } from '@/lib/schemas/auth';
 import type { Invitation, InvitationCreated, Member } from '@/lib/schemas/family';
@@ -57,6 +57,7 @@ function CreateInvitationDialog({
   const serverErrors = serverFieldErrors(create.error);
   const needsAttestation = role === 'adult' || role === 'owner';
   const free = members.filter((m) => !m.user);
+  const minorError = isApiError(create.error) && create.error.code === 'MINOR_CANNOT_BE_ADULT';
 
   function reset() {
     setEmail('');
@@ -121,7 +122,7 @@ function CreateInvitationDialog({
           </NativeSelect>
         </Field>
         {free.length > 0 && (
-          <Field label="קישור לבן/בת משפחה קיימ/ת" optional hint="המשתמש/ת החדש/ה יקושר/ת לפרופיל המשפחתי הזה.">
+          <Field label="קישור לבן/בת משפחה קיימ/ת" optional hint="המשתמש/ת החדש/ה יקושר/ת לפרופיל המשפחתי הזה." error={minorError ? errorMessage(create.error) : undefined}>
             <NativeSelect value={memberId} onChange={(e) => setMemberId(e.target.value)}>
               <option value="">ללא קישור</option>
               {free.map((m) => (
@@ -141,7 +142,7 @@ function CreateInvitationDialog({
             error={errors.attested}
           />
         )}
-        {create.isError && (
+        {create.isError && !minorError && (
           <Callout tone="danger" role="alert">
             {errorMessage(create.error)}
           </Callout>

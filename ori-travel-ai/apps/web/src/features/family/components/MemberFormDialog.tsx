@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Button, Callout, Checkbox, Dialog, Field, Input, NativeSelect } from '@/components/ui';
+import { Button, Callout, Dialog, Field, Input, NativeSelect } from '@/components/ui';
 import { serverFieldErrors, submitErrorMessage } from '@/features/trips/formUtils';
 import { AGE_GROUPS, type Member } from '@/lib/schemas/family';
 import { AGE_GROUP_LABELS } from '../labels';
@@ -28,8 +28,6 @@ function MemberForm({ member, onDone }: { member?: Member; onDone: () => void })
   const [name, setName] = useState(member?.display_name ?? '');
   const [relation, setRelation] = useState(member?.relation ?? '');
   const [ageGroup, setAgeGroup] = useState(member?.age_group ?? 'adult');
-  const [isMinor, setIsMinor] = useState(member?.is_minor ?? false);
-  const [minorTouched, setMinorTouched] = useState(!!member);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const create = useCreateMember();
   const update = useUpdateMember();
@@ -42,7 +40,7 @@ function MemberForm({ member, onDone }: { member?: Member; onDone: () => void })
     if (!name.trim()) found.display_name = 'יש להזין שם';
     setErrors(found);
     if (Object.keys(found).length) return;
-    const body = { display_name: name.trim(), relation: relation.trim() || null, age_group: ageGroup, is_minor: isMinor };
+    const body = { display_name: name.trim(), relation: relation.trim() || null, age_group: ageGroup, is_minor: ageGroup !== 'adult' };
     if (member) update.mutate({ id: member.id, body }, { onSuccess: onDone });
     else create.mutate(body, { onSuccess: onDone });
   }
@@ -59,10 +57,7 @@ function MemberForm({ member, onDone }: { member?: Member; onDone: () => void })
       <Field label="קבוצת גיל" hint="משפיעה על חיפושים ועל מחירי ילדים ותינוקות.">
         <NativeSelect
           value={ageGroup}
-          onChange={(e) => {
-            setAgeGroup(e.target.value);
-            if (!minorTouched) setIsMinor(e.target.value !== 'adult');
-          }}
+          onChange={(e) => setAgeGroup(e.target.value)}
         >
           {AGE_GROUPS.map((g) => (
             <option key={g} value={g}>
@@ -71,15 +66,7 @@ function MemberForm({ member, onDone }: { member?: Member; onDone: () => void })
           ))}
         </NativeSelect>
       </Field>
-      <Checkbox
-        label="קטין/ה (מתחת לגיל 18)"
-        description="בני נוער בני 16–17 עשויים להיות 'מבוגרים' לצורך טיסה אך עדיין קטינים."
-        checked={isMinor}
-        onChange={(e) => {
-          setIsMinor(e.target.checked);
-          setMinorTouched(true);
-        }}
-      />
+      <p className="text-sm text-fg-muted">{ageGroup === 'adult' ? 'מבוגר/ת — לא קטין/ה.' : 'ילדים ותינוקות מסומנים אוטומטית כקטינים.'}</p>
       {general && (
         <Callout tone="danger" role="alert">
           {general}

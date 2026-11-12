@@ -128,6 +128,17 @@ function RetentionResult({ result, onClose }: { result: RetentionRun | null; onC
             <dt className="text-fg-muted">אירועי ביקורת שנמחקו</dt>
             <dd className="font-semibold tabular-nums">{result.audit_events_deleted}</dd>
           </div>
+          {([
+            ['התחברויות שפגו', result.sessions_deleted],
+            ['הזמנות ישנות', result.invitations_deleted],
+            ['התראות שנקראו', result.notifications_deleted],
+            ['תיעוד מחירי התראות', result.price_snapshots_deleted],
+          ] as const).map(([label, n]) => (
+            <div key={label} className="flex justify-between gap-4">
+              <dt className="text-fg-muted">{label}</dt>
+              <dd className="font-semibold tabular-nums">{n}</dd>
+            </div>
+          ))}
         </dl>
       )}
     </Dialog>

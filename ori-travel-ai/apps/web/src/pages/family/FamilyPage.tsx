@@ -70,7 +70,7 @@ export default function FamilyPage() {
                   <li key={m.id} className="contents">
                     <MemberCard
                       member={m}
-                      canEdit={editable}
+                      canEdit={editable && (owner || !m.user || m.user.id === user?.id)}
                       canDelete={owner}
                       onProfile={() => setProfileId(m.id)}
                       onEdit={() => {

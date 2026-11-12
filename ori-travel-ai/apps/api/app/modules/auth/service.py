@@ -103,7 +103,9 @@ def create_session(db: Session, user: User, request: Request | None, response: R
         created_at=now,
         last_seen_at=now,
         expires_at=now + timedelta(hours=settings.session_ttl_hours),
-        reauth_at=now,
+        # Step-up is NOT implied by login: sensitive actions (passport reveal, deletions)
+        # always require re-entering the password via /api/auth/reauth.
+        reauth_at=None,
         ip=client_ip(request),
         user_agent=(request.headers.get("user-agent", "")[:255] if request else None),
     )

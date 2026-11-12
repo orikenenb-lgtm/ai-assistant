@@ -73,6 +73,8 @@ export function describeBookingError(error: unknown): BookingProblem {
       return { ...base, title: 'ההזמנה אינה זמינה', tone: 'warn', mustReread: true };
     case 'LIVE_EXECUTION_DISABLED':
       return { ...base, title: 'ביצוע הזמנה אמיתית כבוי', tone: 'danger' };
+    case 'TRAVELER_MISMATCH':
+      return { ...base, title: 'הנוסעים לא תואמים להצעה', tone: 'warn' };
     case 'BOOKING_NOT_ALLOWED':
       return { ...base, title: 'אין הרשאה להכין הזמנות', tone: 'danger' };
     case 'REAUTH_FAILED':

@@ -45,4 +45,5 @@ export const cancelBooking = (id: string, reason?: string) =>
 export const recordConfirmation = (id: string, body: { supplier_reference: string; notes?: string }) =>
   api.post(`${base(id)}/record-confirmation`, body, { schema: BookingSchema });
 
-export const fetchCheckoutLink = (id: string) => api.get(`${base(id)}/checkout-link`, { schema: CheckoutLinkSchema });
+// POST: revealing the link re-checks the price and may change state, so it is CSRF-protected.
+export const fetchCheckoutLink = (id: string) => api.post(`${base(id)}/checkout-link`, undefined, { schema: CheckoutLinkSchema });

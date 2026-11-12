@@ -184,3 +184,11 @@ def test_expired_invitation_rejected(client, db):
 def test_no_public_signup_route(client):
     assert client.post("/api/auth/register", json={"email": "x@y.z", "password": "Abcdefgh-123"}).status_code == 404
     assert client.post("/api/auth/signup", json={"email": "x@y.z", "password": "Abcdefgh-123"}).status_code == 404
+
+
+def test_login_does_not_imply_step_up(client, make_user, db):
+    """AUD-22: a fresh session is not 'recently re-authenticated'."""
+    user = make_user(role="owner")
+    login(client, user.email)
+    session = db.query(AuthSession).filter_by(user_id=user.id).one()
+    assert session.reauth_at is None

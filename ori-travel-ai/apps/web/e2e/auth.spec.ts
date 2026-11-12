@@ -88,9 +88,8 @@ test.describe('אימות והתחברות', () => {
 
   test('אין redirect פתוח: ניסיון הפניה לדומיין חיצוני נחסם', async ({ page }) => {
     await page.goto('/login');
-    await page.evaluate(() => {
-      window.history.pushState({ usr: { from: '//evil.example/x' } }, '', '/login');
-    });
+    // Simulate a tampered post-login target (router state) pointing at another origin.
+    await page.evaluate(`window.history.pushState({ usr: { from: '//evil.example/x' } }, '', '/login')`);
     await page.getByLabel('אימייל').fill(OWNER_EMAIL);
     await page.locator('input[name="password"]').fill(OWNER_PASSWORD);
     await page.getByRole('button', { name: 'כניסה' }).click();

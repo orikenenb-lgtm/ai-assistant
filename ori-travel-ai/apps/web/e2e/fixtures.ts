@@ -1,3 +1,4 @@
+/* eslint-disable no-empty-pattern -- Playwright fixtures must destructure their first argument */
 import { test as base, expect, request as pwRequest, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,16 +39,16 @@ type WorkerFixtures = { ownerState: string };
 /** Test with the owner already signed in (storage state) and an `api` client. */
 export const test = base.extend<Fixtures, WorkerFixtures>({
   ownerState: [
-    async ({}, use) => {
-      await use(await ensureOwnerState());
+    async ({}, run) => {
+      await run(await ensureOwnerState());
     },
     { scope: 'worker' },
   ],
-  storageState: async ({ ownerState }, use) => {
-    await use(ownerState);
+  storageState: async ({ ownerState }, run) => {
+    await run(ownerState);
   },
-  api: async ({ request }, use) => {
-    await use(new Api(request));
+  api: async ({ request }, run) => {
+    await run(new Api(request));
   },
 });
 

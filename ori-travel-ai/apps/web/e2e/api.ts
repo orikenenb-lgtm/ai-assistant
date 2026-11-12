@@ -1,5 +1,9 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
 
+/** Loosely typed JSON from the real API (the contract is verified by assertions, not by static types). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Json = any;
+
 /**
  * Thin client for the real API using an authenticated Playwright request context.
  * Adds the CSRF header (value of the readable `ori_csrf` cookie) to unsafe methods.
@@ -34,7 +38,7 @@ export class Api {
   }
 
   /** POST and return parsed JSON, failing loudly with the response body on a non-2xx status. */
-  async json<T = any>(res: APIResponse): Promise<T> {
+  async json<T = Json>(res: APIResponse): Promise<T> {
     if (!res.ok()) throw new Error(`API ${res.url()} -> ${res.status()}: ${await res.text()}`);
     return (await res.json()) as T;
   }

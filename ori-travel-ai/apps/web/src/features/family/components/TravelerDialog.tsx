@@ -6,6 +6,7 @@ import { useDeleteTraveler, useTraveler } from '@/features/travelers/hooks';
 import { isApiError } from '@/lib/api';
 import type { Member, TravelerDetail } from '@/lib/schemas/family';
 import { GENDER_LABELS, MEAL_LABELS, SEAT_LABELS } from '../labels';
+import { useReauth } from '../useReauth';
 import { PassportReveal } from './PassportReveal';
 import { TravelerForm } from './TravelerForm';
 
@@ -22,6 +23,8 @@ const dash = <span className="text-fg-subtle">—</span>;
 
 function ProfileView({ member, t, editable }: { member: Member; t: TravelerDetail; editable: boolean }) {
   const full = t.detail_level === 'full';
+  // Viewers get a reduced shape: passport mask, expiry, nationality and accessibility are null (not just empty).
+  const reduced = !full && t.nationality == null && t.accessibility_needs == null && t.passport_expiry_month == null;
   return (
     <dl className="flex flex-col gap-2.5" data-testid="traveler-view" data-level={t.detail_level}>
       {full && (
@@ -38,7 +41,9 @@ function ProfileView({ member, t, editable }: { member: Member; t: TravelerDetai
       )}
       <Row label="מספר דרכון">
         {t.has_passport ? (
-          editable ? (
+          reduced ? (
+            <span className="text-fg-muted">נשמר מספר דרכון (מוסתר)</span>
+          ) : editable ? (
             <PassportReveal key={member.id} memberId={member.id} masked={t.passport_masked} />
           ) : (
             <span className="font-mono" dir="ltr">
@@ -49,15 +54,17 @@ function ProfileView({ member, t, editable }: { member: Member; t: TravelerDetai
           <span className="text-fg-muted">לא נשמר</span>
         )}
       </Row>
-      <Row label="תוקף הדרכון">
-        {full && t.passport_expiry ? <DateText value={t.passport_expiry} /> : t.passport_expiry_month ? <span dir="ltr">{t.passport_expiry_month}</span> : dash}
-      </Row>
-      <Row label="נתינות">{t.nationality ? <span dir="ltr">{t.nationality}</span> : dash}</Row>
+      {!reduced && (
+        <Row label="תוקף הדרכון">
+          {full && t.passport_expiry ? <DateText value={t.passport_expiry} /> : t.passport_expiry_month ? <span dir="ltr">{t.passport_expiry_month}</span> : dash}
+        </Row>
+      )}
+      {!reduced && <Row label="נתינות">{t.nationality ? <span dir="ltr">{t.nationality}</span> : dash}</Row>}
       {full && <Row label="מגדר">{t.gender ? (GENDER_LABELS[t.gender] ?? t.gender) : dash}</Row>}
       <Row label="העדפת מושב">{t.seat_preference ? (SEAT_LABELS[t.seat_preference] ?? t.seat_preference) : dash}</Row>
       <Row label="העדפת ארוחה">{t.meal_preference ? (MEAL_LABELS[t.meal_preference] ?? t.meal_preference) : dash}</Row>
       <Row label="כשרות">{t.kosher_required ? <Badge tone="success">נדרש אוכל כשר</Badge> : 'ללא דרישה'}</Row>
-      <Row label="נגישות">{t.accessibility_needs.length ? t.accessibility_needs.join(', ') : dash}</Row>
+      {!reduced && <Row label="נגישות">{t.accessibility_needs?.length ? t.accessibility_needs.join(', ') : dash}</Row>}
       {full && <Row label="מועדון טיסה">{t.has_frequent_flyer ? 'נשמר מספר (מוצפן)' : dash}</Row>}
       {full && <Row label="הערות">{t.notes ? <span className="whitespace-pre-line">{t.notes}</span> : dash}</Row>}
     </dl>
@@ -89,6 +96,7 @@ function DialogBody({ member, editable, onClose }: { member: Member; editable: b
   const [deleting, setDeleting] = useState(false);
   const query = useTraveler(member.id, member.has_traveler_profile);
   const del = useDeleteTraveler(member.id);
+  const { withReauth, dialog: reauthDialog } = useReauth();
 
   const privacy = (
     <Callout tone="neutral" icon={<Lock />} title="פרטיות">
@@ -144,7 +152,7 @@ function DialogBody({ member, editable, onClose }: { member: Member; editable: b
     <div className="flex flex-col gap-4">
       {privacy}
       {t.detail_level === 'masked' && (
-        <Callout tone="info">לחשבון שלך יש הרשאת צפייה — מוצגים רק פרטים מוסתרים. שם בדרכון, תאריך לידה ומספר דרכון גלויים לבעלי הרשאת עריכה.</Callout>
+        <Callout tone="info">לחשבון שלך יש הרשאת צפייה — מוצגות רק העדפות כלליות. פרטי זיהוי, דרכון, נתינות ונגישות גלויים לבעלי הרשאת עריכה.</Callout>
       )}
       <ProfileView member={member} t={t} editable={editable && t.detail_level === 'full'} />
       <div className="flex flex-wrap justify-between gap-2 border-t border-line pt-4">
@@ -167,6 +175,7 @@ function DialogBody({ member, editable, onClose }: { member: Member; editable: b
           </Button>
         </div>
       </div>
+      {reauthDialog}
       <ConfirmDialog
         open={deleting}
         onOpenChange={setDeleting}
@@ -175,7 +184,7 @@ function DialogBody({ member, editable, onClose }: { member: Member; editable: b
         confirmLabel="מחיקת הפרופיל"
         tone="danger"
         onConfirm={async () => {
-          await del.mutateAsync();
+          await withReauth(() => del.mutateAsync());
           onClose();
         }}
       />

@@ -7,10 +7,12 @@ export interface ReauthDialogProps {
   onOpenChange: (open: boolean) => void;
   /** Resolves when the password was accepted (the caller then retries the sensitive action). */
   onConfirm: (password: string) => Promise<void>;
+  description?: string;
+  confirmLabel?: string;
 }
 
 /** Step-up authentication: the server requires a recent password confirmation (10 minutes) for sensitive reads. */
-export function ReauthDialog({ open, onOpenChange, onConfirm }: ReauthDialogProps) {
+export function ReauthDialog({ open, onOpenChange, onConfirm, description = 'לצפייה במספר הדרכון נדרש אימות מחדש. האימות תקף ל-10 דקות.', confirmLabel = 'אימות והצגה' }: ReauthDialogProps) {
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export function ReauthDialog({ open, onOpenChange, onConfirm }: ReauthDialogProp
       }}
       size="sm"
       title="אימות סיסמה"
-      description="לצפייה במספר הדרכון נדרש אימות מחדש. האימות תקף ל-10 דקות."
+      description={description}
     >
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <Field label="הסיסמה שלך" required>
@@ -62,7 +64,7 @@ export function ReauthDialog({ open, onOpenChange, onConfirm }: ReauthDialogProp
             ביטול
           </Button>
           <Button type="submit" loading={pending}>
-            אימות והצגה
+            {confirmLabel}
           </Button>
         </div>
       </form>

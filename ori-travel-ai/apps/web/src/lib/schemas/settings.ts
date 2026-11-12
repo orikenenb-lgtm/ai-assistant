@@ -23,5 +23,9 @@ export const RetentionRunSchema = z.object({
   search_requests_deleted: z.number().int(),
   offers_deleted: z.number().int(),
   audit_events_deleted: z.number().int(),
+  sessions_deleted: z.number().int().default(0),
+  invitations_deleted: z.number().int().default(0),
+  notifications_deleted: z.number().int().default(0),
+  price_snapshots_deleted: z.number().int().default(0),
 });
 export type RetentionRun = z.infer<typeof RetentionRunSchema>;

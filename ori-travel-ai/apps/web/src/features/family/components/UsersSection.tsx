@@ -5,11 +5,18 @@ import { useAuth } from '@/features/auth';
 import { errorMessage } from '@/lib/api';
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '@/lib/labels';
 import { ROLES, type Role, type User } from '@/lib/schemas/auth';
-import { useFamilyUsers, useUpdateUser } from '../hooks';
+import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Button, ConfirmDialog } from '@/components/ui';
+import { useDeleteUser, useFamilyUsers, useUpdateUser } from '../hooks';
+import { useReauth } from '../useReauth';
 
 function UserRow({ u, isSelf }: { u: User; isSelf: boolean }) {
   const { toast } = useToast();
   const update = useUpdateUser();
+  const del = useDeleteUser();
+  const { withReauth, dialog } = useReauth();
+  const [deleting, setDeleting] = useState(false);
   const change = (body: Record<string, unknown>, ok: string) =>
     update.mutate(
       { id: u.id, body },
@@ -62,7 +69,25 @@ function UserRow({ u, isSelf }: { u: User; isSelf: boolean }) {
           disabled={update.isPending}
           onCheckedChange={(v) => change({ is_active: v }, v ? 'החשבון הופעל' : 'החשבון הושבת והמכשירים נותקו')}
         />
+        {!u.is_active && u.role !== 'owner' && !isSelf && (
+          <Button size="sm" variant="danger" leadingIcon={<Trash2 aria-hidden="true" />} onClick={() => setDeleting(true)}>
+            מחיקת משתמש לצמיתות
+          </Button>
+        )}
       </div>
+      {dialog}
+      <ConfirmDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title="מחיקת משתמש לצמיתות"
+        description={`למחוק לצמיתות את החשבון של ${u.display_name}? החשבון וההתחברויות שלו יימחקו ואי אפשר לבטל. רשומת בן/בת המשפחה נשארת במשפחה ללא חשבון מקושר, וטיולים והצעות שמורות אינם נמחקים. המחיקה דורשת אימות סיסמה מחדש.`}
+        confirmLabel="מחיקה לצמיתות"
+        tone="danger"
+        onConfirm={async () => {
+          await withReauth(() => del.mutateAsync(u.id));
+          toast({ title: 'המשתמש נמחק', tone: 'success' });
+        }}
+      />
     </li>
   );
 }
