@@ -67,3 +67,44 @@ export function providerMode(p: ProviderStatus): 'DEMO' | 'LIVE' | 'CACHED' | un
 export function providerCategories(p: ProviderStatus) {
   return p.categories ?? p.capabilities?.categories ?? [];
 }
+
+export function providerDocsUrl(p: ProviderStatus): string | null {
+  return p.official_docs_url ?? p.capabilities?.official_docs_url ?? null;
+}
+
+export function providerRateLimitNote(p: ProviderStatus): string | null {
+  return p.capabilities?.rate_limit_note ?? null;
+}
+
+// ---- GET /api/providers/diagnostics (editor+) ----
+export const ProviderLastErrorSchema = z.object({
+  code: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+  at: IsoDateTimeSchema,
+});
+
+export const ProviderDiagnosticsSchema = z.object({
+  provider_id: z.string(),
+  display_name: z.string(),
+  mode: DataModeSchema,
+  status: ProviderHealthStatusSchema,
+  runs: z.number().int(),
+  ok_runs: z.number().int(),
+  failed_runs: z.number().int(),
+  timeout_runs: z.number().int(),
+  cached_runs: z.number().int(),
+  skipped_runs: z.number().int(),
+  success_rate: z.string().nullable().optional(), // percent 0-100 as decimal string
+  avg_latency_ms: z.number().int().nullable().optional(),
+  last_error: ProviderLastErrorSchema.nullable().optional(),
+  last_run_at: IsoDateTimeSchema.nullable().optional(),
+  last_run_status: z.string().nullable().optional(),
+});
+export type ProviderDiagnostics = z.infer<typeof ProviderDiagnosticsSchema>;
+
+export const DiagnosticsSchema = z.object({
+  window_days: z.number().int(),
+  generated_at: IsoDateTimeSchema,
+  providers: z.array(ProviderDiagnosticsSchema),
+});
+export type Diagnostics = z.infer<typeof DiagnosticsSchema>;

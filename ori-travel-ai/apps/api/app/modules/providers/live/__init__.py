@@ -1,4 +1,9 @@
-"""LIVE adapters for official provider APIs (placeholders in this wave — no network calls)."""
+"""LIVE adapters for official provider APIs.
+
+Duffel (flights) and Viator (activities) make real HTTPS calls but only when explicitly enabled
+(ORI_LIVE_PROVIDERS_ENABLED=true + credentials). Amadeus is discontinued; Booking.com Demand and Expedia
+Rapid are non-functional placeholders awaiting partner approval.
+"""
 
 from app.modules.providers.live.amadeus import AmadeusAdapter
 from app.modules.providers.live.booking_demand import BookingDemandAdapter

@@ -249,3 +249,31 @@ export type ConvertedAmount = z.infer<typeof ConvertedAmountSchema>;
 
 /** Default comparison weights (see Help page): cost 40, convenience 25, flexibility 20, quality 15. */
 export const DEFAULT_RANKING_WEIGHTS = { cost: 40, convenience: 25, flexibility: 20, quality: 15 } as const;
+
+// ---------- comparison (POST /api/comparisons, GET /api/fx/rates) ----------
+export const ComparisonGroupSchema = z.object({
+  category: CategorySchema,
+  currency: z.string(),
+  offers: z.array(CanonicalOfferSchema),
+  cheapest_offer_id: z.string().nullable().optional(),
+  /** DEMO FX conversions into the display currency — display only, never used for ranking. Keyed by offer id. */
+  display_conversions: z.record(z.string(), ConvertedAmountSchema).default({}),
+});
+export type ComparisonGroup = z.infer<typeof ComparisonGroupSchema>;
+
+export const ComparisonResultSchema = z.object({
+  groups: z.array(ComparisonGroupSchema),
+  weights: z.record(z.string(), z.number().int()),
+  notes: z.array(z.string()).default([]),
+});
+export type ComparisonResult = z.infer<typeof ComparisonResultSchema>;
+
+export const FxRatesSchema = z.object({
+  mode: DataModeSchema,
+  source: z.string(),
+  as_of: IsoDateTimeSchema,
+  base: z.string(),
+  rates: z.record(z.string(), DecimalStringSchema),
+  note: z.string(),
+});
+export type FxRates = z.infer<typeof FxRatesSchema>;

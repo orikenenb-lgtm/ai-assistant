@@ -1,0 +1,12 @@
+{
+ "data": [
+  {
+   "id": "arl_1",
+   "iata_code": "ZZ",
+   "name": "Duffel Airways"
+  }
+ ],
+ "meta": {
+  "limit": 1
+ }
+}

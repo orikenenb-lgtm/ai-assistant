@@ -1,0 +1,94 @@
+{
+ "products": [
+  {
+   "productCode": "5010SYDNEY",
+   "title": "Colosseum <b>Underground</b> & Roman Forum Skip-the-Line Tour",
+   "description": "Walk through history. <script>alert(1)</script> Family friendly.",
+   "images": [
+    {
+     "isCover": true,
+     "variants": [
+      {
+       "url": "https://media.tacdn.com/x.jpg",
+       "width": 480,
+       "height": 320
+      }
+     ]
+    }
+   ],
+   "reviews": {
+    "sources": [
+     {
+      "provider": "VIATOR",
+      "totalCount": 2350,
+      "averageRating": 4.7
+     }
+    ],
+    "totalReviews": 2350,
+    "combinedAverageRating": 4.7
+   },
+   "duration": {
+    "fixedDurationInMinutes": 210
+   },
+   "confirmationType": "INSTANT",
+   "itineraryType": "STANDARD",
+   "pricing": {
+    "summary": {
+     "fromPrice": 59.5,
+     "fromPriceBeforeDiscount": 70.0
+    },
+    "currency": "USD"
+   },
+   "productUrl": "https://www.viator.com/tours/Rome/Colosseum-Tour/d511-5010SYDNEY?pid=P00000&mcid=42383&medium=api",
+   "destinations": [
+    {
+     "ref": "511",
+     "primary": true
+    }
+   ],
+   "tags": [
+    21972,
+    11940
+   ],
+   "flags": [
+    "FREE_CANCELLATION"
+   ]
+  },
+  {
+   "productCode": "7788ROME",
+   "title": "Vatican Museums Early Access",
+   "description": "Early entry.",
+   "reviews": {
+    "totalReviews": 0,
+    "combinedAverageRating": null
+   },
+   "duration": {
+    "variableDurationFromMinutes": 120,
+    "variableDurationToMinutes": 180
+   },
+   "pricing": {
+    "summary": {
+     "fromPrice": "89.00"
+    },
+    "currency": "USD"
+   },
+   "productUrl": "https://viator.com.evil.example/tours/Rome/Vatican",
+   "destinations": [
+    {
+     "ref": "511",
+     "primary": true
+    }
+   ]
+  },
+  {
+   "productCode": "NOPRICE1",
+   "title": "Mystery tour",
+   "pricing": {
+    "summary": {},
+    "currency": "USD"
+   },
+   "productUrl": "https://www.viator.com/tours/x"
+  }
+ ],
+ "totalCount": 3
+}

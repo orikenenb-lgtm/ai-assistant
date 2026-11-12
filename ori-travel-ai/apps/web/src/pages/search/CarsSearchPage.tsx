@@ -1,16 +1,13 @@
 import { Car } from 'lucide-react';
-import { PlaceholderPage } from '@/components/PlaceholderPage';
+import { SearchPage } from '@/features/search/components/SearchPage';
 
 export default function CarsSearchPage() {
   return (
-    <PlaceholderPage
-      title="השכרת רכב"
+    <SearchPage
+      category="car"
+      title="חיפוש רכבים"
+      description="השכרת רכב עם איסוף והחזרה, גיל נהג, ביטוחים כלולים ופיקדון."
       icon={<Car />}
-      description="רכב לטיול: איסוף והחזרה, גיל נהג וסוג רכב."
-      planned={[
-        'מקום וזמן איסוף והחזרה, גיל הנהג, סוג רכב, תיבת הילוכים ומספר מושבים',
-        'פירוט ביטוחים כלולים, פיקדון, מדיניות דלק ועמלות נהג צעיר',
-      ]}
     />
   );
 }

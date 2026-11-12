@@ -1,0 +1,396 @@
+{
+ "data": {
+  "id": "off_0000A1B2C3D4E5F6G7H8",
+  "live_mode": false,
+  "created_at": "2026-11-12T09:00:00.000000Z",
+  "updated_at": "2026-11-12T09:00:00.000000Z",
+  "expires_at": "2099-01-01T00:00:00Z",
+  "total_amount": "1284.60",
+  "total_currency": "EUR",
+  "base_amount": "1071.40",
+  "base_currency": "EUR",
+  "tax_amount": "213.20",
+  "tax_currency": "EUR",
+  "owner": {
+   "iata_code": "ZZ",
+   "name": "Duffel Airways",
+   "id": "arl_00009VME7D6ivUu8dokgf7"
+  },
+  "partial": false,
+  "supported_passenger_identity_document_types": [
+   "passport"
+  ],
+  "payment_requirements": {
+   "requires_instant_payment": false,
+   "price_guarantee_expires_at": null,
+   "payment_required_by": "2099-01-02T00:00:00Z"
+  },
+  "conditions": {
+   "refund_before_departure": {
+    "allowed": true,
+    "penalty_amount": "100.00",
+    "penalty_currency": "EUR"
+   },
+   "change_before_departure": {
+    "allowed": true,
+    "penalty_amount": "50.00",
+    "penalty_currency": "EUR"
+   }
+  },
+  "passengers": [
+   {
+    "id": "pas_0000AAA",
+    "type": "adult",
+    "given_name": null,
+    "family_name": null
+   },
+   {
+    "id": "pas_0000BBB",
+    "type": "adult",
+    "given_name": null,
+    "family_name": null
+   },
+   {
+    "id": "pas_0000CCC",
+    "type": "child",
+    "given_name": null,
+    "family_name": null
+   }
+  ],
+  "slices": [
+   {
+    "id": "sli_out",
+    "origin": {
+     "iata_code": "TLV",
+     "name": "Ben Gurion International Airport",
+     "city_name": "Tel Aviv",
+     "icao_code": null,
+     "time_zone": null,
+     "type": "airport",
+     "id": "arp_tlv_x"
+    },
+    "destination": {
+     "iata_code": "LHR",
+     "name": "Heathrow Airport",
+     "city_name": "London",
+     "icao_code": null,
+     "time_zone": null,
+     "type": "airport",
+     "id": "arp_lhr_x"
+    },
+    "duration": "PT7H40M",
+    "fare_brand_name": "Economy Classic",
+    "origin_type": "airport",
+    "destination_type": "airport",
+    "segments": [
+     {
+      "id": "seg_out1",
+      "origin": {
+       "iata_code": "TLV",
+       "name": "Ben Gurion International Airport",
+       "city_name": "Tel Aviv",
+       "icao_code": null,
+       "time_zone": null,
+       "type": "airport",
+       "id": "arp_tlv_x"
+      },
+      "destination": {
+       "iata_code": "ATH",
+       "name": "Athens International Airport",
+       "city_name": "Athens",
+       "icao_code": null,
+       "time_zone": null,
+       "type": "airport",
+       "id": "arp_ath_x"
+      },
+      "departing_at": "2027-03-10T08:15:00",
+      "arriving_at": "2027-03-10T10:20:00",
+      "duration": "PT2H5M",
+      "marketing_carrier": {
+       "iata_code": "ZZ",
+       "name": "Duffel Airways",
+       "id": "arl_00009VME7D6ivUu8dokgf7"
+      },
+      "operating_carrier": {
+       "iata_code": "ZZ",
+       "name": "Duffel Airways",
+       "id": "arl_00009VME7D6ivUu8dokgf7"
+      },
+      "marketing_carrier_flight_number": "401",
+      "operating_carrier_flight_number": "401",
+      "aircraft": {
+       "name": "Airbus A320",
+       "iata_code": "320"
+      },
+      "origin_terminal": "3",
+      "destination_terminal": null,
+      "distance": null,
+      "passengers": [
+       {
+        "passenger_id": "pas_0000AAA",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOW",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 1
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       },
+       {
+        "passenger_id": "pas_0000BBB",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOW",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 1
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       },
+       {
+        "passenger_id": "pas_0000CCC",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOWCH",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 0
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "seg_out2",
+      "origin": {
+       "iata_code": "ATH",
+       "name": "Athens International Airport",
+       "city_name": "Athens",
+       "icao_code": null,
+       "time_zone": null,
+       "type": "airport",
+       "id": "arp_ath_x"
+      },
+      "destination": {
+       "iata_code": "LHR",
+       "name": "Heathrow Airport",
+       "city_name": "London",
+       "icao_code": null,
+       "time_zone": null,
+       "type": "airport",
+       "id": "arp_lhr_x"
+      },
+      "departing_at": "2027-03-10T12:00:00",
+      "arriving_at": "2027-03-10T13:55:00",
+      "duration": "PT3H55M",
+      "marketing_carrier": {
+       "iata_code": "ZZ",
+       "name": "Duffel Airways",
+       "id": "arl_00009VME7D6ivUu8dokgf7"
+      },
+      "operating_carrier": {
+       "iata_code": "ZY",
+       "name": "Duffel Express",
+       "id": "arl_00009VME7D6ivUu8dokgf8"
+      },
+      "marketing_carrier_flight_number": "822",
+      "operating_carrier_flight_number": "822",
+      "aircraft": {
+       "name": "Boeing 737-800",
+       "iata_code": "320"
+      },
+      "origin_terminal": "3",
+      "destination_terminal": null,
+      "distance": null,
+      "passengers": [
+       {
+        "passenger_id": "pas_0000AAA",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOW",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 1
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       },
+       {
+        "passenger_id": "pas_0000BBB",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOW",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 1
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       },
+       {
+        "passenger_id": "pas_0000CCC",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOWCH",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 0
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "sli_ret",
+    "origin": {
+     "iata_code": "LHR",
+     "name": "Heathrow Airport",
+     "city_name": "London",
+     "icao_code": null,
+     "time_zone": null,
+     "type": "airport",
+     "id": "arp_lhr_x"
+    },
+    "destination": {
+     "iata_code": "TLV",
+     "name": "Ben Gurion International Airport",
+     "city_name": "Tel Aviv",
+     "icao_code": null,
+     "time_zone": null,
+     "type": "airport",
+     "id": "arp_tlv_x"
+    },
+    "duration": "PT4H40M",
+    "fare_brand_name": "Economy Classic",
+    "origin_type": "airport",
+    "destination_type": "airport",
+    "segments": [
+     {
+      "id": "seg_ret1",
+      "origin": {
+       "iata_code": "LHR",
+       "name": "Heathrow Airport",
+       "city_name": "London",
+       "icao_code": null,
+       "time_zone": null,
+       "type": "airport",
+       "id": "arp_lhr_x"
+      },
+      "destination": {
+       "iata_code": "TLV",
+       "name": "Ben Gurion International Airport",
+       "city_name": "Tel Aviv",
+       "icao_code": null,
+       "time_zone": null,
+       "type": "airport",
+       "id": "arp_tlv_x"
+      },
+      "departing_at": "2027-03-17T07:30:00",
+      "arriving_at": "2027-03-17T14:10:00",
+      "duration": "PT4H40M",
+      "marketing_carrier": {
+       "iata_code": "ZZ",
+       "name": "Duffel Airways",
+       "id": "arl_00009VME7D6ivUu8dokgf7"
+      },
+      "operating_carrier": {
+       "iata_code": "ZZ",
+       "name": "Duffel Airways",
+       "id": "arl_00009VME7D6ivUu8dokgf7"
+      },
+      "marketing_carrier_flight_number": "402",
+      "operating_carrier_flight_number": "402",
+      "aircraft": {
+       "name": "Boeing 787-9",
+       "iata_code": "320"
+      },
+      "origin_terminal": "3",
+      "destination_terminal": null,
+      "distance": null,
+      "passengers": [
+       {
+        "passenger_id": "pas_0000AAA",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOW",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 1
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       },
+       {
+        "passenger_id": "pas_0000BBB",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOW",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 1
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       },
+       {
+        "passenger_id": "pas_0000CCC",
+        "cabin_class": "economy",
+        "cabin_class_marketing_name": "Economy",
+        "fare_basis_code": "YOWCH",
+        "baggages": [
+         {
+          "type": "checked",
+          "quantity": 0
+         },
+         {
+          "type": "carry_on",
+          "quantity": 1
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

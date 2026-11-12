@@ -124,3 +124,30 @@ class Reservation(Base):
     details: Mapped[dict] = mapped_column(JSONType, nullable=False, default=dict)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = created_at_col()
+
+
+class SimulatedSupplierBooking(Base):
+    """The MOCK supplier's own ledger (simulation only — never a real booking).
+
+    Persisted so that idempotency and UNKNOWN reconciliation survive restarts:
+    the mock supplier looks requests up by the client idempotency key exactly
+    like a real supplier would.
+    """
+
+    __tablename__ = "simulated_supplier_bookings"
+
+    id: Mapped[str] = pk()
+    idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    booking_intent_id: Mapped[str] = mapped_column(
+        ForeignKey("booking_intents.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    provider_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    # CONFIRMED (supplier created the booking) / REJECTED (supplier refused)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    # Supplier reference, e.g. SIM-1A2B3C; only present for CONFIRMED records
+    reference: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    terms_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    amount_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    scenario: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = created_at_col()
