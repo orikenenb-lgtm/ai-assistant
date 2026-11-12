@@ -36,7 +36,7 @@ test.describe('חיפוש רכבים', () => {
     await page.getByLabel(DROPOFF).fill(`${futureDate(34)}T10:00`);
     await page.getByRole('button', { name: 'חיפוש', exact: true }).click();
 
-    await expectSearchResults(page);
+    await expectSearchResults(page, { liveNotConnected: false });
     await expectSurvivesReload(page);
     await expectRerankChangesResult(page, isMobileProject(testInfo));
     await expectOfferDetails(page);

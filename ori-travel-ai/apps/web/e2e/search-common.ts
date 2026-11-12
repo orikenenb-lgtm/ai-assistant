@@ -19,7 +19,8 @@ export async function rankingSnapshot(page: Page) {
 }
 
 /** Common assertions every finished search must satisfy. */
-export async function expectSearchResults(page: Page) {
+export async function expectSearchResults(page: Page, opts: { liveNotConnected?: boolean } = {}) {
+  const { liveNotConnected = true } = opts;
   await expect(page).toHaveURL(/[?&]search_id=[0-9a-f]+/);
   const results = page.getByTestId('search-results');
   await expect(results).toBeVisible();
@@ -32,7 +33,8 @@ export async function expectSearchResults(page: Page) {
   await expect(strip).toBeVisible();
   // A fresh run reports "תקין"; an identical repeated search may be served from the provider cache ("שמור במטמון").
   await expect(strip).toContainText(/תקין|שמור במטמון/);
-  await expect(strip).toContainText('לא מחובר');
+  // Categories that have live adapters (flights, hotels, activities) list them as "not connected"; cars has none.
+  if (liveNotConnected) await expect(strip).toContainText('לא מחובר');
   await expect(strip).toContainText('הדגמה');
 
   // Coverage note (honest about partial market coverage) + DEMO disclaimer.
