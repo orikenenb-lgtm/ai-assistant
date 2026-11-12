@@ -79,7 +79,7 @@ for (const vw of [720, 320]) {
   test.describe(`reflow at ${vw}px (${vw === 720 ? '200% zoom' : 'smallest phone'})`, () => {
     for (const s of A11Y_SCREENS) {
       test(`${s.id}: no horizontal scroll, primary action reachable`, async ({ browser }) => {
-        test.fail(s.id === 'demo-supplier', 'A11Y-02: the DEMO supplier header overflows horizontally on narrow viewports');
+        test.fail(s.id === 'demo-supplier' && vw === 320, 'A11Y-02: the DEMO supplier header overflows horizontally below ~400px');
         const { ctx, page } = await openPage(browser, { width: vw, theme: 'light', anonymous: s.anon, height: vw === 720 ? 450 : 700 });
         try {
           await s.open(page, f);

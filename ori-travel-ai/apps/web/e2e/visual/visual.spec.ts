@@ -56,6 +56,8 @@ interface Screen {
   /** Navigate + prepare; returns the element to capture (or null for the full page). */
   run: (page: Page, f: Fixtures, ctx: { width: Width }) => Promise<Locator | null>;
   skip?: (w: Width) => boolean;
+  /** Extra regions whose content depends on accumulated data (recent searches, trips list). */
+  mask?: (page: Page) => Locator[];
 }
 
 const screens: Screen[] = [
@@ -70,6 +72,10 @@ const screens: Screen[] = [
   },
   {
     id: 'dashboard',
+    mask: (page) =>
+      ['חיפושים אחרונים', 'טיולים קרובים'].map((t) =>
+        page.getByRole('heading', { name: new RegExp(t) }).first().locator('xpath=ancestor::*[self::section or self::article or contains(@class,"rounded-")][1]'),
+      ),
     run: async (page) => {
       await page.goto('/');
       await expect(page.locator('h1')).toBeVisible();
@@ -202,7 +208,7 @@ for (const theme of ['light', 'dark'] as Theme[]) {
           try {
             const target = await s.run(page, f, { width });
             await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-            await shot(page, `${s.id}-${WIDTHS[width]}-${theme}.png`, target);
+            await shot(page, `${s.id}-${WIDTHS[width]}-${theme}.png`, target, s.mask?.(page) ?? []);
           } finally {
             await ctx.close();
           }
