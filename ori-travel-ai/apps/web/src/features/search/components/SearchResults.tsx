@@ -2,6 +2,7 @@ import { Scale, SlidersHorizontal, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { Badge, Button, ButtonLink, Callout, DialogClose, Drawer, EmptyState, ErrorState, NativeSelect } from '@/components/ui';
+import { FACTOR_LABELS, FACTOR_ORDER } from '@/features/offers/labels';
 import { OfferCard, OfferDetailDialog, useCompareSelection, COMPARE_MIN } from '@/features/offers';
 import { cn } from '@/lib/cn';
 import type { Category } from '@/lib/schemas/common';
@@ -115,7 +116,7 @@ export function SearchResults({ base, onEditSearch }: SearchResultsProps) {
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start" data-testid="search-results" data-search-id={data.search_id}>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start" data-testid="search-results" data-search-id={data.search_id}>
       <aside className="hidden rounded-xl border border-line bg-surface p-5 shadow-xs lg:sticky lg:top-[calc(var(--spacing-topbar)+1rem)] lg:block lg:max-h-[calc(100dvh-var(--spacing-topbar)-2rem)] lg:overflow-y-auto" aria-label="דירוג וסינון">
         {data.offers.length > 0 ? side : <p className="text-sm text-fg-muted">אין הצעות לדירוג או לסינון.</p>}
       </aside>
@@ -175,7 +176,7 @@ export function SearchResults({ base, onEditSearch }: SearchResultsProps) {
                 <Badge tone="accent" size="sm">
                   דירוג מותאם
                 </Badge>{' '}
-                משקלים: {weightsToParam(applied).replace(/,/g, ' · ')}
+                משקלים: {FACTOR_ORDER.map((f) => `${FACTOR_LABELS[f]} ${applied[f]}%`).join(' · ')}
               </p>
             )}
           </div>

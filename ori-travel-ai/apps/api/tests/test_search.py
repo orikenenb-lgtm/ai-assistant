@@ -364,13 +364,20 @@ def test_live_placeholders_never_touch_network(db, make_user, monkeypatch):
     for body in (flight(), hotel(), car(), activity()):
         res = service.run_search(db, user.id, body)
         assert all(p.status == "NOT_CONFIGURED" for p in res.providers if p.mode == "LIVE")
-    # With opt-in + credentials, placeholders are configured but unimplemented => UNSUPPORTED, still no network
+    # With opt-in, partner-gated placeholders (Booking.com / Expedia) are configured but refuse
+    # to search without making any request. (Duffel/Viator are real adapters now; their HTTP
+    # behaviour is tested offline in tests/test_live_*.py.)
+    monkeypatch.delenv("ORI_DUFFEL_ACCESS_TOKEN")
+    monkeypatch.delenv("ORI_VIATOR_API_KEY")
+    monkeypatch.setenv("ORI_BOOKING_DEMAND_API_KEY", "key-value")
+    monkeypatch.setenv("ORI_BOOKING_DEMAND_AFFILIATE_ID", "123456")
     monkeypatch.setenv("ORI_LIVE_PROVIDERS_ENABLED", "true")
     reset_settings_cache()
-    res = service.run_search(db, user.id, flight(), use_cache=False)
+    res = service.run_search(db, user.id, hotel(), use_cache=False)
     runs = {p.provider_id: p for p in res.providers}
-    assert runs["duffel"].status == "UNSUPPORTED" and runs["duffel"].error_code == "NOT_IMPLEMENTED"
-    assert runs["amadeus"].status == "NOT_CONFIGURED"  # no Amadeus credentials
+    assert runs["booking_demand"].status == "UNSUPPORTED"
+    assert runs["amadeus"].status == "NOT_CONFIGURED"  # discontinued
+    assert runs["expedia_rapid"].status == "NOT_CONFIGURED"  # no credentials
     assert res.status == "completed"
 
 

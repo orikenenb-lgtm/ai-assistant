@@ -94,7 +94,7 @@ export default function ComparePage() {
                 </Callout>
               )}
 
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
                 <div className="flex min-w-0 flex-col gap-6">
                   {hasFxData && (
                     <Card padding="sm" className="flex flex-col gap-2">

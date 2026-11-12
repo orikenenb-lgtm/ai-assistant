@@ -52,7 +52,7 @@ export function ProviderStatusStrip({ providers, className }: { providers: Provi
               <div className="flex items-start justify-between gap-2">
                 <span className="min-w-0 text-sm font-medium text-fg">{run.provider_name}</span>
                 <span className="flex shrink-0 flex-wrap justify-end gap-1">
-                  <ModeBadge mode={run.mode} size="sm" />
+                  {(run.status === 'OK' || run.status === 'CACHED') && <ModeBadge mode={run.mode} size="sm" />}
                   <ModeBadge mode={run.status} size="sm" />
                 </span>
               </div>

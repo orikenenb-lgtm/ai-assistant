@@ -78,7 +78,7 @@ _INTERESTS: dict[str, str] = {
     "museum": rf"{NB}{PFX}(?:מוזיאון|מוזיאונים|גלריה|גלריות){NE}|\bmuseums?\b|\bgaller(?:y|ies)\b",
     "tour": rf"{NB}{PFX}(?:סיור|סיורים|סיור מודרך|מדריך){NE}|\b(?:guided )?tours?\b",
     "outdoor": rf"{NB}{PFX}(?:טבע|אופניים|טיולי טבע|הליכה|מסלול){NE}|\b(?:outdoors?|nature|hiking|biking|bike)\b",
-    "family": rf"{NB}{PFX}(?:משפחתי|משפחתיות|משפחתית|לילדים|פארק שעשועים|לונה פארק){NE}|\b(?:family|kids activities|for kids)\b",
+    "family": rf"{NB}{PFX}(?:משפחתי|משפחתיות|משפחתית|לילדים|פארק שעשועים|לונה פארק){NE}|\bfamily\b(?!\s+of)|\b(?:kids activities|for kids)\b",
     "food": rf"{NB}{PFX}(?:אוכל|קולינרי|קולינריה|בישול|טעימות|מסעדות){NE}|\b(?:food|culinary|cooking|tasting)\b",
     "water": rf"{NB}{PFX}(?:מים|ים|שיט|חוף|חופים|פארק מים|שנורקל){NE}|\b(?:water|beach|boat|cruise|snorkel(?:ing)?)\b",
     "nightlife": rf"{NB}{PFX}(?:חיי לילה|ברים|מועדונים|מסיבות){NE}|\b(?:nightlife|bars|clubs)\b",
@@ -614,7 +614,7 @@ _AGE_LIST = r"(\d{1,2}(?:\s*(?:,|ו-?|and|&|-)\s*\d{1,2})*)"
 _RE_AGES = re.compile(rf"(?<![{HEB}])(?:בני|בנות|בגילאי|בגילים|בגילאים|גילאי|גילים|בגיל|בן|בת)\s*:?\s*{_AGE_LIST}"
                       rf"|\b(?:aged|ages?|age)\s*:?\s*{_AGE_LIST}", re.IGNORECASE)
 _RE_AGES_WORDS = re.compile(rf"(?<![{HEB}])(?:בן|בת)\s+(שנתיים|שנה|חצי\s+שנה)(?![{HEB}])")
-_RE_AGES_PAREN = re.compile(r"(?:ילדים|kids|children)\s*\(\s*(\d{1,2}(?:\s*,\s*\d{1,2})*)\s*\)", re.IGNORECASE)
+_RE_AGES_PAREN = re.compile(r"(?:ילדים|ילדה|ילד|kids?|children|child)\s*\(\s*(\d{1,2}(?:\s*,\s*\d{1,2})*)\s*\)", re.IGNORECASE)
 _RE_COUPLE = re.compile(
     rf"(?<![{HEB}])(?:אני\s+ו(?:אשתי|בעלי|בת\s+הזוג|בן\s+הזוג|בת\s+זוגי|בן\s+זוגי|החבר|החברה|חברתי|חברי)|(?:אשתי|בעלי)\s+ואני|"
     rf"זוג(?![{HEB}])|לזוג(?![{HEB}])|לשניים|זוגית)"
@@ -730,7 +730,7 @@ _FLAG_PATTERNS: list[tuple[str, Any, re.Pattern[str]]] = [
     ("language", "en", re.compile(r"באנגלית|\bin\s+english\b", re.IGNORECASE)),
     ("near_airport", True, re.compile(r"בשדה|משדה|שדה\s+התעופה|נמל\s+התעופה|בנתב\"ג|\bairport\b", re.IGNORECASE)),
 ]
-_RE_STARS = re.compile(r"(?<!\d)([1-5])\s*(?:כוכבים|כוכב|stars?|\*|★)", re.IGNORECASE)
+_RE_STARS = re.compile(r"(?<![\d.])([1-5])(?:\.\d)?\s*(?:כוכבים|כוכב|stars?|\*|★)", re.IGNORECASE)
 _RE_SEATS = re.compile(rf"(?<!\d)([2-9])\s*(?:מקומות|מושבים|seats?|seater)(?![{HEB}])", re.IGNORECASE)
 _RE_ROOMS = re.compile(rf"(?<!\d)([1-5])\s*(?:חדרים|חדר(?![{HEB}])|rooms?)", re.IGNORECASE)
 _RE_FLEX = re.compile(r"(?:±|\+-|\+/-|פלוס\s+מינוס)\s*(\d)|(גמיש|גמישים|גמישה|\bflexible\b)", re.IGNORECASE)
@@ -938,7 +938,7 @@ def _party(slots: Slots, category: str, assumptions: list[str]) -> tuple[int, li
             missing.append("children_ages")
     if adults is None:
         adults = 2 if (ages or slots.children_count or slots.children_unknown or category != "flight") else 1
-        if category != "car":
+        if category != "car" and "travelers" not in missing:
             assumptions.append(f"לא צוין מספר המבוגרים — הנחתי {adults}")
     return adults, ages, list(dict.fromkeys(missing))
 

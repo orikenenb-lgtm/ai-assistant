@@ -18,6 +18,7 @@ export function ScoreBadge({ score, className }: { score: ScoreBreakdown; classN
         !score.comparable && 'bg-ink-500',
         className,
       )}
+      dir="ltr"
       title={score.comparable ? 'ציון כולל (0–100)' : 'לא ניתן לדרג מול הצעות אחרות'}
     >
       <span className="sr-only">ציון כולל:</span>

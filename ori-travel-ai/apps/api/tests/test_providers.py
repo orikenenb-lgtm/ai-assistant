@@ -15,7 +15,7 @@ from app.modules.providers.base import ProviderNotConfiguredError, ProviderUnsup
 from app.modules.providers.demo import DemoSkylineAdapter
 from app.modules.providers.live import LIVE_ADAPTER_CLASSES
 from app.modules.providers.service import reset_health_cache
-from app.schemas.search import FlightSearchParams
+from app.schemas.search import FlightSearchParams, HotelSearchParams
 
 
 @pytest.fixture(autouse=True)
@@ -29,6 +29,8 @@ def _registry():
 
 FLIGHT = {"origin": "TLV", "destination": "PRG", "depart_date": (date.today() + timedelta(days=21)).isoformat(),
           "adults": 2}
+HOTEL = {"destination": "Rome", "check_in": (date.today() + timedelta(days=21)).isoformat(),
+         "check_out": (date.today() + timedelta(days=24)).isoformat()}
 
 EXPECTED_LIVE = {
     "duffel": (["flight"], ["ORI_DUFFEL_ACCESS_TOKEN"]),
@@ -99,14 +101,24 @@ def test_live_requires_credentials_and_explicit_opt_in(monkeypatch):
     assert duffel.is_configured() is False  # credentials alone are not enough
     monkeypatch.setenv("ORI_LIVE_PROVIDERS_ENABLED", "true")
     reset_settings_cache()
+    # Duffel is a real adapter now (B6): configured + usable; its HTTP behaviour is
+    # covered offline in tests/test_live_duffel.py with httpx.MockTransport.
     assert duffel.is_configured() is True and registry.is_usable(duffel)
-    assert duffel.health().status == "DEGRADED"
-    with pytest.raises(ProviderUnsupportedError):
-        duffel.search("flight", FlightSearchParams(**FLIGHT), SearchContext("t", utcnow(), 1))
-    amadeus = registry.get_adapter("amadeus")
-    monkeypatch.setenv("ORI_AMADEUS_CLIENT_ID", "id-only")
+    # Partner-gated placeholders stay inert even with credentials + opt-in
+    monkeypatch.setenv("ORI_BOOKING_DEMAND_API_KEY", "key-value")
+    monkeypatch.setenv("ORI_BOOKING_DEMAND_AFFILIATE_ID", "123456")
     reset_settings_cache()
-    assert amadeus.is_configured() is False  # both id and secret are required
+    booking = registry.get_adapter("booking_demand")
+    assert booking.is_configured() is True
+    assert booking.health().status == "DEGRADED"
+    with pytest.raises(ProviderUnsupportedError):
+        booking.search("hotel", HotelSearchParams(**HOTEL), SearchContext("t", utcnow(), 1))
+    # Amadeus Self-Service was discontinued: never configured, whatever the env says
+    amadeus = registry.get_adapter("amadeus")
+    monkeypatch.setenv("ORI_AMADEUS_CLIENT_ID", "id-value")
+    monkeypatch.setenv("ORI_AMADEUS_CLIENT_SECRET", "secret-value")
+    reset_settings_cache()
+    assert amadeus.is_configured() is False
 
 
 @pytest.mark.parametrize(
@@ -244,14 +256,16 @@ def test_diagnostics(auth_client):
 
 def test_configured_live_placeholder_is_degraded_not_ok(auth_client, monkeypatch):
     monkeypatch.setenv("ORI_LIVE_PROVIDERS_ENABLED", "true")
-    monkeypatch.setenv("ORI_DUFFEL_ACCESS_TOKEN", "duffel_test_dummy")
+    monkeypatch.setenv("ORI_BOOKING_DEMAND_API_KEY", "key-value")
+    monkeypatch.setenv("ORI_BOOKING_DEMAND_AFFILIATE_ID", "123456")
     reset_settings_cache()
     c = auth_client("adult")
     items = {p["provider_id"]: p for p in c.get("/api/providers").json()}
-    assert items["duffel"]["configured"] is True and items["duffel"]["status"] == "DEGRADED"
+    assert items["booking_demand"]["configured"] is True and items["booking_demand"]["status"] == "DEGRADED"
     assert items["amadeus"]["status"] == "NOT_CONFIGURED"
-    health = c.post("/api/providers/duffel/health-check").json()
-    assert health["status"] == "DEGRADED" and "טרם מומש" in health["message"]
+    assert items["duffel"]["status"] == "NOT_CONFIGURED"  # no Duffel token in this test
+    health = c.post("/api/providers/booking_demand/health-check").json()
+    assert health["status"] == "DEGRADED"
 
 
 def test_revalidate_offer_helper_uses_owner_settings(auth_client, db):

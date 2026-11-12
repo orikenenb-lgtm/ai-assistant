@@ -13,7 +13,7 @@ export function compareDecimal(a: string, b: string): number {
   if (negA !== negB) return negA ? -1 : 1;
   const intA = ma[2].replace(/^0+(?=\d)/, '');
   const intB = mb[2].replace(/^0+(?=\d)/, '');
-  let cmp = 0;
+  let cmp: number;
   if (intA.length !== intB.length) cmp = intA.length < intB.length ? -1 : 1;
   else if (intA !== intB) cmp = intA < intB ? -1 : 1;
   else {

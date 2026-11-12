@@ -25,3 +25,5 @@
 | 2026-11-12 ~12:37 | Agent B6 | הופעל (גל 2): מתאמים חיים (Duffel, Viator, ECB FX; Amadeus מושבת; Booking/Expedia placeholders) | sonnet | בביצוע |
 | 2026-11-12 ~12:55 | Agent B3 | הסתיים: טיולים, תקציב, ICS/PDF עברי, מועדפים, התראות מחיר, מתזמן opt-in. אימות המנהל: 54/54 בבדיקות שלו | sonnet | ✅ |
 | 2026-11-12 ~12:57 | Agent F3 | הופעל (גל 3, מקביל ל-F2): טיולים, מועדפים, התראות, משפחה, הגדרות | sonnet | בביצוע |
+| 2026-11-12 ~13:15 | Agent B6 | הסתיים: Duffel (מתאם מלא, מצב test + תקרת חיפושים יומית), Viator (affiliate, מחיר "החל מ" כהערכה), Amadeus מושבת (הופסק), Booking/Expedia placeholders, ECB FX אופציונלי. נבדק מול MockTransport בלבד | sonnet | ✅ (מאומת מול fixtures בלבד) |
+| 2026-11-12 ~13:18 | מנהל | עדכון 3 בדיקות ישנות של B2 שבדקו placeholder של Duffel → כעת בודקות Booking/Amadeus אינרטיים; 100% ירוק בבדיקות ספקים/חיפוש/live | — | ✅ |

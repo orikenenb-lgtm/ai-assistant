@@ -80,7 +80,7 @@ export default function ProvidersPage() {
         </QueryState>
 
         {editor ? (
-          <section aria-labelledby="diag-title">
+          <section aria-label="אבחון ספקים">
             <Card padding="sm">
               <CardHeader
                 level={2}
@@ -95,9 +95,6 @@ export default function ProvidersPage() {
                 {(d) => <DiagnosticsTable rows={d.providers} windowDays={d.window_days} />}
               </QueryState>
             </Card>
-            <span id="diag-title" className="sr-only">
-              אבחון ספקים
-            </span>
           </section>
         ) : (
           <Callout tone="neutral" title="תצוגה בלבד">
