@@ -177,7 +177,7 @@ def family_weights(db: Session) -> dict[str, int]:
 def check_search_rate_limit(user_id: str) -> None:
     limiter.check(
         f"search:{user_id}",
-        SEARCH_RATE_LIMIT,
+        get_settings().search_rate_limit or SEARCH_RATE_LIMIT,
         SEARCH_RATE_WINDOW_SECONDS,
         "הגעתם למגבלת החיפושים — נסו שוב בעוד מספר דקות",
     )

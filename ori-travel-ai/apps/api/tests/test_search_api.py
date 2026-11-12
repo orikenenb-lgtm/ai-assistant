@@ -9,7 +9,6 @@ import pytest
 
 from app.modules.providers import registry
 from app.modules.providers.service import reset_health_cache
-from app.modules.search import service
 
 TODAY = date.today()
 
@@ -139,7 +138,10 @@ def test_search_visibility_and_history_isolation(auth_client):
 
 
 def test_search_rate_limit_per_user(auth_client, monkeypatch):
-    monkeypatch.setattr(service, "SEARCH_RATE_LIMIT", 2)
+    from app.core.config import get_settings
+
+    # The budget is configurable (ORI_SEARCH_RATE_LIMIT, default 30); shrink it for the test.
+    monkeypatch.setattr(get_settings(), "search_rate_limit", 2)
     c = auth_client("adult")
     assert c.post("/api/search/flight", json=FLIGHT).status_code == 200
     assert c.post("/api/search/flight", json=FLIGHT).status_code == 200

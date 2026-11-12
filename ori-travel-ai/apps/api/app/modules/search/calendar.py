@@ -112,7 +112,7 @@ MSG_TIMEOUT = "הספק לא הגיב בזמן"
 def check_calendar_rate_limit(user_id: str) -> None:
     limiter.check(
         f"calendar:{user_id}",
-        CALENDAR_RATE_LIMIT,
+        get_settings().calendar_rate_limit or CALENDAR_RATE_LIMIT,
         CALENDAR_RATE_WINDOW_SECONDS,
         "הגעתם למגבלת הבקשות של לוח המחירים — נסו שוב בעוד מספר דקות",
     )

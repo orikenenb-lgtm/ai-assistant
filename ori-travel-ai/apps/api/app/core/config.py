@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     provider_timeout_seconds: float = 12.0
     provider_max_concurrency: int = 4
     search_cache_ttl_minutes: int = 15
+    # Per-user request budgets (per 10 minutes). Keep the defaults for real use; throwaway
+    # E2E/CI servers raise them so a full desktop+mobile browser run fits in one window.
+    search_rate_limit: int = 30
+    calendar_rate_limit: int = 10
     # Live provider credentials (all optional; absent => NOT CONNECTED)
     duffel_access_token: str | None = None
     amadeus_client_id: str | None = None

@@ -63,6 +63,9 @@ try {
             try {
                 $env:ORI_DATABASE_URL = 'sqlite:///' + ((Join-Path $tmp 'e2e.db') -replace '\\', '/')
                 $env:ORI_OWNER_PASSWORD = 'E2e-Passw0rd-Local-1'   # throwaway test-only value
+                # Throwaway server only: a full desktop+mobile browser run needs more than the default budgets
+                $env:ORI_SEARCH_RATE_LIMIT = '300'
+                $env:ORI_CALENDAR_RATE_LIMIT = '60'
                 # Throwaway encryption key for the throwaway DB (traveler-profile specs need one)
                 Push-Location $script:ApiDir
                 try { $env:ORI_DATA_KEY = ((& $py -m app.cli gen-key) | Select-Object -Last 1).Trim() } finally { Pop-Location }
@@ -86,6 +89,7 @@ try {
                 Remove-Item Env:\E2E_OWNER_EMAIL -ErrorAction SilentlyContinue
                 if ($null -ne $savedDb) { $env:ORI_DATABASE_URL = $savedDb } else { Remove-Item Env:\ORI_DATABASE_URL -ErrorAction SilentlyContinue }
                 if ($null -ne $savedKey) { $env:ORI_DATA_KEY = $savedKey } else { Remove-Item Env:\ORI_DATA_KEY -ErrorAction SilentlyContinue }
+                Remove-Item Env:\ORI_SEARCH_RATE_LIMIT, Env:\ORI_CALENDAR_RATE_LIMIT -ErrorAction SilentlyContinue
                 Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
             }
         }

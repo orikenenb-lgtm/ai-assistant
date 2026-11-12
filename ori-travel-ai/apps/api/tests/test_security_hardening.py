@@ -139,3 +139,18 @@ def test_huge_money_amount_is_422_not_500(auth_client):
     assert res.status_code == 422
     ok = c.post("/api/trips", json={"title": "x", "budget": {"amount": "12000.50", "currency": "ILS"}})
     assert ok.status_code == 201, ok.text
+
+
+def test_search_rate_limit_is_configurable_and_defaults_to_30(auth_client, monkeypatch):
+    from datetime import date, timedelta
+
+    from app.core.config import get_settings
+
+    assert get_settings().search_rate_limit == 30 and get_settings().calendar_rate_limit == 10
+    monkeypatch.setattr(get_settings(), "search_rate_limit", 2)
+    c = auth_client("adult")
+    body = {"destination": "Rome", "check_in": (date.today() + timedelta(days=40)).isoformat(),
+            "check_out": (date.today() + timedelta(days=43)).isoformat()}
+    assert c.post("/api/search/hotel", json=body).status_code == 200
+    assert c.post("/api/search/hotel", json=body).status_code == 200
+    assert c.post("/api/search/hotel", json=body).status_code == 429
