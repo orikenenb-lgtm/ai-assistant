@@ -73,6 +73,12 @@ export function BudgetPanel({ tripId }: { tripId: string }) {
                 {REASONS[b.remaining_reason]}
               </p>
             )}
+            {b.per_traveler && (
+              <p className="flex items-baseline justify-between text-sm" data-testid="budget-per-traveler">
+                <span className="text-fg-muted">הערכה לנוסע ({b.traveler_count})</span>
+                <MoneyText value={b.per_traveler} className="font-semibold text-fg" />
+              </p>
+            )}
             {b.over_budget && (
               <Callout tone="danger" icon={<TriangleAlert />} title="הטיול חורג מהתקציב">
                 הסכום שנספר גבוה מהתקציב שהוגדר.

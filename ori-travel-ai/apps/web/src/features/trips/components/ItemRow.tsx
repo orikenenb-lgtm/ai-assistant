@@ -46,6 +46,12 @@ export function ItemRow({ item, trip, editable, canMoveUp, canMoveDown, moveHint
               {kindLabel(item.kind)}
             </Badge>
             {item.data_mode && <ModeBadge mode={item.data_mode} size="sm" />}
+            {item.overlaps.length > 0 && (
+              <Badge tone="danger" size="sm" data-testid="overlap-badge">
+                <TriangleAlert aria-hidden="true" />
+                חפיפה בזמנים
+              </Badge>
+            )}
             {item.offer_expired && (
               <Badge tone="warn" size="sm">
                 <TriangleAlert aria-hidden="true" />
@@ -78,6 +84,15 @@ export function ItemRow({ item, trip, editable, canMoveUp, canMoveDown, moveHint
               <MapPin className="size-3.5 shrink-0 text-fg-subtle" aria-hidden="true" />
               <span className="min-w-0 break-words">{item.location}</span>
             </p>
+          )}
+          {item.overlaps.length > 0 && (
+            <ul className="mt-1 flex flex-col gap-0.5" aria-label="חפיפות" data-testid="overlap-messages">
+              {item.overlaps.map((o) => (
+                <li key={`${o.item_id}-${o.other_item_id}`} className="text-sm text-coral-700">
+                  {o.message}
+                </li>
+              ))}
+            </ul>
           )}
           {item.notes && <p className="mt-1 whitespace-pre-line text-sm text-fg-muted">{item.notes}</p>}
         </div>

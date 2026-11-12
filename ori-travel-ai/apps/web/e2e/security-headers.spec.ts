@@ -66,19 +66,19 @@ anon.describe('כותרות אבטחה', () => {
   });
 });
 
-anon.describe('מעטפת שגיאות API (עברית)', () => {
-  function expectEnvelope(body: unknown, status: number, code?: string) {
-    const b = body as { error?: { code?: string; message?: string; details?: unknown; request_id?: unknown } };
-    expect(b.error, `status ${status}: error envelope`).toBeTruthy();
-    expect(typeof b.error!.code).toBe('string');
-    expect(b.error!.message, 'Hebrew message').toMatch(/[א-ת]/);
-    expect('details' in b.error!).toBe(true);
-    expect('request_id' in b.error!).toBe(true);
-    if (code) expect(b.error!.code).toBe(code);
-    const raw = JSON.stringify(body);
-    expect(raw).not.toMatch(/Traceback|sqlalchemy|\.py"|File "|sqlite3|psycopg/i);
-  }
+function expectEnvelope(body: unknown, status: number, code?: string) {
+  const b = body as { error?: { code?: string; message?: string; details?: unknown; request_id?: unknown } };
+  expect(b.error, `status ${status}: error envelope`).toBeTruthy();
+  expect(typeof b.error!.code).toBe('string');
+  expect(b.error!.message, 'Hebrew message').toMatch(/[א-ת]/);
+  expect('details' in b.error!).toBe(true);
+  expect('request_id' in b.error!).toBe(true);
+  if (code) expect(b.error!.code).toBe(code);
+  const raw = JSON.stringify(body);
+  expect(raw).not.toMatch(/Traceback|sqlalchemy|\.py"|File "|sqlite3|psycopg/i);
+}
 
+anon.describe('מעטפת שגיאות API (עברית)', () => {
   anon('401 ללא התחברות, 404 לנתיב לא קיים, 415 ל-Content-Type שגוי, 422 לגוף לא תקין', async ({ request }) => {
     const unauth = await request.get('/api/trips');
     expect(unauth.status()).toBe(401);
@@ -105,25 +105,23 @@ anon.describe('מעטפת שגיאות API (עברית)', () => {
     expect([404, 405]).toContain(wrongMethod.status());
     expectEnvelope(await wrongMethod.json(), wrongMethod.status());
   });
+});
 
-  anon('אחרי התחברות: 404 לישות לא קיימת ו-422 לחיפוש עם תאריך עבר', async ({ playwright, baseURL }) => {
-    // Own authenticated context built from the saved owner session (anon base test has none).
-    const { default: fs } = await import('node:fs');
-    const { fileURLToPath } = await import('node:url');
-    const state = fileURLToPath(new URL('./.auth/owner.json', import.meta.url));
-    test.skip(!fs.existsSync(state), 'owner session not prepared yet (run the full suite)');
-    const ctx = await playwright.request.newContext({ baseURL, storageState: state });
-    const csrf = (await ctx.storageState()).cookies.find((c) => c.name === 'ori_csrf')?.value ?? '';
-    const notFound = await ctx.get('/api/trips/does-not-exist');
+test.describe('מעטפת שגיאות API אחרי התחברות', () => {
+  test('404 לישות לא קיימת ו-422 לחיפוש עם תאריך עבר', async ({ api }) => {
+    const notFound = await api.get('/api/trips/does-not-exist');
     expect(notFound.status()).toBe(404);
     expectEnvelope(await notFound.json(), 404);
-    const past = await ctx.post('/api/search/flight', {
-      headers: { 'X-CSRF-Token': csrf },
-      data: { origin: 'TLV', destination: 'ATH', depart_date: '2020-01-01', return_date: null, adults: 1, children_ages: [] },
+    const past = await api.post('/api/search/flight', {
+      origin: 'TLV',
+      destination: 'ATH',
+      depart_date: '2020-01-01',
+      return_date: null,
+      adults: 1,
+      children_ages: [],
     });
     expect(past.status()).toBe(422);
     expectEnvelope(await past.json(), 422, 'VALIDATION_ERROR');
-    await ctx.dispose();
   });
 });
 

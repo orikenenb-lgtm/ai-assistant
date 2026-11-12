@@ -8,16 +8,19 @@ and are merged by dedupe.
 
 from __future__ import annotations
 
+import hashlib
+import re
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 from functools import lru_cache
 from typing import Any, ClassVar
 
-from app.modules.providers.base import ProviderUnsupportedError
+from app.modules.providers.base import BookingOptions, ProviderCapabilities, ProviderUnsupportedError
 from app.modules.providers.data.geo import CITIES, City, offset_point, resolve_city
 from app.modules.providers.demo.common import DemoAdapter, dec, round_dec, seeded_rng, supplier_id, unit, usd
 from app.schemas.common import ApiModel, Category
+from app.schemas.offers import CanonicalOffer
 from app.schemas.search import ActivitySearchParams
 
 OPERATORS = ("מסעות ענבר (דמו)", "קידס-טורס (דמו)", "טעמים מקומיים (דמו)", "הרפתקאות כחול-ירוק (דמו)",
@@ -264,3 +267,35 @@ class DemoKidVenturesAdapter(DemoActivityAdapter):
     sell_threshold = 0.85
     markup_range = (-0.04, 0.02)
     booking_fee_usd_per_ticket = Decimal("1.5")
+
+    # ---- DEMO supplier-hosted checkout (docs/security/booking-safety.md §5) ----
+    # The only DEMO provider that, besides simulation, lets the user "complete on the supplier's site".
+    # That site is an IN-APP page (same origin); this adapter never returns an external URL.
+    demo_checkout_path: ClassVar[str] = "/demo-supplier/checkout"
+    _CHECKOUT_REF_RE: ClassVar[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_-]{16,64}")
+
+    def capabilities(self) -> ProviderCapabilities:
+        caps = super().capabilities()
+        return caps.model_copy(update={
+            "supports_hosted_checkout": True,
+            "notes": f"{caps.notes} תומך גם בהדגמת „השלמה באתר הספק” דרך דף ספק לדוגמה בתוך המערכת (ללא חיוב).",
+        })
+
+    def booking_options(self, offer: CanonicalOffer, *, checkout_ref: str | None = None) -> BookingOptions:
+        """Simulation, plus a hosted checkout on the in-app DEMO supplier page.
+
+        ``checkout_ref`` is the opaque id of the checkout session the booking service opened for one
+        approved booking. Without it the link carries an offer-derived placeholder for which no session
+        exists (it only tells the caller that this supplier has a checkout page).
+        """
+        ref = checkout_ref if checkout_ref and self._CHECKOUT_REF_RE.fullmatch(checkout_ref) else hashlib.sha256(
+            f"{self.provider_id}:checkout:{offer.source.supplier_offer_id}".encode()).hexdigest()[:32]
+        return BookingOptions(
+            hosted_checkout_url=f"{self.demo_checkout_path}?ref={ref}",
+            simulation_available=True,
+            live_api_booking=False,
+            instructions=(
+                "זוהי הצעת הדגמה. אפשר לתרגל סימולציה, או לתרגל „השלמה באתר הספק”: ייפתח דף ספק לדוגמה בתוך המערכת, "
+                "ובסיומו תוצג אסמכתה לדוגמה שיש לרשום בהזמנה. לא תתבצע הזמנה אמיתית, לא יבוצע חיוב ולא יישלחו פרטים לספק."
+            ),
+        )

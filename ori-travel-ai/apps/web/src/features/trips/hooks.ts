@@ -83,7 +83,8 @@ export function useReorderItems(tripId: string) {
 export function useAddItemFromOffer() {
   const invalidate = useInvalidateTrips();
   return useMutation({
-    mutationFn: ({ tripId, offerId }: { tripId: string; offerId: string }) => addItemFromOffer(tripId, offerId),
+    mutationFn: ({ tripId, offerId, allowOverlap }: { tripId: string; offerId: string; allowOverlap?: boolean }) =>
+      addItemFromOffer(tripId, offerId, allowOverlap),
     onSuccess: invalidate,
   });
 }

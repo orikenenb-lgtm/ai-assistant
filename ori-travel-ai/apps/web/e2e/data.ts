@@ -7,6 +7,7 @@ export function randomDays(min = 20, spread = 300): number {
 }
 
 export interface SearchData {
+  status: string;
   search_id: string;
   category: string;
   offers: Array<{ id: string; title: string; price: { total: { amount: string; currency: string } }; source: { mode: string } }>;

@@ -46,7 +46,7 @@ from app.models.booking import BOOKING_STATES, Approval, BookingIntent, Reservat
 from app.models.family import FamilyMember
 from app.models.trips import Trip
 from app.modules.auth.service import check_password_for_step_up
-from app.modules.booking import mock_supplier
+from app.modules.booking import demo_supplier, mock_supplier
 from app.modules.booking import state_machine as sm
 from app.modules.booking.schemas import (
     ApprovalOut,
@@ -55,6 +55,7 @@ from app.modules.booking.schemas import (
     BookingOut,
     BookingSummary,
     CheckoutLinkOut,
+    DemoCheckoutOut,
     HistoryEntry,
     ReservationOut,
     TravelerOut,
@@ -80,6 +81,7 @@ MSG_RECONCILE_REQUIRED = "תוצאת השליחה לספק אינה ידועה. 
 MSG_OFFER_EXPIRED = "תוקף ההצעה פג. יש לבצע חיפוש חדש ולהכין הזמנה חדשה."
 MSG_LIVE_DISABLED = "ביצוע הזמנה אמיתית דרך המערכת כבוי. ניתן לבצע סימולציה או להמשיך באתר הספק."
 MSG_APPROVAL_LAPSED = "תוקף האישור פג. יש לבדוק את המחיר ולאשר מחדש."
+MSG_AWAITING_SUPPLIER = "ממתין להשלמה באתר הספק"
 MSG_CANCEL_CONFIRMED = "הזמנה שאושרה אצל הספק אינה ניתנת לביטול דרך המערכת. יש לבטל ישירות מול הספק."
 
 
@@ -261,8 +263,12 @@ def _title(intent: BookingIntent) -> str:
 # ------------------------------------------------------------------- create ----
 
 
-def _execution_mode(offer: CanonicalOffer) -> str:
-    """SIMULATION for DEMO offers, HOSTED_CHECKOUT for LIVE offers with an allowlisted checkout page."""
+def _execution_mode(offer: CanonicalOffer, requested: str | None = None) -> str:
+    """SIMULATION for DEMO offers, HOSTED_CHECKOUT for LIVE offers with an allowlisted checkout page.
+
+    ``requested`` lets the user pick between modes the provider really offers (a DEMO provider with a
+    DEMO supplier page offers both). It can never widen what the adapter declares, and never means LIVE.
+    """
     unavailable = ConflictError(
         "לא ניתן להכין הזמנה להצעה זו: הספק אינו מציע סימולציה או מעבר מאושר לאתר הספק.",
         code="BOOKING_UNAVAILABLE",
@@ -276,8 +282,20 @@ def _execution_mode(offer: CanonicalOffer) -> str:
     except Exception as exc:  # provider code must never break booking safety decisions
         log.info("booking options unavailable for provider %s: %s", offer.source.provider_id, type(exc).__name__)
         raise unavailable from None
-    if mode == "DEMO" and offer.source.mode == "DEMO" and options.simulation_available:
-        return MODE_SIMULATION
+    if mode == "DEMO" and offer.source.mode == "DEMO":
+        # DEMO hosted checkout = the in-app DEMO supplier page, and only that exact relative URL (§5).
+        demo_hosted = demo_supplier.offers_demo_checkout(adapter, options)
+        if requested == MODE_HOSTED:
+            if demo_hosted:
+                return MODE_HOSTED
+            raise unavailable
+        if options.simulation_available:
+            return MODE_SIMULATION
+        if requested is None and demo_hosted:
+            return MODE_HOSTED
+        raise unavailable
+    if requested == MODE_SIMULATION:
+        raise unavailable
     if (
         mode == "LIVE"
         and offer.source.mode in ("LIVE", "CACHED")
@@ -307,7 +325,7 @@ def create_intent(db: Session, ctx: AuthContext, body: BookingCreate, request: R
     offer = search_service.get_offer(db, body.offer_id)
     if offer.source.expires_at is not None and offer.source.expires_at <= utcnow():
         raise ConflictError(MSG_OFFER_EXPIRED, code="OFFER_EXPIRED", details={"reason": "EXPIRED"})
-    mode = _execution_mode(offer)
+    mode = _execution_mode(offer, body.execution_mode)
     if body.simulation_scenario is not None and mode != MODE_SIMULATION:
         raise BadRequestError("תרחיש סימולציה מותר רק בהזמנת הדגמה", code="SCENARIO_NOT_ALLOWED")
     travelers = _load_travelers(db, body.traveler_member_ids)
@@ -627,7 +645,8 @@ def _recheck_before_handoff(db: Session, intent: BookingIntent, actor: str, requ
 
 
 def _confirm(db: Session, intent: BookingIntent, reference: str | None, mode: str, actor: str | None,
-             request: Request | None, *, action: str, reason: str, notes: str | None = None) -> None:
+             request: Request | None, *, action: str, reason: str, notes: str | None = None,
+             demo: bool = False) -> None:
     """The only way to reach CONFIRMED — impossible without a supplier reference."""
     if not reference or not reference.strip():
         raise RuntimeError("CONFIRMED requires a supplier reference")
@@ -645,10 +664,16 @@ def _confirm(db: Session, intent: BookingIntent, reference: str | None, mode: st
         currency=intent.currency,
         confirmed_at=utcnow(),
         details={"title": _title(intent), "travelers": intent.travelers, "terms_hash": intent.terms_hash,
-                 "is_simulation": mode == MODE_SIMULATION},
+                 "is_simulation": mode == MODE_SIMULATION, "is_demo": demo or mode == MODE_SIMULATION,
+                 "reference_verified": demo or mode == MODE_SIMULATION},
         notes=notes,
     ))
-    label = "סימולציה: ההזמנה אושרה" if mode == MODE_SIMULATION else "נרשם אישור הזמנה מהספק"
+    if mode == MODE_SIMULATION:
+        label = "סימולציה: ההזמנה אושרה"
+    elif demo:
+        label = "הדגמה: נרשמה אסמכתה של ספק לדוגמה"
+    else:
+        label = "נרשם אישור הזמנה מהספק"
     _notify_other_adults(db, actor, label, f"„{_title(intent)}” — אסמכתה {reference}.", intent)
 
 
@@ -786,39 +811,81 @@ def _require_hosted(intent: BookingIntent) -> None:
         raise ConflictError("פעולה זו זמינה רק להזמנות שמושלמות באתר הספק.", code="NOT_HOSTED_CHECKOUT")
 
 
+def _is_demo_hosted(intent: BookingIntent) -> bool:
+    """HOSTED_CHECKOUT against a DEMO supplier (by adapter or by the snapshot's own label)."""
+    if intent.execution_mode != MODE_HOSTED:
+        return False
+    if ((intent.offer_snapshot or {}).get("source") or {}).get("mode") == "DEMO":
+        return True
+    return demo_supplier.is_demo_adapter(registry.find_adapter(intent.provider_id))
+
+
+def _handoff_url(db: Session, intent: BookingIntent, adapter: Any) -> tuple[str | None, str, bool]:
+    """(url or None, instructions, is_demo). The URL is returned only when it passes the allowlist.
+
+    * DEMO adapter: exactly ``/demo-supplier/checkout?ref=<the ref of the session we just opened>``.
+      An https URL from a DEMO adapter is refused too — DEMO never navigates off this origin.
+    * Any other adapter: ``adapter.is_allowed_deep_link`` (https + the provider's own domain allowlist).
+      A relative URL can never pass it.
+    """
+    demo = demo_supplier.is_demo_adapter(adapter)
+    if adapter is None or not registry.is_usable(adapter):
+        return None, "", demo
+    url: str | None = None
+    instructions = ""
+    try:
+        offer = CanonicalOffer.model_validate(intent.offer_snapshot)
+        if demo:
+            if not _is_demo_hosted(intent) or not adapter.capabilities().supports_hosted_checkout:
+                return None, "", demo
+            ref = demo_supplier.ref_of(demo_supplier.open_session(db, intent))
+            options = adapter.booking_options(offer, checkout_ref=ref)
+            url, instructions = options.hosted_checkout_url, options.instructions
+            if url != f"{demo_supplier.CHECKOUT_PATH}?ref={ref}":
+                url = None
+        else:
+            options = adapter.booking_options(offer)
+            url, instructions = options.hosted_checkout_url, options.instructions
+    except Exception as exc:
+        log.warning("booking options failed for booking %s: %s", intent.id, type(exc).__name__)
+        return None, "", demo
+    allowed = demo_supplier.is_demo_checkout_url(url) if demo else adapter.is_allowed_deep_link(url)
+    return (url if allowed else None), instructions, demo
+
+
 def checkout_link(db: Session, ctx: AuthContext, intent_id: str, request: Request | None) -> CheckoutLinkOut:
     intent = get_intent(db, intent_id)
     _require_hosted(intent)
     _require_state(intent, (sm.APPROVED,), "לפתוח את אתר הספק")
     _recheck_before_handoff(db, intent, ctx.user_id, request)
     adapter = registry.find_adapter(intent.provider_id)
-    url: str | None = None
-    instructions = ""
-    if adapter is not None and registry.is_usable(adapter):
-        try:
-            options = adapter.booking_options(CanonicalOffer.model_validate(intent.offer_snapshot))
-            url, instructions = options.hosted_checkout_url, options.instructions
-        except Exception as exc:
-            log.warning("booking options failed for booking %s: %s", intent.id, type(exc).__name__)
-    if adapter is None or not adapter.is_allowed_deep_link(url):
+    url, instructions, demo = _handoff_url(db, intent, adapter)
+    if url is None:
         db.rollback()
         record_audit(db, "booking.checkout_link", actor_user_id=ctx.user_id, entity_type=ENTITY, entity_id=intent_id,
                      outcome="denied", details={"code": "CHECKOUT_LINK_UNAVAILABLE"}, request=request, commit=True)
         raise ConflictError("לא נמצא קישור מאושר לאתר הספק עבור הזמנה זו.", code="CHECKOUT_LINK_UNAVAILABLE")
-    assert url is not None  # noqa: S101 - narrowed by is_allowed_deep_link
-    host = url.split("/")[2]
+    host = "in-app:demo-supplier" if demo else url.split("/")[2]
     record_audit(db, "booking.checkout_link", actor_user_id=ctx.user_id, entity_type=ENTITY, entity_id=intent.id,
-                 details={"host": host, "provider_id": intent.provider_id}, request=request)
+                 details={"host": host, "provider_id": intent.provider_id, "demo": demo}, request=request)
     db.commit()
+    if demo:
+        warnings = [
+            "דף ספק לדוגמה (DEMO) בתוך המערכת: אין תשלום, אין חיוב ואין הזמנה אמיתית.",
+            "בסיום יוצג בדף הספק מספר אסמכתה לדוגמה. יש לחזור לכאן ולרשום אותו — עד אז ההזמנה אינה מאושרת.",
+        ]
+    else:
+        warnings = [
+            "ההזמנה והתשלום מתבצעים באתר הספק בלבד. יש לוודא שם שהמחיר והתנאים זהים למה שאושר.",
+            "אחרי השלמת ההזמנה יש לחזור ולרשום כאן את אסמכתת הספק.",
+        ]
     return CheckoutLinkOut(
         url=url,
         provider_id=intent.provider_id,
         provider_name=_provider_name(intent),
         instructions=instructions,
-        warnings=[
-            "ההזמנה והתשלום מתבצעים באתר הספק בלבד. יש לוודא שם שהמחיר והתנאים זהים למה שאושר.",
-            "אחרי השלמת ההזמנה יש לחזור ולרשום כאן את אסמכתת הספק.",
-        ],
+        warnings=warnings,
+        is_demo=demo,
     )
 
 
@@ -828,6 +895,10 @@ def record_confirmation(db: Session, ctx: AuthContext, intent_id: str, supplier_
 
     This records an external fact, so quote/approval TTLs are not re-checked;
     the intent must still be APPROVED with an approval that was never invalidated.
+
+    * LIVE supplier: the reference is whatever the user typed — we cannot verify it (AUD-23, documented).
+    * DEMO supplier: the reference MUST exist in the DEMO supplier's ledger, completed, for this very
+      intent and its current terms. A mistyped / foreign / not-yet-issued reference is refused.
     """
     intent = get_intent(db, intent_id)
     _require_hosted(intent)
@@ -835,6 +906,16 @@ def record_confirmation(db: Session, ctx: AuthContext, intent_id: str, supplier_
     approval = active_approval(intent)
     if approval is None:
         raise ConflictError("אין אישור תקף להזמנה זו.", code="APPROVAL_REQUIRED")
+    demo = _is_demo_hosted(intent)
+    if demo:
+        session = demo_supplier.find_completed(db, intent, supplier_reference)
+        if session is None or not hmac.compare_digest(session.terms_hash, approval.terms_hash):
+            raise ConflictError(
+                "האסמכתה לא נמצאה אצל ספק ההדגמה עבור הזמנה זו. יש להשלים את התהליך בדף הספק לדוגמה "
+                "ולהעתיק משם את האסמכתה בדיוק כפי שהיא מוצגת.",
+                code="SUPPLIER_REFERENCE_NOT_FOUND",
+            )
+        supplier_reference = str(session.reference)
     duplicate = db.scalar(select(Reservation.id).where(Reservation.provider_id == intent.provider_id,
                                                        Reservation.supplier_reference == supplier_reference))
     if duplicate:
@@ -843,11 +924,95 @@ def record_confirmation(db: Session, ctx: AuthContext, intent_id: str, supplier_
     approval.consumed_at = now
     intent.submitted_at = now
     sm.transition(db, intent, sm.SUBMITTING, action="hosted_checkout_completed", actor_user_id=ctx.user_id,
-                  reason="ההזמנה בוצעה באתר הספק", request=request)
+                  reason="ההזמנה הושלמה בדף הספק לדוגמה (הדגמה)" if demo else "ההזמנה בוצעה באתר הספק", request=request)
     _confirm(db, intent, supplier_reference, MODE_HOSTED, ctx.user_id, request, action="record_confirmation",
-             reason="אסמכתת ספק נרשמה ידנית", notes=notes)
+             reason="אסמכתת ספק ההדגמה אומתה ונרשמה" if demo else "אסמכתת ספק נרשמה ידנית", notes=notes, demo=demo)
     db.commit()
+    if demo:
+        return to_out(db, intent, ctx, notice="אסמכתת ספק ההדגמה אומתה ונרשמה. לא בוצעה הזמנה אמיתית ולא בוצע חיוב.")
     return to_out(db, intent, ctx, notice="אסמכתת הספק נרשמה.")
+
+
+# ------------------------------------------------- DEMO supplier page (in-app) ----
+
+
+def _demo_session_or_404(db: Session, ref: str) -> tuple[SimulatedSupplierBooking, BookingIntent]:
+    session = demo_supplier.get_session(db, ref)
+    intent = db.get(BookingIntent, session.booking_intent_id) if session is not None else None
+    if session is None or intent is None or not _is_demo_hosted(intent):
+        raise NotFoundError("דף הספק לדוגמה לא נמצא. יש לפתוח אותו מחדש מתוך ההזמנה.", code="CHECKOUT_SESSION_NOT_FOUND")
+    return session, intent
+
+
+def _demo_session_open(intent: BookingIntent, session: SimulatedSupplierBooking, now: datetime) -> bool:
+    """The DEMO supplier only sells what is approved right now: same terms, valid approval, live quote."""
+    return (
+        session.status == demo_supplier.STATUS_PENDING
+        and intent.state == sm.APPROVED
+        and demo_supplier.matches_intent(session, intent)
+        and not _offer_expired(intent, now)
+        and approval_valid(intent, active_approval(intent), now)
+    )
+
+
+def _demo_checkout_out(intent: BookingIntent, session: SimulatedSupplierBooking, ctx: AuthContext) -> DemoCheckoutOut:
+    now = utcnow()
+    completed = session.status == demo_supplier.STATUS_CONFIRMED and bool(session.reference)
+    is_open = not completed and _demo_session_open(intent, session, now)
+    recorded = completed and intent.state == sm.CONFIRMED and intent.supplier_reference == session.reference
+    if recorded:
+        status, message = "COMPLETED", "האסמכתה כבר נרשמה בהזמנה. אין צורך בפעולה נוספת."
+    elif completed:
+        status = "COMPLETED"
+        message = ("התהליך בדף הספק לדוגמה הושלם. ההזמנה עדיין אינה מאושרת במערכת: יש להעתיק את האסמכתה, "
+                   "לחזור להזמנה ולרשום אותה שם.")
+    elif is_open:
+        status, message = "OPEN", "זהו דף ספק לדוגמה. לחיצה על הכפתור מדמה השלמת הזמנה אצל הספק — בלי תשלום ובלי חיוב."
+    else:
+        status = "EXPIRED"
+        message = "הדף הזה כבר אינו תקף: ההזמנה או התנאים המאושרים השתנו. יש לחזור להזמנה ולפתוח את דף הספק מחדש."
+    show_terms = completed or is_open
+    return DemoCheckoutOut(
+        ref=demo_supplier.ref_of(session),
+        status=status,
+        provider_id=session.provider_id,
+        provider_name=_provider_name(intent),
+        booking_id=intent.id,
+        title=_title(intent),
+        summary=build_terms_summary(intent.offer_snapshot, intent.travelers, intent.current_amount_minor, intent.currency,
+                                    intent.execution_mode) if show_terms and demo_supplier.matches_intent(session, intent) else [],
+        price=_money(session.amount_minor, session.currency),
+        supplier_reference=session.reference if completed else None,
+        recorded=recorded,
+        can_complete=is_open and ctx.can_book,
+        message=message,
+    )
+
+
+def demo_checkout_view(db: Session, ctx: AuthContext, ref: str) -> DemoCheckoutOut:
+    """Read-only view for the in-app DEMO supplier page. Changes nothing."""
+    session, intent = _demo_session_or_404(db, ref)
+    return _demo_checkout_out(intent, session, ctx)
+
+
+def demo_checkout_complete(db: Session, ctx: AuthContext, ref: str, request: Request | None) -> DemoCheckoutOut:
+    """"Simulate completing at the supplier": the DEMO supplier issues a reference.
+
+    Deliberately does NOT touch the booking intent — it stays APPROVED (waiting for the
+    supplier reference) until ``record_confirmation`` verifies and records that reference.
+    """
+    session, intent = _demo_session_or_404(db, ref)
+    if session.status != demo_supplier.STATUS_CONFIRMED:
+        if not _demo_session_open(intent, session, utcnow()):
+            raise ConflictError(
+                "דף הספק לדוגמה כבר אינו תקף: ההזמנה או התנאים המאושרים השתנו. יש לחזור להזמנה ולפתוח את דף הספק מחדש.",
+                code="CHECKOUT_SESSION_EXPIRED",
+            )
+        if demo_supplier.complete(db, session):
+            record_audit(db, "booking.demo_supplier_completed", actor_user_id=ctx.user_id, entity_type=ENTITY,
+                         entity_id=intent.id, details={"provider_id": intent.provider_id, "demo": True}, request=request)
+        db.commit()
+    return _demo_checkout_out(intent, session, ctx)
 
 
 # ------------------------------------------------------------------ outputs ----
@@ -897,6 +1062,8 @@ def _warnings(intent: BookingIntent, approval: Approval | None, now: datetime) -
     snapshot = intent.offer_snapshot or {}
     if intent.execution_mode == MODE_SIMULATION:
         out.append("מצב סימולציה: נתוני הדגמה בלבד. לא תתבצע הזמנה אמיתית ולא יבוצע חיוב.")
+    elif intent.execution_mode == MODE_HOSTED and _is_demo_hosted(intent):
+        out.append("ספק הדגמה: ההשלמה מתבצעת בדף ספק לדוגמה בתוך המערכת. לא תתבצע הזמנה אמיתית ולא יבוצע חיוב.")
     elif intent.execution_mode == MODE_HOSTED:
         out.append("ההזמנה והתשלום מתבצעים באתר הספק בלבד. המערכת אינה מבצעת הזמנות אמיתיות.")
     else:
@@ -918,22 +1085,37 @@ def _warnings(intent: BookingIntent, approval: Approval | None, now: datetime) -
     expected = _occupancy(snapshot.get("details") or {})
     if expected is not None and expected != len(intent.travelers or []) and state not in sm.TERMINAL_STATES:
         out.append(f"ההצעה תומחרה עבור {expected} נוסעים, אך נבחרו {len(intent.travelers or [])}.")
+    if state == sm.APPROVED and intent.execution_mode == MODE_HOSTED:
+        out.append(f"{MSG_AWAITING_SUPPLIER}. ההזמנה אינה מאושרת עד שתירשם כאן אסמכתת הספק.")
     if state == sm.CONFIRMED and intent.execution_mode == MODE_SIMULATION:
         out.append("האסמכתה שייכת לספק מדומה ואינה תקפה אצל שום ספק אמיתי.")
+    if state == sm.CONFIRMED and intent.execution_mode == MODE_HOSTED:
+        if _is_demo_hosted(intent):
+            out.append("האסמכתה שייכת לספק הדגמה ואינה תקפה אצל שום ספק אמיתי. לא בוצעה הזמנה אמיתית ולא בוצע חיוב.")
+        else:
+            out.append("האסמכתה הוזנה ידנית ולא אומתה מול הספק.")
     return out
+
+
+def _state_label(intent: BookingIntent) -> str:
+    # A hosted-checkout intent that is merely APPROVED must never read as a confirmed booking.
+    if intent.state == sm.APPROVED and intent.execution_mode == MODE_HOSTED:
+        return MSG_AWAITING_SUPPLIER
+    return sm.STATE_LABELS_HE.get(intent.state, intent.state)
 
 
 def _summary_fields(intent: BookingIntent) -> dict[str, Any]:
     return {
         "id": intent.id,
         "state": intent.state,
-        "state_label": sm.STATE_LABELS_HE.get(intent.state, intent.state),
+        "state_label": _state_label(intent),
         "category": intent.category,
         "title": _title(intent),
         "provider_id": intent.provider_id,
         "provider_name": _provider_name(intent),
         "execution_mode": intent.execution_mode,
         "is_simulation": intent.execution_mode == MODE_SIMULATION,
+        "is_demo": ((intent.offer_snapshot or {}).get("source") or {}).get("mode") == "DEMO",
         "current_price": _money(intent.current_amount_minor, intent.currency),
         "price_changed": intent.current_amount_minor != intent.quoted_amount_minor,
         "offer_expired": intent.state in sm.EXPIRABLE_STATES and _offer_expired(intent),

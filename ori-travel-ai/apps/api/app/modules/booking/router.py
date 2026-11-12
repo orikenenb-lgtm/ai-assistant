@@ -26,6 +26,8 @@ from app.modules.booking.schemas import (
     BookingSummary,
     CancelRequest,
     CheckoutLinkOut,
+    DemoCheckoutCompleteRequest,
+    DemoCheckoutOut,
     RecordConfirmationRequest,
     SubmitRequest,
     TravelersUpdate,
@@ -138,3 +140,21 @@ def checkout_link(booking_id: str, request: Request, ctx: AuthContext = Depends(
                   db: Session = Depends(get_db)):
     return _guarded(db, ctx, request, "checkout_link", booking_id,
                     lambda: service.checkout_link(db, ctx, booking_id, request))
+
+
+# ---- DEMO supplier page (in-app stand-in for a supplier's own site; docs/security/booking-safety.md §5) ----
+
+
+@router.get("/api/demo-supplier/checkout", response_model=DemoCheckoutOut)
+def demo_supplier_checkout(ref: str = Query(..., pattern=r"^[A-Za-z0-9_-]{16,64}$"),
+                           ctx: AuthContext = Depends(current_user), db: Session = Depends(get_db)):
+    """Read-only. Signed-in family members only; changes nothing."""
+    return service.demo_checkout_view(db, ctx, ref)
+
+
+@router.post("/api/demo-supplier/checkout/complete", response_model=DemoCheckoutOut)
+def demo_supplier_complete(body: DemoCheckoutCompleteRequest, request: Request,
+                           ctx: AuthContext = Depends(booking_adult), db: Session = Depends(get_db)):
+    """The DEMO supplier issues a reference. The booking itself is NOT confirmed by this call."""
+    return _guarded(db, ctx, request, "demo_supplier_completed", None,
+                    lambda: service.demo_checkout_complete(db, ctx, body.ref, request))

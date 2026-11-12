@@ -31,6 +31,9 @@ class BookingCreate(_Request):
     traveler_member_ids: list[MemberId] = Field(..., min_length=1, max_length=9)
     trip_id: str | None = Field(None, min_length=1, max_length=64)
     simulation_scenario: SimulationScenario | None = None
+    # Optional choice between the modes the offer's provider actually supports. Omitted = server default.
+    # "LIVE" is not accepted: there is no live executor.
+    execution_mode: Literal["SIMULATION", "HOSTED_CHECKOUT"] | None = None
 
     _u = field_validator("traveler_member_ids")(_unique)
 
@@ -70,6 +73,12 @@ class CancelRequest(_Request):
 class RecordConfirmationRequest(_Request):
     supplier_reference: str = Field(..., min_length=4, max_length=64, pattern=r"^[A-Za-z0-9-]+$")
     notes: str | None = Field(None, max_length=1000)
+
+
+class DemoCheckoutCompleteRequest(_Request):
+    """Opaque DEMO-supplier checkout session ref (same alphabet/length as the allowlisted URL)."""
+
+    ref: str = Field(..., pattern=r"^[A-Za-z0-9_-]{16,64}$")
 
 
 # ------------------------------------------------------------------ responses ----
@@ -138,6 +147,8 @@ class BookingSummary(ApiModel):
     provider_name: str
     execution_mode: ExecutionMode
     is_simulation: bool
+    # The supplier is a DEMO provider (fictional): nothing real is booked or charged in any execution mode
+    is_demo: bool = False
     current_price: Money
     price_changed: bool
     # The supplier quote has lapsed; the next action attempt will move the intent to EXPIRED
@@ -179,8 +190,35 @@ class BookingOut(BookingSummary):
 
 
 class CheckoutLinkOut(ApiModel):
+    # LIVE: https URL on the provider's allowlisted domain. DEMO: the in-app page
+    # ``/demo-supplier/checkout?ref=<opaque>`` (same origin) and nothing else.
     url: str
     provider_id: str
     provider_name: str
     instructions: str
     warnings: list[str] = Field(default_factory=list)
+    is_demo: bool = False
+
+
+DemoCheckoutStatus = Literal["OPEN", "COMPLETED", "EXPIRED"]
+
+
+class DemoCheckoutOut(ApiModel):
+    """What the in-app DEMO supplier page shows. Never contains payment fields."""
+
+    ref: str
+    status: DemoCheckoutStatus
+    is_demo: Literal[True] = True
+    provider_id: str
+    provider_name: str
+    booking_id: str
+    title: str
+    # The exact approved terms lines; empty when the session no longer matches the booking
+    summary: list[str] = Field(default_factory=list)
+    price: Money
+    # DEMO supplier reference; present only once the checkout was completed on the DEMO supplier page
+    supplier_reference: str | None = None
+    # The reference was already recorded on the booking (booking is CONFIRMED)
+    recorded: bool = False
+    can_complete: bool = False
+    message: str

@@ -60,8 +60,9 @@ export function reorderItems(tripId: string, itemIds: string[]) {
   return api.post(`${base(tripId)}/items/reorder`, { item_ids: itemIds }, { schema: TripDetailSchema });
 }
 
-export function addItemFromOffer(tripId: string, offerId: string) {
-  return api.post(`${base(tripId)}/items/from-offer`, { offer_id: offerId }, { schema: FromOfferResultSchema });
+export function addItemFromOffer(tripId: string, offerId: string, allowOverlap = false) {
+  const body = allowOverlap ? { offer_id: offerId, allow_overlap: true } : { offer_id: offerId };
+  return api.post(`${base(tripId)}/items/from-offer`, body, { schema: FromOfferResultSchema });
 }
 
 export const exportUrl = (tripId: string, kind: 'ics' | 'pdf') => `${base(tripId)}/export.${kind}`;

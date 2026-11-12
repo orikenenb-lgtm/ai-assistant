@@ -226,6 +226,11 @@ def build_terms_summary(
     lines.append(f"ספק: {source.get('provider_name')} (מזהה הצעה: {source.get('supplier_offer_id')})")
     if execution_mode == "SIMULATION":
         lines.append("סימולציה בלבד: נתוני הדגמה. לא תתבצע הזמנה אמיתית, לא יבוצע חיוב ולא יישלחו פרטים לספק.")
+    elif execution_mode == "HOSTED_CHECKOUT" and source.get("mode") == "DEMO":
+        lines.append(
+            "ספק הדגמה: ההשלמה מתבצעת בדף ספק לדוגמה בתוך המערכת. לא תתבצע הזמנה אמיתית, "
+            "לא יבוצע חיוב ולא יישלחו פרטים לספק."
+        )
     elif execution_mode == "HOSTED_CHECKOUT":
         lines.append(
             "ההזמנה והתשלום מתבצעים באתר הספק בלבד. המערכת אינה מזמינה ואינה מחייבת — "

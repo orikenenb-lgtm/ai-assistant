@@ -53,6 +53,15 @@ export const TripTravelerSchema = z.object({
 });
 export type TripTraveler = z.infer<typeof TripTravelerSchema>;
 
+/** One forbidden overlapping pair (flight/flight, activity/flight, activity/activity, hotel/hotel). */
+export const OverlapSchema = z.object({
+  item_id: z.string(),
+  other_item_id: z.string(),
+  kind_pair: z.string(),
+  message: z.string(),
+});
+export type Overlap = z.infer<typeof OverlapSchema>;
+
 export const TripItemSchema = z.object({
   id: z.string(),
   trip_id: z.string(),
@@ -73,6 +82,7 @@ export const TripItemSchema = z.object({
   offer_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
   data_mode: DataModeSchema.nullable().optional(),
   offer_expired: z.boolean().default(false),
+  overlaps: z.array(OverlapSchema).default([]),
   created_at: IsoDateTimeSchema,
   updated_at: IsoDateTimeSchema,
 });
@@ -87,10 +97,11 @@ export const TripDetailSchema = TripSummarySchema.extend({
   items: z.array(TripItemSchema).default([]),
   days: z.array(TripDaySchema).default([]),
   unscheduled_item_ids: z.array(z.string()).default([]),
+  overlaps: z.array(OverlapSchema).default([]),
 });
 export type TripDetail = z.infer<typeof TripDetailSchema>;
 
-export const FromOfferResultSchema = z.object({ item: TripItemSchema, items: z.array(TripItemSchema) });
+export const FromOfferResultSchema = z.object({ item: TripItemSchema, items: z.array(TripItemSchema), overlaps: z.array(OverlapSchema).default([]) });
 
 // ---- budget ----
 
@@ -111,6 +122,9 @@ export const BudgetSchema = z.object({
   remaining: MoneySchema.nullable().optional(),
   remaining_reason: z.enum(['ok', 'no_budget', 'mixed_currencies']),
   over_budget: z.boolean().default(false),
+  per_traveler: MoneySchema.nullable().optional(),
+  per_traveler_reason: z.enum(['ok', 'no_costs', 'no_travelers', 'mixed_currencies']).optional(),
+  traveler_count: z.number().int().default(0),
   warnings: z.array(z.object({ code: z.string(), message: z.string(), item_ids: z.array(z.string()).default([]) })).default([]),
 });
 export type Budget = z.infer<typeof BudgetSchema>;

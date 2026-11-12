@@ -1,42 +1,9 @@
-import { expect, type Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { test } from './fixtures';
 import { sharedFlightSearch } from './data';
 import { OWNER_PASSWORD } from './env';
+import { approve, banner, bookingState, checkPrice, startBooking } from './booking-helpers';
 import { expectNoRealPurchaseWording } from './wording';
-
-type Scenario = 'success' | 'price_change' | 'timeout_unknown';
-
-/** Creates a fresh DEMO offer, then a booking draft through the UI with the given simulation scenario. */
-async function startBooking(page: Page, offerId: string, scenario: Scenario) {
-  await page.goto(`/bookings?offer_id=${offerId}`);
-  const dlg = page.getByRole('dialog', { name: 'הכנת הזמנה' });
-  await expect(dlg.getByTestId('selected-offer')).toContainText('הדגמה');
-  await dlg.getByRole('group', { name: 'נוסעים' }).getByRole('checkbox').first().check();
-  await dlg.getByRole('combobox', { name: 'תרחיש סימולציה' }).selectOption(scenario);
-  await dlg.getByRole('button', { name: 'יצירת הזמנה להכנה' }).click();
-  await expect(page).toHaveURL(/\/bookings\/[0-9a-f]+$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'סקירת הזמנה' })).toBeVisible();
-  return page.url().split('/').pop()!;
-}
-
-const banner = (page: Page) => page.getByRole('note').filter({ hasText: 'סימולציה — לא תתבצע רכישה אמיתית' });
-
-async function checkPrice(page: Page) {
-  await page.getByRole('button', { name: 'בדיקת מחיר מול הספק' }).click();
-  await expect(page.getByRole('heading', { name: 'אישור התנאים' })).toBeVisible();
-}
-
-async function approve(page: Page, password = OWNER_PASSWORD) {
-  await page.getByRole('checkbox', { name: /קראתי ואני מאשר/ }).check();
-  await page.getByLabel('סיסמה (אימות נוסף)').fill(password);
-  await page.getByRole('button', { name: 'אישור התנאים' }).click();
-}
-
-async function bookingState(page: Page, id: string): Promise<string> {
-  const res = await page.request.get(`/api/bookings/${id}`);
-  expect(res.ok()).toBe(true);
-  return (await res.json()).state as string;
-}
 
 test.describe('הכנת הזמנה (סימולציה בלבד)', () => {
   test('מסלול מלא: בדיקת מחיר, סיסמה שגויה לא מאשרת, אישור, שליחה -> CONFIRMED עם אסמכתה SIM-', async ({ page, api }) => {
