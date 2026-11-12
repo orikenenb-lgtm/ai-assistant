@@ -5,10 +5,11 @@
 
 ## איך זה עובד בסביבה הזו
 
-* **המנהל (01 Project Director)** הוא סשן Claude Code הראשי. `get_session` החזיר שהמודל
-  המוגדר הוא `claude-opus-5-5`, וזה גם המודל שהגיש את התשובות (`last_served_model`).
+* **המנהל (01 Project Director)** הוא סשן Claude Code הראשי. `get_session` אימת שהמודל
+  המוגדר הוא גם המודל שהגיש את התשובות (`last_served_model`), בשכבת "בכיר". המזהה המדויק
+  לא נשמר בריפו לפי מדיניות הסביבה, ומדווח בצ'אט בלבד.
 * **סוכנים נפרדים** מופעלים עם הכלי `Agent`, שתומך בבחירת מודל לכל סוכן דרך הפרמטר `model`.
-  הערכים הנתמכים הם `opus`, `sonnet`, `haiku` ו-`fable`.
+  הפרמטר מציע ארבע שכבות מודל, שמסומנות כאן "בכיר", "ביקורת", "ממוקד" ו-"קל" (ראו model-routing.md).
 * **מגבלת אימות:** הסביבה קיבלה את פרמטר המודל, אבל מתוך סוכן-משנה אין דרך לאמת
   באופן עצמאי איזה מודל הגיש לו את התשובות. לכן הטבלה מתעדת את **המודל שנדרש**, ולא טוענת
   לאימות שלא בוצע.
@@ -22,26 +23,26 @@
 
 | # | תפקיד | צוות | בוצע בפועל ע״י | מודל שנדרש |
 |---|---|---|---|---|
-| 01 | Project Director | הנהלה | הסשן הראשי | Opus 5.5 (מאומת דרך get_session) |
-| 02 | Deputy Director | הנהלה | הסשן הראשי (לוח משימות, אינטגרציה, חסמים) | Opus 5.5 |
-| 03 | Backend Lead | Alpha | הסשן הראשי (ליבת ה-API, חוזים) + סוכן B2 (חיפוש) | Opus |
-| 04 | Backend Engineer | Alpha | סוכן B1 | sonnet |
-| 05 | Database Engineer | Alpha | הסשן הראשי (מודלים, Alembic) + סוכן B1 | Opus / sonnet |
-| 06 | Frontend Lead | Beta | סוכן F1 | opus |
-| 07 | Frontend Engineer | Beta | סוכנים F2, F3, F4 | sonnet |
-| 08 | UX Designer | Beta | סוכן F1 (מערכת עיצוב RTL) | opus |
-| 09 | Provider Lead | Gamma | סוכן R1 (מחקר) + סוכן B2 (ממשק מתאמים) | sonnet / opus |
-| 10 | Flights Specialist | Gamma | סוכן R1 (היתכנות) + סוכן B6 (מתאמים חיים) | sonnet |
-| 11 | Hotels Specialist | Gamma | סוכן R1 + סוכן B6 | sonnet |
-| 12 | Cars & Activities Specialist | Gamma | סוכן R1 + סוכן B6 | sonnet |
-| 13 | AI Lead | Delta | סוכן B5 | opus |
-| 14 | AI Orchestration Engineer | Delta | סוכן B5 | opus |
-| 15 | Comparison Engineer | Delta | סוכן B2 | opus |
-| 16 | Security Lead | Epsilon | הסשן הראשי (מודל איומים, ליבת אבטחה) + סוכן ביקורת | Opus / fable |
-| 17 | Booking Safety Engineer | Epsilon | סוכן B4 | fable |
-| 18 | QA Engineer | Epsilon | סוכן QA | sonnet |
-| 19 | DevOps Engineer | Epsilon | סוכן D1 | sonnet |
-| 20 | Independent Auditor | Epsilon | סוכן AUD נפרד, שלא כתב קוד במערכת | fable |
+| 01 | Project Director | הנהלה | הסשן הראשי | בכיר (מאומת דרך get_session) |
+| 02 | Deputy Director | הנהלה | הסשן הראשי (לוח משימות, אינטגרציה, חסמים) | בכיר |
+| 03 | Backend Lead | Alpha | הסשן הראשי (ליבת ה-API, חוזים) + סוכן B2 (חיפוש) | בכיר |
+| 04 | Backend Engineer | Alpha | סוכן B1 | ממוקד |
+| 05 | Database Engineer | Alpha | הסשן הראשי (מודלים, Alembic) + סוכן B1 | בכיר / ממוקד |
+| 06 | Frontend Lead | Beta | סוכן F1 | בכיר |
+| 07 | Frontend Engineer | Beta | סוכנים F2, F3, F4 | ממוקד |
+| 08 | UX Designer | Beta | סוכן F1 (מערכת עיצוב RTL) | בכיר |
+| 09 | Provider Lead | Gamma | סוכן R1 (מחקר) + סוכן B2 (ממשק מתאמים) | ממוקד / בכיר |
+| 10 | Flights Specialist | Gamma | סוכן R1 (היתכנות) + סוכן B6 (מתאמים חיים) | ממוקד |
+| 11 | Hotels Specialist | Gamma | סוכן R1 + סוכן B6 | ממוקד |
+| 12 | Cars & Activities Specialist | Gamma | סוכן R1 + סוכן B6 | ממוקד |
+| 13 | AI Lead | Delta | סוכן B5 | בכיר |
+| 14 | AI Orchestration Engineer | Delta | סוכן B5 | בכיר |
+| 15 | Comparison Engineer | Delta | סוכן B2 | בכיר |
+| 16 | Security Lead | Epsilon | הסשן הראשי (מודל איומים, ליבת אבטחה) + סוכן ביקורת | בכיר / ביקורת |
+| 17 | Booking Safety Engineer | Epsilon | סוכן B4 | ביקורת |
+| 18 | QA Engineer | Epsilon | סוכן QA | ממוקד |
+| 19 | DevOps Engineer | Epsilon | סוכן D1 | ממוקד |
+| 20 | Independent Auditor | Epsilon | סוכן AUD נפרד, שלא כתב קוד במערכת | ביקורת |
 
 ## גלי ביצוע (מתעדכן תוך כדי)
 
@@ -65,7 +66,7 @@
 
 | # | תפקיד V6 | ביצוע בפועל |
 |---|---|---|
-| 01 | Project Director | הסשן הראשי (claude-opus-5-5, מאומת) |
+| 01 | Project Director | הסשן הראשי (שכבת "בכיר", מאומת) |
 | 02 | Deputy Director | הסשן הראשי: לוח משימות, ownership.md, dependency-graph.md, מעקב |
 | 03 | Chief Architect | הסשן הראשי: `api-contract.md`, `v6-flight-experience-contract.md` |
 | 04 | Frontend Lead | FE-FLIGHT |
@@ -94,4 +95,4 @@
 | 27 | QA Automation Lead | QA |
 | 28 | E2E/Browser Test Engineer | QA + E2E-V6 |
 | 29 | Windows/DevOps/Performance | D1 (V3) + DEVOPS-RELEASE |
-| 30 | Independent Release Auditor | RELEASE-AUDIT (fable, לא כותב קוד) |
+| 30 | Independent Release Auditor | RELEASE-AUDIT (שכבת "ביקורת", לא כותב קוד) |
