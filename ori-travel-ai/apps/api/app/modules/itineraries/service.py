@@ -17,10 +17,11 @@ from app.core.audit import record_audit
 from app.core.db import utcnow
 from app.core.errors import ConflictError, NotFoundError
 from app.core.money import from_minor, to_minor
-from app.models.auth import User
 from app.models._common import new_id
+from app.models.auth import User
 from app.models.family import FamilyMember
 from app.models.trips import Trip, TripItem, TripTraveler
+from app.modules.itineraries.overlaps import find_overlaps, overlaps_for
 from app.modules.itineraries.schemas import (
     CurrencyTotal,
     DayOut,
@@ -34,7 +35,6 @@ from app.modules.itineraries.schemas import (
     TripSummary,
     TripUpdate,
 )
-from app.modules.itineraries.overlaps import find_overlaps, overlaps_for
 from app.modules.providers.errors import UnprocessableError
 from app.modules.search.service import get_offer
 from app.schemas.common import Money

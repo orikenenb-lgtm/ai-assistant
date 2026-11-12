@@ -13,9 +13,13 @@ export interface SearchData {
   offers: Array<{ id: string; title: string; price: { total: { amount: string; currency: string } }; source: { mode: string } }>;
 }
 
+/**
+ * Identical searches are served from a server-side cache (30 min) -- which would hide a provider failure --
+ * so every call gets a unique parameter fingerprint: random dates, random trip length and a random max price.
+ */
 export function flightSearch(api: Api, opts: { depart?: number; nights?: number | null; adults?: number } = {}): Promise<SearchData> {
   const depart = opts.depart ?? randomDays();
-  const nights = opts.nights === undefined ? 7 : opts.nights;
+  const nights = opts.nights === undefined ? 3 + Math.floor(Math.random() * 12) : opts.nights;
   return api.search('flight', {
     origin: 'TLV',
     destination: 'ATH',
@@ -28,7 +32,7 @@ export function flightSearch(api: Api, opts: { depart?: number; nights?: number 
     checked_bags: 0,
     preferred_departure_window: 'any',
     currency: 'ILS',
-    max_price: null,
+    max_price: String(60000 + Math.floor(Math.random() * 30000)),
     max_stops: null,
   });
 }

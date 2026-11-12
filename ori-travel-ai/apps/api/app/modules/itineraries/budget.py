@@ -15,8 +15,8 @@ from decimal import Decimal
 from app.core.db import utcnow
 from app.core.money import from_minor, quantize
 from app.models.trips import Trip, TripItem
-from app.modules.itineraries.schemas import BudgetCurrencyRow, BudgetKindRow, BudgetOut, BudgetWarning
 from app.modules.itineraries.overlaps import find_overlaps
+from app.modules.itineraries.schemas import BudgetCurrencyRow, BudgetKindRow, BudgetOut, BudgetWarning
 from app.modules.itineraries.service import snapshot_expired
 from app.schemas.common import Money
 
