@@ -4,7 +4,7 @@ import { Badge, Callout, DateText, Dialog, MoneyText } from '@/components/ui';
 import { formatDuration, formatNumber } from '@/lib/format';
 import { CATEGORY_SINGULAR } from '@/lib/labels';
 import type { CanonicalOffer } from '@/lib/schemas/offers';
-import { BOARD_LABELS, CAR_CLASS_LABELS, INTEREST_LABELS, TRANSMISSION_LABELS } from '../labels';
+import { BOARD_LABELS, CAR_CLASS_LABELS, INTEREST_LABELS, TRANSMISSION_LABELS, countLabel } from '../labels';
 import { safeExternalUrl } from '@/lib/safeUrl';
 import { StartBookingButton } from '@/features/bookings/components/StartBookingButton';
 import { AddToTripButton } from './AddToTripButton';
@@ -86,15 +86,15 @@ export function OfferDetailsView({ offer }: { offer: CanonicalOffer }) {
               [
                 'תאריכים',
                 <span key="dates">
-                  <DateText value={d.check_in} /> – <DateText value={d.check_out} /> ({d.nights} לילות)
+                  <DateText value={d.check_in} /> – <DateText value={d.check_out} /> ({countLabel(d.nights, 'לילה אחד', 'לילות')})
                 </span>,
               ],
-              ['אורחים', `${d.rooms} חדרים · ${d.adults} מבוגרים${d.children ? ` · ${d.children} ילדים` : ''}`],
+              ['אורחים', `${countLabel(d.rooms, 'חדר אחד', 'חדרים')} · ${countLabel(d.adults, 'מבוגר אחד', 'מבוגרים')}${d.children ? ` · ${countLabel(d.children, 'ילד אחד', 'ילדים')}` : ''}`],
               ['דירוג כוכבים', d.star_rating ? `${d.star_rating} כוכבים` : null],
               [
                 'דירוג אורחים',
                 d.guest_rating !== null && d.guest_rating !== undefined
-                  ? `${d.guest_rating.toFixed(1)}/10${d.review_count ? ` · ${formatNumber(d.review_count)} ביקורות` : ''}`
+                  ? `${d.guest_rating.toFixed(1)}/10${d.review_count ? ` · ${d.review_count === 1 ? 'ביקורת אחת' : `${formatNumber(d.review_count)} ביקורות`}` : ''}`
                   : null,
               ],
               ['מרחק מהמרכז', d.distance_to_center_km != null ? `${d.distance_to_center_km.toFixed(1)} ק״מ` : null],
@@ -131,7 +131,7 @@ export function OfferDetailsView({ offer }: { offer: CanonicalOffer }) {
               ['איסוף בתאריך', <DateText key="p" value={d.pickup_at} preset="datetime" timeZone="source" />],
               ['החזרה', d.dropoff_location],
               ['החזרה בתאריך', <DateText key="r" value={d.dropoff_at} preset="datetime" timeZone="source" />],
-              ['ימי השכרה', String(d.rental_days)],
+              ['ימי השכרה', countLabel(d.rental_days, 'יום אחד', 'ימים')],
               ['גיל נהג מינימלי', d.driver_min_age != null ? String(d.driver_min_age) : null],
               ['תוספת נהג צעיר', d.young_driver_fee_applies == null ? null : d.young_driver_fee_applies ? 'חלה תוספת' : 'לא חלה'],
               ['פיקדון', d.deposit ? <MoneyText key="dep" value={d.deposit} /> : null],
@@ -154,7 +154,7 @@ export function OfferDetailsView({ offer }: { offer: CanonicalOffer }) {
               ['סוג', INTEREST_LABELS[d.category] ?? d.category],
               ['עיר', d.city],
               ['משך', d.duration_minutes ? formatDuration(d.duration_minutes) : null],
-              ['דירוג', d.rating != null ? `${d.rating.toFixed(1)}/5${d.review_count ? ` · ${formatNumber(d.review_count)} ביקורות` : ''}` : null],
+              ['דירוג', d.rating != null ? `${d.rating.toFixed(1)}/5${d.review_count ? ` · ${d.review_count === 1 ? 'ביקורת אחת' : `${formatNumber(d.review_count)} ביקורות`}` : ''}` : null],
               ['שפות', d.languages.join(', ')],
               ['שעות התחלה', d.start_times.join(', ')],
               ['נקודת מפגש', d.meeting_point],

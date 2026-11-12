@@ -93,6 +93,13 @@ export function stopsLabel(stops: number): string {
   return `${stops} עצירות`;
 }
 
+/** Counted noun: countLabel(1,'חדר אחד','חדרים') → "חדר אחד"; 2 → "2 חדרים". */
+export function countLabel(n: number, one: string, many: string): string {
+  return n === 1 ? one : `${n} ${many}`;
+}
+
+export const PASSENGER_SINGULAR: Record<string, string> = { adult: 'מבוגר אחד', child: 'ילד אחד', infant: 'תינוק אחד' };
+
 /** Hebrew plural helper: plural(1,'לילה','לילות') → "לילה"; 3 → "3 לילות". */
 export function plural(n: number, one: string, many: string, two?: string): string {
   if (n === 1) return `${one}`;

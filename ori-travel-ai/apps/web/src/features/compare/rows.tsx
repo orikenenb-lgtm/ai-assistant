@@ -2,7 +2,7 @@ import { Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { DateText, FreshnessText, MoneyText } from '@/components/ui';
 import { CancellationSummary, SourceLine, baggageText, cancellationKind, compareDecimal, scoreNumber } from '@/features/offers';
-import { BOARD_LABELS, CAR_CLASS_LABELS, FACTOR_LABELS, INTEREST_LABELS, TRANSMISSION_LABELS, cabinLabel, stopsLabel } from '@/features/offers/labels';
+import { BOARD_LABELS, CAR_CLASS_LABELS, FACTOR_LABELS, INTEREST_LABELS, TRANSMISSION_LABELS, cabinLabel, countLabel, stopsLabel } from '@/features/offers/labels';
 import { formatDuration } from '@/lib/format';
 import type { Category } from '@/lib/schemas/common';
 import type { CanonicalOffer, ConvertedAmount } from '@/lib/schemas/offers';
@@ -275,7 +275,7 @@ const hotelRows: CompareRow[] = [
     render: (o) => (o.details.kind === 'hotel' && o.details.distance_to_center_km != null ? `${o.details.distance_to_center_km.toFixed(1)} ק״מ` : dash),
     best: (offers) => lowest(offers, (o) => (o.details.kind === 'hotel' ? o.details.distance_to_center_km : null)),
   },
-  { id: 'room', label: 'חדר', section: DETAILS, render: (o) => (o.details.kind === 'hotel' ? text(`${o.details.room_name} · ${o.details.nights} לילות`) : dash) },
+  { id: 'room', label: 'חדר', section: DETAILS, render: (o) => (o.details.kind === 'hotel' ? text(`${o.details.room_name} · ${countLabel(o.details.nights, 'לילה אחד', 'לילות')}`) : dash) },
   {
     id: 'amenities',
     label: 'שירותים',

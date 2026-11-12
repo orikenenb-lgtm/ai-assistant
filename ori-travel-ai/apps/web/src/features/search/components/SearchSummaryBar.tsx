@@ -1,5 +1,6 @@
 import { Pencil } from 'lucide-react';
 import { Button, Card, FreshnessText } from '@/components/ui';
+import { countLabel } from '@/features/offers/labels';
 import { describeSearchParams } from '../describe';
 import type { SearchResponse } from '@/lib/schemas/search';
 
@@ -16,7 +17,7 @@ function travellers(params: Record<string, unknown>): string | null {
       ? params.children_ages.length
       : 0;
   if (adults === null) return null;
-  return `${adults} מבוגרים${kids ? ` + ${kids} ילדים` : ''}`;
+  return `${countLabel(adults, 'מבוגר אחד', 'מבוגרים')}${kids ? ` + ${countLabel(kids, 'ילד אחד', 'ילדים')}` : ''}`;
 }
 
 /** Collapsed form: one line summarising the current search, with an edit button. */

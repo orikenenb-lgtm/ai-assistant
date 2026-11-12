@@ -26,7 +26,7 @@ import { MoneyText } from '@/components/ui';
 import { cn } from '@/lib/cn';
 import { formatDuration, formatMoneyValue, formatNumber } from '@/lib/format';
 import { isOfferKind, type Baggage, type CanonicalOffer } from '@/lib/schemas/offers';
-import { BOARD_LABELS, CAR_CLASS_LABELS, INTEREST_LABELS, PASSENGER_LABELS, TRANSMISSION_LABELS, cabinLabel } from '../labels';
+import { BOARD_LABELS, CAR_CLASS_LABELS, INTEREST_LABELS, PASSENGER_LABELS, PASSENGER_SINGULAR, TRANSMISSION_LABELS, cabinLabel, countLabel } from '../labels';
 
 export interface Fact {
   key: string;
@@ -54,7 +54,7 @@ export function baggageText(b: Baggage): string[] {
 export function passengersText(p: Record<string, number>): string {
   return Object.entries(p)
     .filter(([, n]) => n > 0)
-    .map(([k, n]) => `${n} ${PASSENGER_LABELS[k] ?? k}`)
+    .map(([k, n]) => (n === 1 && PASSENGER_SINGULAR[k] ? PASSENGER_SINGULAR[k] : `${n} ${PASSENGER_LABELS[k] ?? k}`))
     .join(', ');
 }
 
@@ -88,7 +88,7 @@ export function offerFacts(offer: CanonicalOffer): Fact[] {
           'rating',
           Star,
           'דירוג אורחים',
-          `${d.guest_rating.toFixed(1)}/10${d.review_count ? ` (${formatNumber(d.review_count)} ביקורות)` : ''}`,
+          `${d.guest_rating.toFixed(1)}/10${d.review_count ? ` (${d.review_count === 1 ? 'ביקורת אחת' : `${formatNumber(d.review_count)} ביקורות`})` : ''}`,
         );
       }
       add('board', Utensils, 'ארוחות', BOARD_LABELS[d.board] ?? d.board);
@@ -96,7 +96,7 @@ export function offerFacts(offer: CanonicalOffer): Fact[] {
       if (d.distance_to_center_km !== null && d.distance_to_center_km !== undefined) {
         add('distance', MapPin, 'מרחק מהמרכז', `${d.distance_to_center_km.toFixed(1)} ק״מ מהמרכז`);
       }
-      add('stay', Calendar, 'שהייה', `${d.nights} לילות · ${d.adults} מבוגרים${d.children ? ` + ${d.children} ילדים` : ''}`);
+      add('stay', Calendar, 'שהייה', `${countLabel(d.nights, 'לילה אחד', 'לילות')} · ${countLabel(d.adults, 'מבוגר אחד', 'מבוגרים')}${d.children ? ` + ${countLabel(d.children, 'ילד אחד', 'ילדים')}` : ''}`);
       if (d.kosher_info) add('kosher', Utensils, 'כשרות', d.kosher_info);
       if (d.accessibility_features.length) add('access', Accessibility, 'נגישות', d.accessibility_features.join(', '));
       break;
@@ -105,7 +105,7 @@ export function offerFacts(offer: CanonicalOffer): Fact[] {
       add('class', Car, 'סוג רכב', `${CAR_CLASS_LABELS[d.car_class] ?? d.car_class} · ${d.model_example}`);
       add('vendor', Briefcase, 'חברה', d.vendor);
       add('trans', Cog, 'תיבת הילוכים', TRANSMISSION_LABELS[d.transmission] ?? d.transmission);
-      add('seats', Users, 'מקומות ומזוודות', `${d.seats} מקומות · ${d.bags} מזוודות${d.air_conditioning ? ' · מיזוג' : ''}`);
+      add('seats', Users, 'מקומות ומזוודות', `${countLabel(d.seats, 'מקום אחד', 'מקומות')} · ${countLabel(d.bags, 'מזוודה אחת', 'מזוודות')}${d.air_conditioning ? ' · מיזוג' : ''}`);
       if (d.mileage) add('mileage', Gauge, 'קילומטראז׳', d.mileage === 'unlimited' ? 'ק״מ חופשי' : d.mileage);
       if (d.fuel_policy) add('fuel', Fuel, 'מדיניות דלק', d.fuel_policy);
       if (d.deposit) {
@@ -115,7 +115,7 @@ export function offerFacts(offer: CanonicalOffer): Fact[] {
           </span>
         ));
       }
-      add('days', Calendar, 'ימי השכרה', `${d.rental_days} ימים`);
+      add('days', Calendar, 'ימי השכרה', countLabel(d.rental_days, 'יום אחד', 'ימים'));
       break;
     }
     case 'activity': {
