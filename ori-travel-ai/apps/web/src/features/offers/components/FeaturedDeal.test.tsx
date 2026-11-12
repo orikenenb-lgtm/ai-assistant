@@ -75,7 +75,7 @@ describe('FeaturedDeal', () => {
     expect(text(panel)).toContain('דמו סקייליין');
     expect(within(panel).getByText('הדגמה')).toBeInTheDocument();
     expect(text(screen.getByTestId('featured-note'))).toContain('לא בהכרח בכל השוק');
-    expect(text(screen.getByTestId('featured-note'))).toContain('נבדקו 7 הצעות');
+    expect(text(screen.getByTestId('featured-note'))).toContain('לא בהכרח בכל השוק. הושוו 7 הצעות.');
 
     await userEvent.setup().click(within(panel).getByRole('button', { name: 'בדיקת ההצעה' }));
     expect(onReview).toHaveBeenCalledWith(offer);

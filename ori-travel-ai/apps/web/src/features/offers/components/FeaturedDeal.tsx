@@ -148,8 +148,8 @@ export function FeaturedDeal({ pick, onReview, placeName, className }: FeaturedD
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-relaxed text-tangerine-800" data-testid="featured-note">
-          {pick.note}
-          {pick.comparableCount > 1 && ` נבדקו ${pick.comparableCount} הצעות.`}
+          {pick.note?.trim()}
+          {pick.comparableCount > 1 && `${/[.!?]$/.test(pick.note?.trim() ?? '.') ? '' : '.'} הושוו ${pick.comparableCount} הצעות.`}
         </p>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <button

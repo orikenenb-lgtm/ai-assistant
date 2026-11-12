@@ -24,7 +24,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 -CreateOwner -Owner
 powershell -ExecutionPolicy Bypass -File .\scripts\start.ps1
 ```
 
-ואז לפתוח בדפדפן: `http://localhost:8000`
+ואז לפתוח בדפדפן: `http://localhost:8000` (פקודת ההרצה הנבדקת: `scripts/start.sh app --rebuild --port N` ב-bash, `.\scripts\start.ps1 -Rebuild -Port N` ב-PowerShell; ברירת המחדל פורט 8000).
+
+* בדיקת תקינות: `http://localhost:8000/api/health` ו-`http://localhost:8000/api/ready`.
+* שדרוג: `git pull` ואז `setup.ps1` (מגבה את המסד אוטומטית לפני מיגרציה ממתינה) ו-`start.ps1 -Rebuild`.
+* מדריכי שחרור: [windows-release.md](docs/release/windows-release.md) · [rollback.md](docs/release/rollback.md) · [diagnostics.md](docs/release/diagnostics.md)
 
 ## התחלה מהירה (Linux / macOS)
 
@@ -43,11 +47,13 @@ scripts/start.sh
 | `scripts/test.ps1` / `test.sh` | כל הבדיקות (ruff, pytest, typecheck, lint, vitest, build; `-E2E` ל-Playwright) |
 | `scripts/create-owner.ps1` / `.sh` | יצירת בעל/ת החשבון |
 | `scripts/seed-demo.ps1` / `.sh` | נתוני דמו |
+| `scripts/migrate.ps1` / `.sh` | מיגרציות עם גיבוי אוטומטי `pre-migrate` לפני עדכון ממתין |
 | `scripts/backup-db.ps1` / `.sh` | גיבוי SQLite מתוארך |
+| `scripts/restore-db.ps1` / `.sh` | שחזור מגיבוי (שומר קודם את המסד הנוכחי כ-`pre-restore`) |
 | `scripts/export-openapi.py` | ייצוא חוזה ה-API ל-`packages/shared/openapi.json` |
 
-הערה: סקריפטי ה-PowerShell נכתבו ונבדקו בקפידה אך **לא הורצו בסביבת הפיתוח של הפרויקט** (אין שם PowerShell).
-סקריפטי ה-bash הורצו בפועל. אם משהו נכשל ב-Windows, ראו [troubleshooting.md](docs/operations/troubleshooting.md).
+הערה: סקריפטי ה-PowerShell נכתבו ונבדקו בקריאה בלבד ו**לא הורצו בסביבת הפיתוח של הפרויקט** (אין שם PowerShell).
+סקריפטי ה-bash הורצו בפועל, כולל התקנה נקייה, גיבוי לפני מיגרציה ושחזור. אם משהו נכשל ב-Windows, ראו [troubleshooting.md](docs/operations/troubleshooting.md).
 
 ## תיעוד
 
@@ -55,6 +61,7 @@ scripts/start.sh
 * אבטחה: [threat-model.md](docs/security/threat-model.md) · [booking-safety.md](docs/security/booking-safety.md)
 * ספקים: [providers.md](docs/integrations/providers.md) · [provider-api-notes.md](docs/integrations/provider-api-notes.md) · [tool-capability-matrix.md](docs/integrations/tool-capability-matrix.md)
 * תפעול: [windows-setup.md](docs/operations/windows-setup.md) · [troubleshooting.md](docs/operations/troubleshooting.md)
+* שחרור: [windows-release.md](docs/release/windows-release.md) · [rollback.md](docs/release/rollback.md) · [diagnostics.md](docs/release/diagnostics.md)
 * חוזה משותף: [packages/shared/README.md](packages/shared/README.md)
 * תיאום הסוכנים: [organization.md](docs/agents/organization.md) · [task-board.md](docs/agents/task-board.md) · [decisions.md](docs/agents/decisions.md)
 * ממשק: [apps/web/README.md](apps/web/README.md)

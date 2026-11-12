@@ -53,7 +53,7 @@ cd ai-assistant\ori-travel-ai
 1. בודק Python 3.12+ ו-Node 20+.
 2. יוצר `apps\api\.venv` ומתקין `requirements-dev.txt`.
 3. יוצר `apps\api\.env` מתוך `.env.example` ומכניס `ORI_DATA_KEY` חדש (המפתח לא מודפס). **אם `.env` או המפתח כבר קיימים, לא נוגעים בהם.**
-4. מריץ `python -m app.cli migrate` ליצירת/עדכון מסד הנתונים.
+4. מריץ מיגרציות ליצירת/עדכון מסד הנתונים (`migrate.ps1`). אם המסד קיים וממתינה מיגרציה, נוצר קודם גיבוי `pre-migrate`; אם הגיבוי נכשל, המיגרציה לא רצה.
 5. מריץ `npm ci` ב-`apps\web` (דילוג: `-SkipWeb`).
 6. עם `-CreateOwner`: מבקש סיסמה בהקלדה מוסתרת, מעביר אותה ל-CLI דרך משתנה סביבה זמני `ORI_OWNER_PASSWORD` שנמחק מיד אחר כך.
 7. עם `-SeedDemo`: מוסיף בני משפחה לדוגמה (נתוני דמו בלבד).
@@ -84,8 +84,8 @@ cd ai-assistant\ori-travel-ai
 * חומת האש של Windows תבקש אישור; אשרו לרשת פרטית בלבד.
 * עוגיות ההתחברות אינן מסומנות `Secure` ב-HTTP. הדרך הנכונה היא HTTPS דרך reverse proxy, ואז `ORI_COOKIE_SECURE=true` ב-`.env`.
 * גישה מכתובת אחרת (`http://192.168.x.x:8000`) דורשת להוסיף את כתובת המחשב **גם** ל-`ORI_ALLOWED_HOSTS`
-  (בדיקת כותרת Host). בלי זה השרת מחזיר 400 "Invalid host header". אם רוצים גם את Vite, מוסיפים את הכתובת
-  ל-`ORI_CORS_ORIGINS` (ראו troubleshooting).
+  (בדיקת כותרת Host). בלי זה השרת מחזיר 400 "Invalid host header". במצב app אין צורך ב-`ORI_CORS_ORIGINS`;
+  רק אם משתמשים ב-Vite (`-Dev`) מוסיפים את הכתובת גם אליו (ראו troubleshooting).
 * אל תחשפו את הפורט לאינטרנט.
 
 ## 4. יצירת בעל/ת החשבון
@@ -143,7 +143,15 @@ ORI_AI_ALLOW_PAID=true
 **חשוב:** פרטי הדרכון ותאריכי הלידה מוצפנים במפתח `ORI_DATA_KEY` שב-`apps\api\.env`. גיבוי המסד **בלי** המפתח = מידע מוצפן שאי אפשר לקרוא.
 שמרו עותק של `.env` **בנפרד** מגיבוי המסד, במקום מאובטח (מנהל סיסמאות / כונן מוצפן). לעולם לא ב-git. ראו גם [threat-model.md](../security/threat-model.md).
 
-שחזור: עוצרים את השרת, מעתיקים קובץ גיבוי על `apps\api\data\ori_travel.db`, מתחילים מחדש.
+גיבוי אוטומטי נוצר גם **לפני כל מיגרציה ממתינה** (`setup.ps1` / `migrate.ps1`): `apps\api\data\backups\ori_travel-pre-migrate-<חותמת>.db`.
+
+שחזור (עוצרים את השרת קודם):
+
+```powershell
+.\scripts\restore-db.ps1 -BackupFile .\apps\api\data\backups\ori_travel-20261112-101500.db
+```
+
+המסד הנוכחי נשמר לפני כן כ-`...-pre-restore-...`. פירוט, חזרה לגרסת קוד קודמת וטיפול במפתח: [rollback.md](../release/rollback.md).
 
 ## 9. בדיקות
 
@@ -170,7 +178,7 @@ git pull
 .\scripts\start.ps1 -Rebuild
 ```
 
-`setup.ps1` בטוח להרצה חוזרת: משתמש ב-venv הקיים, מתקין תלויות חדשות, מריץ מיגרציות חדשות ולא נוגע במפתח. גבו את המסד לפני עדכון גדול.
+`setup.ps1` בטוח להרצה חוזרת: משתמש ב-venv הקיים, מתקין תלויות חדשות, מריץ מיגרציות חדשות ולא נוגע במפתח. `setup.ps1` מגבה אוטומטית לפני מיגרציה ממתינה, אבל עדיין מומלץ `backup-db.ps1` לפני עדכון גדול. אם משהו השתבש: [rollback.md](../release/rollback.md).
 
 ## 11. הסרה
 

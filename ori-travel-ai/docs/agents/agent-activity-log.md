@@ -72,3 +72,5 @@
 | 2026-11-12 ~15:30 | Agent DEVOPS-RELEASE | הופעל: התקנה נקייה מ-clone, גיבוי לפני migration, סקירת PowerShell, מסמכי שחרור/rollback/אבחון | sonnet | בביצוע |
 | 2026-11-12 ~15:40 | Agent BOOK-REDIRECT | הסתיים: checkout מדומה באתר ספק (demo_kidventures) מקצה לקצה, אימות אסמכתה מול ספר DEMO, 61 בדיקות חדשות (כולל 22 ניסיונות open redirect), תיקוני QA-03/05/07, נתוני אטרקציות; 838 API, 240 web | fable | ✅ |
 | 2026-11-12 ~15:45 | Agent UX-DS | הסתיים: עיצוב בהיר (סרגל לבן, accent טורקיז, tangerine לדילים), dark mode עם בורר, Segmented/Legend, מטרות מגע 44px, 59 זוגות צבע AA בשני המצבים, תיקון BUG-QA-01/02; 209 בדיקות web; 48 צילומי לפני/אחרי | opus | ✅ |
+| 2026-11-12 ~16:00 | Agent DEVOPS-RELEASE | הסתיים: התקנה נקייה מ-clone (bash) עברה מקצה לקצה ב-23 שניות; גיבוי לפני migration + שחזור (נבדק עם migration זמני); מסמכי windows-release/rollback/diagnostics; CI: shellcheck + בדיקת גיבוי. PowerShell לא הורץ | sonnet | ✅ |
+| 2026-11-12 ~16:02 | מנהל | request_id בשורת לוג הבקשה (rid=…) + בדיקה; עדכון diagnostics.md | — | ✅ |

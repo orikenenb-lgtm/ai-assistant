@@ -114,7 +114,12 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         if request.url.path.startswith("/api/"):
             # Paths can carry secrets (e.g. legacy invitation links) — always redact.
             log.info(
-                "%s %s -> %s (%sms)", request.method, redact_text(request.url.path), response.status_code, elapsed_ms
+                "%s %s -> %s (%sms) rid=%s",
+                request.method,
+                redact_text(request.url.path),
+                response.status_code,
+                elapsed_ms,
+                request_id,
             )
         return response
 

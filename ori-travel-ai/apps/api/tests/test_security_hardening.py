@@ -122,3 +122,10 @@ def test_api_404_and_bad_json_envelopes(client):
     assert bad.status_code == 422
     detail = bad.json()["error"]["details"][0]
     assert detail["type"] == "json_invalid" and detail["field"] == ""
+
+
+def test_request_log_line_has_request_id(client, caplog):
+    with caplog.at_level(logging.INFO, logger="ori.http"):
+        res = client.get("/api/health", headers={"X-Request-ID": "abcdef1234567890"})
+    assert res.headers["x-request-id"] == "abcdef1234567890"
+    assert any("rid=abcdef1234567890" in r.getMessage() for r in caplog.records if r.name == "ori.http")

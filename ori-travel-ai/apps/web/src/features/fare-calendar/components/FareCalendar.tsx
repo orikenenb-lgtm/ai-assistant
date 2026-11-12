@@ -293,7 +293,7 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
         >
           <div role="row" className="flex gap-1.5">
             {days.map((d, i) => (
-              <div role="gridcell" key={d} className="w-[4.75rem] shrink-0 snap-start">
+              <div role="gridcell" key={d} className="w-[4.25rem] shrink-0 snap-start">
                 {loading ? (
                   <Skeleton className="h-[5.25rem] w-full rounded-lg" />
                 ) : (
@@ -456,7 +456,7 @@ function CalendarInner({ base, onSelect, pendingKey, selectError, placeName, pag
         {data && <CellDetails cell={cells.get(detailKey)} cellKeyValue={detailKey} />}
 
         <div className="flex flex-col gap-3 border-t border-line pt-3">
-          <CalendarLegend id={legendId} note={data?.legend_note} />
+          <CalendarLegend id={legendId} />
           {data && <Notes data={data} pageCoverageNote={pageCoverageNote} />}
         </div>
       </div>
@@ -554,10 +554,10 @@ function Notes({ data, pageCoverageNote }: { data: FareCalendarResponse; pageCov
   return (
     <div className="flex flex-col gap-1.5 text-xs leading-relaxed text-fg-subtle" data-testid="fare-coverage">
       {coverage && <p>{coverage}</p>}
-      <p>בחירת תא מריצה את החיפוש הרגיל לתאריכים האלה; המחיר הסופי נקבע בחיפוש ואצל הספק.</p>
-      {data.sources.length > 0 && (
+      {(data.legend_note || data.sources.length > 0) && (
         <details className="group">
-          <summary className="w-fit cursor-pointer font-medium text-accent hover:text-accent-hover">מקורות הנתונים בלוח</summary>
+          <summary className="w-fit cursor-pointer font-medium text-accent hover:text-accent-hover">איך לקרוא את הלוח ומאיפה המחירים</summary>
+          {data.legend_note && <p className="mt-1.5">{data.legend_note}</p>}
           <ul className="mt-1.5 flex flex-col gap-1">
             {data.sources.map((s) => (
               <li key={s.provider_id} className="flex flex-wrap items-center gap-1.5">

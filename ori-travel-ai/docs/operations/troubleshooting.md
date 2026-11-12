@@ -2,6 +2,8 @@
 
 פקודות מוצגות ל-PowerShell מתיקיית `ori-travel-ai`; ב-Linux/macOS השתמשו בסקריפטי `.sh`.
 
+> מדריכים נוספים: [diagnostics.md](../release/diagnostics.md) (בדיקות health/ready, לוגים, חבילת אבחון בטוחה) · [rollback.md](../release/rollback.md) (חזרה לאחור ושחזור).
+
 ## הפורט תפוס (`Port 8000 is busy`)
 
 מי משתמש בפורט:
@@ -74,11 +76,13 @@ Remove-Item -Recurse -Force .\apps\web\node_modules
 
 * השתמשו באותה כתובת שבה השרת רץ (`http://localhost:8000`), לא לערבב `localhost` ו-`127.0.0.1` באותו הסשן.
 * במצב `-Dev` יש לפתוח את `http://localhost:5173` (Vite עושה proxy ל-API).
-* כתובת אחרת (LAN, פורט אחר): מוסיפים אותה ב-`apps\api\.env` ומפעילים מחדש. ללא כוכביות:
+* כתובת אחרת (LAN, פורט אחר): מוסיפים את המארח ל-`ORI_ALLOWED_HOSTS` ב-`apps\api\.env` ומפעילים מחדש. ללא כוכביות.
+  במצב app (ממשק ו-API מאותו שרת, `start.ps1 -Lan`) זה מספיק, ואין צורך ב-`ORI_CORS_ORIGINS` (נבדק).
+  `ORI_CORS_ORIGINS` נדרש רק כשהממשק מוגש ממקור נפרד, למשל Vite במצב `-Dev`.
 
 ```
-ORI_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.1.20:8000
 ORI_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.20
+ORI_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.1.20:5173
 ```
 
 ## `Invalid host header` (400)
