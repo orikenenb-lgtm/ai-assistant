@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     # Live providers are additionally gated by an explicit opt-in flag so that
     # a pasted key never silently starts spending quota.
     live_providers_enabled: bool = False
+    # Official FX reference rates (ECB) for display-only conversions. Opt-in.
+    fx_live_enabled: bool = False
+    fx_timeout_seconds: float = 8.0
 
     # ---- AI ----
     ai_provider: Literal["none", "ollama", "anthropic"] = "none"

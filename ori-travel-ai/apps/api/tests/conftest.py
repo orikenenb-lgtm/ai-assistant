@@ -47,9 +47,20 @@ def _fresh_db() -> Iterator[None]:
     engine = db_module.get_engine()
     Base.metadata.create_all(engine)
     limiter.reset()
+    _reset_provider_state()
     yield
+    _reset_provider_state()
     Base.metadata.drop_all(engine)
     db_module.reset_engine()
+
+
+def _reset_provider_state() -> None:
+    """Undo per-test adapter overrides and cached health results."""
+    from app.modules.providers import registry
+    from app.modules.providers import service as provider_service
+
+    registry.reset_registry()
+    provider_service.reset_health_cache()
 
 
 @pytest.fixture
