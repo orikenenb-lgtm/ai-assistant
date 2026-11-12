@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
-import { flightSearch } from './data';
+import { sharedFlightSearch } from './data';
 import { OWNER_PASSWORD } from './env';
 import { expectNoRealPurchaseWording } from './wording';
 
@@ -40,7 +40,7 @@ async function bookingState(page: Page, id: string): Promise<string> {
 
 test.describe('הכנת הזמנה (סימולציה בלבד)', () => {
   test('מסלול מלא: בדיקת מחיר, סיסמה שגויה לא מאשרת, אישור, שליחה -> CONFIRMED עם אסמכתה SIM-', async ({ page, api }) => {
-    const search = await flightSearch(api, { nights: null, adults: 1 });
+    const search = await sharedFlightSearch(api);
     const id = await startBooking(page, search.offers[0].id, 'success');
 
     // Simulation banner is visible from the first screen; no real-purchase wording anywhere.
@@ -90,8 +90,8 @@ test.describe('הכנת הזמנה (סימולציה בלבד)', () => {
   });
 
   test('timeout_unknown: מצב "לא ידוע", רק בירור אפשרי, ואז CONFIRMED', async ({ page, api }) => {
-    const search = await flightSearch(api, { nights: null, adults: 1 });
-    const id = await startBooking(page, search.offers[0].id, 'timeout_unknown');
+    const search = await sharedFlightSearch(api);
+    const id = await startBooking(page, search.offers[1].id, 'timeout_unknown');
     await checkPrice(page);
     await approve(page);
     await expect(page.getByRole('button', { name: 'שליחה (סימולציה)' })).toBeVisible();
@@ -118,8 +118,8 @@ test.describe('הכנת הזמנה (סימולציה בלבד)', () => {
   });
 
   test('price_change: המחיר עולה בשליחה, האישור מתבטל ונדרש אישור מחדש', async ({ page, api }) => {
-    const search = await flightSearch(api, { nights: null, adults: 1 });
-    const id = await startBooking(page, search.offers[0].id, 'price_change');
+    const search = await sharedFlightSearch(api);
+    const id = await startBooking(page, search.offers[2].id, 'price_change');
     await checkPrice(page);
     await approve(page);
     await expect(page.getByRole('button', { name: 'שליחה (סימולציה)' })).toBeVisible();
@@ -146,8 +146,8 @@ test.describe('הכנת הזמנה (סימולציה בלבד)', () => {
   });
 
   test('אין ביצוע אמיתי: מצב LIVE ופעולות ללא אישור נדחים בשרת', async ({ page, api }) => {
-    const search = await flightSearch(api, { nights: null, adults: 1 });
-    const id = await startBooking(page, search.offers[0].id, 'success');
+    const search = await sharedFlightSearch(api);
+    const id = await startBooking(page, search.offers[3].id, 'success');
     // Submitting without a price check / approval is refused.
     const res = await api.post(`/api/bookings/${id}/submit`, { idempotency_key: crypto.randomUUID() });
     expect(res.status()).toBeGreaterThanOrEqual(400);

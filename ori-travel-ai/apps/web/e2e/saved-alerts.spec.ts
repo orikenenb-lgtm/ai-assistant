@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './fixtures';
-import { flightSearch } from './data';
+import { sharedFlightSearch } from './data';
 import { uniq } from './env';
 
 test.describe('הצעות שמורות והתראות מחיר', () => {
@@ -17,8 +17,8 @@ test.describe('הצעות שמורות והתראות מחיר', () => {
   });
 
   test('שמירת הצעה מופיעה ב"הצעות שמורות" ואפשר להסיר אותה', async ({ page, api }) => {
-    const search = await flightSearch(api, { adults: 1 });
-    const offer = search.offers[1];
+    const search = await sharedFlightSearch(api);
+    const offer = search.offers[1 + Math.floor(Math.random() * 4)];
     await page.goto(`/search/flights?search_id=${search.search_id}`);
     const card = page.locator(`[data-testid="offer-card"][data-offer-id="${offer.id}"]`);
     await card.getByRole('button', { name: 'שמירה' }).click();
@@ -44,7 +44,7 @@ test.describe('הצעות שמורות והתראות מחיר', () => {
   });
 
   test('התראת מחיר מחיפוש: בדיקה ידנית, תמונת מחיר בהיסטוריה, וחסימת קירור בבדיקה השנייה', async ({ page, api }) => {
-    const search = await flightSearch(api, { adults: 2 });
+    const search = await sharedFlightSearch(api);
     const name = uniq('התראה-');
     alertNames.push(name);
 

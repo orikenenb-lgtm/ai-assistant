@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './fixtures';
-import { flightSearch, money } from './data';
+import { money, sharedFlightSearch } from './data';
 import { futureDate, uniq } from './env';
 
 test.describe('טיולים', () => {
@@ -14,7 +14,7 @@ test.describe('טיולים', () => {
 
   test('יצירת טיול, הוספת הצעה, ציר זמן עם DEMO ועלות, תקציב, ייצוא ICS ו-PDF', async ({ page, api }) => {
     const title = uniq('טיול-');
-    const search = await flightSearch(api, { nights: 7, adults: 1 });
+    const search = await sharedFlightSearch(api);
     const offer = search.offers[0];
 
     // --- create the trip through the UI

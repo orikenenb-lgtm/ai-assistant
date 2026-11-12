@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import { freshOwnerContext, test } from './fixtures';
 import { Api } from './api';
-import { flightSearch } from './data';
+import { flightSearch, sharedFlightSearch } from './data';
 import { OWNER_PASSWORD, futureDate, uniq } from './env';
 
 const PASSPORT = 'P7654321Z';
@@ -117,7 +117,7 @@ test.describe.serial('משפחה, פרופיל נוסע והזמנות', () => {
     // A trip + an offer for the viewer to look at.
     const created = await api.json(await api.post('/api/trips', { title: uniq('טיול-צופה-'), destination: 'Rome', start_date: futureDate(60), end_date: futureDate(65), traveler_ids: [] }));
     tripId = created.id;
-    const search = await flightSearch(api, { adults: 1 });
+    const search = await sharedFlightSearch(api);
 
     // --- owner creates the invitation
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);

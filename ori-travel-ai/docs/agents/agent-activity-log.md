@@ -49,3 +49,17 @@
 | 2026-11-12 ~15:50 | Agent B4 (חידוש) | תיקוני ביקורת AUD-01/04/05/09: terms_hash מכסה כל מה שהמאשר רואה, התאמת הרכב נוסעים להצעה, סירוב hosted-checkout ללא revalidate, checkout-link כ-POST. 82 בדיקות הזמנה | fable | ✅ |
 | 2026-11-12 ~15:55 | Agent F3 (חידוש) | התאמת מסכים: צורת צופה מצומצמת, reauth למחיקות, מחיקת משתמש, age_group⇔is_minor, שגיאות הזמנה, ספירות retention. 152 בדיקות web | sonnet | ✅ |
 | 2026-11-12 ~16:00 | מנהל | checkout-link POST בלקוח; migration 0001 נוצר מחדש ונבדק (SQLite + PostgreSQL 16, round-trip); AUD-22: login לא נחשב reauth | — | ✅ |
+
+## שלב V6 (הנחיית VIDEO-INSPIRED V6)
+
+| זמן (UTC) | גורם | פעולה | מודל שנדרש | תוצאה |
+|---|---|---|---|---|
+| 2026-11-12 ~14:15 | מנהל | קבלת V6. הסרטון לא הועלה כקובץ (רק ההנחיה), ולכן העבודה מתבססת על התיאור המילולי | claude-opus-5-5 | — |
+| 2026-11-12 ~14:16 | מנהל | worktree מבודד ב-5e79705 ושחזור בסיס ברקע (ruff, bandit, pip-audit, pytest SQLite+PG, alembic, web) | — | בביצוע |
+| 2026-11-12 ~14:20 | מנהל | חוזה V6 (`v6-flight-experience-contract.md`) ו-tokens חדשים (tangerine/sky/deal/heat) עם בדיקת ניגודיות | — | ✅ |
+| 2026-11-12 ~14:22 | Agent BE-CAL | הופעל: API ללוח מחירים, highlights, geo, ימים בלי טיסות ב-DEMO | opus | בביצוע |
+| 2026-11-12 ~14:22 | Agent FE-FLIGHT | הופעל: חוויית טיסות (heatmap, טבלה, כרטיס דיל, מפת מסלול) | opus | בביצוע |
+| 2026-11-12 ~14:22 | Agent UX-DS | הופעל: רענון מערכת עיצוב בהירה, dark mode, נגישות | opus | בביצוע |
+| 2026-11-12 ~14:22 | Agent BE-TRIPS | הופעל: זיהוי חפיפות בטיול, תקציב לנוסע, בדיקת נתוני רכבים ואטרקציות | sonnet | בביצוע |
+| 2026-11-12 ~14:22 | Agent BOOK-REDIRECT | הופעל: checkout מדומה באתר ספק (DEMO) מקצה לקצה | fable | בביצוע |
+| 2026-11-12 ~14:22 | Agent PROV-ANALYST | הופעל: אימות חוזר של תיעוד ספקים ומטריצת יכולות | sonnet | בביצוע |

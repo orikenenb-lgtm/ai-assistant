@@ -90,6 +90,36 @@
   --color-coral-700: #8c331f;
 
   /* Semantic aliases — prefer these in feature code */
+  /* V6 fare-comparison palette (contrast verified, see docs/release/design-system.md).
+     Warm tangerine = best/featured deal; sky = low prices / alternate dates. */
+  --color-tangerine-50: #fff6ef;
+  --color-tangerine-100: #ffe2cc;
+  --color-tangerine-200: #ffc9a1;
+  --color-tangerine-400: #f39050;
+  --color-tangerine-600: #b9520c; /* white text on it: 4.91:1 */
+  --color-tangerine-700: #a8480b; /* on white: 5.84:1 */
+  --color-tangerine-800: #7c3508; /* on tangerine-100: 7.17:1 */
+  --color-sky-50: #effaff;
+  --color-sky-100: #d4eefa;
+  --color-sky-200: #a9dcf3;
+  --color-sky-500: #2a93c6;
+  --color-sky-700: #14628a; /* on white: 6.68:1 */
+  --color-sky-800: #0f4c6b; /* on sky-100: 7.68:1 */
+
+  /* Semantic: featured deal */
+  --color-deal: var(--color-tangerine-700);
+  --color-deal-strong: var(--color-tangerine-600);
+  --color-deal-soft: var(--color-tangerine-50);
+  --color-deal-line: var(--color-tangerine-200);
+  /* Semantic: fare heatmap cells (dark ink text passes ≥ 8.9:1 on all of them).
+     Colour is never the only signal — cells also carry text/icons (see contract). */
+  --color-heat-best: #ffb27a; /* cheapest priced cell(s) */
+  --color-heat-low: #cfeefb; /* lowest third */
+  --color-heat-mid: #fdeaa8; /* middle third */
+  --color-heat-high: #ffd2b0; /* highest third */
+  --color-heat-none: var(--color-ink-50); /* searched, no offers */
+  --color-heat-unknown: var(--color-white); /* not searched */
+
   --color-canvas: var(--color-sand-50);
   --color-surface: var(--color-white);
   --color-surface-sunken: var(--color-sand-100);

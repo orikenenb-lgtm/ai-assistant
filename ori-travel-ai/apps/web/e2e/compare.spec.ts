@@ -1,10 +1,10 @@
 import { expect } from '@playwright/test';
 import { test } from './fixtures';
-import { flightSearch } from './data';
+import { sharedFlightSearch } from './data';
 
 test.describe('השוואת הצעות', () => {
   test('בחירת שתי הצעות, טבלת השוואה עם שורות ציון, וניקוי הבחירה', async ({ page, api }) => {
-    const search = await flightSearch(api, { nights: 5, adults: 2 });
+    const search = await sharedFlightSearch(api);
     await page.goto(`/search/flights?search_id=${search.search_id}`);
     const cards = page.locator('[data-testid="offer-card"]');
     await expect(cards.first()).toBeVisible();
