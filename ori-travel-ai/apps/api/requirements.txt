@@ -10,3 +10,5 @@ argon2-cffi==25.1.0
 cryptography==50.0.2
 python-bidi==0.6.12
 reportlab==5.1.0
+# IANA time zone database for zoneinfo on Windows (Linux uses the system tzdata)
+tzdata==2026.6

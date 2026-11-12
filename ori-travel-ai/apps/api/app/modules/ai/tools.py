@@ -354,7 +354,3 @@ def _save_offer(state: TurnState, args: dict[str, Any]) -> ToolOutcome:
         state.saved.append(offer_id)
     return ToolOutcome(json.dumps(result, ensure_ascii=False))
 
-
-def validate_args_for(category: str, args: dict[str, Any]):
-    """Exposed for tests: validate search-tool arguments exactly as the tool does."""
-    return parse_search_params({k: v for k, v in args.items() if k != "category"}, category)
