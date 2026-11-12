@@ -98,6 +98,16 @@ def cmd_seed_demo(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_verify_providers(args: argparse.Namespace) -> int:
+    from app.modules.providers.verify import verify_providers
+
+    report = verify_providers(search=not args.no_search)
+    for c in report.checks:
+        print(f"{'✓' if c.ok else '✗'} {c.name}: {c.detail}")
+    print("✓ כל הבדיקות עברו — Duffel (Sandbox) ו-ECB מחוברים" if report.ok else "✗ לא כל הבדיקות עברו — ראו למעלה")
+    return 0 if report.ok else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.cli", description="Ori Travel AI utilities")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -110,6 +120,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--allow-additional", action="store_true")
     p.set_defaults(fn=cmd_create_owner)
     sub.add_parser("seed-demo", help="Create demo family members and a sample trip").set_defaults(fn=cmd_seed_demo)
+    v = sub.add_parser("verify-providers", help="Check Duffel sandbox + ECB against their real APIs (no secrets shown)")
+    v.add_argument("--no-search", action="store_true", help="Skip the single TLV-ATH sandbox search")
+    v.set_defaults(fn=cmd_verify_providers)
     args = parser.parse_args(argv)
     return int(args.fn(args))
 

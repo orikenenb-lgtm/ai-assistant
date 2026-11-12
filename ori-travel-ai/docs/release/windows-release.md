@@ -190,3 +190,25 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start.ps1 -Lan
 
 התקנה נקייה מ-clone של הענף על Python 3.13 ו-Node 22: `setup.sh` כ-23 שניות (כולל `npm ci`), `start.sh app --rebuild --port 8091` עלה אחרי כ-15 שניות כולל בניית הממשק.
 `/api/health` ו-`/api/ready` החזירו 200; `/` ונתיב עמוק של ה-SPA הוגשו כ-HTML; כניסה עם CSRF עבדה; `Host: evil.example` ו-Host של LAN שלא ברשימה נדחו ב-400; עם `ORI_ALLOWED_HOSTS` שכולל כתובת LAN, בקשה עם אותו Host התקבלה, כולל כניסה ופעולה משנת-מצב עם Origin תואם.
+
+## הפעלת ספקים מאומתים: Duffel sandbox ושערי ECB
+
+אחרי ששמרתם `ORI_DUFFEL_ACCESS_TOKEN=duffel_test_…` בקובץ `apps\api\.env`, מריצים:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\enable-live-providers.ps1
+```
+
+מה הסקריפט עושה:
+
+1. **בודק את הטוקן.** הוא חייב להיות קיים, ולהיות טוקן בדיקה. טוקן חי עוצר את הסקריפט. הערך לא מוצג אף פעם.
+2. **בודק הגדרות מסוכנות.** הסקריפט נעצר בלי לשנות כלום אם מופעלים ביצוע הזמנות חי או AI בתשלום, או אם יש בקובץ מפתחות לספקים חיים אחרים.
+3. **מגבה ומעדכן את `.env`.** הגיבוי נשמר ב-`apps\api\data\backups`, ואז הסקריפט מגדיר שני דגלים בלבד: `ORI_LIVE_PROVIDERS_ENABLED=true` ו-`ORI_FX_LIVE_ENABLED=true`.
+4. **עוצר רק את שרת ORI Travel AI**, כלומר python של ה-venv שמריץ את `uvicorn app.main:app`.
+5. **מריץ `python -m app.cli verify-providers`**, שמבצע:
+   * בדיקת חיבור אמיתית ל-Duffel.
+   * חיפוש sandbox אחד TLV→ATH. חייב לחזור `live_mode=false`, והאפליקציה חייבת לסמן את ההצעות `SANDBOX`.
+   * בדיקה של שערי ECB, שחייבים לחזור במצב `LIVE`.
+6. **מפעיל את האפליקציה בחלון חדש.** כדי לדלג על השלב הזה מוסיפים `-NoStart`.
+
+הזמנה אמיתית חסומה בקוד בלי קשר להגדרות, והצעות Sandbox לא ניתנות להזמנה.
