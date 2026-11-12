@@ -1,4 +1,11 @@
-"""Trip budget: totals per currency (never mixed or silently converted), per kind, remaining, warnings."""
+"""Trip budget: totals per currency (never mixed or silently converted), per kind, remaining, warnings.
+
+Overlap policy: items flagged as overlapping (``OVERLAPS`` warning) are STILL counted in every total -
+an overlap is a scheduling conflict, not a cost exclusion; only ``cost_status == "excluded"`` removes a cost.
+
+``per_traveler`` = counted (known + estimated) / number of trip travelers, only when every counted
+cost is in one currency and there is at least one traveler; otherwise null with ``per_traveler_reason``.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +16,7 @@ from app.core.db import utcnow
 from app.core.money import from_minor, quantize
 from app.models.trips import Trip, TripItem
 from app.modules.itineraries.schemas import BudgetCurrencyRow, BudgetKindRow, BudgetOut, BudgetWarning
+from app.modules.itineraries.overlaps import find_overlaps
 from app.modules.itineraries.service import snapshot_expired
 from app.schemas.common import Money
 
@@ -119,6 +127,33 @@ def compute_budget(trip: Trip) -> BudgetOut:
                 item_ids=demo,
             )
         )
+    overlaps = find_overlaps(items)
+    if overlaps:
+        involved = list(dict.fromkeys(i for o in overlaps for i in (o.item_id, o.other_item_id)))
+        warnings.append(
+            BudgetWarning(
+                code="OVERLAPS",
+                message=(
+                    f"נמצאו {len(overlaps)} חפיפות בזמנים בין פריטים בטיול. "
+                    "העלויות של הפריטים החופפים עדיין נספרות בתקציב."
+                ),
+                item_ids=involved,
+            )
+        )
+
+    traveler_count = len(trip.travelers)
+    per_traveler: Money | None = None
+    if not counted_currencies:
+        per_reason = "no_costs"
+    elif len(counted_currencies) > 1:
+        per_reason = "mixed_currencies"
+    elif traveler_count <= 0:
+        per_reason = "no_travelers"
+    else:
+        cur = next(iter(counted_currencies))
+        total = next((r.counted for r in totals if r.currency == cur), Decimal(0))
+        per_traveler = Money(amount=quantize(total / traveler_count, cur), currency=cur)
+        per_reason = "ok"
     return BudgetOut(
         trip_id=trip.id,
         budget=budget,
@@ -127,5 +162,8 @@ def compute_budget(trip: Trip) -> BudgetOut:
         remaining=remaining,
         remaining_reason=reason,  # type: ignore[arg-type]
         over_budget=over,
+        per_traveler=per_traveler,
+        per_traveler_reason=per_reason,  # type: ignore[arg-type]
+        traveler_count=traveler_count,
         warnings=warnings,
     )

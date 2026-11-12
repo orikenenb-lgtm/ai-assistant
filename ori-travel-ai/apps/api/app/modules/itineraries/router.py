@@ -10,6 +10,7 @@ from app.core.deps import AuthContext, current_user, require_editor
 from app.modules.itineraries import service
 from app.modules.itineraries.budget import compute_budget
 from app.modules.itineraries.ics import build_ics
+from app.modules.itineraries.overlaps import find_overlaps
 from app.modules.itineraries.pdf import build_trip_pdf
 from app.modules.itineraries.schemas import (
     BudgetOut,
@@ -76,9 +77,12 @@ def item_from_offer(
     trip_id: str, body: FromOfferIn, request: Request, ctx: AuthContext = Depends(require_editor), db: Session = Depends(get_db)
 ):
     trip = service.get_trip(db, trip_id)
-    items = service.add_items_from_offer(db, ctx.user, trip, body.offer_id, request)
-    outs = [service.item_out(i, trip) for i in items]
-    return FromOfferOut(item=outs[0], items=outs)
+    items = service.add_items_from_offer(db, ctx.user, trip, body.offer_id, request, allow_overlap=body.allow_overlap)
+    all_overlaps = find_overlaps(trip.items)
+    outs = [service.item_out(i, trip, all_overlaps) for i in items]
+    ids = {i.id for i in items}
+    batch = [o for o in all_overlaps if o.item_id in ids or o.other_item_id in ids]
+    return FromOfferOut(item=outs[0], items=outs, overlaps=batch)
 
 
 @router.post("/{trip_id}/items/reorder", response_model=TripDetail)

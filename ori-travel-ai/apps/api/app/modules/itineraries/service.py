@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta, tzinfo
 from decimal import Decimal
 from zoneinfo import ZoneInfo
@@ -14,14 +15,16 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.core.audit import record_audit
 from app.core.db import utcnow
-from app.core.errors import NotFoundError
+from app.core.errors import ConflictError, NotFoundError
 from app.core.money import from_minor, to_minor
 from app.models.auth import User
+from app.models._common import new_id
 from app.models.family import FamilyMember
 from app.models.trips import Trip, TripItem, TripTraveler
 from app.modules.itineraries.schemas import (
     CurrencyTotal,
     DayOut,
+    OverlapOut,
     TravelerOut,
     TripCreate,
     TripDetail,
@@ -31,6 +34,7 @@ from app.modules.itineraries.schemas import (
     TripSummary,
     TripUpdate,
 )
+from app.modules.itineraries.overlaps import find_overlaps, overlaps_for
 from app.modules.providers.errors import UnprocessableError
 from app.modules.search.service import get_offer
 from app.schemas.common import Money
@@ -116,8 +120,11 @@ def snapshot_expired(snapshot: dict | None, now: datetime | None = None) -> bool
     return exp < (now or utcnow())
 
 
-def item_out(item: TripItem, trip: Trip) -> TripItemOut:
+def item_out(item: TripItem, trip: Trip, overlaps: list[OverlapOut] | None = None) -> TripItemOut:
+    """``overlaps`` = all trip overlaps (``trip_detail`` passes them in); computed here when omitted."""
     snap = item.offer_snapshot
+    if overlaps is None:
+        overlaps = find_overlaps(trip.items)
     return TripItemOut(
         id=item.id,
         trip_id=item.trip_id,
@@ -138,6 +145,7 @@ def item_out(item: TripItem, trip: Trip) -> TripItemOut:
         offer_snapshot=snap,
         data_mode=snapshot_mode(snap),  # type: ignore[arg-type]
         offer_expired=snapshot_expired(snap),
+        overlaps=overlaps_for(overlaps, item.id),
         created_at=item.created_at,
         updated_at=item.updated_at,
     )
@@ -245,13 +253,15 @@ def trip_detail(db: Session, trip: Trip) -> TripDetail:
     members.sort(key=lambda m: (m.display_name, m.id))
     days, unscheduled = group_days(trip)
     items = sorted(trip.items, key=lambda i: (i.sort_order, i.created_at))
+    overlaps = find_overlaps(trip.items)
     return TripDetail(
         **_summary_fields(trip),
         notes=trip.notes,
         travelers=[TravelerOut.model_validate(m) for m in members],
-        items=[item_out(i, trip) for i in items],
+        items=[item_out(i, trip, overlaps) for i in items],
         days=days,
         unscheduled_item_ids=unscheduled,
+        overlaps=overlaps,
     )
 
 
@@ -378,13 +388,67 @@ def _next_sort_order(trip: Trip) -> int:
     return max((i.sort_order for i in trip.items), default=-1) + 1
 
 
+@dataclass
+class _Candidate:
+    """An item that is about to be saved (not in the session yet)."""
+
+    id: str
+    kind: str
+    title: str
+    start_at: datetime | None
+    end_at: datetime | None
+
+
+def _enforce_no_overlap(
+    trip: Trip, candidates: list, *, allow: bool, replacing: str | None = None, only_new: bool = False
+) -> None:
+    """Raise 409 ITEM_OVERLAP when saving ``candidates`` creates a forbidden overlap and ``allow`` is false.
+
+    ``only_new`` (updates): ignore pairs that already overlapped before the edit.
+    """
+    if allow:
+        return
+    existing = [i for i in trip.items if i.id != replacing]
+    ids = {c.id for c in candidates}
+    found = [o for o in find_overlaps([*existing, *candidates]) if o.item_id in ids or o.other_item_id in ids]
+    if only_new and replacing:
+        before = {
+            frozenset((o.item_id, o.other_item_id))
+            for o in find_overlaps(trip.items)
+            if replacing in (o.item_id, o.other_item_id)
+        }
+        found = [o for o in found if frozenset((o.item_id, o.other_item_id)) not in before]
+    if not found:
+        return
+    titles = {i.id: i.title for i in [*existing, *candidates]}
+    details = []
+    for o in found:
+        other = o.other_item_id if o.item_id in ids else o.item_id
+        d = o.model_dump()
+        d["conflicts_with_item_id"] = other
+        d["conflicts_with_title"] = titles.get(other)
+        details.append(d)
+    raise ConflictError(
+        "הפריט חופף בזמן לפריט אחר בטיול: " + found[0].message,
+        code="ITEM_OVERLAP",
+        details=details,
+    )
+
+
 def create_item(db: Session, user: User, trip: Trip, body: TripItemCreate, request: Request | None = None) -> TripItem:
     tz = validate_timezone(body.timezone)
     fallback = zone_of(tz, trip.timezone)
     start = to_utc(body.start_at, fallback) if body.start_at else None
     end = to_utc(body.end_at, fallback) if body.end_at else None
     _validate_item_state(start_at=start, end_at=end, cost=body.cost, cost_status=body.cost_status)
+    new_item_id = new_id()
+    _enforce_no_overlap(
+        trip,
+        [_Candidate(new_item_id, body.kind, body.title, start, end)],
+        allow=body.allow_overlap,
+    )
     item = TripItem(
+        id=new_item_id,
         trip_id=trip.id,
         kind=body.kind,
         title=body.title,
@@ -427,6 +491,22 @@ def update_item(
         cost = _money(item.cost_amount_minor, item.cost_currency)
     status = body.cost_status if "cost_status" in fields else item.cost_status
     _validate_item_state(start_at=start, end_at=end, cost=cost, cost_status=status or "estimate")
+    if fields & {"kind", "title", "start_at", "end_at", "timezone"}:
+        _enforce_no_overlap(
+            trip,
+            [
+                _Candidate(
+                    item.id,
+                    body.kind if "kind" in fields and body.kind else item.kind,
+                    body.title if "title" in fields and body.title else item.title,
+                    start,
+                    end,
+                )
+            ],
+            allow=body.allow_overlap,
+            replacing=item.id,
+            only_new=True,
+        )
 
     if "kind" in fields:
         item.kind = body.kind  # type: ignore[assignment]
@@ -580,7 +660,7 @@ def _specs_from_offer(offer: CanonicalOffer, trip: Trip) -> list[dict]:
 
 
 def add_items_from_offer(
-    db: Session, user: User, trip: Trip, offer_id: str, request: Request | None = None
+    db: Session, user: User, trip: Trip, offer_id: str, request: Request | None = None, allow_overlap: bool = False
 ) -> list[TripItem]:
     offer = get_offer(db, offer_id)
     specs = _specs_from_offer(offer, trip)
@@ -617,8 +697,15 @@ def add_items_from_offer(
         else:
             item.cost_status = "excluded"
             item.notes = "המחיר מופיע בפריט הראשון של אותה הצעה (מחיר כולל לכל הטיסות)"
-        trip.items.append(item)
+        item.id = new_id()
         created.append(item)
+    _enforce_no_overlap(
+        trip,
+        [_Candidate(i.id, i.kind, i.title, i.start_at, i.end_at) for i in created],
+        allow=allow_overlap,
+    )
+    for item in created:
+        trip.items.append(item)
     trip.updated_at = utcnow()
     db.flush()
     record_audit(

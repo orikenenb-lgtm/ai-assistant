@@ -235,3 +235,23 @@
 1. **Duffel:** חיפושים בלי הזמנות עלולים להיות מחויבים; השאירו את `daily_search_cap` נמוך, אל תפעילו מעקב מחירים אוטומטי על Duffel, ואל תעברו לטוקן חי בלי בדיקת מחירון ותנאי שירות (וזכאות של יחיד להפעלת חשבון חי: לא אומתה).
 2. **Viator:** אין עלות לפי המחקר, אך יש לבדוק בתנאי השותפות מגבלות על שמירת מחירים/תוכן ועל הצגת מחיר "החל מ".
 3. כל הפורמטים והמזהים המסומנים "לא אומת" דורשים בדיקת עשן ידנית מול חשבון בדיקה לפני שימוש.
+
+## אימות חוזר V6
+
+תאריך: 2026-11-12 (UTC). פירוט מלא ב-`provider-capability-matrix.md`.
+
+- **נסיון קריאת דפים רשמיים:** כל 10 קריאות `WebFetch` (Duffel x2, ECB, Viator, OSM, Booking, Expedia, Amadeus, בנק ישראל, Tiqets) נכשלו ב-`getaddrinfo ENOTFOUND <host>` - הדומיינים אינם ברשימת הרשת המותרת של הסשן. `WebSearch` עבד והחזיר תקצירים בלבד. **אין עובדה שאומתה מול דף רשמי שנפתח.**
+- **נתמך בתקצירים:** `Duffel-Version: v2`; `POST /air/offer_requests` ו-`GET /air/offers`; test mode עם "Duffel Airways" ומחירים לא ריאליסטיים; שגיאת `rate_limit_exceeded` וכותרת `ratelimit-reset`; Viator Basic: `exp-api-key` + `Accept: application/json;version=2.0` + `POST /products/search`, ללא `/modified-since`; Booking Demand: Managed Affiliate Partner, Bearer + `X-Affiliate-Id`; Expedia Lodging: חתימת SHA-512, ושאר מוצרי Rapid ב-OAuth 2.0; Amadeus Self-Service הוסר (עיתונות, תאריך 17.7.2026 מצד שלישי).
+- **עלויות Duffel (צד שלישי, לאמת):** ~3$ להזמנה, ~2$ לשירות נלווה, ~1% Managed Content, עמלת חיפוש עודף מעל 1500:1.
+- **פערים לתיקון (ללא עריכת קוד בסבב זה):**
+  - `viator.py:73-89` מזהי יעד לא אומתו; לבדוק מול נקודת destinations הרשמית (מקורות סותרים בין `/destinations` ל-`/taxonomy/destinations`).
+  - `viator.py:92` רשימת מטבעות מנוחשת; ILS נשלח כ-USD.
+  - `viator.py:204-213` גוף הבקשה (`startDate`/`endDate`, `sorting.sort="DEFAULT"`, `pagination`) לא אומת.
+  - `viator.py:153` `Accept-Language: he` ו-sandbox host (שורות 61-64) לא אומתו.
+  - `duffel.py:336` `return_offers=false` מופיע רק בתיעוד צד שלישי; `duffel.py:305` `{"age": n}` לא אומת.
+  - `tests/fixtures/live/duffel_error_422.json`: הקוד `validation_required` על תאריך עבר חשוד כלא מתאים.
+  - `expedia_rapid.py:142` כתובת התיעוד כנראה ישנה (`/rapid/setup`).
+  - `booking_demand.py`: ה-API כולל גם cars; ההערה מתייחסת למלונות בלבד.
+  - `fx.py:87` כתובת ECB לא נפתחה.
+- **חלופות רכב/פעילויות:** Tiqets Distributor API (חינם לפי מקורות, דורש Agreement), Klook, GetYourGuide - כולן `UNVERIFIED` לזכאות יחיד; Discover Cars/Rentalcars - לא נמצא מידע.
+- כל הספקים נשארים **MOCK ONLY / DISCONNECTED / BLOCKED**; לא בוצעה קריאה אמיתית.
