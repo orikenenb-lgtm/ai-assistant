@@ -1,8 +1,8 @@
 import { ChevronDown, Minus, Plus, Search, X } from 'lucide-react';
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Button, Callout, Field, Input, NativeSelect, buttonClasses } from '@/components/ui';
+import { Button, Callout, Field, Input, NativeSelect, buttonClasses, controlClasses } from '@/components/ui';
 import { cn } from '@/lib/cn';
-import { findPlace, searchPlaces } from '../airports';
+import { PLACES, findPlace, searchPlaces, type Place } from '../airports';
 import { CURRENCIES, errorFor, type FieldErrors } from '../forms/common';
 
 // ---------------------------------------------------------------- Stepper --
@@ -116,6 +116,9 @@ export function ChildAgesEditor({ ages, onChange, max, error, className }: Child
 
 // ------------------------------------------------------- Airport combobox --
 
+/** Small muted field label used by the compact flight search header. */
+export const COMPACT_LABEL = 'text-xs font-medium text-fg-muted';
+
 export interface PlaceComboboxProps {
   label: string;
   value: string;
@@ -128,16 +131,33 @@ export interface PlaceComboboxProps {
   placeholder?: string;
   className?: string;
   inputName?: string;
+  /** Suggestion list (default: the bundled client list). Flights pass the `/api/geo/airports` dataset. */
+  places?: readonly Place[];
+  /** Visual density: "compact" uses a small muted label (search header). */
+  density?: 'default' | 'compact';
 }
 
-/** Accessible combobox (ARIA 1.2 listbox pattern) over a small airport list; free text still allowed. */
-export function PlaceCombobox({ label, value, onChange, mode = 'iata', error, hint, required, placeholder, className, inputName }: PlaceComboboxProps) {
+/** Accessible combobox (ARIA 1.2 listbox pattern) over an airport list; free text still allowed. */
+export function PlaceCombobox({
+  label,
+  value,
+  onChange,
+  mode = 'iata',
+  error,
+  hint,
+  required,
+  placeholder,
+  className,
+  inputName,
+  places = PLACES,
+  density = 'default',
+}: PlaceComboboxProps) {
   const listId = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const options = useMemo(() => searchPlaces(value), [value]);
-  const resolved = findPlace(value);
+  const options = useMemo(() => searchPlaces(value, 8, places), [value, places]);
+  const resolved = findPlace(value, places);
   const showList = open && options.length > 0;
 
   function select(code: string) {
@@ -151,8 +171,18 @@ export function PlaceCombobox({ label, value, onChange, mode = 'iata', error, hi
       label={label}
       required={required}
       error={error}
-      hint={hint ?? (resolved ? `${resolved.city} · ${resolved.name}` : mode === 'iata' ? 'קוד IATA בן 3 אותיות, או שם עיר לחיפוש' : undefined)}
+      hint={
+        hint ??
+        (resolved ? (
+          <span className={density === 'compact' ? 'block truncate' : undefined} title={density === 'compact' ? `${resolved.city} · ${resolved.name}` : undefined}>
+            {resolved.city} · {resolved.name}
+          </span>
+        ) : mode === 'iata' ? (
+          'קוד IATA בן 3 אותיות, או שם עיר לחיפוש'
+        ) : undefined)
+      }
       className={className}
+      labelClassName={density === 'compact' ? COMPACT_LABEL : undefined}
     >
       <div
         className="relative"
@@ -230,6 +260,125 @@ export function PlaceCombobox({ label, value, onChange, mode = 'iata', error, hi
         )}
       </div>
     </Field>
+  );
+}
+
+// -------------------------------------------------------- Travelers picker --
+
+export interface TravelersPickerProps {
+  adults: number;
+  childrenAges: number[];
+  onAdults: (n: number) => void;
+  onChildrenAges: (ages: number[]) => void;
+  maxTravellers: number;
+  error?: ReactNode;
+  className?: string;
+}
+
+export function travellersSummary(adults: number, children: number): string {
+  const a = adults === 1 ? 'מבוגר אחד' : `${adults} מבוגרים`;
+  if (!children) return a;
+  return `${a} · ${children === 1 ? 'ילד אחד' : `${children} ילדים`}`;
+}
+
+/**
+ * Compact "who is travelling" control: a disclosure button showing the summary, opening a small panel with the adults
+ * stepper and per-child ages. Escape / outside click closes it and returns focus to the button.
+ */
+export function TravelersPicker({ adults, childrenAges, onAdults, onChildrenAges, maxTravellers, error, className }: TravelersPickerProps) {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const close = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) buttonRef.current?.focus();
+  };
+  return (
+    <div
+      ref={wrapRef}
+      className={cn('relative flex flex-col gap-1.5', className)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && open) {
+          e.preventDefault();
+          e.stopPropagation();
+          close(true);
+        }
+      }}
+      onBlur={(e) => {
+        if (open && !wrapRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
+      <span id={`${id}-label`} className={COMPACT_LABEL}>
+        נוסעים
+      </span>
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-expanded={open}
+        aria-controls={`${id}-panel`}
+        aria-labelledby={`${id}-label ${id}-value`}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+        onClick={() => setOpen((v) => !v)}
+        className={cn(controlClasses, 'flex h-10 items-center justify-between gap-2 px-3 text-start')}
+      >
+        <span id={`${id}-value`} className="truncate">
+          {travellersSummary(adults, childrenAges.length)}
+        </span>
+        <ChevronDown className={cn('size-4 shrink-0 text-fg-subtle transition-transform', open && 'rotate-180')} aria-hidden="true" />
+      </button>
+      {error && (
+        <p id={`${id}-error`} className="text-sm text-coral-700" role="alert">
+          {error}
+        </p>
+      )}
+      <div
+        id={`${id}-panel`}
+        role="group"
+        aria-label="בחירת נוסעים"
+        hidden={!open}
+        className="absolute inset-x-0 top-full z-30 mt-1.5 flex flex-col gap-4 rounded-xl border border-line bg-surface p-4 shadow-lg md:inset-x-auto md:end-0 md:w-80"
+      >
+        <Stepper
+          label="מבוגרים"
+          value={adults}
+          min={1}
+          max={maxTravellers}
+          onChange={onAdults}
+          hint={`עד ${maxTravellers} נוסעים בסך הכול`}
+        />
+        <ChildAgesEditor ages={childrenAges} onChange={onChildrenAges} max={Math.min(8, maxTravellers - adults)} />
+        <div className="flex justify-end border-t border-line pt-3">
+          <Button size="sm" variant="secondary" onClick={() => close(true)}>
+            סיום
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------ inline select --
+
+export interface InlineSelectProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: Array<{ value: string; label: string }>;
+  className?: string;
+}
+
+/** Label + small select on one line (search header toolbar). */
+export function InlineSelect({ label, value, onChange, options, className }: InlineSelectProps) {
+  const id = useId();
+  return (
+    <div className={cn('flex items-center gap-2', className)}>
+      <label htmlFor={id} className="shrink-0 text-xs font-medium text-fg-muted">
+        {label}
+      </label>
+      <NativeSelect id={id} value={value} options={options} onChange={(e) => onChange(e.target.value)} className="min-w-28" />
+    </div>
   );
 }
 

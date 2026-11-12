@@ -2,7 +2,11 @@
  * Small client-side airport/city list for the combobox (matches the places the
  * demo providers know about). Free text is still accepted: providers resolve any
  * valid IATA code and the server validates it.
+ *
+ * Since V6 the flight combobox prefers `/api/geo/airports` (see `airportsApi.ts`) and falls back to this list.
  */
+import type { GeoAirport } from '@/lib/schemas/geo';
+
 export interface Place {
   code: string;
   /** Hebrew city name. */
@@ -83,20 +87,45 @@ export const PLACES: Place[] = [
 
 const BY_CODE = new Map(PLACES.map((p) => [p.code, p]));
 
-export function findPlace(code: string): Place | undefined {
-  return BY_CODE.get(code.trim().toUpperCase());
+/** Lookup by code in `list` (default: the bundled client list). */
+export function findPlace(code: string, list: readonly Place[] = PLACES): Place | undefined {
+  const key = code.trim().toUpperCase();
+  if (list === PLACES) return BY_CODE.get(key);
+  return list.find((p) => p.code === key);
+}
+
+/** Converts `/api/geo/airports` rows into combobox places; Hebrew country names come from the client list when known. */
+export function placesFromGeo(airports: ReadonlyArray<GeoAirport>): Place[] {
+  const countryHe = new Map<string, string>();
+  for (const a of airports) {
+    const known = BY_CODE.get(a.code);
+    if (known && a.country_code) countryHe.set(a.country_code, known.country);
+  }
+  const out: Place[] = airports.map((a) => ({
+    code: a.code,
+    city: a.city_he,
+    name: a.name_he,
+    english: `${a.city_en} ${a.name_en}`,
+    country: BY_CODE.get(a.code)?.country ?? (a.country_code ? (countryHe.get(a.country_code) ?? a.country_code) : ''),
+  }));
+  // Metropolitan codes (ROM, PAR, LON) are city codes, not airports — keep them from the client list.
+  const codes = new Set(out.map((p) => p.code));
+  for (const p of PLACES) if (p.metro && !codes.has(p.code)) out.push(p);
+  return out;
 }
 
 function norm(s: string): string {
   return s.toLowerCase().replace(/[׳'’"״]/g, '');
 }
 
+const POPULAR = ['TLV', 'ATH', 'LCA', 'LHR', 'JFK', 'FCO', 'BCN', 'BKK'];
+
 /** Case-insensitive search by code prefix, Hebrew city/airport/country or English name. Codes rank first. */
-export function searchPlaces(query: string, limit = 8): Place[] {
+export function searchPlaces(query: string, limit = 8, list: readonly Place[] = PLACES): Place[] {
   const q = norm(query.trim());
-  if (!q) return PLACES.filter((p) => ['TLV', 'ATH', 'LCA', 'LHR', 'JFK', 'FCO', 'BCN', 'BKK'].includes(p.code)).slice(0, limit);
+  if (!q) return POPULAR.map((c) => list.find((p) => p.code === c)).filter((p): p is Place => !!p).slice(0, limit);
   const scored: Array<{ p: Place; s: number }> = [];
-  for (const p of PLACES) {
+  for (const p of list) {
     const code = p.code.toLowerCase();
     let s = 0;
     if (code === q) s = 100;

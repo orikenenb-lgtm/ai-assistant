@@ -1276,4 +1276,5 @@ def test_checkout_link_is_post_with_csrf(live, db):
     assert count(db, AuditEvent, action="booking.checkout_link") == 0
     c.headers["X-CSRF-Token"] = token
     res = c.post(f"{B}/{bid}/checkout-link")
-    assert res.status_code == 200 and set(res.json()) == {"url", "provider_id", "provider_name", "instructions", "warnings"}
+    assert res.status_code == 200 and set(res.json()) == {"url", "provider_id", "provider_name", "instructions", "warnings",
+                                                         "is_demo"} and res.json()["is_demo"] is False

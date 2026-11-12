@@ -1,6 +1,14 @@
 import { Checkbox, Field, Input, NativeSelect } from '@/components/ui';
+import { cabinLabel } from '@/features/offers/labels';
 import type { Category } from '@/lib/schemas/common';
-import type { OfferFilters } from '../filters';
+import type { DepartWindow, OfferFilters } from '../filters';
+
+const WINDOW_FILTER_LABELS: Record<DepartWindow, string> = {
+  morning: 'בוקר (05:00–12:00)',
+  afternoon: 'צהריים (12:00–17:00)',
+  evening: 'ערב (17:00–21:00)',
+  night: 'לילה (21:00–05:00)',
+};
 
 export interface FilterPanelProps {
   category: Category;
@@ -9,6 +17,10 @@ export interface FilterPanelProps {
   providers: Array<{ id: string; name: string }>;
   carriers: string[];
   currency: string;
+  /** Cabins present in the results (flights) — the cabin filter only shows when there are two or more. */
+  cabins?: Array<{ value: string; count: number }>;
+  /** Outbound departure windows present in the results, with counts (flights). */
+  windows?: ReadonlyMap<DepartWindow, number>;
 }
 
 function toggle(list: string[], v: string): string[] {
@@ -28,7 +40,7 @@ function CheckList({ legend, items, value, onChange }: { legend: string; items: 
 }
 
 /** Quick client-side filters (no network). What's offered depends on the category. */
-export function FilterPanel({ category, filters: f, onChange, providers, carriers, currency }: FilterPanelProps) {
+export function FilterPanel({ category, filters: f, onChange, providers, carriers, currency, cabins = [], windows }: FilterPanelProps) {
   return (
     <section aria-labelledby="filters-title" className="flex flex-col gap-4">
       <h3 id="filters-title" className="text-sm font-bold text-fg">
@@ -59,7 +71,34 @@ export function FilterPanel({ category, filters: f, onChange, providers, carrier
               ]}
             />
           </Field>
-          <Checkbox label="כולל מזוודה לבטן" checked={f.checkedBag} onChange={(e) => onChange({ checkedBag: e.target.checked })} />
+          <Checkbox
+            label="כולל מזוודה לבטן"
+            description="רק הצעות שבהן הספק מציין מזוודה לבטן כלולה במחיר"
+            checked={f.checkedBag}
+            onChange={(e) => onChange({ checkedBag: e.target.checked })}
+          />
+          <Field label="שעת המראה (הלוך)">
+            <NativeSelect
+              value={f.departWindow}
+              onChange={(e) => onChange({ departWindow: e.target.value as OfferFilters['departWindow'] })}
+              options={[
+                { value: '', label: 'כל שעה' },
+                ...(Object.keys(WINDOW_FILTER_LABELS) as DepartWindow[]).map((w) => ({
+                  value: w,
+                  label: `${WINDOW_FILTER_LABELS[w]} · ${windows?.get(w) ?? 0}`,
+                })),
+              ]}
+            />
+          </Field>
+          {(cabins.length > 1 || f.cabin !== '') && (
+            <Field label="מחלקה">
+              <NativeSelect
+                value={f.cabin}
+                onChange={(e) => onChange({ cabin: e.target.value })}
+                options={[{ value: '', label: 'כל המחלקות' }, ...cabins.map((c) => ({ value: c.value, label: `${cabinLabel(c.value)} · ${c.count}` }))]}
+              />
+            </Field>
+          )}
           {carriers.length > 1 && (
             <CheckList
               legend="חברת תעופה"

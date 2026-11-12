@@ -154,8 +154,10 @@ def test_pdf_many_items_paginates(auth_client):
     c = auth_client("adult")
     t = make_trip(c)
     for i in range(80):
+        # This test is about PDF pagination, not scheduling: the 80 activities intentionally
+        # share start times, so the user-confirmed overlap flag is set (V6 overlap rule).
         add(c, t["id"], "activity", f"פעילות מספר {i}", ("10", "ILS"), "known",
-            start_at=f"2026-12-{1 + i % 20:02d}T09:00:00Z")
+            start_at=f"2026-12-{1 + i % 20:02d}T09:00:00Z", allow_overlap=True)
     data = c.get(f"/api/trips/{t['id']}/export.pdf").content
     assert data.startswith(b"%PDF")
     assert data.count(b"/Type /Page\n") + data.count(b"/Type /Page ") >= 3 or data.count(b"/Type /Page") >= 3

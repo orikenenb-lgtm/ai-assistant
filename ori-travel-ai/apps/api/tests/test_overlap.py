@@ -121,9 +121,9 @@ def test_from_offer_overlap(auth_client):
 def test_budget_overlaps_warning_counts_costs_and_per_traveler(auth_client, db):
     c = auth_client("adult")
     t = make_trip(c, budget={"amount": "1000.00", "currency": "ILS"})
-    post(c, t["id"], "activity", "2026-12-01T09:00:00Z", "2026-12-01T11:00:00Z", cost={"amount": "100", "currency": "ILS"}, cost_status="known")
-    post(c, t["id"], "activity", "2026-12-01T10:00:00Z", "2026-12-01T12:00:00Z", cost={"amount": "50", "currency": "ILS"},
-         cost_status="known", allow_overlap=True)
+    ils = lambda n: {"amount": n, "currency": "ILS"}  # noqa: E731
+    post(c, t["id"], "activity", "2026-12-01T09:00:00Z", "2026-12-01T11:00:00Z", cost=ils("100"), cost_status="known")
+    post(c, t["id"], "activity", "2026-12-01T10:00:00Z", "2026-12-01T12:00:00Z", cost=ils("50"), cost_status="known", allow_overlap=True)
     b = c.get(f"/api/trips/{t['id']}/budget").json()
     w = next(w for w in b["warnings"] if w["code"] == "OVERLAPS")
     assert len(w["item_ids"]) == 2

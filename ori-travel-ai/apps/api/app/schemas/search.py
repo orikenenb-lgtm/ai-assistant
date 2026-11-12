@@ -177,6 +177,20 @@ class ProviderRun(ApiModel):
     fetched_at: datetime | None = None
 
 
+class SearchHighlights(ApiModel):
+    """Notable offers of ONE search (V6 contract §2), computed after filters/dedupe.
+
+    Only offers in the dominant currency (most offers) are compared — no FX.
+    """
+
+    currency: CurrencyCode
+    cheapest_offer_id: str
+    fastest_offer_id: str | None = None  # flights only
+    best_score_offer_id: str
+    comparable_count: int
+    note: str  # Hebrew: "cheapest among the offers found", never "cheapest in the market"
+
+
 class SearchResponse(ApiModel):
     search_id: str
     category: Category
@@ -192,3 +206,5 @@ class SearchResponse(ApiModel):
     coverage_note: str
     has_demo_results: bool = False
     has_live_results: bool = False
+    # V6 (additive): null when there are no offers
+    highlights: SearchHighlights | None = None

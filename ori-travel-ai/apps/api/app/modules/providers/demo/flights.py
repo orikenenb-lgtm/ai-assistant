@@ -5,6 +5,24 @@ D1-D5, names suffixed "(דמו)"). Both providers resell a shared deterministic
 "market" schedule, so the same flight numbers/times/fare brand appear at both
 (at slightly different prices) and get merged by dedupe, while fare brands
 that only one provider sells (e.g. "לייט" at Skyline) stay separate.
+
+No-service days (DEMO, deterministic — see ``service_status``)
+---------------------------------------------------------------
+So that the fare calendar shows real "no flights" cells, the shared market is
+EMPTY (both DEMO providers return zero offers) on:
+
+1. **Weekly non-operating days of thin routes.** A route is a *trunk* route
+   when BOTH airports are in ``DAILY_SERVICE_AIRPORTS`` (Ben Gurion + the main
+   year-round hubs/capitals: ATH, LCA, FCO, CDG, LHR, JFK, ...). Trunk routes
+   operate every day. Every other route (Greek/Spanish islands, secondary
+   airports, Eilat, long-haul leisure, ...) is *thin*: it has 1-3 weekdays
+   without service, seeded by the UNORDERED airport pair (same weekdays in
+   both directions, like a real out-and-back rotation). Example: TLV-RHO.
+2. **Sold-out dates on thin routes.** About 1 in 12 remaining dates of a thin
+   route is sold out for a cabin, seeded by (origin, destination, date, cabin).
+
+Trunk routes are never affected, so searches on main routes (and the tests
+that use relative dates on them) always find flights.
 """
 
 from __future__ import annotations
@@ -13,7 +31,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from functools import lru_cache
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from app.modules.providers.base import ProviderUnsupportedError
 from app.modules.providers.data.geo import (
@@ -101,6 +119,41 @@ WEEKDAY_FACTOR = (Decimal("0.97"), Decimal("0.94"), Decimal("0.94"), Decimal("1.
                   Decimal("0.98"), Decimal("1.06"))
 LAYOVERS = (65, 80, 95, 110, 140, 170, 215)
 BAG_FEE_USD = Decimal("40")  # estimate per extra checked bag per passenger per direction
+
+# Airports with year-round DAILY service between each other (trunk routes). See module docstring.
+DAILY_SERVICE_AIRPORTS = frozenset({
+    "TLV", "ATH", "LCA", "FCO", "MXP", "CDG", "LHR", "AMS", "FRA", "MUC", "ZRH", "VIE", "PRG", "BUD", "WAW",
+    "BER", "MAD", "BCN", "IST", "DXB", "AUH", "JFK", "BKK",
+})
+SOLD_OUT_RATE = 1 / 12  # share of otherwise-operating dates of a THIN route that are sold out (per cabin)
+_NON_OPERATING_DAY_COUNTS = (1, 2, 2, 3)  # weekdays without service on a thin route (seeded choice)
+ServiceStatus = Literal["operating", "no_service", "sold_out"]
+
+
+def is_trunk_route(origin: str, destination: str) -> bool:
+    return origin in DAILY_SERVICE_AIRPORTS and destination in DAILY_SERVICE_AIRPORTS
+
+
+@lru_cache(maxsize=2048)
+def non_operating_weekdays(origin: str, destination: str) -> frozenset[int]:
+    """Weekdays (Monday=0) WITHOUT service on a route; empty for trunk routes. Same for both directions."""
+    if is_trunk_route(origin, destination):
+        return frozenset()
+    a, b = sorted((origin, destination))
+    rng = seeded_rng("flight-service-days", a, b)
+    count = rng.choice(_NON_OPERATING_DAY_COUNTS)
+    return frozenset(rng.sample(range(7), count))
+
+
+def service_status(origin: str, destination: str, day: date, cabin: str) -> ServiceStatus:
+    """DEMO operating status of one directional route/date/cabin (deterministic)."""
+    if is_trunk_route(origin, destination):
+        return "operating"
+    if day.weekday() in non_operating_weekdays(origin, destination):
+        return "no_service"
+    if unit("flight-sold-out", origin, destination, day.isoformat(), cabin) < SOLD_OUT_RATE:
+        return "sold_out"
+    return "operating"
 
 
 @dataclass(frozen=True)
@@ -195,7 +248,12 @@ def _make_leg(carrier: Carrier, rng, a: Airport, b: Airport, dep_local: datetime
 
 @lru_cache(maxsize=512)
 def market(origin: str, destination: str, day: date, cabin: str) -> tuple[Itinerary, ...]:
-    """Deterministic shared schedule for one route/day/cabin (seeded by route + date only)."""
+    """Deterministic shared schedule for one route/day/cabin (seeded by route + date only).
+
+    Empty on DEMO no-service / sold-out days (``service_status``).
+    """
+    if service_status(origin, destination, day, cabin) != "operating":
+        return ()
     o, d = AIRPORTS[origin], AIRPORTS[destination]
     rng = seeded_rng("flight-market", o.iata, d.iata, day.isoformat())
     dist = airport_distance_km(o, d)

@@ -61,6 +61,7 @@ from app.modules.providers.base import (
 from app.modules.providers.errors import UnprocessableError
 from app.modules.providers.normalization import clean_text, finalize_offer
 from app.modules.search.filters import currency_warning, passes
+from app.modules.search.highlights import compute_highlights
 from app.modules.search.schemas import SearchHistoryItem
 from app.schemas.common import Category, Page
 from app.schemas.offers import CanonicalOffer
@@ -459,17 +460,29 @@ def _response(sr: SearchRequest, runs: list[ProviderRun], offers: list[Canonical
         coverage_note=coverage,
         has_demo_results=any(o.source.mode == "DEMO" for o in offers),
         has_live_results=any(o.source.mode in ("LIVE", "CACHED") for o in offers),
+        highlights=compute_highlights(offers, (sr.params or {}).get("currency")),
     )
 
 
 # -------------------------------------------------------------------- cache ----
 
 
-def _find_cached(db: Session, phash: str, eligible_ids: set[str]) -> SearchRequest | None:
+def _find_cached(db: Session, phash: str, eligible_ids: set[str],
+                 configs: dict[str, Any] | None = None) -> SearchRequest | None:
+    """Most recent identical, fully completed search within the TTL.
+
+    A search completed BEFORE an eligible provider's configuration last changed
+    (enable/disable, ``simulate_error``, ``max_results`` ...) is not reused, so an
+    owner's provider change takes effect on the very next search.
+    """
     ttl = get_settings().search_cache_ttl_minutes
     if ttl <= 0 or not eligible_ids:
         return None
     since = utcnow() - timedelta(minutes=ttl)
+    changed = [getattr(configs.get(pid), "updated_at", None) for pid in eligible_ids] if configs else []
+    changed_at = max((c for c in changed if c is not None), default=None)
+    if changed_at is not None and changed_at > since:
+        since = changed_at
     candidates = db.scalars(
         select(SearchRequest)
         .where(
@@ -562,7 +575,7 @@ def run_search(db: Session, user_id: str | None, params: Any, origin: str = "man
     adapters = registry.adapters_for_category(category)
     eligible = {a.provider_id for a in adapters if configs[a.provider_id].enabled and registry.is_usable(a)}
     if use_cache:
-        cached = _find_cached(db, phash, eligible)
+        cached = _find_cached(db, phash, eligible, configs)
         if cached is not None:
             return _serve_from_cache(db, user_id, canonical, phash, origin, cached, weights)
 
