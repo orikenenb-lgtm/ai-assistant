@@ -86,6 +86,14 @@ class TravelerOut(ApiModel):
     is_minor: bool
 
 
+class OverlapOut(ApiModel):
+    item_id: str
+    other_item_id: str
+    # kinds sorted alphabetically and joined by "-", e.g. "activity-flight"
+    kind_pair: str
+    message: str
+
+
 class TripItemCreate(ApiModel):
     kind: ItemKind
     title: str = Field(..., min_length=1, max_length=300)
@@ -98,6 +106,8 @@ class TripItemCreate(ApiModel):
     cost: Money | None = None
     cost_status: ItemCostStatus = "estimate"
     notes: str | None = Field(None, max_length=5000)
+    # explicit user confirmation to save despite a forbidden overlap (otherwise 409 ITEM_OVERLAP)
+    allow_overlap: bool = False
 
     _t = field_validator("title")(_strip_required)
 
@@ -119,6 +129,7 @@ class TripItemUpdate(ApiModel):
     cost: Money | None = None
     cost_status: ItemCostStatus | None = None
     notes: str | None = Field(None, max_length=5000)
+    allow_overlap: bool = False
 
     @field_validator("title")
     @classmethod
@@ -133,6 +144,7 @@ class TripItemUpdate(ApiModel):
 
 class FromOfferIn(ApiModel):
     offer_id: str = Field(..., min_length=1, max_length=64)
+    allow_overlap: bool = False
 
 
 class ReorderIn(ApiModel):
@@ -161,6 +173,8 @@ class TripItemOut(ApiModel):
     # Convenience flags derived from the snapshot
     data_mode: Literal["DEMO", "LIVE", "CACHED"] | None = None
     offer_expired: bool = False
+    # forbidden overlaps this item takes part in (see overlaps.py)
+    overlaps: list[OverlapOut] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
@@ -170,6 +184,7 @@ class FromOfferOut(ApiModel):
 
     item: TripItemOut
     items: list[TripItemOut]
+    overlaps: list[OverlapOut] = Field(default_factory=list)
 
 
 class DayOut(ApiModel):
@@ -209,6 +224,8 @@ class TripDetail(TripSummary):
     days: list[DayOut]
     # Items without a date (shown in an "unscheduled" bucket)
     unscheduled_item_ids: list[str]
+    # every forbidden overlapping pair in the trip (one entry per pair)
+    overlaps: list[OverlapOut] = Field(default_factory=list)
 
 
 # ---------------- budget ----------------
@@ -244,6 +261,10 @@ class BudgetOut(ApiModel):
     remaining: Money | None = None
     remaining_reason: Literal["ok", "no_budget", "mixed_currencies"]
     over_budget: bool = False
+    # counted (known + estimated) cost / traveler_count; null unless one currency and travelers > 0
+    per_traveler: Money | None = None
+    per_traveler_reason: Literal["ok", "no_costs", "no_travelers", "mixed_currencies"] = "no_costs"
+    traveler_count: int = 0
     warnings: list[BudgetWarning]
 
 

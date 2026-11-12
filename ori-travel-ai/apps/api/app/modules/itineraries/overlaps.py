@@ -30,6 +30,7 @@ FORBIDDEN_PAIRS: frozenset[frozenset[str]] = frozenset(
 )
 
 _KIND_HE = {"flight": "טיסה", "activity": "פעילות", "hotel": "מלון"}
+_FEMININE = {"flight", "activity"}
 
 
 class _Timed(Protocol):
@@ -74,7 +75,8 @@ def kind_pair(kind_a: str, kind_b: str) -> str:
 
 def _message(a: _Timed, b: _Timed) -> str:
     ka, kb = _KIND_HE.get(a.kind, a.kind), _KIND_HE.get(b.kind, b.kind)
-    return f"{ka} \"{a.title}\" חופפת בזמן ל{kb} \"{b.title}\""
+    verb = "חופפת" if a.kind in _FEMININE else "חופף"
+    return f"{ka} \"{a.title}\" {verb} בזמן ל{kb} \"{b.title}\""
 
 
 def find_overlaps(items: Iterable[_Timed]) -> list[OverlapOut]:
