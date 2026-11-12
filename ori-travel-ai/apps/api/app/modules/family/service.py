@@ -352,7 +352,7 @@ def create_invitation(db: Session, actor: User, body: InvitationCreate, request:
     )
     db.commit()
     db.refresh(inv)
-    return InvitationCreated(invitation=invitation_out(inv), invite_path=f"/invite/{token}")
+    return InvitationCreated(invitation=invitation_out(inv), invite_path=f"/invite#{token}")
 
 
 def revoke_invitation(db: Session, actor: User, invitation_id: str, request: Request | None) -> None:

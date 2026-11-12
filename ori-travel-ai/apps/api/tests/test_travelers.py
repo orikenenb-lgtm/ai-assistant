@@ -14,6 +14,8 @@ PAYLOAD = {
     "passport_number": "AB1234567",
     "passport_expiry": "2031-06-15",
     "nationality": "il",
+    "gender": "female",
+    "notes": "diabetic insulin",
     "kosher_required": True,
     "accessibility_needs": ["wheelchair"],
     "frequent_flyer": "LY123456",
@@ -44,10 +46,11 @@ def test_encrypted_at_rest(auth_client, member_id, db):
     assert res.json()["nationality"] == "IL"
     row = db.execute(text("select * from traveler_profiles")).mappings().one()
     for col in ("legal_first_name_enc", "legal_last_name_enc", "date_of_birth_enc", "passport_number_enc",
-                "passport_expiry_enc", "frequent_flyer_enc"):
+                "passport_expiry_enc", "frequent_flyer_enc", "notes_enc", "accessibility_needs_enc", "gender_enc",
+                "nationality_enc"):
         assert row[col].startswith("v1:")
     blob = " ".join(str(v) for v in row.values())
-    for plain in ("Dana", "Levi", "1988", "AB1234567", "LY123456", "2031-06"):
+    for plain in ("Dana", "Levi", "1988", "AB1234567", "LY123456", "2031-06", "wheelchair", "diabetic", "female"):
         assert plain not in blob
 
 
@@ -59,19 +62,27 @@ def test_masking_and_detail_levels(auth_client, member_id):
     lst = viewer.get("/api/travelers").json()
     assert len(lst) == 1
     item = lst[0]
-    assert item["has_passport"] is True and item["passport_masked"].endswith("567")
-    assert "AB1234567" not in str(item) and item["passport_expiry_month"] == "2031-06"
-    assert "date_of_birth" not in item and "legal_first_name" not in item
+    assert item["has_passport"] is True and item["kosher_required"] is True
+    assert item["passport_masked"] is None and item["passport_expiry_month"] is None
+    assert item["accessibility_needs"] is None and item["nationality"] is None
+    assert "567" not in str(item) and "2031" not in str(item) and "wheelchair" not in str(item)
+
+    ed = adult.get("/api/travelers").json()[0]
+    assert ed["passport_masked"].endswith("567") and ed["passport_expiry_month"] == "2031-06"
+    assert ed["accessibility_needs"] == ["wheelchair"] and ed["nationality"] == "IL"
 
     masked = viewer.get(f"/api/travelers/{member_id}").json()
     assert masked["detail_level"] == "masked" and masked["legal_first_name"] is None and masked["date_of_birth"] is None
     assert "AB1234567" not in str(masked)
+    for leak in ("wheelchair", "567", "2031", "IL", "Dana"):
+        assert leak not in str({k: v for k, v in masked.items() if k != "display_name"}), leak
 
     full = adult.get(f"/api/travelers/{member_id}").json()
     assert full["detail_level"] == "full"
     assert full["legal_first_name"] == "Dana" and full["date_of_birth"] == "1988-03-04"
     assert full["passport_masked"].endswith("567") and "AB1234567" not in str(full)
     assert full["age_group_suggestion"] == "adult"
+    assert full["notes"] == "diabetic insulin" and full["accessibility_needs"] == ["wheelchair"] and full["gender"] == "female"
 
 
 def test_partial_update_keeps_passport(auth_client, member_id):
@@ -177,3 +188,22 @@ def test_audit_has_no_plaintext(auth_client, member_id, db):
         assert plain not in dump
     assert db.query(TravelerProfile).count() == 0
     assert db.query(FamilyMember).filter_by(id=member_id).count() == 1
+
+
+def test_delete_requires_recent_reauth(auth_client, member_id, db):
+    from datetime import timedelta
+
+    from app.core.db import utcnow
+    from app.models import AuthSession
+
+    for role in ("adult", "owner"):
+        c = auth_client(role)
+        c.put(f"/api/travelers/{member_id}", json=PAYLOAD)
+        sess = db.query(AuthSession).filter_by(user_id=c.user.id).one()
+        sess.reauth_at = utcnow() - timedelta(hours=1)
+        db.commit()
+        res = c.delete(f"/api/travelers/{member_id}")
+        assert res.status_code == 403 and res.json()["error"]["code"] == "REAUTH_REQUIRED"
+        assert db.query(TravelerProfile).count() == 1
+        assert c.post("/api/auth/reauth", json={"password": "Test-Password-123"}).status_code == 200
+        assert c.delete(f"/api/travelers/{member_id}").status_code == 200

@@ -151,8 +151,8 @@ def test_invitation_lifecycle(auth_client, client, db):
     data = res.json()
     assert data["invitation"]["status"] == "pending"
     path = data["invite_path"]
-    assert path.startswith("/invite/")
-    token = path.removeprefix("/invite/")
+    assert path.startswith("/invite#")  # token in the URL fragment: never sent to the server
+    token = path.removeprefix("/invite#")
     inv = db.get(Invitation, data["invitation"]["id"])
     assert inv.token_hash == sha256_hex(token) and token not in str(data["invitation"])
     listing = owner.get("/api/family/invitations").json()
@@ -169,8 +169,8 @@ def test_invitation_lifecycle(auth_client, client, db):
 def test_duplicate_pending_invitation_revokes_old(auth_client, client):
     owner = auth_client("owner")
     body = {"email": "x@family.test", "display_name": "X", "role": "viewer"}
-    t1 = owner.post("/api/family/invitations", json=body).json()["invite_path"].removeprefix("/invite/")
-    t2 = owner.post("/api/family/invitations", json=body).json()["invite_path"].removeprefix("/invite/")
+    t1 = owner.post("/api/family/invitations", json=body).json()["invite_path"].removeprefix("/invite#")
+    t2 = owner.post("/api/family/invitations", json=body).json()["invite_path"].removeprefix("/invite#")
     assert client.get(f"/api/auth/invitations/{t1}").status_code == 404
     assert client.get(f"/api/auth/invitations/{t2}").status_code == 200
     statuses = sorted(i["status"] for i in owner.get("/api/family/invitations").json())
@@ -180,7 +180,7 @@ def test_duplicate_pending_invitation_revokes_old(auth_client, client):
 def test_revoke_and_expired_status(auth_client, client, db):
     owner = auth_client("owner")
     created = owner.post("/api/family/invitations", json={"email": "r@family.test", "display_name": "R", "role": "viewer"}).json()
-    token = created["invite_path"].removeprefix("/invite/")
+    token = created["invite_path"].removeprefix("/invite#")
     assert owner.delete(f"/api/family/invitations/{created['invitation']['id']}").status_code == 200
     assert client.get(f"/api/auth/invitations/{token}").status_code == 404
     assert owner.get("/api/family/invitations").json()[0]["status"] == "revoked"
@@ -202,9 +202,105 @@ def test_accept_links_family_member(auth_client, client, db):
         "/api/family/invitations",
         json={"email": "g@family.test", "display_name": "סבא", "role": "viewer", "family_member_id": mid},
     ).json()
-    token = created["invite_path"].removeprefix("/invite/")
+    token = created["invite_path"].removeprefix("/invite#")
     client.post("/api/auth/invitations/accept", json={"token": token, "password": DEFAULT_PASSWORD})
     db.expire_all()
     assert db.get(FamilyMember, mid).user_id is not None
     user = db.query(User).filter_by(email="g@family.test").one()
     login(client, user.email)
+
+
+def test_member_age_consistency(auth_client):
+    owner = auth_client("owner")
+    assert owner.post("/api/family/members", json={"display_name": "a", "age_group": "adult", "is_minor": True}).status_code == 422
+    assert owner.post("/api/family/members", json={"display_name": "a", "age_group": "child", "is_minor": False}).status_code == 422
+    mid = owner.post("/api/family/members", json={"display_name": "a", "age_group": "adult"}).json()["id"]
+    assert owner.patch(f"/api/family/members/{mid}", json={"is_minor": True}).status_code == 422
+    res = owner.patch(f"/api/family/members/{mid}", json={"age_group": "infant"})
+    assert res.status_code == 200 and res.json()["is_minor"] is True
+    assert owner.patch(f"/api/family/members/{mid}", json={"age_group": "adult", "is_minor": True}).status_code == 422
+
+
+def test_linked_member_edit_restricted(auth_client, db):
+    owner = auth_client("owner")
+    adult = auth_client("adult")
+    owner_mid = db.query(FamilyMember).filter_by(user_id=owner.user.id).one().id
+    adult_mid = db.query(FamilyMember).filter_by(user_id=adult.user.id).one().id
+    assert adult.patch(f"/api/family/members/{owner_mid}", json={"display_name": "hacked"}).status_code == 403
+    assert adult.patch(f"/api/family/members/{adult_mid}", json={"relation": "אמא"}).status_code == 200
+    assert owner.patch(f"/api/family/members/{adult_mid}", json={"relation": "דודה"}).status_code == 200
+    free = owner.post("/api/family/members", json={"display_name": "f", "age_group": "adult"}).json()["id"]
+    assert adult.patch(f"/api/family/members/{free}", json={"relation": "x"}).status_code == 200
+
+
+def test_minor_cannot_be_invited_as_adult(auth_client):
+    owner = auth_client("owner")
+    mid = owner.post("/api/family/members", json={"display_name": "נועה", "age_group": "child"}).json()["id"]
+    body = {"email": "n@family.test", "display_name": "נועה", "role": "adult", "legal_adult_attested": True, "family_member_id": mid}
+    res = owner.post("/api/family/invitations", json=body)
+    assert res.status_code == 400 and res.json()["error"]["code"] == "MINOR_CANNOT_BE_ADULT"
+    assert owner.post("/api/family/invitations", json={**body, "role": "owner"}).status_code == 400
+    assert owner.post("/api/family/invitations", json={**body, "role": "viewer", "legal_adult_attested": False}).status_code == 201
+
+
+def test_delete_user_rules(auth_client, make_user, db):
+    from datetime import timedelta
+
+    owner = auth_client("owner")
+    other_owner = auth_client("owner")
+    adult = auth_client("adult")
+    adult_mid = db.query(FamilyMember).filter_by(user_id=adult.user.id).one().id
+    uid = adult.user.id
+
+    assert adult.delete(f"/api/family/users/{uid}").status_code == 403
+    assert owner.delete(f"/api/family/users/{owner.user.id}").json()["error"]["code"] == "CANNOT_DELETE_SELF"
+    assert owner.delete(f"/api/family/users/{other_owner.user.id}").json()["error"]["code"] == "CANNOT_DELETE_OWNER"
+    assert owner.delete(f"/api/family/users/{uid}").json()["error"]["code"] == "USER_STILL_ACTIVE"
+    owner.patch(f"/api/family/users/{uid}", json={"is_active": False})
+
+    sess = db.query(AuthSession).filter_by(user_id=owner.user.id).one()
+    sess.reauth_at = utcnow() - timedelta(hours=1)
+    db.commit()
+    res = owner.delete(f"/api/family/users/{uid}")
+    assert res.status_code == 403 and res.json()["error"]["code"] == "REAUTH_REQUIRED"
+    owner.post("/api/auth/reauth", json={"password": DEFAULT_PASSWORD})
+    assert owner.delete(f"/api/family/users/{uid}").status_code == 200
+    db.expire_all()
+    assert db.get(User, uid) is None
+    assert db.get(FamilyMember, adult_mid).user_id is None
+    assert db.query(AuditEvent).filter_by(action="family.user_delete").count() == 1
+    assert owner.delete(f"/api/family/users/{uid}").status_code == 404
+
+
+def test_member_delete_scrubs_booking_names(auth_client, db):
+    from app.models import Approval, BookingIntent, Offer, Reservation
+
+    owner = auth_client("owner")
+    mid = owner.post("/api/family/members", json={"display_name": "יעקב ישראלי", "age_group": "adult"}).json()["id"]
+    other = owner.post("/api/family/members", json={"display_name": "שרה", "age_group": "adult"}).json()["id"]
+    travelers = [
+        {"family_member_id": mid, "display_name": "יעקב ישראלי", "age_group": "adult"},
+        {"family_member_id": other, "display_name": "שרה", "age_group": "adult"},
+    ]
+    offer = Offer(provider_id="d", mode="DEMO", category="flight", supplier_offer_id="s", dedupe_key="k", title="t",
+                  total_amount_minor=1, currency="ILS", price_status="known", fetched_at=utcnow(), data={})
+    db.add(offer)
+    db.flush()
+    intent = BookingIntent(created_by_id=owner.user.id, offer_id=offer.id, category="flight", provider_id="d", offer_snapshot={},
+                           travelers=travelers, quoted_amount_minor=1, current_amount_minor=1, currency="ILS")
+    db.add(intent)
+    db.flush()
+    db.add(Approval(booking_intent_id=intent.id, terms_hash="h", approved_amount_minor=1, currency="ILS",
+                    summary="נוסעים (2): יעקב ישראלי (מבוגר), שרה (מבוגר)", expires_at=utcnow()))
+    db.add(Reservation(booking_intent_id=intent.id, provider_id="d", supplier_reference="R", mode="SIMULATION", amount_minor=1,
+                       currency="ILS", confirmed_at=utcnow(), details={"travelers": travelers, "title": "x"}))
+    db.commit()
+
+    assert owner.delete(f"/api/family/members/{mid}").status_code == 200
+    db.expire_all()
+    intent = db.query(BookingIntent).one()
+    assert [t["display_name"] for t in intent.travelers] == ["[נמחק]", "שרה"]
+    assert intent.travelers[0]["family_member_id"] == mid
+    assert [t["display_name"] for t in db.query(Reservation).one().details["travelers"]] == ["[נמחק]", "שרה"]
+    summary = db.query(Approval).one().summary
+    assert "יעקב" not in summary and "[נמחק]" in summary and "שרה" in summary

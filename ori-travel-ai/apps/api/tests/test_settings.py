@@ -147,7 +147,8 @@ def test_retention_run_keeps_referenced(auth_client, db):
 
     res = owner.post("/api/settings/retention/run")
     assert res.status_code == 200
-    assert res.json() == {"search_requests_deleted": 1, "offers_deleted": 1, "audit_events_deleted": 1}
+    body = res.json()
+    assert (body["search_requests_deleted"], body["offers_deleted"], body["audit_events_deleted"]) == (1, 1, 1)
     db.expire_all()
     remaining = {o.id for o in db.query(Offer).all()}
     assert ids["plain"] not in remaining
@@ -177,3 +178,54 @@ def _filler(col):
     if "DATETIME" in t or "TIMESTAMP" in t:
         return utcnow()
     return "x"
+
+
+def test_retention_extra_purges(auth_client, db):
+    from app.models import Alert, AuthSession, Invitation, Notification
+
+    owner = auth_client("owner")
+    now = utcnow()
+    old = now - timedelta(days=200)
+    long_ago = now - timedelta(days=40)
+    uid = owner.user.id
+
+    def sess(**kw):
+        db.add(AuthSession(token_hash=str(len(db.new)) + kw.pop("h"), csrf_token="c", user_id=uid, last_seen_at=now,
+                           expires_at=kw.pop("expires", now + timedelta(days=1)), **kw))
+
+    sess(h="a", revoked_at=long_ago)           # purge
+    sess(h="b", expires=long_ago)              # purge
+    sess(h="c", revoked_at=now)                # keep (recent)
+    sess(h="d")                                # keep (active)
+    for i, (acc, rev, exp) in enumerate([(long_ago, None, now), (None, long_ago, now), (None, None, long_ago),
+                                         (now, None, now), (None, None, now + timedelta(days=1))]):
+        db.add(Invitation(email=f"i{i}@x.test", display_name="i", role="viewer", token_hash=f"t{i}", created_at=old,
+                          expires_at=exp, accepted_at=acc, revoked_at=rev))
+    db.add_all([
+        Notification(user_id=uid, kind="system", title="old read", read_at=now, created_at=old),
+        Notification(user_id=uid, kind="system", title="old unread", created_at=old),
+        Notification(user_id=uid, kind="system", title="new read", read_at=now),
+    ])
+    alert = Alert(user_id=uid, name="a", category="flight", search_params={}, currency="ILS", check_interval_minutes=360)
+    db.add(alert)
+    db.flush()
+    snaps = [PriceSnapshot(alert_id=alert.id, provider_id="p", mode="DEMO", captured_at=old - timedelta(days=i)) for i in range(3)]
+    snaps.append(PriceSnapshot(alert_id=alert.id, provider_id="p", mode="DEMO", captured_at=now))
+    db.add_all(snaps)
+    db.commit()
+
+    body = owner.post("/api/settings/retention/run").json()
+    assert body["sessions_deleted"] == 2
+    assert body["invitations_deleted"] == 3
+    assert body["notifications_deleted"] == 1
+    assert body["price_snapshots_deleted"] == 3
+    db.expire_all()
+    assert db.query(PriceSnapshot).count() == 1
+
+    # when every snapshot is old the latest one is still kept
+    for sn in db.query(PriceSnapshot):
+        sn.captured_at = old
+    db.add(PriceSnapshot(alert_id=alert.id, provider_id="p", mode="DEMO", captured_at=old - timedelta(days=9)))
+    db.commit()
+    assert owner.post("/api/settings/retention/run").json()["price_snapshots_deleted"] == 1
+    assert db.query(PriceSnapshot).count() == 1

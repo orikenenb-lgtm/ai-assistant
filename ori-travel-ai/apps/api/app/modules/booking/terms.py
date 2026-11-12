@@ -1,10 +1,11 @@
 """Terms hash + Hebrew terms summary.
 
 An approval is bound to ``terms_hash``: SHA-256 over a canonical JSON document
-describing exactly what will be booked. Volatile fields (fetch time, quote
-expiry, ranking score, marketing text) are deliberately excluded so that a
-re-quote with identical terms keeps the same hash, while any change to the
-product, the price, the cancellation terms or the travelers changes it.
+describing exactly what will be booked — the structured product fields AND the
+exact summary lines shown to the approver. Volatile fields that are never
+displayed (fetch time, quote expiry, ranking score) are excluded so that a
+re-quote with identical terms keeps the same hash, while any change to what the
+approver read changes it.
 """
 
 from __future__ import annotations
