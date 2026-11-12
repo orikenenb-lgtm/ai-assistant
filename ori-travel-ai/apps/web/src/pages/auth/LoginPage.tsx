@@ -133,7 +133,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 end-0 grid w-10 place-items-center rounded-e-md text-fg-subtle hover:text-fg"
+                className="absolute inset-y-0 end-0 grid w-11 place-items-center rounded-e-md text-fg-subtle hover:text-fg"
                 aria-label={showPassword ? 'הסתרת הסיסמה' : 'הצגת הסיסמה'}
                 aria-pressed={showPassword}
               >

@@ -34,15 +34,15 @@ for (const theme of ['light', 'dark'] as Theme[]) {
               expect(st.nav, 'nav landmark').toBeGreaterThanOrEqual(1);
               expect(st.header, 'banner/header landmark').toBeGreaterThanOrEqual(1);
             }
-            // Exactly one h1 (the DEMO supplier page has none: A11Y-01, asserted separately below).
+            // Exactly one h1 on every screen (A11Y-01 fixed: the DEMO supplier page has one too).
             if (s.expectH1 !== false) expect(st.h1, 'exactly one h1').toBe(1);
             expect(st.unnamedInteractive, 'interactive elements without an accessible name').toEqual([]);
             expect(st.unlabelledFields, 'form controls without a label').toEqual([]);
             expect(st.imgsWithoutAlt, '<img> without alt').toEqual([]);
             expect(st.duplicateIds, 'duplicate ids').toEqual([]);
             expect(st.headingSkips, 'heading levels skipped (e.g. h1 -> h3)').toBe(0);
-            // No horizontal overflow (checked at both widths; DEMO supplier at 390 is A11Y-02).
-            if (!(s.id === 'demo-supplier' && width === 'mobile')) {
+            // No horizontal overflow at both widths.
+            {  // A11Y-02 fixed: the DEMO supplier page no longer overflows at 390px
               expect(st.overflow.sw, `scrollWidth ${st.overflow.sw} <= clientWidth ${st.overflow.cw}`).toBeLessThanOrEqual(st.overflow.cw);
             }
           } finally { await ctx.close(); }

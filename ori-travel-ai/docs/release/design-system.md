@@ -74,13 +74,15 @@
 | `heat-high` | `bg-heat-high` | `#ffd2b0` | `#4a2d1c` | שליש עליון |
 | `heat-none` | `bg-heat-none` | `#f3f5f8` | `#1b2331` | נבדק — אין טיסות (`∅`) |
 | `heat-unknown` | `bg-heat-unknown` | `#ffffff` | `#151c27` | לא נבדק (`—`); חייב `border-line` כי זהה למשטח |
+| `heat-fg` | `text-heat-fg` | `#142339` | `#eef1f5` | טקסט ראשי על כל תא heat (מחיר) |
+| `heat-fg-muted` | `text-heat-fg-muted` | `#33435c` | `#dde3ec` | טקסט משני על תא heat (מספר יום, יום בשבוע) — ≥ 5.49:1 על כל מילוי בשתי הערכות (A11Y-03) |
 | `success` / `-soft` / `-line` | `text-success` | moss 700/50/200 | משתקף | הצלחה / חי |
 | `info` / `-soft` / `-line` | `text-info` | harbor 700/50/200 | משתקף | מידע / מטמון |
 | `warn` / `-soft` / `-line` | `text-warn` | amber 700/50/200 | משתקף | אזהרה / חלקי |
 | `danger` / `-soft` / `-line` | `text-danger` | coral 700/50/200 | משתקף | שגיאה / נכשל |
 
 > שמות `tangerine-*`, `sky-*`, `deal*`, `heat-*` הם חלק מהחוזה — אין לשנות שמות; שינוי ערך רק עם בדיקת ניגודיות ועדכון הטבלה למטה.
-> ב-V6 נוספו (תוספת בלבד): `surface-hover`, `accent-soft/strong/line/fg`, `scrim`, `low*`, `success/info/warn/danger*`, `spacing-touch`.
+> ב-V6 נוספו (תוספת בלבד): `surface-hover`, `accent-soft/strong/line/fg`, `scrim`, `low*`, `success/info/warn/danger*`, `spacing-touch`, `heat-fg`, `heat-fg-muted`.
 
 ### 3.2 סולמות פלטה
 
@@ -169,6 +171,13 @@
 | `sky-700` / `surface` | low: מחיר נמוך על לבן | 6.68:1 ✓ | 10.18:1 ✓ | 4.5:1 |
 | `sky-800` / `sky-100` | טקסט על sky-100 | 7.68:1 ✓ | 10.19:1 ✓ | 4.5:1 |
 | `sky-800` / `sky-50` | תג low | 8.73:1 ✓ | 12.21:1 ✓ | 4.5:1 |
+| `heat-fg` / `heat-best` | תא לוח מחירים: מחיר בתא הזול ביותר | 8.95:1 ✓ | 6.25:1 ✓ | 4.5:1 |
+| `heat-fg-muted` / `heat-best` | תא הזול ביותר: מספר יום / יום בשבוע (A11Y-03) | 5.67:1 ✓ | 5.49:1 ✓ | 4.5:1 |
+| `heat-fg-muted` / `heat-low` | תא זול: מספר יום / יום בשבוע | 8.23:1 ✓ | 8.79:1 ✓ | 4.5:1 |
+| `heat-fg-muted` / `heat-mid` | תא בינוני: מספר יום / יום בשבוע | 8.35:1 ✓ | 9.05:1 ✓ | 4.5:1 |
+| `heat-fg-muted` / `heat-high` | תא יקר: מספר יום / יום בשבוע | 7.20:1 ✓ | 9.67:1 ✓ | 4.5:1 |
+| `heat-fg-muted` / `heat-none` | תא אין טיסות: מספר יום | 9.16:1 ✓ | 12.22:1 ✓ | 4.5:1 |
+| `heat-fg-muted` / `heat-unknown` | תא לא נבדק: מספר יום | 10.01:1 ✓ | 13.26:1 ✓ | 4.5:1 |
 | `fg` / `heat-best` | תא לוח מחירים: הזול ביותר | 8.95:1 ✓ | 6.25:1 ✓ | 4.5:1 |
 | `fg` / `heat-low` | תא: שליש תחתון | 13.00:1 ✓ | 10.01:1 ✓ | 4.5:1 |
 | `fg` / `heat-mid` | תא: שליש אמצעי | 13.17:1 ✓ | 10.31:1 ✓ | 4.5:1 |
@@ -187,6 +196,8 @@
 
 **אי כהה** (`.surface-dark` על `#0f4f49` → `#143241`): לבן 9.40 / 13.44, `ink-200` 6.73 / 9.62, `sea-300` 5.95 / 8.52, `sun-400` (אייקון) 5.70 / 8.15 — זהה בשתי הערכות.
 
+**A11Y-03 (תוקן):** בערכה הכהה מספר היום בתא "הזול ביותר" השתמש ב-`text-ink-700` (`#c4ccd8` על `#8a4613` = **4.37:1**, נכשל). התיקון: טוקן ייעודי `heat-fg-muted` (בכהה `#dde3ec` → **5.49:1**; בבהיר זהה ל-`ink-700`, 5.67:1) לכל טקסט משני על תאי heat. **כלל:** על תאי heat משתמשים רק ב-`text-heat-fg` / `text-heat-fg-muted` — לא בצעדי `ink-*` (הם מתהפכים בכהה ואינם מכוילים מול המילוי הכתום).
+
 **ערכים שאינם טקסט (לידיעה):** קו `line` מול `surface` 1.24:1 (דקורטיבי בלבד — שדות קלט משתמשים ב-`control`); `heat-unknown` זהה ל-`surface` ולכן תא "לא נבדק" חייב
 `border-line` + הסמן `—`; `heat-best` מול `heat-high` רק 1.27:1 (בהירה) — לכן **הסמן ★/טקסט "הזול ביותר" בתא best הוא חובה**, לא קישוט.
 מסגרת DEMO מקווקוות (`sand-500`) 2.4:1 — דקורטיבית; התג מזוהה בטקסט "הדגמה" + אייקון.
@@ -200,12 +211,12 @@
 
 | רכיב | וריאנטים / props עיקריים | הערות |
 |---|---|---|
-| `Button` / `ButtonLink` / `buttonClasses()` | `variant`: `primary` (מילוי accent — אחד למסך), `accent` (tonal: רקע `accent-soft`), `secondary` (outline), `ghost`, `danger`, `link`, **`deal`** (חדש: כתום, רק לפאנל ההצעה המומלצת); `size`: `sm` 32px / `md` 40px / `lg` 48px; `loading`, `loadingText`, `leadingIcon`, `trailingIcon`, `fullWidth` | כולל `.touch-target` (44px במגע). `primary` עבר מנייבי לטורקיז; `accent` עבר ממילוי ל-tonal |
+| `Button` / `ButtonLink` / `buttonClasses()` | `variant`: `primary` (מילוי accent — אחד למסך), `accent` (tonal: רקע `accent-soft`), `secondary` (outline), `ghost`, `danger`, `link`, **`deal`** (חדש: כתום, רק לפאנל ההצעה המומלצת); `size`: `sm` 32px / `md` 40px / `lg` 48px; `loading`, `loadingText`, `leadingIcon`, `trailingIcon`, `fullWidth`, **`wrap`** (חדש: התווית נשברת לשורות במקום לגלוש — לתוויות ארוכות במובייל) | כולל `.touch-target` (44px במגע). `primary` עבר מנייבי לטורקיז; `accent` עבר ממילוי ל-tonal |
 | `IconButton` | `label` (חובה, עברית), `icon`, `variant`, `size` `sm`/`md`/`lg`, `loading`, `showTooltip` | 44px במגע |
 | `Input`, `Textarea`, `NativeSelect`, `controlClasses` | בתוך `<Field label hint error>` | 40px; במגע ≥ 44px וטקסט 16px (אין זום ב-iOS). `controlClasses` למקשים מותאמים (combobox) |
 | `Checkbox`, `Switch` | `label`, `description`, `error` | מסילת מתג כבוי `ink-400` (3.45:1); אגודל לבן קבוע; תווית Checkbox מורחבת במגע |
 | `Field` | `label`, `hint`, `error`, `required`, `optional` | מחבר `id`, `aria-describedby`, `aria-invalid` |
-| `Card`, `CardHeader`, `CardFooter` | `padding`, `interactive`, `as`; `CardHeader icon actions level` | `rounded-xl border-line shadow-xs`; אייקון בצ'יפ `accent-soft` |
+| `Card`, `CardHeader`, `CardFooter` | `padding`, `interactive`, `as`; `CardHeader icon actions level` | `rounded-xl border-line shadow-xs`; אייקון בצ'יפ `accent-soft`; קישורים ב-`actions` עם אזור מגע 44px (`.touch-targets`) |
 | `Badge` | `tone`: `neutral`, `muted`, `accent`, `success`, `info`, `warn`, `danger`, `demo`, `dark`, **`deal`**, **`low`**; `size` `sm`/`md` | `demo` = מקווקו חול + semibold |
 | `ModeBadge` | `mode` (DEMO/LIVE/CACHED/סטטוסי ספק), `size`, `showTooltip`, `description` | צבע + טקסט + אייקון + טולטיפ |
 | `Callout` | `tone` `info`/`success`/`warn`/`danger`/`neutral`, `title`, `icon`, `action` | |
@@ -214,12 +225,12 @@
 | `useReturnFocus(open, enabled?)` | **חדש** — מחזיר handler ל-`onCloseAutoFocus` | לדיאלוגים מותאמים מעל Radix |
 | `DropdownMenu*` | `DropdownMenuItem tone`, **`DropdownMenuRadioGroup`**, **`DropdownMenuRadioItem`** (חדשים) | שורות 36px, 44px במגע |
 | `Tabs*` | Radix, RTL | לשונית פעילה: משטח לבן + מסגרת + semibold |
-| **`Segmented`** (חדש) | ראו 5.1 | קבוצת בחירה (רשימה ⇄ טבלה, חודש ⇄ מטריצה) |
+| **`Segmented`** (חדש) | ראו 5.1 | קבוצת בחירה (רשימה ⇄ טבלה, חודש ⇄ מטריצה); במגע כל מקטע ≥ 44px |
 | **`Legend`**, **`LegendSwatch`** (חדשים) | ראו 5.2 | מקרא ללוח מחירים/גרפים |
 | `DataTable` | `columns`, `rows`, `getRowKey`, `caption`, `dense`, `loading`, `empty` | מיכל הגלילה `relative` (תיקון גלישת sr-only); כותרת `surface-sunken`; ספרות טבלאיות |
 | `EmptyState`, `ErrorState`, `Skeleton`, `SkeletonText`, `Spinner` | | ריק: מסגרת מקווקוות על `surface`; שגיאה: `coral-50` + מזהה בקשה + "נסו שוב" |
 | `Toast` (`useToast`) | `tone` `info`/`success`/`warn`/`danger`, `duration` | פס צבע בצד ההתחלה (ימין) + אייקון; `role="alert"` ל-danger |
-| `PageHeader` | `title`, `description`, `eyebrow`, `icon`, `actions` | H1 יחיד; אייקון בצ'יפ `accent-soft` (במקום נייבי+זהב) |
+| `PageHeader` | `title`, `description`, `eyebrow`, `icon`, `actions` | H1 יחיד; אייקון בצ'יפ `accent-soft` (במקום נייבי+זהב); קישורים ב-`eyebrow`/`actions` מקבלים אזור מגע 44px אוטומטית (`.touch-targets`) |
 | `Stat`, `Pagination`, `MoneyText`, `DateText`, `DateRange`, `FreshnessText`, `Tooltip`, `Kbd`, `VisuallyHidden` | ללא שינוי API | `Stat` עם `price-nums` |
 
 ### 5.1 `Segmented` (חדש)
@@ -252,7 +263,7 @@ import { List, Table2 } from 'lucide-react';
 | `disabled`, `name`, `className`, `data-testid` | | | |
 
 מבוסס על `<input type="radio">` מקוריים: Tab נכנס לקבוצה, חיצים מזיזים בחירה (מקורי, מודע ל-RTL), "checked" מוכרז. הנבחר שונה במשטח, משקל וצל — לא רק בצבע.
-כל אפשרות היא מטרת מגע של 44px. כל `<label>` מקבל `data-state="checked|unchecked"`.
+במסכי מגע כל אפשרות (ה-`<label>` והגלולה הגלויה) בגובה 44px לפחות. כל `<label>` מקבל `data-state="checked|unchecked"`.
 
 ### 5.2 `Legend` / `LegendSwatch` (חדש)
 
@@ -289,7 +300,7 @@ import { Legend, ModeBadge } from '@/components/ui';
 
 ### 5.3 מתכונים לטיסות (FE-FLIGHT)
 
-- **תא לוח מחירים**: `bg-heat-{tier} text-fg border border-line` + סמן (★ ל-best, `—` לא נבדק, `∅` אין טיסות, `!` שגיאה) + `aria-label` עם שם הדרגה.
+- **תא לוח מחירים**: `bg-heat-{tier} text-heat-fg border border-line`, מספר יום / יום בשבוע `text-heat-fg-muted`, + סמן (★ ל-best, `—` לא נבדק, `∅` אין טיסות, `!` שגיאה) + `aria-label` עם שם הדרגה.
   פוקוס: הטבעת הגלובלית (`outline-focus`) עובדת על כל הרקעים (≥ 3:1). נבחר: `ring-2 ring-accent` + `aria-pressed`/`aria-selected`.
 - **פאנל ההצעה המומלצת**: `rounded-xl border border-deal-line bg-deal-soft`, מחיר `text-deal price-nums text-3xl font-bold`, תג `<Badge tone="deal">`,
   כפתור `<Button variant="deal">` (ולא כפתור מותאם עם `bg-deal-strong` — כך מקבלים 44px, פוקוס, מצבי hover/active/disabled ותמיכה בכהה).
@@ -319,9 +330,12 @@ import { Legend, ModeBadge } from '@/components/ui';
 - **מטרות מגע ≥ 44px** במצביע גס (`@media (pointer: coarse)`): `.touch-target` מוסיף `::after` בלתי נראה שמגדיל את אזור הלחיצה ל-44×44 בלי לשנות את המראה
   (Button, IconButton, Switch, Tabs, Segmented, סגירת דיאלוג/טוסט/מגירה, תפריט משתמש); שדות ופריטי תפריט/ניווט: `min-h-touch`/`h-touch`.
   ל-`.touch-target` יש `position: relative` בשכבת components — מחלקת `absolute` על אותו אלמנט גוברת.
+  **כללים גנריים:** כל `<summary>` מקבל את אזור המגע אוטומטית; קישורים בתוך מיכל `.touch-targets` (כבר מוגדר ב-`PageHeader` eyebrow/actions וב-`CardHeader` actions) מקבלים אותו;
+  לקישור עזר בודד ("כל ההזמנות", "ניהול ספקים ואבחון") הוסיפו `touch-target`; לשדה/סליידר מותאם — `pointer-coarse:h-touch`.
+  **הערה לבדיקות חזותיות:** צילום `fullPage` של Playwright בהקשר מובייל מחיל מחדש את מדדי המכשיר בזמן הצילום, ולכן סגנונות `(pointer: coarse)` אינם מופיעים בתמונות הבסיס של 390px — המידות האמיתיות נמדדות בבדיקת ה-a11y (`TOUCH_JS`).
 - **פוקוס**: קישור דילוג, פוקוס עובר ל-`<main>` בניווט, דיאלוגים/מגירות מחזירים פוקוס לפותח (גם במצב מבוקר).
 - **תנועה מופחתת** מכובדת גלובלית.
-- **גלישה אופקית**: אין ב-390px (נבדק ב-16 מסכים). גריד עם תוכן `nowrap` חייב `grid-cols-1` (= `minmax(0,1fr)`) או `min-w-0` על הילדים.
+- **גלישה אופקית**: אין ב-390px / 320px (נבדק ב-16 מסכים + בדיקות reflow). גריד עם תוכן `nowrap` חייב `grid-cols-1` (= `minmax(0,1fr)`) או `min-w-0` על הילדים; כפתור עם תווית ארוכה — `wrap`.
 
 ## 8. RTL
 
@@ -362,3 +376,4 @@ import { Legend, ModeBadge } from '@/components/ui';
 - רכיבים חדשים: `Segmented`, `Legend`, `LegendSwatch`, `DropdownMenuRadioGroup/Item`, `useReturnFocus`; `Drawer showCloseButton`.
 - מטרות מגע 44px, טקסט 16px בשדות במגע, `DataTable` עם מיכל `relative`.
 - תיקוני QA: BUG-QA-01 (פוקוס חוזר מדיאלוגים מבוקרים, כולל ConfirmDialog/Drawer), BUG-QA-02 (גלישה אופקית בלוח הבקרה ב-390px).
+- תיקוני נגישות (`docs/release/accessibility-report.md`): A11Y-01 (h1 בדף ספק ה-DEMO), A11Y-02 (גלישה ב-390/320px — כפתור ארוך עם `wrap`), A11Y-03 (טוקנים `heat-fg`/`heat-fg-muted`, 5.49:1 בכהה), A11Y-05 (אזור מגע 44px: `summary`, `.touch-targets`, `Segmented`, שדות/סליידרים בהגדרות, קישורי עזר, בוררי טופס הטיסות).

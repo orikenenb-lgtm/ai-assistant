@@ -26,7 +26,7 @@ export const A11Y_SCREENS: A11yScreen[] = [
   { id: 'hotels-results', open: async (p, f) => { await p.goto(`/search/hotels?search_id=${f.hotelSearchId}`); await expect(p.getByTestId('offer-card').first()).toBeVisible(); await settle(p); } },
   { id: 'trip-detail', open: async (p, f) => { await p.goto(`/trips/${f.tripId}`); await expect(p.getByTestId('overlap-badge').first()).toBeVisible(); await settle(p); } },
   { id: 'booking-review', open: async (p, f) => { await openBookingReview(p, f); await settle(p); } },
-  { id: 'demo-supplier', expectH1: false, open: async (p, f) => { await p.goto(f.checkoutUrl); await expect(p.getByText('דף ספק לדוגמה — DEMO, אין חיוב').first()).toBeVisible(); await settle(p); } },
+  { id: 'demo-supplier', expectH1: true, open: async (p, f) => { await p.goto(f.checkoutUrl); await expect(p.getByText('דף ספק לדוגמה — DEMO, אין חיוב').first()).toBeVisible(); await settle(p); } },
   { id: 'family', open: async (p) => { await p.goto('/family'); await expect(p.locator('h1')).toBeVisible(); await settle(p); } },
   { id: 'settings', open: async (p) => { await p.goto('/settings'); await expect(p.locator('h1')).toBeVisible(); await settle(p); } },
 ];

@@ -21,7 +21,8 @@ let f: Fixtures;
 test.beforeAll(async () => { f = await ensureFixtures(); fs.mkdirSync(OUT, { recursive: true }); });
 
 /** A11Y-03: dark theme, calendar cells on the "best/low" tangerine fill use text-ink-700 (4.37:1 < 4.5:1). */
-const knownContrast = (c: ContrastSample, theme: Theme) => theme === 'dark' && c.selector.includes('fare-cell');
+// A11Y-03 is fixed (heat-fg tokens): no contrast exceptions remain.
+const knownContrast = (_c: ContrastSample, _theme: Theme) => false;
 
 for (const theme of ['light', 'dark'] as Theme[]) {
   for (const width of ['desktop', 'mobile'] as const) {
@@ -54,11 +55,8 @@ test('A11Y-03 dark theme: fare-calendar day numbers on tangerine cells reach 4.5
 
 /* ---------------------------------------------------------------- touch targets @390 */
 
-/** Confirmed violations (A11Y-05), matched on the element's visible name / selector. Anything else is a regression. */
-const KNOWN_TOUCH: Array<RegExp> = [
-  /ניהול ספקים ואבחון/, /^ספקים ואבחון$/, /^כיוון אחד$/, /^הלוך-חזור$/, /איך לקרוא את הלוח/, /ייצוא ל-PDF/, /ייצוא ליומן/, /אפשרויות נוספות/, /כל הטיולים/, /כל ההזמנות/,
-  /פירוט לפי סוג/, /מה ההבדל בין התפקידים/, /חזרה להזמנה במערכת/, /input\.h-9\.w-20/, /accent-sea-600/, /size-\[1\.125rem\]/, /הצגת הסיסמה/,
-];
+/** A11Y-05 is fixed: no exceptions remain. Any element below 44x44 at 390px (touch) is a regression. */
+const KNOWN_TOUCH: Array<RegExp> = [];
 
 const touchResults: Record<string, TouchViolation[]> = {};
 
