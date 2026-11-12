@@ -78,7 +78,13 @@ Remove-Item -Recurse -Force .\apps\web\node_modules
 
 ```
 ORI_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.1.20:8000
+ORI_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.20
 ```
+
+## `Invalid host header` (400)
+
+השרת מקבל רק שמות מארח שמופיעים ב-`ORI_ALLOWED_HOSTS`. ברירת המחדל היא `localhost,127.0.0.1`. אם פותחים
+את האפליקציה בשם מחשב או בכתובת IP ברשת, צריך להוסיף אותם לרשימה (בלי כוכביות) ולהפעיל מחדש.
 
 * אם הכניסה "נתקעת" אחרי שינוי, מוחקים עוגיות של האתר או מתנתקים ונכנסים שוב.
 * מאחורי HTTPS: `ORI_COOKIE_SECURE=true`; ב-HTTP רגיל חייב להיות `false` או שהעוגיות לא יישמרו.

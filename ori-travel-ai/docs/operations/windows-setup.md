@@ -83,7 +83,9 @@ cd ai-assistant\ori-travel-ai
 
 * חומת האש של Windows תבקש אישור; אשרו לרשת פרטית בלבד.
 * עוגיות ההתחברות אינן מסומנות `Secure` ב-HTTP. הדרך הנכונה היא HTTPS דרך reverse proxy, ואז `ORI_COOKIE_SECURE=true` ב-`.env`.
-* גישה מכתובת אחרת (`http://192.168.x.x:8000`) דורשת להוסיף אותה ל-`ORI_CORS_ORIGINS` (ראו troubleshooting).
+* גישה מכתובת אחרת (`http://192.168.x.x:8000`) דורשת להוסיף את כתובת המחשב **גם** ל-`ORI_ALLOWED_HOSTS`
+  (בדיקת כותרת Host). בלי זה השרת מחזיר 400 "Invalid host header". אם רוצים גם את Vite, מוסיפים את הכתובת
+  ל-`ORI_CORS_ORIGINS` (ראו troubleshooting).
 * אל תחשפו את הפורט לאינטרנט.
 
 ## 4. יצירת בעל/ת החשבון
