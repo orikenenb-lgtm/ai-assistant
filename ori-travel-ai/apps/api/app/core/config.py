@@ -80,6 +80,8 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-sonnet-5-5"
     # Paid cloud LLM calls require this explicit cost authorization flag.
     ai_allow_paid: bool = False
+    # Anthropic server-side refusal fallback bills a second model; separately opt-in.
+    ai_anthropic_server_fallback: bool = False
     ai_max_tool_calls_per_turn: int = 4
     ai_timeout_seconds: float = 60.0
 

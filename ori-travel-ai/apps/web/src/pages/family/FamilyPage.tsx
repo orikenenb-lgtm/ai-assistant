@@ -19,7 +19,9 @@ export default function FamilyPage() {
   const del = useDeleteMember();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Member | undefined>(undefined);
-  const [profile, setProfile] = useState<Member | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  // Look the member up live so the dialog sees has_traveler_profile change after saving.
+  const profile = query.data?.find((m) => m.id === profileId) ?? null;
   const [deleting, setDeleting] = useState<Member | null>(null);
 
   const addButton = editable ? (
@@ -70,7 +72,7 @@ export default function FamilyPage() {
                       member={m}
                       canEdit={editable}
                       canDelete={owner}
-                      onProfile={() => setProfile(m)}
+                      onProfile={() => setProfileId(m.id)}
                       onEdit={() => {
                         setEditing(m);
                         setFormOpen(true);
@@ -97,7 +99,7 @@ export default function FamilyPage() {
       </div>
 
       {editable && <MemberFormDialog key={editing?.id ?? 'new'} open={formOpen} onOpenChange={setFormOpen} member={editing} />}
-      <TravelerDialog member={profile} editable={editable} onOpenChange={(o) => !o && setProfile(null)} />
+      <TravelerDialog member={profile} editable={editable} onOpenChange={(o) => !o && setProfileId(null)} />
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}

@@ -424,7 +424,8 @@ class AnthropicClient:
             "anthropic-version": ANTHROPIC_VERSION,
             "content-type": "application/json",
         }
-        if model in _FALLBACK_CAPABLE_MODELS:
+        # The server-side fallback model is billed too, so it needs its own explicit opt-in.
+        if model in _FALLBACK_CAPABLE_MODELS and get_settings().ai_anthropic_server_fallback:
             headers["anthropic-beta"] = ANTHROPIC_FALLBACK_BETA
             body["fallbacks"] = "default"
         return headers, body

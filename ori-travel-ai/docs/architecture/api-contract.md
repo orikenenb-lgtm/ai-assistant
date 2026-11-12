@@ -186,6 +186,12 @@ Scheduler: `app/modules/price_tracking/scheduler.py` `maybe_start()/stop()` — 
 
 The AI can NEVER call booking/payment functions. Supplier content is untrusted data.
 
+Implemented additions (B5, see decisions ד-013): `/api/ai/parse` also returns `understood`, `assumptions[]`,
+`errors[]`; `/api/ai/plan-trip` returns `{destination, destination_code, start_date, end_date, days:[{date, weekday,
+label, items:[{type:"activity"|"free", time_slot, time_slot_label, title, offer_id, start_time, duration_minutes,
+reasons[], card}]}], intro, intro_mode:"model"|"template", search_id, interests, warnings, grounding}`;
+`tool_calls[].status ∈ {ok, error, rejected, skipped}`. Rate limits: chat 20/10min, parse 60/10min, plan 10/10min.
+
 ## 4. Team rules for every agent
 
 1. Work **only inside your file scope** (listed in your brief). If you believe a file
