@@ -1,0 +1,15 @@
+# Ori Travel AI — local artifacts (secrets are also covered by the repo-level .gitignore)
+.env
+.env.*
+!.env.example
+apps/api/data/
+*.db
+*.db-shm
+*.db-wal
+apps/api/.venv/
+apps/web/node_modules/
+apps/web/dist/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/e2e/.auth/
+*.pdf.tmp

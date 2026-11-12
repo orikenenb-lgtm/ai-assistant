@@ -1,0 +1,12 @@
+# Ori Travel AI — runtime dependencies (pinned, verified with Python 3.12)
+fastapi==0.162.5
+uvicorn[standard]==0.54.0
+sqlalchemy==2.1.8
+alembic==1.20.1
+pydantic==2.14.3
+pydantic-settings==2.16.2
+httpx==0.28.1
+argon2-cffi==25.1.0
+cryptography==50.0.2
+python-bidi==0.6.12
+reportlab==5.1.0

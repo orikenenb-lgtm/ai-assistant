@@ -1,0 +1,74 @@
+"""Shared API schema primitives."""
+
+from __future__ import annotations
+
+import re
+from decimal import Decimal
+from typing import Annotated, Generic, Literal, TypeVar
+
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, PlainSerializer, field_validator
+
+from app.core.money import SUPPORTED_CURRENCIES, quantize
+
+Category = Literal["flight", "hotel", "car", "activity"]
+DataMode = Literal["DEMO", "LIVE", "CACHED"]
+
+# Decimal serialised as a string in JSON to avoid float rounding.
+DecimalStr = Annotated[Decimal, PlainSerializer(lambda v: format(v, "f"), return_type=str, when_used="json")]
+
+CurrencyCode = Annotated[str, Field(min_length=3, max_length=3, pattern=r"^[A-Z]{3}$")]
+
+_EMAIL_RE = re.compile(r"^[^@\s<>\"']{1,64}@[A-Za-z0-9.-]{1,252}\.[A-Za-z]{2,24}$")
+
+
+def _validate_email(v: str) -> str:
+    v = v.strip().lower()
+    if len(v) > 254 or not _EMAIL_RE.match(v) or ".." in v:
+        raise ValueError("כתובת אימייל אינה תקינה")
+    return v
+
+
+# Lenient, offline e-mail validation (no DNS lookups; allows private family domains)
+EmailAddress = Annotated[str, AfterValidator(_validate_email)]
+
+
+class ApiModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
+class Money(ApiModel):
+    amount: DecimalStr = Field(..., description="Decimal amount as string in JSON, e.g. '123.45'")
+    currency: CurrencyCode
+
+    @field_validator("currency")
+    @classmethod
+    def _supported(cls, v: str) -> str:
+        if v not in SUPPORTED_CURRENCIES:
+            raise ValueError(f"Unsupported currency {v}")
+        return v
+
+    def quantized(self) -> Money:
+        return Money(amount=quantize(self.amount, self.currency), currency=self.currency)
+
+
+T = TypeVar("T")
+
+
+class Page(ApiModel, Generic[T]):
+    items: list[T]
+    total: int
+    page: int
+    page_size: int
+
+
+class PageParams(ApiModel):
+    page: int = Field(1, ge=1, le=10_000)
+    page_size: int = Field(20, ge=1, le=100)
+
+    @property
+    def offset(self) -> int:
+        return (self.page - 1) * self.page_size
+
+
+class OkResponse(ApiModel):
+    ok: bool = True
