@@ -45,7 +45,16 @@ async function shot(page: Page, name: string, target?: Locator | null, extraMask
   await page.evaluate(async () => {
     const imgs = Array.from(document.querySelectorAll('img'));
     imgs.forEach((img) => (img.loading = 'eager'));
-    await Promise.all(imgs.map((img) => (img.complete ? img.decode().catch(() => {}) : new Promise((r) => img.addEventListener('load', r, { once: true }) || img.addEventListener('error', r, { once: true })))));
+    await Promise.all(
+      imgs.map((img) =>
+        img.complete
+          ? img.decode().catch(() => {})
+          : new Promise<void>((resolve) => {
+              img.addEventListener('load', () => resolve(), { once: true });
+              img.addEventListener('error', () => resolve(), { once: true });
+            }),
+      ),
+    );
   });
   await settle(page);
   await markDynamic(page);
