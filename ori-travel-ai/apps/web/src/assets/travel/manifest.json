@@ -1,0 +1,519 @@
+[
+  {
+    "source": "travel_01.webp",
+    "name": "greek-harbor",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "greek-harbor-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "greek-harbor-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_02.webp",
+    "name": "alpine-chalet",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "alpine-chalet-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "alpine-chalet-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_03.webp",
+    "name": "old-town-couple",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "old-town-couple-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "old-town-couple-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_04.webp",
+    "name": "tropical-villa",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "tropical-villa-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "tropical-villa-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_05.webp",
+    "name": "wing-sunset",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "wing-sunset-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "wing-sunset-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_06.webp",
+    "name": "icon-collage",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.403,
+    "kind": "object",
+    "files": [],
+    "shipped": false
+  },
+  {
+    "source": "travel_07.webp",
+    "name": "headphones",
+    "width": 1312,
+    "height": 1199,
+    "mode": "RGBA",
+    "transparent_share": 0.621,
+    "kind": "object",
+    "files": [],
+    "shipped": false
+  },
+  {
+    "source": "travel_08.webp",
+    "name": "suitcase-cream-tall",
+    "width": 1086,
+    "height": 1448,
+    "mode": "RGBA",
+    "transparent_share": 0.523,
+    "kind": "object",
+    "files": [],
+    "shipped": false
+  },
+  {
+    "source": "travel_09.webp",
+    "name": "passport-boarding-pass",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.491,
+    "kind": "object",
+    "files": [
+      {
+        "file": "passport-boarding-pass.webp",
+        "width": 900,
+        "height": 600
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_10.webp",
+    "name": "poolside-relax",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGBA",
+    "transparent_share": 0.012,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "poolside-relax-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "poolside-relax-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_11.webp",
+    "name": "passport-flatlay",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "passport-flatlay-800.webp",
+        "width": 800,
+        "height": 533
+      },
+      {
+        "file": "passport-flatlay-1536.webp",
+        "width": 1536,
+        "height": 1024
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_12.webp",
+    "name": "family-poolside",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.245,
+    "kind": "object",
+    "files": [
+      {
+        "file": "family-poolside.webp",
+        "width": 900,
+        "height": 600
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_13.webp",
+    "name": "pool-diorama",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGBA",
+    "transparent_share": 0.466,
+    "kind": "object",
+    "files": [
+      {
+        "file": "pool-diorama.webp",
+        "width": 900,
+        "height": 507
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_14.webp",
+    "name": "mountain-lake",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGBA",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "mountain-lake-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "mountain-lake-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_15.webp",
+    "name": "suitcase-macro",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.356,
+    "kind": "object",
+    "files": [],
+    "shipped": false
+  },
+  {
+    "source": "travel_16.webp",
+    "name": "airplane",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.685,
+    "kind": "object",
+    "files": [
+      {
+        "file": "airplane.webp",
+        "width": 900,
+        "height": 600
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_17.webp",
+    "name": "airplane-clouds",
+    "width": 1752,
+    "height": 897,
+    "mode": "RGBA",
+    "transparent_share": 0.399,
+    "kind": "object",
+    "files": [
+      {
+        "file": "airplane-clouds.webp",
+        "width": 900,
+        "height": 461
+      }
+    ],
+    "near_duplicates": [
+      "travel_20.webp"
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_18.webp",
+    "name": "passport-wallet",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.698,
+    "kind": "object",
+    "files": [
+      {
+        "file": "passport-wallet.webp",
+        "width": 900,
+        "height": 600
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_19.webp",
+    "name": "check-in-cutout",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.308,
+    "kind": "object",
+    "files": [
+      {
+        "file": "check-in-cutout.webp",
+        "width": 900,
+        "height": 600
+      }
+    ],
+    "near_duplicates": [
+      "travel_24.webp"
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_20.webp",
+    "name": "airplane-cloud",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGBA",
+    "transparent_share": 0.645,
+    "kind": "object",
+    "files": [
+      {
+        "file": "airplane-cloud.webp",
+        "width": 900,
+        "height": 507
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_21.webp",
+    "name": "suitcase-cream",
+    "width": 1024,
+    "height": 1536,
+    "mode": "RGBA",
+    "transparent_share": 0.461,
+    "kind": "object",
+    "files": [
+      {
+        "file": "suitcase-cream.webp",
+        "width": 600,
+        "height": 900
+      }
+    ],
+    "near_duplicates": [
+      "travel_08.webp",
+      "travel_23.webp"
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_22.webp",
+    "name": "camera",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.586,
+    "kind": "object",
+    "files": [
+      {
+        "file": "camera.webp",
+        "width": 900,
+        "height": 600
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_23.webp",
+    "name": "suitcase-silver",
+    "width": 1086,
+    "height": 1448,
+    "mode": "RGBA",
+    "transparent_share": 0.497,
+    "kind": "object",
+    "files": [
+      {
+        "file": "suitcase-silver.webp",
+        "width": 675,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_24.webp",
+    "name": "check-in-scene",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "check-in-scene-800.webp",
+        "width": 800,
+        "height": 533
+      },
+      {
+        "file": "check-in-scene-1536.webp",
+        "width": 1536,
+        "height": 1024
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_25.webp",
+    "name": "island-diorama",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.337,
+    "kind": "object",
+    "files": [
+      {
+        "file": "island-diorama.webp",
+        "width": 900,
+        "height": 600
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_26.webp",
+    "name": "spa",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGBA",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "spa-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "spa-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_27.webp",
+    "name": "pool-villa",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "transparent_share": 0.0,
+    "kind": "scene",
+    "files": [
+      {
+        "file": "pool-villa-800.webp",
+        "width": 800,
+        "height": 450
+      },
+      {
+        "file": "pool-villa-1600.webp",
+        "width": 1600,
+        "height": 900
+      }
+    ],
+    "shipped": true
+  },
+  {
+    "source": "travel_28.webp",
+    "name": "hat-sunglasses",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGBA",
+    "transparent_share": 0.509,
+    "kind": "object",
+    "files": [
+      {
+        "file": "hat-sunglasses.webp",
+        "width": 900,
+        "height": 600
+      }
+    ],
+    "shipped": true
+  }
+]

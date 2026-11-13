@@ -1,0 +1,29 @@
+[project]
+name = "ori-travel-api"
+version = "1.0.0"
+description = "Ori Travel AI — private family travel API"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    "ignore::DeprecationWarning:passlib.*",
+]
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+extend-exclude = [".venv", "alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC"]
+ignore = [
+    "S101",  # assert in tests
+    "B008",  # FastAPI Depends() in defaults
+    "S311",  # random used for deterministic DEMO fixtures, never for security
+    "UP046", # pydantic generic models need typing.Generic
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S107"]

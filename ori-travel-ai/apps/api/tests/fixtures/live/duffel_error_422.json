@@ -1,0 +1,13 @@
+{
+ "errors": [
+  {
+   "type": "validation_error",
+   "title": "Invalid",
+   "message": "departure_date must be in the future",
+   "code": "validation_required"
+  }
+ ],
+ "meta": {
+  "status": 422
+ }
+}

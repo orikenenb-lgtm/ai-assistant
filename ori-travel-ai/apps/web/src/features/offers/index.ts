@@ -1,0 +1,20 @@
+/** Shared offer UI (agent F2). Reuse in AI chat, saved offers, trips and booking pages. */
+export { AddToTripButton, type AddToTripButtonProps } from './components/AddToTripButton';
+export { AlsoOfferedBy } from './components/AlsoOfferedBy';
+export { CancellationSummary, cancellationKind, type CancellationSummaryProps } from './components/CancellationSummary';
+export { CompareToggle, type CompareToggleProps } from './components/CompareToggle';
+export { FeaturedDeal, totalLabel, type FeaturedDealProps } from './components/FeaturedDeal';
+export { FlightItinerary, FlightSliceView, dayOffset, sliceTitle, type FlightItineraryProps } from './components/FlightItinerary';
+export { OfferCard, type OfferCardProps } from './components/OfferCard';
+export { OfferDetailDialog, OfferDetailsView, type OfferDetailDialogProps } from './components/OfferDetailDialog';
+export { OfferKeyFacts, offerFacts, baggageText, passengersText, type Fact } from './components/OfferFacts';
+export { OfferTable, type OfferTableProps, type TableSortKey } from './components/OfferTable';
+export { PriceBreakdown, PriceSummary, hasExcludedCosts, unitPrices, type PriceBreakdownProps } from './components/PriceBreakdown';
+export { SaveOfferButton, type SaveOfferButtonProps } from './components/SaveOfferButton';
+export { ScoreBadge, ScoreExplanation, type ScoreExplanationProps } from './components/ScoreExplanation';
+export { SourceLine, isExpired, type SourceLineProps } from './components/SourceLine';
+export { COMPARE_MAX, COMPARE_MIN, compareSelection, useCompareSelection } from './compareSelection';
+export { compareDecimal, scoreNumber } from './decimal';
+export { cheapestOffer, dominantCurrency, pickFeatured, travellersCovered, type FeaturedPick } from './featured';
+export { useOffer, useSaveOffer, useAddOfferToTrip } from './hooks';
+export * from './labels';

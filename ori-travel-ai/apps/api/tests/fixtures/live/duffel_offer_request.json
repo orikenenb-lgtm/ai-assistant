@@ -1,0 +1,29 @@
+{
+ "data": {
+  "id": "orq_0000ABCDEFGHIJKLMNOP",
+  "live_mode": false,
+  "created_at": "2026-11-12T09:00:00.000000Z",
+  "slices": [],
+  "passengers": [
+   {
+    "id": "pas_0000AAA",
+    "type": "adult",
+    "given_name": null,
+    "family_name": null
+   },
+   {
+    "id": "pas_0000BBB",
+    "type": "adult",
+    "given_name": null,
+    "family_name": null
+   },
+   {
+    "id": "pas_0000CCC",
+    "type": "child",
+    "given_name": null,
+    "family_name": null
+   }
+  ],
+  "cabin_class": "economy"
+ }
+}

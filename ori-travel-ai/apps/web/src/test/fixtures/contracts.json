@@ -1,0 +1,568 @@
+{
+  "offers": [
+    {
+      "id": "off_f1",
+      "category": "flight",
+      "title": "תל אביב → אתונה",
+      "subtitle": null,
+      "source": {
+        "provider_id": "demo_air",
+        "provider_name": "דמו-אייר",
+        "mode": "DEMO",
+        "fetched_at": "2026-11-12T10:00:00Z",
+        "expires_at": "2026-11-12T10:15:00Z",
+        "supplier_offer_id": "S-1",
+        "deep_link": null,
+        "note": "נתוני הדגמה בלבד"
+      },
+      "price": {
+        "total": {
+          "amount": "1234.50",
+          "currency": "ILS"
+        },
+        "total_status": "known",
+        "components": [
+          {
+            "label": "מחיר בסיס",
+            "kind": "base",
+            "amount": {
+              "amount": "1234.50",
+              "currency": "ILS"
+            },
+            "status": "known",
+            "included_in_total": true
+          },
+          {
+            "label": "מס עירוני",
+            "kind": "tax",
+            "amount": {
+              "amount": "12.50",
+              "currency": "ILS"
+            },
+            "status": "excluded",
+            "included_in_total": false
+          }
+        ],
+        "excluded_notes": [
+          "מס עירוני משולם במלון"
+        ],
+        "per_night": null,
+        "per_person": null,
+        "per_day": null
+      },
+      "cancellation": {
+        "refundable": false,
+        "free_cancellation_until": null,
+        "changeable": null,
+        "change_fee": null,
+        "policy_text": null
+      },
+      "details": {
+        "kind": "flight",
+        "slices": [
+          {
+            "origin": "TLV",
+            "destination": "ATH",
+            "departing_at": "2026-12-01T08:15:00+02:00",
+            "arriving_at": "2026-12-01T10:45:00+02:00",
+            "duration_minutes": 150,
+            "stops": 0,
+            "segments": [
+              {
+                "carrier_code": "DA",
+                "carrier_name": "דמו-אייר",
+                "flight_number": "DA123",
+                "origin": "TLV",
+                "origin_name": null,
+                "destination": "ATH",
+                "destination_name": null,
+                "departing_at": "2026-12-01T08:15:00+02:00",
+                "arriving_at": "2026-12-01T10:45:00+02:00",
+                "duration_minutes": 150,
+                "cabin": "economy",
+                "aircraft": null,
+                "operating_carrier_name": null
+              }
+            ],
+            "layovers_minutes": []
+          }
+        ],
+        "cabin": "economy",
+        "fare_brand": null,
+        "baggage": {
+          "personal_item": true,
+          "carry_on_included": 1,
+          "checked_included": null,
+          "checked_bag_weight_kg": null,
+          "notes": null
+        },
+        "passengers": {
+          "adult": 2,
+          "child": 1,
+          "infant": 0
+        },
+        "validating_carrier": null,
+        "total_duration_minutes": 150,
+        "max_stops": 0
+      },
+      "dedupe_key": "f:TLV-ATH",
+      "also_offered_by": [],
+      "warnings": [],
+      "score": {
+        "total": "78.5",
+        "cost": "80",
+        "convenience": "70",
+        "flexibility": "90",
+        "quality": "65.25",
+        "weights": {
+          "cost": 40,
+          "convenience": 25,
+          "flexibility": 20,
+          "quality": 15
+        },
+        "reasons": [
+          "מחיר נמוך מהממוצע"
+        ],
+        "rank": 1,
+        "comparable": true
+      }
+    },
+    {
+      "id": "off_h1",
+      "category": "hotel",
+      "title": "מלון דמו",
+      "subtitle": null,
+      "source": {
+        "provider_id": "demo_stay",
+        "provider_name": "דמו-אייר",
+        "mode": "DEMO",
+        "fetched_at": "2026-11-12T10:00:00Z",
+        "expires_at": "2026-11-12T10:15:00Z",
+        "supplier_offer_id": "S-1",
+        "deep_link": null,
+        "note": "נתוני הדגמה בלבד"
+      },
+      "price": {
+        "total": {
+          "amount": "2400",
+          "currency": "EUR"
+        },
+        "total_status": "known",
+        "components": [
+          {
+            "label": "מחיר בסיס",
+            "kind": "base",
+            "amount": {
+              "amount": "2400",
+              "currency": "EUR"
+            },
+            "status": "known",
+            "included_in_total": true
+          },
+          {
+            "label": "מס עירוני",
+            "kind": "tax",
+            "amount": {
+              "amount": "12.50",
+              "currency": "EUR"
+            },
+            "status": "excluded",
+            "included_in_total": false
+          }
+        ],
+        "excluded_notes": [
+          "מס עירוני משולם במלון"
+        ],
+        "per_night": null,
+        "per_person": null,
+        "per_day": null
+      },
+      "cancellation": {
+        "refundable": true,
+        "free_cancellation_until": "2026-11-28T23:59:00+02:00",
+        "changeable": null,
+        "change_fee": null,
+        "policy_text": null
+      },
+      "details": {
+        "kind": "hotel",
+        "hotel_name": "מלון דמו",
+        "hotel_id": "H1",
+        "star_rating": 4.5,
+        "guest_rating": 8.7,
+        "review_count": null,
+        "address": null,
+        "city": "Athens",
+        "country_code": null,
+        "latitude": null,
+        "longitude": null,
+        "distance_to_center_km": null,
+        "room_name": "חדר משפחה",
+        "board": "breakfast",
+        "check_in": "2026-12-01",
+        "check_out": "2026-12-05",
+        "nights": 4,
+        "rooms": 1,
+        "adults": 2,
+        "children": 1,
+        "amenities": [],
+        "kosher_info": null,
+        "accessibility_features": []
+      },
+      "dedupe_key": "h:H1",
+      "also_offered_by": [],
+      "warnings": [],
+      "score": null
+    },
+    {
+      "id": "off_c1",
+      "category": "car",
+      "title": "רכב משפחתי",
+      "subtitle": null,
+      "source": {
+        "provider_id": "demo_cars",
+        "provider_name": "דמו-אייר",
+        "mode": "CACHED",
+        "fetched_at": "2026-11-12T10:00:00Z",
+        "expires_at": "2026-11-12T10:15:00Z",
+        "supplier_offer_id": "S-1",
+        "deep_link": null,
+        "note": "נתוני הדגמה בלבד"
+      },
+      "price": {
+        "total": {
+          "amount": "310.99",
+          "currency": "USD"
+        },
+        "total_status": "known",
+        "components": [
+          {
+            "label": "מחיר בסיס",
+            "kind": "base",
+            "amount": {
+              "amount": "310.99",
+              "currency": "USD"
+            },
+            "status": "known",
+            "included_in_total": true
+          },
+          {
+            "label": "מס עירוני",
+            "kind": "tax",
+            "amount": {
+              "amount": "12.50",
+              "currency": "USD"
+            },
+            "status": "excluded",
+            "included_in_total": false
+          }
+        ],
+        "excluded_notes": [
+          "מס עירוני משולם במלון"
+        ],
+        "per_night": null,
+        "per_person": null,
+        "per_day": null
+      },
+      "cancellation": {
+        "refundable": null,
+        "free_cancellation_until": null,
+        "changeable": null,
+        "change_fee": null,
+        "policy_text": null
+      },
+      "details": {
+        "kind": "car",
+        "vendor": "דמו-קאר",
+        "car_class": "midsize",
+        "model_example": "Toyota Corolla",
+        "transmission": "automatic",
+        "seats": 5,
+        "bags": 3,
+        "air_conditioning": true,
+        "fuel_policy": null,
+        "mileage": null,
+        "pickup_location": "ATH",
+        "dropoff_location": "ATH",
+        "pickup_at": "2026-12-01T11:00:00",
+        "dropoff_at": "2026-12-05T11:00:00",
+        "rental_days": 4,
+        "driver_min_age": null,
+        "young_driver_fee_applies": null,
+        "insurance_included": [],
+        "deposit": {
+          "amount": "500",
+          "currency": "USD"
+        }
+      },
+      "dedupe_key": "c:1",
+      "also_offered_by": [],
+      "warnings": [],
+      "score": null
+    },
+    {
+      "id": "off_a1",
+      "category": "activity",
+      "title": "סיור באקרופוליס",
+      "subtitle": null,
+      "source": {
+        "provider_id": "demo_fun",
+        "provider_name": "דמו-אייר",
+        "mode": "DEMO",
+        "fetched_at": "2026-11-12T10:00:00Z",
+        "expires_at": "2026-11-12T10:15:00Z",
+        "supplier_offer_id": "S-1",
+        "deep_link": null,
+        "note": "נתוני הדגמה בלבד"
+      },
+      "price": {
+        "total": {
+          "amount": "15000",
+          "currency": "JPY"
+        },
+        "total_status": "known",
+        "components": [
+          {
+            "label": "מחיר בסיס",
+            "kind": "base",
+            "amount": {
+              "amount": "15000",
+              "currency": "JPY"
+            },
+            "status": "known",
+            "included_in_total": true
+          },
+          {
+            "label": "מס עירוני",
+            "kind": "tax",
+            "amount": {
+              "amount": "12.50",
+              "currency": "JPY"
+            },
+            "status": "excluded",
+            "included_in_total": false
+          }
+        ],
+        "excluded_notes": [
+          "מס עירוני משולם במלון"
+        ],
+        "per_night": null,
+        "per_person": null,
+        "per_day": null
+      },
+      "cancellation": {
+        "refundable": null,
+        "free_cancellation_until": null,
+        "changeable": null,
+        "change_fee": null,
+        "policy_text": null
+      },
+      "details": {
+        "kind": "activity",
+        "name": "סיור באקרופוליס",
+        "activity_id": "A1",
+        "category": "tour",
+        "city": "Athens",
+        "description": null,
+        "duration_minutes": null,
+        "available_dates": [
+          "2026-12-02"
+        ],
+        "start_times": [
+          "09:00"
+        ],
+        "languages": [],
+        "meeting_point": null,
+        "latitude": null,
+        "longitude": null,
+        "rating": 4.8,
+        "review_count": null,
+        "family_friendly": true,
+        "min_age": null,
+        "accessibility_features": [],
+        "participants": {
+          "adult": 2
+        }
+      },
+      "dedupe_key": "a:1",
+      "also_offered_by": [],
+      "warnings": [],
+      "score": null
+    }
+  ],
+  "searchResponse": {
+    "search_id": "srch_1",
+    "category": "flight",
+    "status": "partial",
+    "params": {
+      "origin": "TLV",
+      "destination": "ATH",
+      "depart_date": "2026-12-01"
+    },
+    "created_at": "2026-11-12T10:00:00Z",
+    "completed_at": "2026-11-12T10:00:00Z",
+    "providers": [
+      {
+        "provider_id": "demo_air",
+        "provider_name": "דמו-אייר",
+        "mode": "DEMO",
+        "status": "OK",
+        "result_count": 1,
+        "duration_ms": 120,
+        "error_code": null,
+        "message": null,
+        "fetched_at": "2026-11-12T10:00:00Z"
+      },
+      {
+        "provider_id": "duffel",
+        "provider_name": "Duffel",
+        "mode": "LIVE",
+        "status": "NOT_CONFIGURED",
+        "result_count": 0,
+        "duration_ms": null,
+        "error_code": null,
+        "message": "לא מחובר",
+        "fetched_at": null
+      }
+    ],
+    "offers": [
+      {
+        "id": "off_f1",
+        "category": "flight",
+        "title": "תל אביב → אתונה",
+        "subtitle": null,
+        "source": {
+          "provider_id": "demo_air",
+          "provider_name": "דמו-אייר",
+          "mode": "DEMO",
+          "fetched_at": "2026-11-12T10:00:00Z",
+          "expires_at": "2026-11-12T10:15:00Z",
+          "supplier_offer_id": "S-1",
+          "deep_link": null,
+          "note": "נתוני הדגמה בלבד"
+        },
+        "price": {
+          "total": {
+            "amount": "1234.50",
+            "currency": "ILS"
+          },
+          "total_status": "known",
+          "components": [
+            {
+              "label": "מחיר בסיס",
+              "kind": "base",
+              "amount": {
+                "amount": "1234.50",
+                "currency": "ILS"
+              },
+              "status": "known",
+              "included_in_total": true
+            },
+            {
+              "label": "מס עירוני",
+              "kind": "tax",
+              "amount": {
+                "amount": "12.50",
+                "currency": "ILS"
+              },
+              "status": "excluded",
+              "included_in_total": false
+            }
+          ],
+          "excluded_notes": [
+            "מס עירוני משולם במלון"
+          ],
+          "per_night": null,
+          "per_person": null,
+          "per_day": null
+        },
+        "cancellation": {
+          "refundable": false,
+          "free_cancellation_until": null,
+          "changeable": null,
+          "change_fee": null,
+          "policy_text": null
+        },
+        "details": {
+          "kind": "flight",
+          "slices": [
+            {
+              "origin": "TLV",
+              "destination": "ATH",
+              "departing_at": "2026-12-01T08:15:00+02:00",
+              "arriving_at": "2026-12-01T10:45:00+02:00",
+              "duration_minutes": 150,
+              "stops": 0,
+              "segments": [
+                {
+                  "carrier_code": "DA",
+                  "carrier_name": "דמו-אייר",
+                  "flight_number": "DA123",
+                  "origin": "TLV",
+                  "origin_name": null,
+                  "destination": "ATH",
+                  "destination_name": null,
+                  "departing_at": "2026-12-01T08:15:00+02:00",
+                  "arriving_at": "2026-12-01T10:45:00+02:00",
+                  "duration_minutes": 150,
+                  "cabin": "economy",
+                  "aircraft": null,
+                  "operating_carrier_name": null
+                }
+              ],
+              "layovers_minutes": []
+            }
+          ],
+          "cabin": "economy",
+          "fare_brand": null,
+          "baggage": {
+            "personal_item": true,
+            "carry_on_included": 1,
+            "checked_included": null,
+            "checked_bag_weight_kg": null,
+            "notes": null
+          },
+          "passengers": {
+            "adult": 2,
+            "child": 1,
+            "infant": 0
+          },
+          "validating_carrier": null,
+          "total_duration_minutes": 150,
+          "max_stops": 0
+        },
+        "dedupe_key": "f:TLV-ATH",
+        "also_offered_by": [],
+        "warnings": [],
+        "score": {
+          "total": "78.5",
+          "cost": "80",
+          "convenience": "70",
+          "flexibility": "90",
+          "quality": "65.25",
+          "weights": {
+            "cost": 40,
+            "convenience": 25,
+            "flexibility": 20,
+            "quality": 15
+          },
+          "reasons": [
+            "מחיר נמוך מהממוצע"
+          ],
+          "rank": 1,
+          "comparable": true
+        }
+      }
+    ],
+    "total_offers_before_dedupe": 2,
+    "weights": {
+      "cost": 40,
+      "convenience": 25,
+      "flexibility": 20,
+      "quality": 15
+    },
+    "coverage_note": "תוצאות הדגמה בלבד",
+    "has_demo_results": true,
+    "has_live_results": false
+  }
+}

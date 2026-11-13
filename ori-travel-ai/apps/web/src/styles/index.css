@@ -1,0 +1,519 @@
+/*
+ * Ori Travel AI — design tokens + global styles (Tailwind CSS v4).
+ * Full documentation (Hebrew): docs/release/design-system.md
+ *
+ * Direction (V6): a light, calm, fast-comparison tool. Near-white neutral canvas,
+ * white surfaces with crisp 1px lines, slate "ink" typography, ONE calm accent
+ * (sea-teal) for actions and navigation. Tangerine is reserved for the best /
+ * featured deal and sky for low prices, so price semantics never compete with UI
+ * chrome. Status hues: moss (success/live), harbor (info/cached), amber (warning),
+ * coral (danger).
+ *
+ * Theming: every colour is a CSS variable. Dark mode redefines the palette scales
+ * on <html data-theme="dark"> (set by components/layout/theme.ts from the user's
+ * choice or prefers-color-scheme), so feature code that uses palette utilities
+ * (`bg-sea-50 text-sea-700`, `bg-ink-900 text-white`, …) adapts automatically:
+ * light steps become dark steps and vice versa, and `white` becomes the dark
+ * surface (text-white on a solid colour stays readable). All text pairs are
+ * WCAG AA in both themes — the full ratio table (light + dark) is in the doc;
+ * re-run the check there whenever a value changes.
+ *
+ * The default Tailwind palette is intentionally reset (`--color-*: initial`).
+ */
+@import 'tailwindcss';
+
+/* `dark:` follows the resolved theme (manual toggle or system), not only the media query. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme static {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* Ink — slate-navy neutrals for text, icons, lines.
+     ink-900 on white = 15.8:1, ink-600 = 7.55:1, ink-500 = 5.4:1, ink-400 (input borders) = 3.45:1 */
+  --color-ink-50: #f3f5f8;
+  --color-ink-100: #e6eaf0;
+  --color-ink-200: #cdd5e0;
+  --color-ink-300: #a7b3c5;
+  --color-ink-400: #7c8ba3;
+  --color-ink-500: #5b6b86;
+  --color-ink-600: #45556f;
+  --color-ink-700: #33435c;
+  --color-ink-800: #22324a;
+  --color-ink-900: #142339;
+  --color-ink-950: #0b1526;
+
+  /* Sand — warm neutrals, now very subtle (50–200 are almost neutral). Kept for the
+     DEMO language (dashed sand badges/banners). sand-800 on sand-100 = 8.2:1 */
+  --color-sand-50: #f9f8f5;
+  --color-sand-100: #f3f0ea;
+  --color-sand-200: #e8e2d6;
+  --color-sand-300: #d9cdb8;
+  --color-sand-400: #c9b28e;
+  --color-sand-500: #b6966a;
+  --color-sand-600: #957650;
+  --color-sand-700: #745a3c;
+  --color-sand-800: #57432d;
+  --color-sand-900: #3d2f20;
+
+  /* Sea — the single UI accent (actions, links, active navigation, focus).
+     white on sea-600 = 6.0:1, sea-700 on sea-50 = 7.4:1, sea-500 focus ring vs white = 4.3:1 */
+  --color-sea-50: #edf8f6;
+  --color-sea-100: #d2efea;
+  --color-sea-200: #a6ded5;
+  --color-sea-300: #6fc5b8;
+  --color-sea-400: #3ba698;
+  --color-sea-500: #1f897d;
+  --color-sea-600: #156f66;
+  --color-sea-700: #125a53;
+  --color-sea-800: #104843;
+  --color-sea-900: #0d3935;
+
+  /* Sun — brand highlight (logo, rank-1 marker). ink-950 on sun-400 = 10.1:1 */
+  --color-sun-100: #fbefd9;
+  --color-sun-300: #f0cd8f;
+  --color-sun-400: #e9b872;
+  --color-sun-500: #d99a45;
+  --color-sun-700: #8a5a1c;
+
+  /* Status hues (bg-50 / border-200 / text-700 pairs are all ≥ 6.4:1) */
+  --color-moss-50: #eff6ee;
+  --color-moss-100: #d8ebd4;
+  --color-moss-200: #b3d6ac;
+  --color-moss-500: #4c8c47;
+  --color-moss-600: #3b7337;
+  --color-moss-700: #2e5b2b;
+
+  --color-harbor-50: #eef3fa;
+  --color-harbor-100: #d9e4f3;
+  --color-harbor-200: #b4c9e6;
+  --color-harbor-500: #4a6fa5;
+  --color-harbor-600: #3a5a8c;
+  --color-harbor-700: #2d4870;
+
+  --color-amber-50: #fdf7e8;
+  --color-amber-100: #f9ebc4;
+  --color-amber-200: #f1d68a;
+  --color-amber-500: #c48a12;
+  --color-amber-600: #9c6b0a;
+  --color-amber-700: #7a5208;
+
+  --color-coral-50: #fdf2ef;
+  --color-coral-100: #fadfd7;
+  --color-coral-200: #f4bbaa;
+  --color-coral-500: #c8553a;
+  --color-coral-600: #ad4129;
+  --color-coral-700: #8c331f;
+
+  /* V6 fare-comparison palette (contract names — tune values only with contrast checks,
+     see docs/release/design-system.md). Warm tangerine = best/featured deal;
+     sky = low prices / alternate dates. */
+  --color-tangerine-50: #fff6ef;
+  --color-tangerine-100: #ffe2cc;
+  --color-tangerine-200: #ffc9a1;
+  --color-tangerine-400: #f39050;
+  --color-tangerine-600: #b9520c; /* white text on it: 4.91:1 */
+  --color-tangerine-700: #a8480b; /* on white: 5.84:1 */
+  --color-tangerine-800: #7c3508; /* on tangerine-100: 7.17:1 */
+  --color-sky-50: #effaff;
+  --color-sky-100: #d4eefa;
+  --color-sky-200: #a9dcf3;
+  --color-sky-500: #2a93c6;
+  --color-sky-700: #14628a; /* on white: 6.68:1 */
+  --color-sky-800: #0f4c6b; /* on sky-100: 7.68:1 */
+
+  /* Semantic: featured deal (tangerine) */
+  --color-deal: var(--color-tangerine-700);
+  --color-deal-strong: var(--color-tangerine-600);
+  --color-deal-soft: var(--color-tangerine-50);
+  --color-deal-line: var(--color-tangerine-200);
+  /* Semantic: low price (sky) */
+  --color-low: var(--color-sky-700);
+  --color-low-soft: var(--color-sky-50);
+  --color-low-line: var(--color-sky-200);
+  /* Semantic: fare heatmap cells (`text-fg` passes ≥ 8.9:1 on all of them, both themes).
+     Colour is never the only signal — cells also carry text/icons (see contract). */
+  --color-heat-best: #ffb27a; /* cheapest priced cell(s) */
+  --color-heat-low: #cfeefb; /* lowest third */
+  --color-heat-mid: #fdeaa8; /* middle third */
+  --color-heat-high: #ffd2b0; /* highest third */
+  --color-heat-none: var(--color-ink-50); /* searched, no offers */
+  --color-heat-unknown: var(--color-white); /* not searched */
+  /* Text on heat cells (any tier/state, both themes): primary + secondary (day number, weekday). */
+  --color-heat-fg: var(--color-ink-900); /* ≥ 8.9:1 light, ≥ 6.2:1 dark on every heat fill */
+  --color-heat-fg-muted: var(--color-ink-700); /* ≥ 5.6:1 light; dark override below ≥ 5.5:1 */
+
+  /* Semantic: surfaces, lines, text — prefer these in feature code */
+  --color-canvas: #f6f7f9; /* page background (cool near-white) */
+  --color-surface: var(--color-white); /* cards, sidebar, top bar, dialogs */
+  --color-surface-sunken: #f1f3f6; /* wells, table headers, segmented tracks */
+  --color-surface-hover: #f3f5f8; /* row / nav / ghost hover */
+  --color-line: #e3e7ed; /* hairlines between surfaces (decorative) */
+  --color-line-strong: var(--color-ink-200); /* emphasised dividers, outline buttons */
+  --color-control: var(--color-ink-400); /* input borders: 3.45:1 vs white (≥ 3:1) */
+  --color-fg: var(--color-ink-900);
+  --color-fg-muted: var(--color-ink-600);
+  --color-fg-subtle: var(--color-ink-500);
+  --color-accent: var(--color-sea-600); /* primary buttons, links, active indicator */
+  --color-accent-hover: var(--color-sea-700);
+  --color-accent-soft: var(--color-sea-50); /* active nav item, tonal buttons */
+  --color-accent-strong: var(--color-sea-700); /* accent-coloured text on accent-soft */
+  --color-accent-line: var(--color-sea-200);
+  --color-accent-fg: var(--color-white); /* text on solid accent */
+  --color-focus: var(--color-sea-500); /* 4.3:1 vs white, 3.9:1 vs canvas */
+  --color-scrim: #0b1220; /* modal overlay (used with /45–/55 opacity) */
+  /* Status aliases (text / soft background / line) */
+  --color-success: var(--color-moss-700);
+  --color-success-soft: var(--color-moss-50);
+  --color-success-line: var(--color-moss-200);
+  --color-info: var(--color-harbor-700);
+  --color-info-soft: var(--color-harbor-50);
+  --color-info-line: var(--color-harbor-200);
+  --color-warn: var(--color-amber-700);
+  --color-warn-soft: var(--color-amber-50);
+  --color-warn-line: var(--color-amber-200);
+  --color-danger: var(--color-coral-700);
+  --color-danger-soft: var(--color-coral-50);
+  --color-danger-line: var(--color-coral-200);
+
+  /* Typography */
+  --font-sans: 'Heebo', ui-sans-serif, system-ui, 'Segoe UI', 'Arial Hebrew', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', Menlo, Consolas, monospace;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.01em;
+
+  /* Radii — crisp, not pillowy */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+
+  /* Elevation — soft, low-contrast; borders do most of the separation */
+  --shadow-xs: 0 1px 2px rgb(16 24 40 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-md: 0 2px 4px -1px rgb(16 24 40 / 0.04), 0 8px 20px -6px rgb(16 24 40 / 0.1);
+  --shadow-lg: 0 4px 8px -2px rgb(16 24 40 / 0.05), 0 20px 44px -12px rgb(16 24 40 / 0.2);
+
+  /* Layout */
+  --spacing-sidebar: 16rem;
+  --spacing-topbar: 4rem;
+  --spacing-tabbar: 4.25rem;
+  --spacing-touch: 2.75rem; /* 44px minimum touch target (h-touch / min-h-touch / size-touch) */
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-in: fade-in 160ms var(--ease-out-soft);
+  --animate-pop-in: pop-in 180ms var(--ease-out-soft);
+  --animate-slide-in-start: slide-in-start 240ms var(--ease-out-soft);
+  --animate-toast-in: toast-in 220ms var(--ease-out-soft);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  /* "start" = right edge in RTL: slide in from the inline-start side */
+  @keyframes slide-in-start {
+    from {
+      transform: translateX(var(--slide-from, 100%));
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/*
+ * Dark theme. Scales are mirrored (50 ↔ 950) so the same utility keeps the same
+ * *role*: 50 = faint tinted background, 700 = text on that background, 600 = solid
+ * fill with `text-white`. `white` becomes the dark surface. Verified pairs: see doc.
+ */
+@layer base {
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --color-white: #151c27;
+    --color-black: #000000;
+
+    --color-ink-50: #1b2331;
+    --color-ink-100: #232c3c;
+    --color-ink-200: #2f3a4d;
+    --color-ink-300: #475469;
+    --color-ink-400: #6d7b93;
+    --color-ink-500: #8f9bb0;
+    --color-ink-600: #a9b3c4;
+    --color-ink-700: #c4ccd8;
+    --color-ink-800: #dbe0e8;
+    --color-ink-900: #eef1f5;
+    --color-ink-950: #f8f9fb;
+
+    --color-sand-50: #1b1f26;
+    --color-sand-100: #23262c;
+    --color-sand-200: #2f3137;
+    --color-sand-300: #4a463f;
+    --color-sand-400: #6f6656;
+    --color-sand-500: #968770;
+    --color-sand-600: #b3a283;
+    --color-sand-700: #cdbc9c;
+    --color-sand-800: #e2d4b8;
+    --color-sand-900: #f0e7d4;
+
+    --color-sea-50: #0f2a29;
+    --color-sea-100: #133935;
+    --color-sea-200: #1b514b;
+    --color-sea-300: #246f65;
+    --color-sea-400: #2f8f83;
+    --color-sea-500: #3faf9f;
+    --color-sea-600: #5ec5b6;
+    --color-sea-700: #88d7cb;
+    --color-sea-800: #b1e7de;
+    --color-sea-900: #d7f4ef;
+
+    --color-sun-100: #2c2314;
+    --color-sun-300: #6c4a14;
+    --color-sun-400: #7a5418;
+    --color-sun-500: #a6762e;
+    --color-sun-700: #f0cd8f;
+
+    --color-moss-50: #15261a;
+    --color-moss-100: #1c3422;
+    --color-moss-200: #2b4e31;
+    --color-moss-500: #5ba653;
+    --color-moss-600: #7cc073;
+    --color-moss-700: #a4d79c;
+
+    --color-harbor-50: #151f33;
+    --color-harbor-100: #1c2a45;
+    --color-harbor-200: #2b3f63;
+    --color-harbor-500: #7093cc;
+    --color-harbor-600: #8cafe0;
+    --color-harbor-700: #b5cef0;
+
+    --color-amber-50: #2a2111;
+    --color-amber-100: #3a2d13;
+    --color-amber-200: #5a4518;
+    --color-amber-500: #d9a532;
+    --color-amber-600: #e8bb56;
+    --color-amber-700: #f3d58c;
+
+    --color-coral-50: #2e1915;
+    --color-coral-100: #40211b;
+    --color-coral-200: #64332b;
+    --color-coral-500: #e07b61;
+    --color-coral-600: #ec937c;
+    --color-coral-700: #f6b5a4;
+
+    --color-tangerine-50: #2c1b0f;
+    --color-tangerine-100: #3e2513;
+    --color-tangerine-200: #6c3e1b;
+    --color-tangerine-400: #e08a4a;
+    --color-tangerine-600: #f2a066;
+    --color-tangerine-700: #f6b07c;
+    --color-tangerine-800: #ffd3b2;
+    --color-sky-50: #0e2331;
+    --color-sky-100: #11314a;
+    --color-sky-200: #18496b;
+    --color-sky-500: #50b0e0;
+    --color-sky-700: #90d0f2;
+    --color-sky-800: #c0e6f8;
+
+    --color-heat-best: #8a4613;
+    --color-heat-low: #123e57;
+    --color-heat-mid: #40381a;
+    --color-heat-high: #4a2d1c;
+    /* ink-700 (#c4ccd8) is only 4.37:1 on heat-best #8a4613 (A11Y-03) — secondary cell text is brighter in dark. */
+    --color-heat-fg-muted: #dde3ec;
+
+    --color-canvas: #0e141d;
+    --color-surface: #151c27;
+    --color-surface-sunken: #111721;
+    --color-surface-hover: #1b2331;
+    --color-line: #273142;
+    --color-line-strong: #364257;
+    --color-scrim: #000000;
+  }
+
+  /* Before JS resolves the theme (first paint only): match the system so the blank
+     page does not flash white for dark-mode users. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      color-scheme: dark;
+      background-color: #0e141d;
+    }
+  }
+
+  html {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'kern';
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    min-height: 100dvh;
+    line-height: 1.6;
+    background-color: var(--color-canvas);
+  }
+
+  [dir='ltr'] {
+    --slide-from: -100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Numbers in tables line up (prices, durations, counts). */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Visible, consistent focus ring for keyboard users (≥ 3:1 on every surface) */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-sea-100);
+    color: var(--color-ink-950);
+  }
+
+  input[type='number']::-webkit-inner-spin-button {
+    opacity: 1;
+  }
+}
+
+@layer components {
+  /*
+   * Dark "island" (e.g. the dashboard's assistant card, .bg-horizon). Pins the
+   * palette steps such islands use, so they look identical — and stay AA — in
+   * both themes: white 9.4:1, ink-200 6.7:1, sea-300 5.9:1, sun-400 5.7:1 on #0f4f49.
+   */
+  .surface-dark {
+    --color-white: #ffffff;
+    --color-ink-200: #d3dbe5;
+    --color-ink-300: #b3bfd0;
+    --color-sea-300: #8fdccf;
+    --color-sun-300: #f5d9a8;
+    --color-sun-400: #f0c27f;
+    --color-focus: #8fdccf;
+    color-scheme: dark;
+  }
+
+  /*
+   * Touch targets: on coarse pointers an invisible ::after grows the hit area to at
+   * least 44×44px without changing the visual size. `position: relative` lives in
+   * this layer so a utility like `absolute` on the same element still wins.
+   * Applied generically too: every <summary> (disclosure toggles are never inline text), and
+   * links inside containers marked `.touch-targets` (PageHeader eyebrow/actions, CardHeader
+   * actions) — compact helper links like "ספקים ואבחון" / "כל הטיולים".
+   */
+  .touch-target,
+  .touch-targets :is(a[href], summary),
+  summary {
+    position: relative;
+  }
+  @media (pointer: coarse) {
+    .touch-target::after,
+    .touch-targets :is(a[href], summary)::after,
+    summary::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, var(--spacing-touch));
+      height: max(100%, var(--spacing-touch));
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Prices / figures: tabular + lining digits, slightly tighter. */
+  .price-nums {
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.005em;
+  }
+
+  /* Brand panel for dark islands: deep sea-teal (not navy), soft sun glow. */
+  .bg-horizon {
+    background-color: #0f4f49;
+    background-image:
+      radial-gradient(110% 80% at 88% 0%, rgb(240 194 127 / 0.16) 0%, transparent 55%),
+      linear-gradient(140deg, #0f4f49 0%, #12434a 48%, #143241 100%);
+  }
+
+  /* Very light brand wash for large light panels (auth layout). Theme-aware. */
+  .bg-brand-wash {
+    background-color: var(--color-surface-sunken);
+    background-image:
+      radial-gradient(90% 70% at 100% 0%, color-mix(in oklab, var(--color-sea-100) 70%, transparent) 0%, transparent 60%),
+      radial-gradient(80% 60% at 0% 100%, color-mix(in oklab, var(--color-sky-100) 60%, transparent) 0%, transparent 65%);
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-300) transparent;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

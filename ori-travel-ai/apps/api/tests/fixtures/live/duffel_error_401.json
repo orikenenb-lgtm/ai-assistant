@@ -1,0 +1,15 @@
+{
+ "errors": [
+  {
+   "type": "authentication_error",
+   "title": "Bad token",
+   "message": "The access token is invalid",
+   "code": "access_token_not_found",
+   "documentation_url": "https://duffel.com/docs"
+  }
+ ],
+ "meta": {
+  "status": 401,
+  "request_id": "x"
+ }
+}
