@@ -1,5 +1,6 @@
 package ai.noa.bridge.app.ui
 
+import androidx.compose.runtime.collectAsState
 import ai.noa.bridge.app.R
 import ai.noa.bridge.app.ui.drafts.DraftDetailScreen
 import ai.noa.bridge.app.ui.home.HomeScreen
@@ -37,7 +38,7 @@ class FontScaleTest {
     fun home_allActionsReachableAt200Percent() {
         val fake = FakeAppController(initialSettings = BridgeSettings(cloudConsentGiven = false, sendingEnabled = true))
         rule.setContent {
-            Big { HomeScreen(fake, fake.status.value, fake.settings.value, fake.drafts.value, {}, {}, {}, {}) }
+            Big { HomeScreen(fake, fake.status.collectAsState().value, fake.settings.collectAsState().value, fake.drafts.collectAsState().value, {}, {}, {}, {}) }
         }
         rule.onNodeWithText(str(R.string.home_no_consent_body)).performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag("pauseToggle").performScrollTo().assertIsDisplayed()
@@ -49,7 +50,7 @@ class FontScaleTest {
         val fake = FakeAppController(initialSettings = BridgeSettings(cloudConsentGiven = true, sendingEnabled = true))
         rule.setContent {
             Big {
-                DraftDetailScreen("draft-1", fake.drafts.value, fake.status.value, fake.settings.value, fake, null, { true }, {})
+                DraftDetailScreen("draft-1", fake.drafts.collectAsState().value, fake.status.collectAsState().value, fake.settings.collectAsState().value, fake, null, { true }, {})
             }
         }
         rule.onNodeWithTag("excludeButton").performScrollTo().assertIsDisplayed()

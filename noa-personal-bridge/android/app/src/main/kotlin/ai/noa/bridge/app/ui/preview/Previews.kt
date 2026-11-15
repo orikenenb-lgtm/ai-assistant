@@ -1,5 +1,6 @@
 package ai.noa.bridge.app.ui.preview
 
+import androidx.compose.runtime.collectAsState
 import ai.noa.bridge.app.BridgeStatus
 import ai.noa.bridge.app.ui.drafts.DraftDetailScreen
 import ai.noa.bridge.app.ui.drafts.DraftsListScreen
@@ -32,7 +33,7 @@ private fun Frame(dark: Boolean = false, content: @Composable () -> Unit) {
 @Composable
 private fun HomePreview() = Frame {
     val c = remember { FakeAppController(initialSettings = BridgeSettings(cloudConsentGiven = true, sendingEnabled = true)) }
-    HomeScreen(c, c.status.value, c.settings.value, c.drafts.value, {}, {}, {}, {})
+    HomeScreen(c, c.status.collectAsState().value, c.settings.collectAsState().value, c.drafts.collectAsState().value, {}, {}, {}, {})
 }
 
 @Preview(name = "Home – emergency stopped, dark", showBackground = true, widthDp = 412, heightDp = 1400, uiMode = Configuration.UI_MODE_NIGHT_YES, locale = "iw")
@@ -44,7 +45,7 @@ private fun HomeStoppedPreview() = Frame(dark = true) {
             initialSettings = BridgeSettings(emergencyStopped = true),
         )
     }
-    HomeScreen(c, c.status.value, c.settings.value, c.drafts.value, {}, {}, {}, {})
+    HomeScreen(c, c.status.collectAsState().value, c.settings.collectAsState().value, c.drafts.collectAsState().value, {}, {}, {}, {})
 }
 
 @Preview(name = "Drafts", showBackground = true, widthDp = 412, heightDp = 2000, locale = "iw")
@@ -63,26 +64,26 @@ private fun DraftsEmptyPreview() = Frame {
 @Composable
 private fun DetailPreview() = Frame {
     val c = remember { FakeAppController(initialSettings = BridgeSettings(cloudConsentGiven = true, sendingEnabled = true)) }
-    DraftDetailScreen("draft-2", c.drafts.value, c.status.value, c.settings.value, c, null, { false }, {})
+    DraftDetailScreen("draft-2", c.drafts.collectAsState().value, c.status.collectAsState().value, c.settings.collectAsState().value, c, null, { false }, {})
 }
 
 @Preview(name = "Settings", showBackground = true, widthDp = 412, heightDp = 2000, locale = "iw")
 @Composable
 private fun SettingsPreview() = Frame {
     val c = remember { FakeAppController() }
-    SettingsScreen(c, c.status.value, c.settings.value, c.exclusions.value, "0.1.0", true, {}, {})
+    SettingsScreen(c, c.status.collectAsState().value, c.settings.collectAsState().value, c.exclusions.collectAsState().value, "0.1.0", true, {}, {})
 }
 
 @Preview(name = "Pairing", showBackground = true, widthDp = 412, heightDp = 900, locale = "iw")
 @Composable
 private fun PairingPreview() = Frame {
     val c = remember { FakeAppController(initialStatus = BridgeStatus()) }
-    PairingScreen(c, c.status.value, onBack = {})
+    PairingScreen(c, c.status.collectAsState().value, onBack = {})
 }
 
 @Preview(name = "Onboarding", showBackground = true, widthDp = 412, heightDp = 900, locale = "iw")
 @Composable
 private fun OnboardingPreview() = Frame {
     val c = remember { FakeAppController(initialStatus = BridgeStatus()) }
-    OnboardingScreen(c, c.status.value, onRequestPostNotifications = {}, onFinished = {})
+    OnboardingScreen(c, c.status.collectAsState().value, onRequestPostNotifications = {}, onFinished = {})
 }
