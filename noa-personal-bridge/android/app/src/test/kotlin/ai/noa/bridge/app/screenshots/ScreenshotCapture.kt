@@ -196,8 +196,9 @@ class ScreenshotCapture {
     fun approveDialogSendingOff() {
         app(FakeAppController())
         openDraft("draft-1")
+        // UX-07: with sending off the button copies directly (no dialog any more).
         rule.onNodeWithTag("approveButton").performScrollTo().performClick()
-        shoot("05b_approve_dialog_sending_off", dialog = true)
+        shoot("05b_approve_dialog_sending_off")
     }
 
     @Test

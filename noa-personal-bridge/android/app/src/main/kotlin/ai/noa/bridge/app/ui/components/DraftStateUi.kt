@@ -15,10 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Icon
@@ -30,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -39,6 +37,17 @@ val ActiveStates: Set<DraftState> = setOf(
     DraftState.RECEIVED, DraftState.FILTERED, DraftState.DEBOUNCING, DraftState.PROCESSING,
     DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL, DraftState.APPROVED, DraftState.SENDING,
 )
+
+/** States in which a send was attempted (or is running): the text was handed to WhatsApp. */
+val SendAttemptStates: Set<DraftState> = setOf(DraftState.SENDING, DraftState.SEND_ATTEMPTED, DraftState.UNKNOWN_RESULT)
+
+/** Icon of a state chip, exposed for tests (UX-06 / A11Y-09). */
+fun DraftState.chipIconRes(): Int? = when (this) {
+    DraftState.DEBOUNCING -> R.drawable.ic_state_hourglass
+    DraftState.SEND_ATTEMPTED -> R.drawable.ic_state_forwarded
+    DraftState.UNKNOWN_RESULT -> R.drawable.ic_state_unknown
+    else -> null
+}
 
 /** States that count as "waiting for the user" (badge, home card). */
 val PendingStates: Set<DraftState> = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL)
@@ -99,14 +108,17 @@ private fun chipStyle(state: DraftState): ChipStyle {
     val cs = MaterialTheme.colorScheme
     return when (state) {
         DraftState.RECEIVED, DraftState.FILTERED -> ChipStyle(cs.surfaceContainerHigh, cs.onSurfaceVariant, Icons.Filled.Info)
-        DraftState.DEBOUNCING -> ChipStyle(cs.surfaceContainerHigh, cs.onSurfaceVariant, Icons.Filled.DateRange)
+        // A11Y-09: an hourglass (waiting), not a calendar.
+        DraftState.DEBOUNCING -> ChipStyle(cs.surfaceContainerHigh, cs.onSurfaceVariant, ImageVector.vectorResource(state.chipIconRes()!!))
         DraftState.PROCESSING -> ChipStyle(cs.secondaryContainer, cs.onSecondaryContainer, Icons.Filled.Create)
         DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL -> ChipStyle(s.infoContainer, s.onInfoContainer, Icons.Filled.Info)
         DraftState.APPROVED -> ChipStyle(s.infoContainer, s.onInfoContainer, Icons.Filled.Check)
         DraftState.SENDING -> ChipStyle(s.infoContainer, s.onInfoContainer, Icons.AutoMirrored.Filled.Send)
-        DraftState.SEND_ATTEMPTED -> ChipStyle(s.successContainer, s.onSuccessContainer, Icons.Filled.Done)
+        // UX-06: neutral "handed over" icon and colors — never a green success check (no delivery receipt).
+        DraftState.SEND_ATTEMPTED -> ChipStyle(s.infoContainer, s.onInfoContainer, ImageVector.vectorResource(state.chipIconRes()!!))
         DraftState.FAILED -> ChipStyle(s.dangerContainer, s.onDangerContainer, Icons.Filled.Warning)
-        DraftState.UNKNOWN_RESULT -> ChipStyle(s.warningContainer, s.onWarningContainer, Icons.Filled.Refresh)
+        // A11Y-09: a question mark — a refresh icon would suggest "retry", and nothing is retried.
+        DraftState.UNKNOWN_RESULT -> ChipStyle(s.warningContainer, s.onWarningContainer, ImageVector.vectorResource(state.chipIconRes()!!))
         DraftState.EXPIRED -> ChipStyle(cs.surfaceContainerHigh, cs.onSurfaceVariant, Icons.Filled.Clear)
         DraftState.CANCELLED -> ChipStyle(cs.surfaceContainerHigh, cs.onSurfaceVariant, Icons.Filled.Clear)
     }

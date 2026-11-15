@@ -8,6 +8,8 @@ import ai.noa.bridge.app.ui.components.BannerKind
 import ai.noa.bridge.app.ui.components.CancellableStates
 import ai.noa.bridge.app.ui.components.ConfirmDialog
 import ai.noa.bridge.app.ui.components.DraftStateChip
+import ai.noa.bridge.app.ui.components.EmergencyStopAction
+import ai.noa.bridge.app.ui.components.SendAttemptStates
 import ai.noa.bridge.app.ui.components.MinTouchTarget
 import ai.noa.bridge.app.ui.components.NoticeBanner
 import ai.noa.bridge.app.ui.components.SectionHeader
@@ -18,6 +20,7 @@ import ai.noa.bridge.core.Approval
 import ai.noa.bridge.core.BridgeSettings
 import ai.noa.bridge.core.Draft
 import ai.noa.bridge.core.DraftState
+import ai.noa.bridge.core.DraftStateMachine
 import ai.noa.bridge.core.IncomingMessage
 import android.content.ClipData
 import android.content.ClipDescription
@@ -72,9 +75,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ai.noa.bridge.app.ui.theme.NoaStatus
@@ -119,6 +122,8 @@ fun DraftDetailScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
+                // UX-03: emergency stop reachable from the draft itself.
+                actions = { EmergencyStopAction(stopped = settings.emergencyStopped, onStop = controller::emergencyStop) },
             )
         },
     ) { inner ->
@@ -201,6 +206,8 @@ private fun DraftDetailContent(
 
     val inFlight = sendAttempt == SendUiState.InFlight || draft.state == DraftState.SENDING
     val alreadyAttempted = sendAttempt != null
+    // UX-06: after any send attempt the text is what was handed over, and the approve button is gone.
+    val sendWasAttempted = alreadyAttempted || draft.state in SendAttemptStates
     val editable = draft.state in ApprovableStates && !alreadyAttempted && !settings.emergencyStopped
     val isDirty = text != serverText
     val overLimit = text.length > MAX_REPLY_CHARS
@@ -274,6 +281,31 @@ private fun DraftDetailContent(
     }
     val cancelEnabled = draft.state in CancellableStates && !inFlight && !alreadyAttempted
 
+    /** UX-07: with sending off the primary action copies the STORED text — nothing is "approved". */
+    fun copyStoredText() {
+        errorRes = 0
+        infoRes = 0
+        draftChanged = false
+        if (text.isBlank()) {
+            errorRes = R.string.detail_empty_text_error
+            return
+        }
+        val live = if (text != (controller.liveDraft(draft.id)?.finalText ?: serverText)) {
+            saveEdit() ?: return
+        } else {
+            controller.liveDraft(draft.id)
+        }
+        val stored = live?.finalText
+        if (live == null || live.state !in ConfirmableStates || stored.isNullOrBlank()) {
+            errorRes = R.string.detail_approve_failed
+            return
+        }
+        copyToClipboard(context, stored)
+        infoRes = R.string.detail_copied
+    }
+    val contentScrubbed = draft.state in DraftStateMachine.terminalStates &&
+        draft.sourceMessages.isEmpty() && draft.finalText == null
+
     Column(
         modifier
             .fillMaxSize()
@@ -299,10 +331,19 @@ private fun DraftDetailContent(
             SafetyBanner(draft)
         }
 
+        if (contentScrubbed) {
+            Text(
+                stringResource(R.string.detail_content_scrubbed),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("contentScrubbed"),
+            )
+        }
+
         SectionHeader(stringResource(R.string.detail_incoming_header))
         draft.sourceMessages.forEach { IncomingBubble(it) }
 
-        SectionHeader(stringResource(R.string.detail_reply_header))
+        SectionHeader(stringResource(if (sendWasAttempted) R.string.detail_reply_header_sent else R.string.detail_reply_header))
         if (draft.finalText == null && draft.state !in ApprovableStates) {
             Text(stringResource(R.string.detail_reply_waiting), style = MaterialTheme.typography.bodyMedium)
         } else {
@@ -364,7 +405,12 @@ private fun DraftDetailContent(
             )
         }
         if (errorRes != 0) {
-            NoticeBanner(BannerKind.DANGER, stringResource(errorRes), modifier = Modifier.testTag("detailError"))
+            NoticeBanner(
+                BannerKind.DANGER,
+                stringResource(errorRes),
+                modifier = Modifier.testTag("detailError"),
+                liveRegion = LiveRegionMode.Polite,
+            )
         }
         if (infoRes != 0) {
             Text(
@@ -376,18 +422,22 @@ private fun DraftDetailContent(
         }
 
         // ---- Actions ----
-        Button(
-            onClick = { openApproveDialog() },
-            enabled = approveEnabled,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("approveButton"),
-            shape = MaterialTheme.shapes.medium,
-        ) {
-            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(
-                stringResource(if (settings.sendingEnabled) R.string.detail_approve_send else R.string.detail_approve_copy),
-                style = MaterialTheme.typography.titleMedium,
-            )
+        if (!sendWasAttempted) {
+            Button(
+                onClick = { if (settings.sendingEnabled) openApproveDialog() else copyStoredText() },
+                enabled = approveEnabled,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("approveButton"),
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                if (settings.sendingEnabled) {
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                }
+                Text(
+                    stringResource(if (settings.sendingEnabled) R.string.detail_approve_send else R.string.detail_copy_text),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
         if (alreadyAttempted) {
             Text(
@@ -418,69 +468,55 @@ private fun DraftDetailContent(
         } else {
             // Always the STORED text of the live draft at the revision the dialog was opened on.
             val shownText = draft.finalText.orEmpty()
-            if (sendingPossible) {
-                ConfirmDialog(
-                    title = stringResource(R.string.approve_dialog_title),
-                    confirmLabel = stringResource(R.string.approve_dialog_confirm),
-                    confirmEnabled = !inFlight && !alreadyAttempted,
-                    onDismiss = { dialogName = DetailDialog.NONE.name },
-                    onConfirm = {
-                        dialogName = DetailDialog.NONE.name
-                        // Never edits: approves exactly the stored text, only if nothing changed.
-                        val live = unchangedSinceDialogOpened() ?: return@ConfirmDialog
-                        val approval = controller.approveDraft(live.id, live.finalText!!)
-                        if (approval == null) {
-                            errorRes = R.string.detail_approve_failed
-                        } else if (!onSend(approval)) {
-                            errorRes = R.string.detail_already_attempted
-                        }
-                    },
-                    modifier = Modifier.testTag("approveDialog"),
-                ) {
-                    Text(
-                        stringResource(R.string.approve_dialog_recipient, draft.senderDisplayName),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.testTag("approveDialogRecipient"),
-                    )
-                    Text(stringResource(R.string.approve_dialog_exact_text), style = MaterialTheme.typography.bodyMedium)
-                    ExactTextBox(shownText)
-                    Text(
-                        stringResource(R.string.approve_dialog_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            } else {
-                // Sending is off: never pretend to send. Offer the exact text for manual pasting.
-                ConfirmDialog(
-                    title = stringResource(R.string.approve_dialog_off_title),
-                    confirmLabel = stringResource(R.string.approve_dialog_copy),
-                    dismissLabel = stringResource(R.string.action_close),
-                    onDismiss = { dialogName = DetailDialog.NONE.name },
-                    onConfirm = {
-                        dialogName = DetailDialog.NONE.name
-                        val live = unchangedSinceDialogOpened() ?: return@ConfirmDialog
-                        copyToClipboard(context, live.finalText!!)
-                        infoRes = R.string.detail_copied
-                    },
-                    modifier = Modifier.testTag("approveDialog"),
-                ) {
-                    Text(
-                        stringResource(R.string.approve_dialog_off_body, draft.senderDisplayName),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    if (settings.sendingEnabled && status.deviceLocked) {
-                        Text(stringResource(R.string.detail_locked_notice), style = MaterialTheme.typography.bodyMedium)
+            // Only reachable with sending on (UX-07: with sending off the button copies directly).
+            ConfirmDialog(
+                title = stringResource(R.string.approve_dialog_title),
+                confirmLabel = stringResource(R.string.approve_dialog_confirm),
+                confirmEnabled = sendingPossible && !inFlight && !alreadyAttempted,
+                filterObscuredTouches = true,
+                onDismiss = { dialogName = DetailDialog.NONE.name },
+                onConfirm = {
+                    dialogName = DetailDialog.NONE.name
+                    // Never edits: approves exactly the stored text, only if nothing changed.
+                    val live = unchangedSinceDialogOpened() ?: return@ConfirmDialog
+                    val approval = controller.approveDraft(live.id, live.finalText!!)
+                    if (approval == null) {
+                        errorRes = R.string.detail_approve_failed
+                    } else if (!onSend(approval)) {
+                        errorRes = R.string.detail_already_attempted
                     }
-                    ExactTextBox(shownText)
+                },
+                modifier = Modifier.testTag("approveDialog"),
+            ) {
+                // UX-04: repeat the safety warning where the decision is made.
+                if (draft.safety.injectionSuspected || draft.safety.sensitiveRequest) {
+                    NoticeBanner(
+                        BannerKind.WARNING,
+                        stringResource(R.string.approve_dialog_safety),
+                        modifier = Modifier.testTag("approveDialogSafety"),
+                    )
                 }
+                Text(
+                    stringResource(R.string.approve_dialog_recipient, draft.senderDisplayName),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.testTag("approveDialogRecipient"),
+                )
+                Text(stringResource(R.string.approve_dialog_exact_text), style = MaterialTheme.typography.bodyMedium)
+                ExactTextBox(shownText)
+                if (settings.sendingEnabled && status.deviceLocked) {
+                    Text(stringResource(R.string.detail_locked_notice), style = MaterialTheme.typography.bodyMedium)
+                }
+                Text(
+                    stringResource(R.string.approve_dialog_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
         DetailDialog.CANCEL -> ConfirmDialog(
             title = stringResource(R.string.cancel_dialog_title),
             body = stringResource(R.string.cancel_dialog_body),
             confirmLabel = stringResource(R.string.cancel_dialog_confirm),
-            dismissLabel = stringResource(R.string.action_keep),
             destructive = true,
             onDismiss = { dialogName = DetailDialog.NONE.name },
             onConfirm = {
@@ -534,10 +570,15 @@ private fun SafetyBanner(draft: Draft) {
     )
 }
 
+/**
+ * A11Y-01: TalkBack must read the message itself. The bubble merges its children so the text is
+ * read as one item; sender and time are a stateDescription (read after the text), never a
+ * contentDescription (which would replace the text).
+ */
 @Composable
 private fun IncomingBubble(message: IncomingMessage) {
     val time = formatClockTime(message.timestampMillis)
-    val cd = stringResource(R.string.cd_message_from, message.senderDisplayName, time)
+    val meta = stringResource(R.string.cd_message_meta, message.senderDisplayName, time)
     // Incoming messages sit at the start edge (right side in RTL), like in WhatsApp.
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
         Surface(
@@ -547,7 +588,8 @@ private fun IncomingBubble(message: IncomingMessage) {
             modifier = Modifier
                 .widthIn(max = 520.dp)
                 .fillMaxWidth(0.88f)
-                .semantics(mergeDescendants = true) { contentDescription = cd },
+                .testTag("incomingBubble")
+                .semantics(mergeDescendants = true) { stateDescription = meta },
         ) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                 Text(message.text, style = MaterialTheme.typography.bodyLarge)
@@ -578,7 +620,7 @@ private fun SendProgressOrResult(attempt: SendUiState?) {
         }
         is SendUiState.Finished -> {
             val kind = when (attempt.result) {
-                DraftState.SEND_ATTEMPTED -> BannerKind.SUCCESS
+                DraftState.SEND_ATTEMPTED -> BannerKind.INFO // UX-06: handed over, not "delivered"
                 DraftState.FAILED -> BannerKind.DANGER
                 DraftState.UNKNOWN_RESULT -> BannerKind.WARNING
                 else -> BannerKind.INFO
@@ -587,9 +629,8 @@ private fun SendProgressOrResult(attempt: SendUiState?) {
                 kind = kind,
                 title = stringResource(attempt.result.labelRes()),
                 body = stringResource(attempt.result.explanationRes()),
-                modifier = Modifier
-                    .testTag("sendResult_${attempt.result.name}")
-                    .semantics { liveRegion = LiveRegionMode.Polite },
+                modifier = Modifier.testTag("sendResult_${attempt.result.name}"),
+                liveRegion = LiveRegionMode.Assertive,
             )
         }
         SendUiState.Crashed -> NoticeBanner(
@@ -597,6 +638,7 @@ private fun SendProgressOrResult(attempt: SendUiState?) {
             title = stringResource(R.string.state_unknown_result),
             body = stringResource(R.string.detail_send_exception),
             modifier = Modifier.testTag("sendResult_CRASHED"),
+            liveRegion = LiveRegionMode.Assertive,
         )
     }
 }

@@ -26,8 +26,11 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/** Base URL + device token used for authenticated calls. */
-data class ApiCredentials(val baseUrl: String, val deviceToken: String) {
+/**
+ * Base URL + device token used for authenticated calls, plus the optional SPKI pin
+ * (`sha256/<base64>`) the user entered when pairing. Null pin = system CAs only.
+ */
+data class ApiCredentials(val baseUrl: String, val deviceToken: String, val spkiPin: String? = null) {
     override fun toString(): String = "ApiCredentials(***)"
 }
 
@@ -51,9 +54,13 @@ data class HealthInfo(val ok: Boolean, val enabled: Boolean, val engine: String?
  * - Bodies are never logged (no logging interceptor); errors are logged as status codes only.
  * - OkHttp's silent connection retry is OFF: a re-sent request would reuse the nonce and be
  *   rejected as a replay (409). Redirects are OFF so the bearer token is never forwarded.
- * - Certificate pinning: optional [certificatePinner] hook, NOT enabled by default (the operator's
- *   certificate is not known at build time and a wrong pin would brick the app). To enable, pass
- *   `CertificatePinner.Builder().add(host, "sha256/<base64 SPKI hash>")` from the composition root.
+ * - Certificate pinning (optional, S-M5): when the user entered an SPKI pin at pairing time, every
+ *   call to that host goes through a client with a [CertificatePinner] for exactly that host and pin
+ *   ([clientFor]); without a pin only the system CAs are trusted (network security config). The
+ *   [certificatePinner] constructor hook still exists for a build-time pin.
+ * - `conversation_ref` is sent exactly as given in [DraftRequest.conversationKey]. The production
+ *   controller passes an HMAC of the local key with a per-install secret ([ConversationRefs]), never
+ *   the local key itself.
  */
 class BridgeApiClient(
     private val credentials: () -> ApiCredentials?,
@@ -71,6 +78,25 @@ class BridgeApiClient(
         if (certificatePinner != null) certificatePinner(certificatePinner)
     }.build()
 
+    /** (host, pin) → pinned client. newBuilder() shares the connection pool and dispatcher. */
+    @Volatile
+    private var pinned: Triple<String, String, OkHttpClient>? = null
+
+    /**
+     * The client for a call to [url]: the base client, or — when [spkiPin] is set — a client whose
+     * CertificatePinner pins exactly [url]'s host to that SPKI hash. An invalid pin never reaches
+     * here (pairing rejects it); if one does, it fails closed (IllegalArgumentException → no call).
+     */
+    internal fun clientFor(url: HttpUrl, spkiPin: String?): OkHttpClient {
+        val pin = spkiPin?.takeIf { it.isNotBlank() } ?: return client
+        pinned?.let { (host, p, c) -> if (host == url.host && p == pin) return c }
+        val built = client.newBuilder()
+            .certificatePinner(CertificatePinner.Builder().add(url.host, pin).build())
+            .build()
+        pinned = Triple(url.host, pin, built)
+        return built
+    }
+
     override suspend fun requestDraft(request: DraftRequest): DraftResult {
         val creds = credentials() ?: return DraftResult.Failure(MSG_NOT_PAIRED, retryable = false)
         val base = validateBaseUrl(creds.baseUrl, allowDebugCleartext)
@@ -83,7 +109,7 @@ class BridgeApiClient(
             .build()
 
         return try {
-            client.newCall(httpRequest).await().use { response ->
+            clientFor(base, creds.spkiPin).newCall(httpRequest).await().use { response ->
                 if (!response.isSuccessful) {
                     SafeLog.w(SafeLog.Event.API_HTTP_ERROR, response.code)
                     if (response.code == 401) onUnauthorized()
@@ -118,16 +144,18 @@ class BridgeApiClient(
         }
     }
 
-    suspend fun pair(baseUrl: String, pairingCode: String, deviceName: String): PairOutcome {
+    /** POST /v1/pair. With [spkiPin], the pairing call itself is already pinned (no trust-on-first-use gap). */
+    suspend fun pair(baseUrl: String, pairingCode: String, deviceName: String, spkiPin: String? = null): PairOutcome {
         val base = validateBaseUrl(baseUrl, allowDebugCleartext)
             ?: return PairOutcome.Failure(MSG_BAD_URL, null).also { SafeLog.w(SafeLog.Event.API_REFUSED_URL) }
         val code = normalizePairingCode(pairingCode) ?: return PairOutcome.Failure(MSG_BAD_CODE_FORMAT, null)
-        val body = PairRequestBody(pairingCode = code, deviceName = deviceName.trim().take(MAX_DEVICE_NAME).ifEmpty { "Android" })
+        val pin = if (spkiPin.isNullOrBlank()) null else normalizeSpkiPin(spkiPin) ?: return PairOutcome.Failure(MSG_BAD_PIN, null)
+        val body = PairRequestBody(pairingCode = code, deviceName = truncateText(deviceName.trim(), MAX_DEVICE_NAME).ifEmpty { "Android" })
         val request = Request.Builder().url(base.resolvePath("v1/pair"))
             .post(json.encodeToString(PairRequestBody.serializer(), body).toRequestBody(JSON))
             .build()
         return try {
-            client.newCall(request).await().use { response ->
+            clientFor(base, pin).newCall(request).await().use { response ->
                 if (!response.isSuccessful) {
                     SafeLog.w(SafeLog.Event.API_HTTP_ERROR, response.code)
                     return PairOutcome.Failure(pairFailureMessage(response.code), response.code)
@@ -150,15 +178,20 @@ class BridgeApiClient(
         }
     }
 
-    /** POST /v1/devices/revoke. Returns true on 204/2xx. Best effort: never throws. */
-    suspend fun revoke(): Boolean {
+    /**
+     * POST /v1/devices/revoke. Returns true on 204/2xx. Best effort: never throws. Bounded by an
+     * OkHttp call timeout of [timeoutMillis] (a wall-clock bound, unlike a coroutine timeout).
+     */
+    suspend fun revoke(timeoutMillis: Long = REVOKE_TIMEOUT_MILLIS): Boolean {
         val creds = credentials() ?: return false
         val base = validateBaseUrl(creds.baseUrl, allowDebugCleartext) ?: return false
         val request = authenticated(Request.Builder().url(base.resolvePath("v1/devices/revoke")), creds)
             .post(EMPTY_BODY)
             .build()
         return try {
-            client.newCall(request).await().use { response ->
+            val call = clientFor(base, creds.spkiPin).newCall(request)
+            call.timeout().timeout(timeoutMillis, TimeUnit.MILLISECONDS)
+            call.await().use { response ->
                 if (!response.isSuccessful) SafeLog.w(SafeLog.Event.API_HTTP_ERROR, response.code)
                 response.isSuccessful
             }
@@ -169,11 +202,11 @@ class BridgeApiClient(
     }
 
     /** GET /health (no auth). Null when unreachable or malformed. */
-    suspend fun health(baseUrl: String): HealthInfo? {
+    suspend fun health(baseUrl: String, spkiPin: String? = null): HealthInfo? {
         val base = validateBaseUrl(baseUrl, allowDebugCleartext) ?: return null
         val request = Request.Builder().url(base.resolvePath("health")).get().build()
         return try {
-            client.newCall(request).await().use { response ->
+            clientFor(base, spkiPin).newCall(request).await().use { response ->
                 if (!response.isSuccessful) {
                     SafeLog.w(SafeLog.Event.API_HTTP_ERROR, response.code)
                     return null
@@ -207,6 +240,7 @@ class BridgeApiClient(
         const val MAX_TOTAL = 8_000
         const val MAX_SENDER = 80
         const val MAX_DEVICE_NAME = 60
+        const val REVOKE_TIMEOUT_MILLIS = 10_000L
 
         const val MSG_UNAUTHORIZED = "החיבור לשרת בוטל — יש לחבר מחדש"
         const val MSG_REPLAY = "שגיאת סנכרון זמן מול השרת — בדוק שהשעון בטלפון מדויק"
@@ -218,7 +252,9 @@ class BridgeApiClient(
         const val MSG_REJECTED = "השרת דחה את הבקשה"
         const val MSG_BAD_RESPONSE = "התקבלה תשובה לא תקינה מהשרת"
         const val MSG_NOT_PAIRED = "המכשיר אינו מחובר לשרת"
-        const val MSG_BAD_URL = "כתובת השרת חייבת להתחיל ב־https://"
+        /** The URL is an LTR isolate (U+2066…U+2069) so "://" is not reordered inside the Hebrew text. */
+        const val MSG_BAD_URL = "כתובת השרת חייבת להתחיל ב־\u2066https://\u2069"
+        const val MSG_BAD_PIN = "טביעת האצבע של המפתח הציבורי לא תקינה (צריך \u2066sha256/\u2069 ואחריו 44 תווי Base64)"
         const val MSG_BAD_CODE_FORMAT = "קוד החיבור צריך להכיל 8 תווים (אותיות לועזיות וספרות)"
         const val MSG_BAD_CODE = "קוד החיבור לא תקין או שפג תוקפו"
         const val MSG_WRONG_ENDPOINT = "כתובת השרת שגויה — בדוק את הכתובת"
@@ -227,6 +263,7 @@ class BridgeApiClient(
         private val EMPTY_BODY: RequestBody = ByteArray(0).toRequestBody(null)
         private val CONVERSATION_REF = Regex("^[0-9a-f]{64}$")
         private val UUID_V4 = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
+        private const val PIN_PREFIX = "sha256/"
         private const val PAIRING_ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ"
         private val DEBUG_CLEARTEXT_HOSTS = setOf("10.0.2.2", "localhost", "127.0.0.1")
 
@@ -260,6 +297,42 @@ class BridgeApiClient(
             }
         }
 
+        /**
+         * Normalizes an SPKI pin to OkHttp's `sha256/<base64>` form. Accepts the bare base64 or the
+         * `sha256/` prefix (any case), surrounding whitespace ignored. The base64 must decode to
+         * exactly 32 bytes (a SHA-256). Returns null for anything else (blank included).
+         */
+        fun normalizeSpkiPin(raw: String): String? {
+            val trimmed = raw.trim()
+            val b64 = if (trimmed.startsWith(PIN_PREFIX, ignoreCase = true)) trimmed.substring(PIN_PREFIX.length) else trimmed
+            if (b64.isEmpty() || b64.any { it.isWhitespace() }) return null
+            val bytes = try {
+                java.util.Base64.getDecoder().decode(b64)
+            } catch (e: IllegalArgumentException) {
+                return null
+            }
+            if (bytes.size != 32) return null
+            return PIN_PREFIX + java.util.Base64.getEncoder().encodeToString(bytes)
+        }
+
+        /**
+         * Cuts [text] to at most [maxUtf16] UTF-16 units on a user-perceived character boundary
+         * (BreakIterator character instance), so a surrogate pair or an emoji / ZWJ sequence is never
+         * split into a lone surrogate (QA-03). The result is also at most [maxUtf16] code points.
+         */
+        internal fun truncateText(text: String, maxUtf16: Int): String {
+            if (text.length <= maxUtf16) return text
+            val it = java.text.BreakIterator.getCharacterInstance()
+            it.setText(text)
+            var cut = it.preceding(maxUtf16 + 1).coerceAtLeast(0) // DONE (-1) → 0
+            // Runtimes without extended grapheme clusters break after a ZERO WIDTH JOINER: never end
+            // on one (it would leave half of a ZWJ emoji sequence).
+            while (cut > 0 && text[cut - 1] == '\u200D') cut = it.preceding(cut).coerceAtLeast(0)
+            // Belt and braces for runtimes whose BreakIterator is not surrogate-aware.
+            if (cut > 0 && Character.isHighSurrogate(text[cut - 1])) cut--
+            return text.substring(0, cut)
+        }
+
         fun normalizePairingCode(raw: String): String? {
             val code = raw.trim().uppercase().replace("-", "").replace(" ", "")
             return code.takeIf { it.length == 8 && it.all { c -> c in PAIRING_ALPHABET } }
@@ -272,7 +345,7 @@ class BridgeApiClient(
             // v1.1: request_id must be a UUID v4 (the server answers 422 otherwise).
             if (!UUID_V4.matches(request.requestId)) return null
             val lines = request.messages
-                .map { MessageBody(text = it.text.trim().take(MAX_TEXT), sentAt = it.timestampMillis) }
+                .map { MessageBody(text = truncateText(it.text.trim(), MAX_TEXT), sentAt = it.timestampMillis) }
                 .filter { it.text.isNotEmpty() }
                 .takeLast(MAX_MESSAGES)
                 .toMutableList()
@@ -282,7 +355,7 @@ class BridgeApiClient(
             return DraftRequestBody(
                 requestId = request.requestId,
                 conversationRef = ref,
-                senderDisplayName = request.senderDisplayName.trim().take(MAX_SENDER),
+                senderDisplayName = truncateText(request.senderDisplayName.trim(), MAX_SENDER),
                 messages = lines,
                 locale = locale,
             )

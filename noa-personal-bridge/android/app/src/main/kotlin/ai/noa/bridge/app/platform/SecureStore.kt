@@ -11,8 +11,9 @@ import java.security.GeneralSecurityException
 
 /**
  * Encrypted key/value storage (SharedPreferences "noa_bridge_secure"; every value is encrypted
- * with [SecretCipher]): device token, device id, backend base URL, and the exclusion list (display
- * names are personal data). The preferences file is excluded from backup and device transfer.
+ * with [SecretCipher]): device token, device id, backend base URL, optional SPKI pin, the
+ * conversation_ref secret, and the exclusion list (display names are personal data). Every call
+ * does keystore work and a synchronous commit: call it off the main thread (the controller does). The preferences file is excluded from backup and device transfer.
  */
 class SecureStore(
     private val context: Context,
@@ -35,6 +36,23 @@ class SecureStore(
         get() = read(KEY_BASE_URL)
         set(value) = write(KEY_BASE_URL, value)
 
+    /** Optional SPKI pin (`sha256/<base64>`) entered at pairing; null = system CAs only. */
+    var certificatePin: String?
+        get() = read(KEY_PIN)
+        set(value) = write(KEY_PIN, value)
+
+    /**
+     * The per-install secret for [ConversationRefs] (32 random bytes, stored encrypted). Created on
+     * first use; gone after [wipeAll], so a wipe also makes every earlier conversation_ref unlinkable.
+     * If storing fails (keystore error) the fresh secret is still returned for this process.
+     */
+    fun conversationRefSecret(): ByteArray = synchronized(lock) {
+        read(KEY_REF_SECRET)
+            ?.let { runCatching { java.util.Base64.getDecoder().decode(it) }.getOrNull() }
+            ?.takeIf { it.size == ConversationRefs.SECRET_BYTES }
+            ?: ConversationRefs.newSecret().also { write(KEY_REF_SECRET, java.util.Base64.getEncoder().encodeToString(it)) }
+    }
+
     fun exclusions(): List<ExclusionEntry> {
         val raw = read(KEY_EXCLUSIONS) ?: return emptyList()
         return try {
@@ -53,7 +71,7 @@ class SecureStore(
     }
 
     fun clearCredentials() = synchronized(lock) {
-        prefs.edit().remove(KEY_TOKEN).remove(KEY_DEVICE_ID).commit()
+        prefs.edit().remove(KEY_TOKEN).remove(KEY_DEVICE_ID).remove(KEY_PIN).commit()
         Unit
     }
 
@@ -115,6 +133,8 @@ class SecureStore(
         private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_BASE_URL = "base_url"
         private const val KEY_EXCLUSIONS = "exclusions"
+        private const val KEY_PIN = "spki_pin"
+        private const val KEY_REF_SECRET = "conversation_ref_secret"
         private val json = Json { ignoreUnknownKeys = true }
     }
 }

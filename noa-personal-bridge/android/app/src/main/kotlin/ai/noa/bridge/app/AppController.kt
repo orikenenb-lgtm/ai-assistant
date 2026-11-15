@@ -36,12 +36,22 @@ interface AppController {
     /** Performs the single send attempt for a valid approval. Requires an unlocked device. */
     suspend fun sendApproved(approval: Approval): DraftState
 
-    /** Pair with the bridge backend using a one-time code. */
-    suspend fun pair(baseUrl: String, pairingCode: String): PairingResult
-    /** Revokes the device token on the server (best effort) and forgets it locally. */
-    suspend fun disconnect()
-    /** Deletes drafts, exclusions, settings and tokens stored on this device. */
-    suspend fun wipeLocalData()
+    /**
+     * Pair with the bridge backend using a one-time code. [spkiPin] (optional, `sha256/<base64>` or
+     * the bare base64) pins the server's public key for every later call; null/blank = system CAs.
+     */
+    suspend fun pair(baseUrl: String, pairingCode: String, spkiPin: String? = null): PairingResult
+    /**
+     * Revokes the device token on the server (best effort) and forgets it locally. Reports honestly
+     * whether the server confirmed the revocation; when it did not, the token may still be valid on
+     * the server and `status.lastErrorHebrew` explains how to revoke it there.
+     */
+    suspend fun disconnect(): ServerRevokeResult
+    /**
+     * Deletes drafts, exclusions, settings and tokens stored on this device. When paired, first
+     * tries (best effort) to revoke the token on the server, and reports the result like [disconnect].
+     */
+    suspend fun wipeLocalData(): ServerRevokeResult
 
     /** Opens the system screen where the user grants notification access. */
     fun openNotificationAccessSettings()
@@ -62,6 +72,16 @@ data class BridgeStatus(
 )
 
 data class ExclusionEntry(val conversationKeyValue: String, val displayName: String)
+
+/** Whether the server confirmed that the device token is revoked. */
+enum class ServerRevokeResult {
+    /** The server answered 2xx to the revoke call. */
+    CONFIRMED,
+    /** No answer / an error: the token may still be valid on the server. */
+    NOT_CONFIRMED,
+    /** There was no token to revoke. */
+    NOT_PAIRED,
+}
 
 sealed interface PairingResult {
     data object Success : PairingResult

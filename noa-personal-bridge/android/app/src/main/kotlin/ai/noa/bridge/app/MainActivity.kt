@@ -8,7 +8,9 @@ import ai.noa.bridge.app.ui.preview.FakeAppController
 import ai.noa.bridge.app.ui.theme.NoaTheme
 import ai.noa.bridge.core.BridgeSettings
 import ai.noa.bridge.app.platform.DraftNotifier
+import ai.noa.bridge.app.platform.SafeLog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -28,6 +30,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Private messages must never leak into screenshots, screen recordings or the recents view.
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        hideOverlayWindows()
 
         source = ControllerProvider.from(this) {
             // Only reachable when the Application is not BridgeApplication (e.g. a test harness).
@@ -54,6 +57,21 @@ class MainActivity : ComponentActivity() {
                     onOpenDraftHandled = { openDraftId.value = null },
                 )
             }
+        }
+    }
+
+    /**
+     * Tapjacking (S-L8): on Android 12+ hide every non-system overlay (SYSTEM_ALERT_WINDOW) while our
+     * window is showing, so nothing can be drawn over the approve button / dialog. Needs the normal
+     * install-time permission HIDE_OVERLAY_WINDOWS. The approve dialog additionally filters touches
+     * that arrive while it is obscured (see ConfirmDialog.filterObscuredTouches).
+     */
+    private fun hideOverlayWindows() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        try {
+            window.setHideOverlayWindows(true)
+        } catch (e: SecurityException) {
+            SafeLog.e(SafeLog.Event.OVERLAY_PROTECTION_UNAVAILABLE, e)
         }
     }
 

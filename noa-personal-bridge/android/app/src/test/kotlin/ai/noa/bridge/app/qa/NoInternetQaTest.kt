@@ -213,7 +213,8 @@ class NoInternetQaTest {
         assertEquals(3, bodies.size)
         // Every attempt is its own request id (a new draft) — never a silent resend of the same one.
         assertEquals(3, bodies.map { Regex("\"request_id\":\"([^\"]+)\"").find(it)!!.groupValues[1] }.toSet().size)
-        assertTrue(bodies.all { ConversationKeys.derive(snapshot("x" to 1L))!!.value in it })
+        // S-M4: the wire conversation_ref is the per-install HMAC of the local key, never the key itself.
+        assertTrue(bodies.all { c.conversationRefOf(ConversationKeys.derive(snapshot("x" to 1L))!!) in it })
         assertFalse("the device token is a header, never in the body", bodies.any { "qa-token-not-real" in it })
     }
 }

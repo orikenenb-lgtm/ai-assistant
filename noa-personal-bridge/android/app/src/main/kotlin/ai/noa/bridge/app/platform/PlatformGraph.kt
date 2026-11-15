@@ -48,5 +48,6 @@ internal class PlatformGraph(context: Context, scope: CoroutineScope) {
         onNotification = { controller.coordinator.onNotification(it) },
         onConversationRemoved = { controller.coordinator.onNotificationRemoved(it) },
         wouldAccept = { snapshot -> filter.evaluate(snapshot, controller.settings.value) is FilterResult.Accepted },
+        onSeed = { controller.coordinator.seedSeen(it) },
     )
 }

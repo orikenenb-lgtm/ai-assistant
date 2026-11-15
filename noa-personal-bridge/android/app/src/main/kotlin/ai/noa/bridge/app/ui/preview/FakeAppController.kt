@@ -4,6 +4,7 @@ import ai.noa.bridge.app.AppController
 import ai.noa.bridge.app.BridgeStatus
 import ai.noa.bridge.app.ExclusionEntry
 import ai.noa.bridge.app.PairingResult
+import ai.noa.bridge.app.ServerRevokeResult
 import ai.noa.bridge.core.Approval
 import ai.noa.bridge.core.BridgeSettings
 import ai.noa.bridge.core.ConversationKey
@@ -40,6 +41,8 @@ class FakeAppController(
     var pairDelayMillis: Long = 0L,
     /** When true [approveDraft] returns null regardless of state (simulates a stale draft). */
     var rejectApprovals: Boolean = false,
+    /** What [disconnect] / [wipeLocalData] report while paired. */
+    var revokeResult: ServerRevokeResult = ServerRevokeResult.CONFIRMED,
 ) : AppController {
 
     private val _status = MutableStateFlow(initialStatus)
@@ -66,6 +69,8 @@ class FakeAppController(
     val approveCalls = mutableListOf<Pair<String, String>>()
     val sendCalls = mutableListOf<Approval>()
     val pairCalls = mutableListOf<Pair<String, String>>()
+    /** spkiPin argument of every [pair] call (null = none entered). */
+    val pinCalls = mutableListOf<String?>()
     var disconnectCalls = 0; private set
     var wipeCalls = 0; private set
     var openNotificationAccessCalls = 0; private set
@@ -187,8 +192,8 @@ class FakeAppController(
         return result
     }
 
-    override suspend fun pair(baseUrl: String, pairingCode: String): PairingResult {
-        record("pair"); pairCalls += baseUrl to pairingCode
+    override suspend fun pair(baseUrl: String, pairingCode: String, spkiPin: String?): PairingResult {
+        record("pair"); pairCalls += baseUrl to pairingCode; pinCalls += spkiPin
         if (pairDelayMillis > 0) delay(pairDelayMillis)
         val result = pairingResult
         if (result is PairingResult.Success) {
@@ -197,17 +202,21 @@ class FakeAppController(
         return result
     }
 
-    override suspend fun disconnect() {
+    override suspend fun disconnect(): ServerRevokeResult {
         record("disconnect"); disconnectCalls++
+        val result = if (_status.value.paired) revokeResult else ServerRevokeResult.NOT_PAIRED
         _status.update { it.copy(paired = false, backendBaseUrl = null, backendReachable = null) }
+        return result
     }
 
-    override suspend fun wipeLocalData() {
+    override suspend fun wipeLocalData(): ServerRevokeResult {
         record("wipeLocalData"); wipeCalls++
+        val result = if (_status.value.paired) revokeResult else ServerRevokeResult.NOT_PAIRED
         _drafts.value = emptyList()
         _exclusions.value = emptyList()
         _settings.value = BridgeSettings()
         _status.update { it.copy(paired = false, backendBaseUrl = null, backendReachable = null, lastErrorHebrew = null) }
+        return result
     }
 
     override fun openNotificationAccessSettings() {

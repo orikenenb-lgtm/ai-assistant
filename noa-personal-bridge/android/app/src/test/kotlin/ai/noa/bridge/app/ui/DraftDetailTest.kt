@@ -81,7 +81,8 @@ class DraftDetailTest {
 
         // Honest result, and no way to send the same draft again.
         rule.onNodeWithTag("sendResult_SEND_ATTEMPTED").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithTag("approveButton").performScrollTo().assertIsNotEnabled()
+        // UX-06: after a send attempt the approve button is hidden, not just disabled.
+        rule.onNodeWithTag("approveButton").assertDoesNotExist()
         assertEquals(1, fake.sendCalls.size)
     }
 
@@ -113,11 +114,10 @@ class DraftDetailTest {
         val fake = FakeAppController(initialSettings = sendingOff)
         setDetail(fake)
 
-        rule.onNodeWithTag("approveButton").performScrollTo().performClick()
-        rule.onNodeWithText(str(R.string.approve_dialog_off_title)).assertIsDisplayed()
-        rule.onNodeWithTag("approveDialogText").assertTextEquals(draft1Text)
-        rule.onNodeWithText(str(R.string.approve_dialog_copy)).assertIsDisplayed().performClick()
+        // UX-07: the button says what it does and does exactly that — no dialog, no "approve".
+        rule.onNodeWithTag("approveButton").performScrollTo().assertTextEquals(str(R.string.detail_copy_text)).performClick()
         rule.waitForIdle()
+        rule.onNodeWithTag("approveDialog").assertDoesNotExist()
 
         assertTrue(fake.sendCalls.isEmpty())
         assertTrue(fake.approveCalls.isEmpty())

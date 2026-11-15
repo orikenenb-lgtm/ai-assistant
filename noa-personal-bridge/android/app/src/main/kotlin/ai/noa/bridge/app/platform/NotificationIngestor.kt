@@ -22,6 +22,11 @@ class NotificationIngestor(
      * with the current settings is FilterResult.Accepted). Reply handles are only kept for those.
      */
     private val wouldAccept: (NotificationSnapshot) -> Boolean = { true },
+    /**
+     * Receives the snapshots showing when the listener (re)connects so their lines are marked as
+     * seen (production: BridgeCoordinator.seedSeen) and are never sent to the backend again (S-L7).
+     */
+    private val onSeed: (List<NotificationSnapshot>) -> Unit = {},
 ) {
 
     /** Only personal WhatsApp (not WhatsApp Business, not a Samsung Dual Messenger / work-profile clone). */
@@ -37,9 +42,16 @@ class NotificationIngestor(
     /** Refreshes reply handles only (e.g. for notifications already showing when the listener connects). */
     fun registerReplyAction(mapped: MappedNotification) {
         val snapshot = mapped.snapshot
+        // Never reply through a redacted / placeholder notification (Android 15+ sensitive-content
+        // redaction, "2 new messages"), and do not keep the OLDER handle either (S-M1): the
+        // conversation now has a message nobody read, so any reply prepared before it is stale.
+        if (isHiddenContent(mapped)) {
+            val removed = (listOfNotNull(deriveKey(snapshot)?.takeIf { registry.remove(it) != null }) +
+                registry.removeByNotificationKey(snapshot.notificationKey)).toSet()
+            if (removed.isNotEmpty()) SafeLog.i(SafeLog.Event.NOTIFICATION_HIDDEN_HANDLE_REMOVED, removed.size)
+            return
+        }
         val action = mapped.replyAction ?: return
-        // Never reply through a redacted notification (Android 15+ sensitive-content redaction).
-        if (mapped.isLikelyRedacted || ContentVisibility.isRedactedSnapshot(snapshot)) return
         // Cheap local guard; the core filter is the authority on private vs. group.
         if (snapshot.isGroupSummary || snapshot.isOngoing || snapshot.isGroupConversationFlag == true) return
         if (!wouldAccept(snapshot)) return
@@ -67,6 +79,9 @@ class NotificationIngestor(
     fun rebuildFrom(active: List<MappedNotification>) {
         registry.clear()
         active.forEach { registerReplyAction(it) }
+        // Old unread lines must not reach the backend after a restart (the dedup is memory-only).
+        onSeed(active.map { it.snapshot })
+        SafeLog.i(SafeLog.Event.LISTENER_SEEDED, active.size)
     }
 
     fun onRemoved(mapped: MappedNotification, reason: Int) {
@@ -77,6 +92,14 @@ class NotificationIngestor(
         if (snapshot.isGroupSummary || reason !in USER_OR_APP_REMOVAL_REASONS) return
         val key = deriveKey(snapshot) ?: removed.firstOrNull() ?: return
         onConversationRemoved(key)
+    }
+
+    /** Same rule as the core filter's HIDDEN_CONTENT, from the single shared detector. */
+    private fun isHiddenContent(mapped: MappedNotification): Boolean {
+        val snapshot = mapped.snapshot
+        if (mapped.isLikelyRedacted || ContentVisibility.isRedactedSnapshot(snapshot)) return true
+        val nonBlank = snapshot.messages.mapNotNull { m -> m.text?.takeIf { it.isNotBlank() } }
+        return nonBlank.size == 1 && ContentVisibility.isHiddenPlaceholder(nonBlank.single())
     }
 
     companion object {

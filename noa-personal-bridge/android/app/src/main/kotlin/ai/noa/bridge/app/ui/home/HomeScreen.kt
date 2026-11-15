@@ -5,10 +5,11 @@ import ai.noa.bridge.app.BridgeStatus
 import ai.noa.bridge.app.R
 import ai.noa.bridge.app.ui.components.BannerKind
 import ai.noa.bridge.app.ui.components.ConfirmDialog
+import ai.noa.bridge.app.ui.components.EmergencyStopAction
+import ai.noa.bridge.app.ui.components.EmergencyStopDialog
 import ai.noa.bridge.app.ui.components.MinTouchTarget
 import ai.noa.bridge.app.ui.components.NoaCard
 import ai.noa.bridge.app.ui.components.NoticeBanner
-import ai.noa.bridge.app.ui.components.ScreenTitle
 import ai.noa.bridge.app.ui.components.StatusCard
 import ai.noa.bridge.app.ui.components.StatusLevel
 import ai.noa.bridge.app.ui.components.StatusPill
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -45,6 +47,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,12 +57,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     controller: AppController,
@@ -76,14 +81,25 @@ fun HomeScreen(
     var confirmResume by rememberSaveable { mutableStateOf(false) }
     val pending = drafts.pendingCount()
 
+    Column(modifier.fillMaxSize()) {
+    // UX-03: the emergency stop is always visible in the top bar, without scrolling.
+    TopAppBar(
+        title = { Text(stringResource(R.string.app_title), modifier = Modifier.semantics { heading() }) },
+        actions = { EmergencyStopAction(stopped = settings.emergencyStopped, onStop = controller::emergencyStop) },
+    )
     Column(
-        modifier
-            .fillMaxSize()
+        Modifier
+            .weight(1f)
+            .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        ScreenTitle(stringResource(R.string.app_title), subtitle = stringResource(R.string.home_subtitle))
+        Text(
+            stringResource(R.string.home_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
 
         if (settings.emergencyStopped) {
             NoticeBanner(
@@ -101,7 +117,13 @@ fun HomeScreen(
         }
 
         status.lastErrorHebrew?.takeIf { it.isNotBlank() }?.let { error ->
-            NoticeBanner(kind = BannerKind.WARNING, title = stringResource(R.string.home_last_error_title), body = error)
+            NoticeBanner(
+                kind = BannerKind.WARNING,
+                title = stringResource(R.string.home_last_error_title),
+                body = error,
+                liveRegion = LiveRegionMode.Polite,
+                modifier = Modifier.testTag("lastErrorBanner"),
+            )
         }
 
         if (!settings.cloudConsentGiven) {
@@ -145,13 +167,10 @@ fun HomeScreen(
         }
         Spacer(Modifier.padding(bottom = 8.dp))
     }
+    }
 
     if (confirmStop) {
-        ConfirmDialog(
-            title = stringResource(R.string.home_emergency_dialog_title),
-            body = stringResource(R.string.home_emergency_dialog_body),
-            confirmLabel = stringResource(R.string.home_emergency_dialog_confirm),
-            destructive = true,
+        EmergencyStopDialog(
             onConfirm = {
                 confirmStop = false
                 controller.emergencyStop()
@@ -334,11 +353,8 @@ private fun PauseRow(paused: Boolean, enabled: Boolean, onToggle: (Boolean) -> U
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    stringResource(R.string.home_pause_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.semantics { heading() },
-                )
+                // A11Y-05: a toggle is not a heading.
+                Text(stringResource(R.string.home_pause_title), style = MaterialTheme.typography.titleMedium)
                 Text(
                     stringResource(if (paused) R.string.home_pause_desc_paused else R.string.home_pause_desc_active),
                     style = MaterialTheme.typography.bodySmall,

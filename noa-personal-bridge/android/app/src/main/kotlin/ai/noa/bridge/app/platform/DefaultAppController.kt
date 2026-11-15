@@ -4,6 +4,7 @@ import ai.noa.bridge.app.AppController
 import ai.noa.bridge.app.BridgeStatus
 import ai.noa.bridge.app.ExclusionEntry
 import ai.noa.bridge.app.PairingResult
+import ai.noa.bridge.app.ServerRevokeResult
 import ai.noa.bridge.core.Approval
 import ai.noa.bridge.core.BridgeCoordinator
 import ai.noa.bridge.core.BridgeSettings
@@ -25,7 +26,9 @@ import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +37,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Production [AppController]: wires the core [BridgeCoordinator] to the platform pieces and owns
@@ -45,6 +47,16 @@ import kotlinx.coroutines.withTimeoutOrNull
  *   is not compiled in, or when the experimental send toggle is off.
  * - Nothing is sent to the backend without cloud consent (the engine wrapper short-circuits).
  * - Emergency stop also turns the experimental send toggle off and drops every reply handle.
+ * - The backend never sees the local conversation key: `conversation_ref` is an HMAC of it with a
+ *   per-install secret ([ConversationRefs], S-M4).
+ *
+ * Threading (PERF-01/02): keystore decrypts (credentials, exclusions, ref secret) run on
+ * [ioDispatcher] after construction; until they are loaded the coordinator runs with `paused`
+ * (fail closed: no draft can be made for a conversation whose exclusion is not loaded yet).
+ * Settings and exclusions are written on [ioDispatcher] with a synchronous commit; each write
+ * stores the newest value, so out-of-order writes still leave the latest state on disk.
+ * The plain settings flags (emergency stop, pause, consent, sending) are still read synchronously
+ * at construction: they must apply before the first notification is handled.
  */
 class DefaultAppController(
     private val context: Context,
@@ -65,29 +77,46 @@ class DefaultAppController(
 ) : AppController {
 
     @Volatile
-    private var credentialsCache: ApiCredentials? = loadCredentials()
+    private var credentialsCache: ApiCredentials? = null
+
+    /** Set once pair/disconnect/wipe changed the credentials, so the startup load never overrides them. */
+    @Volatile
+    private var credentialsTouched = false
+
+    @Volatile
+    private var exclusionsTouched = false
+
+    /** True once credentials and exclusions were read from [secureStore] (see the class KDoc). */
+    @Volatile
+    private var storesLoaded = false
+
+    @Volatile
+    private var refSecret: ByteArray? = null
+    private val refSecretLock = Any()
+    private val settingsLock = Any()
+    private val settingsWriteLock = Any()
+    private val secureWriteLock = Any()
 
     private val api: BridgeApiClient = apiClientFactory({ credentialsCache }) {
         setError(BridgeApiClient.MSG_UNAUTHORIZED)
     }
 
-    private val _exclusions = MutableStateFlow(secureStore.exclusions())
+    private val _exclusions = MutableStateFlow<List<ExclusionEntry>>(emptyList())
     override val exclusions: StateFlow<List<ExclusionEntry>> = _exclusions.asStateFlow()
 
-    private val _settings = MutableStateFlow(
-        sanitize(settingsStore.load(excludedKeys(_exclusions.value), debounceMillis)),
-    )
+    private val _settings = MutableStateFlow(sanitize(settingsStore.load(emptySet(), debounceMillis)))
     override val settings: StateFlow<BridgeSettings> = _settings.asStateFlow()
 
     private val _status = MutableStateFlow(BridgeStatus())
     override val status: StateFlow<BridgeStatus> = _status.asStateFlow()
 
-    /** Consent gate + status reporting around the real backend client. */
+    /** Consent gate + pseudonymous conversation_ref + status reporting around the real backend client. */
     private val engine = DraftEngineClient { request ->
         if (!_settings.value.cloudConsentGiven) {
             DraftResult.Failure(MSG_NO_CONSENT, retryable = false)
         } else {
-            val result = api.requestDraft(request)
+            val wire = request.copy(conversationKey = ConversationKey(conversationRefOf(request.conversationKey)))
+            val result = api.requestDraft(wire)
             when (result) {
                 is DraftResult.Success -> _status.update { it.copy(backendReachable = true, lastErrorHebrew = null) }
                 is DraftResult.Failure -> _status.update {
@@ -101,15 +130,46 @@ class DefaultAppController(
         }
     }
 
-    val coordinator: BridgeCoordinator = coordinatorFactory(engine, replySender, _settings.value)
+    val coordinator: BridgeCoordinator = coordinatorFactory(engine, replySender, forCoordinator(_settings.value))
 
     override val drafts: StateFlow<List<Draft>> = coordinator.drafts
+
+    /** Reads the keystore-encrypted values off the main thread (PERF-01). */
+    private val loadJob: Job = scope.launch(ioDispatcher) { loadSecureValues() }
 
     init {
         refreshPermissions()
         scope.launch { ListenerState.connected.collect { c -> _status.update { it.copy(listenerConnected = c) } } }
         if (notifier != null) scope.launch { coordinator.drafts.collect { notifier.onDrafts(it) } }
-        credentialsCache?.let { creds -> scope.launch { checkHealth(creds.baseUrl) } }
+    }
+
+    private fun loadSecureValues() {
+        val creds = loadCredentials()
+        val stored = try {
+            secureStore.exclusions()
+        } catch (e: RuntimeException) {
+            SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
+            emptyList()
+        }
+        if (!credentialsTouched) credentialsCache = creds
+        if (!exclusionsTouched) _exclusions.value = stored
+        storesLoaded = true
+        updateSettings(persist = false) { it.copy(excludedConversations = excludedKeys(_exclusions.value)) }
+        val current = credentialsCache
+        _status.update { it.copy(paired = current != null, backendBaseUrl = current?.baseUrl ?: it.backendBaseUrl) }
+        // Not inside loadJob: pair/disconnect wait for loadJob and must not wait for the network.
+        if (current != null && !credentialsTouched) scope.launch { checkHealth(current) }
+    }
+
+    /** Until the stores are loaded the coordinator is paused, so an exclusion can never be missed. */
+    private fun forCoordinator(s: BridgeSettings): BridgeSettings = if (storesLoaded) s else s.copy(paused = true)
+
+    /** HMAC-SHA256(per-install secret, local key) as 64 hex chars (S-M4). Runs on the engine's thread. */
+    internal fun conversationRefOf(key: ConversationKey): String {
+        val secret = refSecret ?: synchronized(refSecretLock) {
+            refSecret ?: secureStore.conversationRefSecret().also { refSecret = it }
+        }
+        return ConversationRefs.of(secret, key)
     }
 
     // ---- settings -------------------------------------------------------------------------
@@ -146,16 +206,22 @@ class DefaultAppController(
     }
 
     private fun persistExclusions(entries: List<ExclusionEntry>) {
-        secureStore.setExclusions(entries)
+        exclusionsTouched = true
         _exclusions.value = entries
         updateSettings { it.copy(excludedConversations = excludedKeys(entries)) }
+        // Keystore encryption + commit off the main thread (PERF-02); always writes the newest list.
+        scope.launch(ioDispatcher) { synchronized(secureWriteLock) { secureStore.setExclusions(_exclusions.value) } }
     }
 
-    private fun updateSettings(transform: (BridgeSettings) -> BridgeSettings) {
-        val next = sanitize(transform(_settings.value))
-        _settings.value = next
-        settingsStore.save(next)
-        coordinator.updateSettings(next)
+    private fun updateSettings(persist: Boolean = true, transform: (BridgeSettings) -> BridgeSettings) {
+        synchronized(settingsLock) {
+            val next = sanitize(transform(_settings.value))
+            _settings.value = next
+            coordinator.updateSettings(forCoordinator(next))
+        }
+        // Safety flags (emergency stop, consent, sending) must survive a crash: commit(), but off
+        // the main thread (PERF-02). Every write stores the newest value, so ordering cannot lose one.
+        if (persist) scope.launch(ioDispatcher) { synchronized(settingsWriteLock) { settingsStore.save(_settings.value) } }
     }
 
     private fun sanitize(s: BridgeSettings): BridgeSettings =
@@ -205,58 +271,111 @@ class DefaultAppController(
 
     // ---- backend --------------------------------------------------------------------------
 
-    override suspend fun pair(baseUrl: String, pairingCode: String): PairingResult {
+    override suspend fun pair(baseUrl: String, pairingCode: String, spkiPin: String?): PairingResult {
         val url = BridgeApiClient.validateBaseUrl(baseUrl, allowDebugCleartext)
             ?: return PairingResult.Failure(BridgeApiClient.MSG_BAD_URL)
         val code = BridgeApiClient.normalizePairingCode(pairingCode)
             ?: return PairingResult.Failure(BridgeApiClient.MSG_BAD_CODE_FORMAT)
+        val pin = if (spkiPin.isNullOrBlank()) {
+            null
+        } else {
+            BridgeApiClient.normalizeSpkiPin(spkiPin) ?: return PairingResult.Failure(BridgeApiClient.MSG_BAD_PIN)
+        }
         val canonicalUrl = url.toString()
-        return when (val outcome = api.pair(canonicalUrl, code, deviceName)) {
+        loadJob.join()
+        return when (val outcome = api.pair(canonicalUrl, code, deviceName, pin)) {
             is PairOutcome.Failure -> {
                 setError(outcome.messageHebrew)
                 PairingResult.Failure(outcome.messageHebrew)
             }
             is PairOutcome.Success -> {
                 withContext(ioDispatcher) {
-                    secureStore.baseUrl = canonicalUrl
-                    secureStore.deviceId = outcome.deviceId
-                    secureStore.deviceToken = outcome.deviceToken
+                    synchronized(secureWriteLock) {
+                        secureStore.baseUrl = canonicalUrl
+                        secureStore.deviceId = outcome.deviceId
+                        secureStore.deviceToken = outcome.deviceToken
+                        secureStore.certificatePin = pin
+                    }
                 }
-                credentialsCache = ApiCredentials(canonicalUrl, outcome.deviceToken)
+                val creds = ApiCredentials(canonicalUrl, outcome.deviceToken, pin)
+                credentialsTouched = true
+                credentialsCache = creds
                 _status.update { it.copy(paired = true, backendBaseUrl = canonicalUrl, lastErrorHebrew = null) }
-                scope.launch { checkHealth(canonicalUrl) }
+                scope.launch { checkHealth(creds) }
                 PairingResult.Success
             }
         }
     }
 
-    override suspend fun disconnect() {
-        if (credentialsCache != null) {
-            withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) { api.revoke() }
-        }
+    /**
+     * Revokes on the server first (while the token is still known), then forgets the credentials.
+     * Honest about the result (S-L5): when the server did not confirm, the token may still be valid
+     * there and the status says how to revoke it with the admin CLI.
+     */
+    override suspend fun disconnect(): ServerRevokeResult {
+        loadJob.join()
+        val result = revokeOnServer()
+        credentialsTouched = true
         credentialsCache = null
-        withContext(ioDispatcher) { secureStore.clearCredentials() }
-        _status.update { it.copy(paired = false, backendReachable = null) }
+        withContext(ioDispatcher) { synchronized(secureWriteLock) { secureStore.clearCredentials() } }
+        _status.update {
+            it.copy(
+                paired = false,
+                backendReachable = null,
+                lastErrorHebrew = if (result == ServerRevokeResult.NOT_CONFIRMED) MSG_REVOKE_NOT_CONFIRMED else it.lastErrorHebrew,
+            )
+        }
+        return result
     }
 
-    override suspend fun wipeLocalData() {
+    /** Best-effort server revoke first when paired (S-L5), then deletes everything local. */
+    override suspend fun wipeLocalData(): ServerRevokeResult {
+        loadJob.join()
+        val result = revokeOnServer()
         coordinator.clearAll()
         registry.clear()
         notifier?.cancelAll()
+        credentialsTouched = true
+        exclusionsTouched = true
         credentialsCache = null
-        withContext(ioDispatcher) {
-            secureStore.wipeAll()
-            settingsStore.wipeAll()
-        }
         _exclusions.value = emptyList()
-        val defaults = sanitize(BridgeSettings())
-        _settings.value = defaults
-        coordinator.updateSettings(defaults)
-        _status.update { it.copy(paired = false, backendBaseUrl = null, backendReachable = null, lastErrorHebrew = null) }
+        synchronized(refSecretLock) { refSecret = null } // a new conversation_ref secret after the wipe
+        withContext(ioDispatcher) {
+            synchronized(secureWriteLock) { secureStore.wipeAll() }
+            synchronized(settingsWriteLock) { settingsStore.wipeAll() }
+        }
+        synchronized(settingsLock) {
+            val defaults = sanitize(BridgeSettings())
+            _settings.value = defaults
+            coordinator.updateSettings(forCoordinator(defaults))
+        }
+        _status.update {
+            it.copy(
+                paired = false,
+                backendBaseUrl = null,
+                backendReachable = null,
+                lastErrorHebrew = if (result == ServerRevokeResult.NOT_CONFIRMED) MSG_REVOKE_NOT_CONFIRMED else null,
+            )
+        }
+        return result
     }
 
-    private suspend fun checkHealth(baseUrl: String) {
-        val health = api.health(baseUrl)
+    private suspend fun revokeOnServer(): ServerRevokeResult {
+        if (credentialsCache == null) return ServerRevokeResult.NOT_PAIRED
+        val confirmed = try {
+            api.revoke() // bounded by its own wall-clock call timeout (10 s)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: RuntimeException) {
+            SafeLog.e(SafeLog.Event.CONTROLLER_FAILURE, e)
+            false
+        }
+        if (!confirmed) SafeLog.w(SafeLog.Event.REVOKE_NOT_CONFIRMED)
+        return if (confirmed) ServerRevokeResult.CONFIRMED else ServerRevokeResult.NOT_CONFIRMED
+    }
+
+    private suspend fun checkHealth(creds: ApiCredentials) {
+        val health = api.health(creds.baseUrl, creds.spkiPin)
         _status.update { it.copy(backendReachable = health?.ok == true) }
     }
 
@@ -314,7 +433,7 @@ class DefaultAppController(
     private fun loadCredentials(): ApiCredentials? = try {
         val url = secureStore.baseUrl
         val token = secureStore.deviceToken
-        if (url == null || token == null) null else ApiCredentials(url, token)
+        if (url == null || token == null) null else ApiCredentials(url, token, secureStore.certificatePin)
     } catch (e: RuntimeException) {
         SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
         null
@@ -324,7 +443,9 @@ class DefaultAppController(
         const val MSG_LOCKED = "יש לבטל את נעילת הטלפון לפני שליחה"
         const val MSG_SENDING_DISABLED = "השליחה הניסיונית כבויה בהגדרות"
         const val MSG_NO_CONSENT = "לא ניתנה הסכמה לעיבוד הודעות בשרת"
-        private const val REVOKE_TIMEOUT_MILLIS = 10_000L
+        /** The command name is an LTR isolate so it renders correctly inside the Hebrew sentence. */
+        const val MSG_REVOKE_NOT_CONFIRMED =
+            "הניתוק המקומי בוצע, אבל השרת לא אישר את הביטול — בטל את המכשיר בשרת עם \u2066revoke-device\u2069"
 
         /** States in which cancel() is pointless or not allowed (terminal, or a send in flight). */
         private val NOT_CANCELLABLE = setOf(

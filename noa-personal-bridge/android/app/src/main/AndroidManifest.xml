@@ -4,9 +4,12 @@
 
     <!-- The ONLY permissions this app requests. No contacts, SMS, phone, accessibility,
          overlay, foreground service or battery-optimization exemption. Notification access is
-         granted by the user in system Settings (it is not a manifest permission). -->
+         granted by the user in system Settings (it is not a manifest permission).
+         HIDE_OVERLAY_WINDOWS is a normal (install-time) permission that lets MainActivity hide
+         other apps' overlays while it is showing (tapjacking protection, Android 12+). -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
 
     <application
         android:name=".BridgeApplication"

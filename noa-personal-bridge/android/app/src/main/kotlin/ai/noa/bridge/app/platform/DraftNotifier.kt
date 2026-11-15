@@ -19,8 +19,10 @@ import androidx.core.content.ContextCompat
 /**
  * Our OWN notification ("drafts" channel) telling the user a draft waits for approval.
  *
- * - Private version: "טיוטה מוכנה לאישור" / "תשובה עבור <sender>". Public (lock-screen) version
- *   has no names: "טיוטה חדשה ממתינה".
+ * - No names anywhere (S-L6): both the private and the public (lock-screen) version read
+ *   "טיוטה מוכנה לאישור" / "יש טיוטה חדשה שממתינה לאישורך". One UI mirrors our notification to the
+ *   lock screen ("show content"), a Galaxy Watch and Link to Windows, so it carries no sender name
+ *   and no message text.
  * - Tap opens MainActivity (immutable PendingIntent) with [EXTRA_DRAFT_ID].
  * - There are deliberately NO actions: approval and sending happen only inside the app.
  * - Skips silently when POST_NOTIFICATIONS is not granted (Android 13+) or notifications are off.
@@ -72,11 +74,12 @@ class DraftNotifier(private val context: Context) {
         }
         ensureChannel()
         val publicVersion = baseBuilder(draft.id)
-            .setContentTitle(PUBLIC_TITLE)
+            .setContentTitle(TITLE)
+            .setContentText(TEXT)
             .build()
         val notification = baseBuilder(draft.id)
             .setContentTitle(TITLE)
-            .setContentText("תשובה עבור ${draft.senderDisplayName}")
+            .setContentText(TEXT)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setPublicVersion(publicVersion)
             .build()
@@ -128,6 +131,6 @@ class DraftNotifier(private val context: Context) {
         private const val CHANNEL_NAME = "טיוטות לאישור"
         private const val CHANNEL_DESCRIPTION = "התראה כשטיוטת תשובה מוכנה לאישור באפליקציה"
         const val TITLE = "טיוטה מוכנה לאישור"
-        const val PUBLIC_TITLE = "טיוטה חדשה ממתינה"
+        const val TEXT = "יש טיוטה חדשה שממתינה לאישורך"
     }
 }

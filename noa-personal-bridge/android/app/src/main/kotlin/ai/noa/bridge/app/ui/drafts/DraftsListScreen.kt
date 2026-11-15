@@ -47,6 +47,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
+/** The three sections of the drafts list (UX-01). */
+data class DraftGroups(val needsYou: List<Draft>, val inProgress: List<Draft>, val history: List<Draft>)
+
+/**
+ * UX-01: what needs the user comes first — AWAITING_APPROVAL, then APPROVED (a refused send that can
+ * be approved again) — then drafts still in progress, then history. Newest first inside each group.
+ */
+fun groupDrafts(drafts: List<Draft>): DraftGroups {
+    val newestFirst = compareByDescending<Draft> { it.updatedAtMillis }.thenByDescending { it.createdAtMillis }
+    val needsYou = drafts.filter { it.state in NeedsYouStates }
+        .sortedWith(compareBy<Draft> { NeedsYouStates.indexOf(it.state) }.then(newestFirst))
+    val inProgress = drafts.filter { it.state in ActiveStates && it.state !in NeedsYouStates }.sortedWith(newestFirst)
+    val history = drafts.filter { it.state !in ActiveStates }.sortedWith(newestFirst)
+    return DraftGroups(needsYou, inProgress, history)
+}
+
+private val NeedsYouStates = listOf(DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
+
 @Composable
 fun DraftsListScreen(
     drafts: List<Draft>,
@@ -54,10 +72,7 @@ fun DraftsListScreen(
     modifier: Modifier = Modifier,
 ) {
     // Sorting is cheap, but keep it out of every recomposition.
-    val (active, history) = remember(drafts) {
-        val sorted = drafts.sortedByDescending { it.updatedAtMillis }
-        sorted.partition { it.state in ActiveStates }
-    }
+    val groups = remember(drafts) { groupDrafts(drafts) }
 
     if (drafts.isEmpty()) {
         EmptyDrafts(modifier)
@@ -70,15 +85,27 @@ fun DraftsListScreen(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item(key = "title", contentType = "title") { ScreenTitle(stringResource(R.string.drafts_title)) }
-        if (active.isNotEmpty()) {
-            item(key = "h_active", contentType = "header") { SectionHeader(stringResource(R.string.drafts_section_active)) }
-            items(active, key = { it.id }, contentType = { "draft" }) { draft ->
+        if (groups.needsYou.isNotEmpty()) {
+            item(key = "h_needs_you", contentType = "header") {
+                SectionHeader(stringResource(R.string.drafts_section_needs_you), Modifier.testTag("section_needs_you"))
+            }
+            items(groups.needsYou, key = { it.id }, contentType = { "draft" }) { draft ->
                 DraftCard(draft = draft, onClick = { onOpenDraft(draft.id) })
             }
         }
-        if (history.isNotEmpty()) {
-            item(key = "h_history", contentType = "header") { SectionHeader(stringResource(R.string.drafts_section_history)) }
-            items(history, key = { it.id }, contentType = { "draft" }) { draft ->
+        if (groups.inProgress.isNotEmpty()) {
+            item(key = "h_active", contentType = "header") {
+                SectionHeader(stringResource(R.string.drafts_section_active), Modifier.testTag("section_in_progress"))
+            }
+            items(groups.inProgress, key = { it.id }, contentType = { "draft" }) { draft ->
+                DraftCard(draft = draft, onClick = { onOpenDraft(draft.id) })
+            }
+        }
+        if (groups.history.isNotEmpty()) {
+            item(key = "h_history", contentType = "header") {
+                SectionHeader(stringResource(R.string.drafts_section_history), Modifier.testTag("section_history"))
+            }
+            items(groups.history, key = { it.id }, contentType = { "draft" }) { draft ->
                 DraftCard(draft = draft, onClick = { onOpenDraft(draft.id) })
             }
         }
@@ -103,12 +130,12 @@ private fun DraftCard(draft: Draft, onClick: () -> Unit) {
                 Avatar(draft.senderDisplayName)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
+                    // A11Y-05: not a heading — the card is a button; headings are the section titles only.
                     Text(
                         draft.senderDisplayName,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.semantics { heading() },
                     )
                     Text(
                         relativeTimeLabel(draft.updatedAtMillis),

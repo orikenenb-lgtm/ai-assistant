@@ -2,7 +2,7 @@
 
 ## שקיפות: מה רץ בפועל
 - **מגבלת המקביליות בסביבה:** בהנחיות של הסביבה מומלץ לא להפעיל יותר מכ־10 סוכנים לכל Workflow. הכלי `Agent` מריץ סוכנים ברקע, וכל אחד מהם הוא הרצה אמיתית ונפרדת של מודל, עם כלים משלו.
-- **בפועל רצו 12 סוכנים עצמאיים אמיתיים, בשני גלים:** 7 בגל 1 ו־5 בגל 2. בכל גל הסוכנים רצו במקביל.
+- **בפועל רצו 15 סוכנים עצמאיים אמיתיים:** 7 בגל 1, 5 בגל 2 ו־3 סוכני תיקון. בכל גל הסוכנים רצו במקביל.
 - **35 התפקידים כוסו לאורך הפרויקט.** כל סוכן אמיתי קיבל קבוצת תפקידים עם משימה מדידה, קבצים בבעלותו ותוצר מוגדר.
 - **תפקידים 01–05 (ניהול) לא היו סוכנים נפרדים.** הם בוצעו על ידי הסשן הראשי ("מנהל־העל"): חוזים, החלטות, אינטגרציה, אימות עצמאי של כל תוצר, ותיקונים.
 - **לא הופעלו 35 סוכנים נפרדים, ואין טענה כזו.** הפעלה של 35 סוכנים רק כדי להגיע למספר הייתה מכפילה את העלות בלי תועלת. ההנחיה הייתה "אין להפעיל סוכנים מיותרים רק כדי להגיע למספר".
@@ -18,11 +18,14 @@
 | R5 — AI | 1 | 13 AI Lead, 14 LLM Integration, 15 Context, 16 Prompt, 17 AI Safety | `bridge_service/ai/**` + 227 בדיקות | הרצה עצמאית; תיקון באג ברכות (D-017) |
 | R6 — מחקר היתכנות | 1 | 34 WhatsApp Research, 08, 09, 12 | `ANDROID_FEASIBILITY.md` | יושם בקוד: דחיית התראות מוסתרות (D-018), ברירת מחדל "העתק" (D-019) |
 | R7 — Audit + Baseline | 1 | 21 Integration, 29 Regression, 05 Quality, 30 DevOps | `EXISTING_SYSTEM_AUDIT.md`, `INTEGRATION_PLAN.md`, `BASELINE_REGRESSION.md` | ממצא "מפתח נועה לא מוגבל" הועבר ל־R5 ויושם |
-| R8 — ביקורת קוד עצמאית | 2 | 33 Independent Reviewer | `CODE_REVIEW.md` | ראו `FINAL_REPORT.md` |
-| R9 — אבטחה ופרטיות | 2 | 23 Security Lead, 24 Mobile Security, 25 Privacy, 26 Threat Modeling | `SECURITY.md`, `PRIVACY.md` | ראו `FINAL_REPORT.md` |
-| R10 — QA ו־Regression | 2 | 27 QA Lead, 28 Android Test, 29 Regression | `TEST_PLAN.md`, `TEST_RESULTS.md`, בדיקות `qa/` | ראו `FINAL_REPORT.md` |
-| R11 — UX, נגישות וביצועים | 2 | 31 (מעבר שני, בלתי תלוי), 35 Performance | צילומי מסך אמיתיים, `UX_PERFORMANCE_REVIEW.md` | ראו `FINAL_REPORT.md` |
-| R12 — תיעוד | 2 | 32 Documentation | `README.md`, `INSTALLATION_HE.md`, `USER_GUIDE_HE.md`, `TROUBLESHOOTING.md` | ראו `FINAL_REPORT.md` |
+| R8 — ביקורת קוד עצמאית | 2 | 33 Independent Reviewer | `CODE_REVIEW.md` | כל הממצאים טופלו על ידי R13–R15 (ראו טבלאות "Fix status" במסמכים) |
+| R9 — אבטחה ופרטיות | 2 | 23 Security Lead, 24 Mobile Security, 25 Privacy, 26 Threat Modeling | `SECURITY.md`, `PRIVACY.md` | כל הממצאים טופלו על ידי R13–R15 (ראו טבלאות "Fix status" במסמכים) |
+| R10 — QA ו־Regression | 2 | 27 QA Lead, 28 Android Test, 29 Regression | `TEST_PLAN.md`, `TEST_RESULTS.md`, בדיקות `qa/` | כל הממצאים טופלו על ידי R13–R15 (ראו טבלאות "Fix status" במסמכים) |
+| R11 — UX, נגישות וביצועים | 2 | 31 (מעבר שני, בלתי תלוי), 35 Performance | צילומי מסך אמיתיים, `UX_PERFORMANCE_REVIEW.md` | כל הממצאים טופלו על ידי R13–R15 (ראו טבלאות "Fix status" במסמכים) |
+| R12 — תיעוד | 2 | 32 Documentation | `README.md`, `INSTALLATION_HE.md`, `USER_GUIDE_HE.md`, `TROUBLESHOOTING.md` | כל הממצאים טופלו על ידי R13–R15 (ראו טבלאות "Fix status" במסמכים) |
+| R13 — תיקון ממצאי ביקורת קוד | 3 | 07, 09, 11, 22 | תיקון 11 ממצאים + בדיקות `ReviewFixes*` | הרצה עצמאית: 176 Core + 183 App |
+| R14 — תיקוני אבטחה בשרת | 3 | 17, 19, 20, 23 | 8 החלטות אבטחה + QA-01, QA-02 | הרצה עצמאית: 600/600 |
+| R15 — תיקוני אבטחה ו־UX ב־Android | 3 | 11, 24, 25, 31, 35 | 8 ממצאי אבטחה, ממצאי UX/נגישות/ביצועים, QA-03, Release | בנייה נקייה: 187 Core + 228 App, 0 שגיאות Lint |
 
 ## מיפוי 35 התפקידים
 

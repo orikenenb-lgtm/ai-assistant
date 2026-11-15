@@ -25,10 +25,28 @@ android {
         buildConfigField("boolean", "REPLY_PATH_COMPILED_IN", "true")
     }
 
+    // S-M2: optional release signing, read ONLY from environment variables (no secrets in the repo).
+    // Applied only when all four are set; otherwise `assembleRelease` produces an unsigned APK.
+    //   NOA_KEYSTORE_FILE, NOA_KEYSTORE_PASSWORD, NOA_KEY_ALIAS, NOA_KEY_PASSWORD
+    val releaseSigning = listOf("NOA_KEYSTORE_FILE", "NOA_KEYSTORE_PASSWORD", "NOA_KEY_ALIAS", "NOA_KEY_PASSWORD")
+        .map { System.getenv(it)?.takeIf(String::isNotBlank) }
+    if (releaseSigning.all { it != null }) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(releaseSigning[0]!!)
+                storePassword = releaseSigning[1]
+                keyAlias = releaseSigning[2]
+                keyPassword = releaseSigning[3]
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
+            isDebuggable = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
     }
     compileOptions {

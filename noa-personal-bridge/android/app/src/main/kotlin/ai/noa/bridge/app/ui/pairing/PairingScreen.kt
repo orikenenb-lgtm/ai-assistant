@@ -4,6 +4,7 @@ import ai.noa.bridge.app.AppController
 import ai.noa.bridge.app.BridgeStatus
 import ai.noa.bridge.app.PairingResult
 import ai.noa.bridge.app.R
+import ai.noa.bridge.app.platform.BridgeApiClient
 import ai.noa.bridge.app.ui.components.BannerKind
 import ai.noa.bridge.app.ui.components.MinTouchTarget
 import ai.noa.bridge.app.ui.components.NoticeBanner
@@ -44,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -73,6 +75,12 @@ object PairingValidation {
         input.filter { it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' }.take(CODE_LENGTH)
 
     fun isValidCode(code: String): Boolean = codeRegex.matches(code)
+
+    /** S-M5: the optional SPKI pin. Blank = no pinning (system CAs only); otherwise `sha256/<base64 of 32 bytes>`. */
+    fun isValidPin(input: String): Boolean = input.isBlank() || BridgeApiClient.normalizeSpkiPin(input) != null
+
+    /** The pin to pass to the controller: null when blank. */
+    fun pinOrNull(input: String): String? = input.trim().takeIf { it.isNotEmpty() }
 }
 
 private sealed interface PairingUi {
@@ -93,22 +101,24 @@ fun PairingScreen(
     val scope = rememberCoroutineScope()
     var url by rememberSaveable { mutableStateOf(status.backendBaseUrl ?: "https://") }
     var code by rememberSaveable { mutableStateOf("") }
+    var pin by rememberSaveable { mutableStateOf("") }
     var showErrors by rememberSaveable { mutableStateOf(false) }
     // Not saved: an in-flight pairing does not survive recreation, so the screen restarts at Idle.
     var ui by androidx.compose.runtime.remember { mutableStateOf<PairingUi>(PairingUi.Idle) }
 
     val urlValid = PairingValidation.isValidBaseUrl(url)
     val codeValid = PairingValidation.isValidCode(code)
+    val pinValid = PairingValidation.isValidPin(pin)
     val inProgress = ui == PairingUi.InProgress
 
     fun submit() {
         showErrors = true
-        if (!urlValid || !codeValid || inProgress) return
+        if (!urlValid || !codeValid || !pinValid || inProgress) return
         ui = PairingUi.InProgress
         val baseUrl = PairingValidation.normalizeUrl(url)
         scope.launch {
             ui = try {
-                when (val r = controller.pair(baseUrl, code)) {
+                when (val r = controller.pair(baseUrl, code, PairingValidation.pinOrNull(pin))) {
                     PairingResult.Success -> PairingUi.Success
                     is PairingResult.Failure -> PairingUi.Failure(r.messageHebrew.takeIf { it.isNotBlank() })
                 }
@@ -180,11 +190,30 @@ fun PairingScreen(
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Characters,
                     keyboardType = KeyboardType.Ascii,
-                    imeAction = ImeAction.Done,
+                    imeAction = ImeAction.Next,
                     autoCorrectEnabled = false,
                 ),
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { submit() }),
                 modifier = Modifier.fillMaxWidth().testTag("pairingCode"),
+            )
+            OutlinedTextField(
+                value = pin,
+                onValueChange = { pin = it.trim(); if (ui is PairingUi.Failure) ui = PairingUi.Idle },
+                label = { Text(stringResource(R.string.pairing_pin_label)) },
+                placeholder = { Text(stringResource(R.string.pairing_pin_placeholder)) },
+                singleLine = true,
+                enabled = !inProgress,
+                isError = showErrors && !pinValid,
+                supportingText = {
+                    Text(
+                        if (showErrors && !pinValid) stringResource(R.string.pairing_pin_error)
+                        else stringResource(R.string.pairing_pin_supporting),
+                        modifier = if (showErrors && !pinValid) Modifier.testTag("pairingPinError") else Modifier,
+                    )
+                },
+                textStyle = MaterialTheme.typography.bodyMedium.copy(textDirection = TextDirection.Ltr),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, imeAction = ImeAction.Done, autoCorrectEnabled = false),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { submit() }),
+                modifier = Modifier.fillMaxWidth().testTag("pairingPin"),
             )
 
             Button(
@@ -208,6 +237,7 @@ fun PairingScreen(
                     BannerKind.SUCCESS,
                     stringResource(R.string.pairing_success),
                     modifier = Modifier.testTag("pairingSuccess"),
+                    liveRegion = LiveRegionMode.Polite,
                     action = {
                         Button(onClick = onBack, modifier = Modifier.heightIn(min = MinTouchTarget)) {
                             Text(stringResource(R.string.action_continue))
@@ -218,6 +248,7 @@ fun PairingScreen(
                     BannerKind.DANGER,
                     state.message?.let { stringResource(R.string.pairing_failure, it) } ?: stringResource(R.string.pairing_failure_generic),
                     modifier = Modifier.testTag("pairingFailure"),
+                    liveRegion = LiveRegionMode.Polite,
                 )
             }
 

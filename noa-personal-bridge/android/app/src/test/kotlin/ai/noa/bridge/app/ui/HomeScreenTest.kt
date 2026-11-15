@@ -60,7 +60,7 @@ class HomeScreenTest {
         val fake = FakeAppController()
         setHome(fake)
         rule.onNodeWithTag("emergencyStopButton").performScrollTo().performClick()
-        rule.onNodeWithText(str(R.string.action_cancel)).performClick()
+        rule.onNodeWithText(str(R.string.action_close)).performClick()
         rule.waitForIdle()
         assertEquals(0, fake.emergencyStopCalls)
     }

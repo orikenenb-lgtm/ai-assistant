@@ -87,6 +87,8 @@ class FakeCoordinator(initial: List<Draft> = emptyList()) : BridgeCoordinator {
 
     override fun onNotification(snapshot: NotificationSnapshot) { calls += "onNotification" }
     override fun onNotificationRemoved(conversationKey: ConversationKey) { calls += "onNotificationRemoved" }
+    val seeded = mutableListOf<NotificationSnapshot>()
+    override fun seedSeen(snapshots: List<NotificationSnapshot>) { calls += "seedSeen"; seeded += snapshots }
     override fun updateSettings(settings: BridgeSettings) { calls += "updateSettings"; lastSettings = settings }
     override fun edit(draftId: String, newText: String) { calls += "edit:$draftId" }
     override fun cancel(draftId: String) { calls += "cancel:$draftId" }

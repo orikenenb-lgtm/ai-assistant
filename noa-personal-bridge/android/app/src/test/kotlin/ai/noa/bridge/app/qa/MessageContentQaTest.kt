@@ -15,7 +15,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -91,7 +90,6 @@ class MessageContentQaTest {
         assertEquals(0, server.requestCount)
     }
 
-    @Ignore("BUG: QA-03 — BridgeApiClient.buildDraftBody cuts at 2000 UTF-16 units (take(MAX_TEXT)), splitting an emoji surrogate pair; the lone surrogate is sent as '?'")
     @Test fun content_cutAt2000NeverSplitsAnEmoji() = runTest {
         val text = "א".repeat(1_999) + "😀" + " סוף"
         val sent = sentBody(request(text)).texts().single()

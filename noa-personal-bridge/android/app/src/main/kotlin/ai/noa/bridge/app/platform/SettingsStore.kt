@@ -7,6 +7,8 @@ import android.content.Context
 /**
  * Non-sensitive [BridgeSettings] flags (plain SharedPreferences "noa_bridge_settings").
  * The exclusion set is NOT stored here — it lives encrypted in [SecureStore].
+ * [save] uses a synchronous commit() because the flags are safety-relevant (emergency stop,
+ * consent, sending) and must survive a crash; the controller calls it on the IO dispatcher (PERF-02).
  */
 class SettingsStore(
     private val context: Context,

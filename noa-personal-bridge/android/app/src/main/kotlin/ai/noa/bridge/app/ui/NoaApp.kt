@@ -48,7 +48,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 
@@ -74,12 +77,11 @@ fun NoaApp(
     sendTracker: SendTracker = viewModel(),
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        val now by produceState(initialValue = 0L, liveClock) {
+        // PERF-08: the clock ticks only while the app is RESUMED (no looper wake-ups in the background).
+        val lifecycle = LocalLifecycleOwner.current.lifecycle
+        val now by produceState(initialValue = 0L, liveClock, lifecycle) {
             if (!liveClock) return@produceState
-            while (true) {
-                value = System.currentTimeMillis()
-                delay(30_000L)
-            }
+            tickWhileResumed(lifecycle, CLOCK_TICK_MILLIS, System::currentTimeMillis) { value = it }
         }
         CompositionLocalProvider(LocalNowMillis provides now) {
             Surface(color = MaterialTheme.colorScheme.background, modifier = modifier.fillMaxSize().testTag("noaRoot")) {
@@ -88,6 +90,21 @@ fun NoaApp(
                     openDraftId, onOpenDraftHandled, sendTracker,
                 )
             }
+        }
+    }
+}
+
+private const val CLOCK_TICK_MILLIS = 30_000L
+
+/**
+ * Calls [onTick] with [now] immediately and then every [intervalMillis], but only while [lifecycle]
+ * is at least RESUMED; stops when it drops below and restarts (with a fresh tick) on the next resume.
+ */
+internal suspend fun tickWhileResumed(lifecycle: Lifecycle, intervalMillis: Long, now: () -> Long, onTick: (Long) -> Unit) {
+    lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+        while (true) {
+            onTick(now())
+            delay(intervalMillis)
         }
     }
 }

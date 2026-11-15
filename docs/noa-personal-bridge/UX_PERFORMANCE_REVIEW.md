@@ -169,3 +169,37 @@
 5. **PERF-01 / PERF-02** — Keystore ו-`commit()` מחוץ ל-main thread.
 6. **UX-05 / UX-06** — דיאלוג מתיישן, ייצוג "הועבר" בלי סמנטיקת הצלחה.
 7. השאר (נמוכה) — כשנוח.
+
+---
+
+## Fix status
+
+Android fix pass (2026-11-15), after the architect's decisions. App tests:
+`noa-personal-bridge/android/app/src/test/.../app/ui/SecurityUxFixesUiTest.kt` (the classes `SecurityUxFixesUiTest` and
+`SecurityPlatformUiTest`) and `.../app/platform/SecurityFixesPlatformTest.kt`. Core test: `core/src/test/.../core/SecurityFixesTest.kt`.
+
+| ID | Status | Fix | Regression tests |
+|---|---|---|---|
+| A11Y-01 | FIXED | The incoming bubble merges its children and has no `contentDescription`. TalkBack reads the message text, and sender and time are a `stateDescription` ("הודעה של X, בשעה T"). | `SecurityUxFixesUiTest.a11y01_incomingBubbleExposesTheMessageTextWithSenderAndTimeAsState` |
+| A11Y-02 | FIXED | `NoticeBanner(liveRegion = …)`. Polite: detail error, Settings result, pairing success/failure, Home "last error". Assertive: send results and the send exception banner. The "draft changed" banner was already Assertive. | `a11y02_detailErrorIsAPoliteLiveRegion`, `ux06_a11y02_sendResultIsAnnouncedAssertively`, `sL5_settingsSaysHonestlyWhenTheServerDidNotConfirmTheRevoke`, `sM5_validPinIsPassedToPairing_emptyPinMeansNone` |
+| A11Y-03 | FIXED | Latin runs inside Hebrew are wrapped in LRI/PDI isolates (U+2066…U+2069): `https://` in `pairing_url_error` and `BridgeApiClient.MSG_BAD_URL`, the URL argument of `home_server_address`, `settings_pair_desc_paired` and `pairing_already_paired`, `sha256/` in the pin texts, and `revoke-device`. Checked the other Latin runs (`WhatsApp`, numbers, `Base64`): they render correctly, because they sit between strong RTL characters or are numbers. No string starts with a strong Latin character, which would make the paragraph LTR. | `SecurityPlatformUiTest.a11y03_a11y04_latinRunsAreIsolatedAndArrowsPointLeftInRtl` |
+| A11Y-04 | FIXED | "בהגדרות → פרטיות" is now "←" (`home_no_consent_body`, `onb_consent_skip_note`). | same test (no "→" in any string) |
+| A11Y-05 | FIXED | `heading()` is removed from the sender name in clickable draft cards and from the pause toggle. The headings are the section titles. | `ux01_a11y05_sectionsAreTheOnlyHeadingsAndNeedsYouComesFirst` |
+| A11Y-06, A11Y-07, A11Y-08, A11Y-10 | NOT CHANGED | Low or informational, left as documented. | — |
+| A11Y-09 | FIXED | DEBOUNCING uses an hourglass and UNKNOWN_RESULT uses a question mark (help outline). Both are vector drawables, because only material-icons-core is a dependency. There is no Refresh / retry icon any more. | `ux06_stateIconsAreHonest` |
+| UX-01 | FIXED | `groupDrafts()`: "ממתין לאישורך" (AWAITING_APPROVAL, then APPROVED), then "בתהליך", then history. Each group is sorted by `updatedAt` desc. | `ux01_awaitingThenApprovedFirst_thenInProgress_thenHistory_newestFirstInEachGroup`, `ux01_a11y05_…`; `DraftsListTest.rendersAHebrewStateChipForEveryDraftState` (updated to look inside each card) |
+| UX-02 | FIXED | The default dismiss label of `ConfirmDialog` is "סגור". The button on the draft screen is "בטל טיוטה", and the confirm action of the cancel dialog is "ביטול טיוטה". "ביטול" is no longer used for anything. | `ux02_dialogDismissReadsCloseAndTheDraftButtonReadsCancelDraft`; `HomeScreenTest` (updated) |
+| UX-03 | FIXED | `EmergencyStopAction` is in the top app bar of Home and of Draft detail. It is always visible and uses the same confirm dialog. When already stopped it stays visible but disabled ("עצירת חירום פעילה"). The big button at the bottom of Home stays. | `ux03_homeTopBarStopIsVisibleWithoutScrollingAndConfirms`, `ux03_draftDetailTopBarHasTheSameStop` |
+| UX-04 | FIXED | When the draft has safety flags, the approve dialog repeats a short warning (`approve_dialog_safety`). | `ux04_approveDialogRepeatsTheSafetyWarningOnlyForFlaggedDrafts`, `ux04_noSafetyWarningForAnUnflaggedDraft` |
+| UX-05 | FIXED EARLIER | See CODE_REVIEW.md H-1: the dialog closes when the revision or state changes. | `ReviewFixesUiTest.h1_*` |
+| UX-06 | FIXED | SEND_ATTEMPTED uses info colors and a neutral "handed over" (outbox) icon, never a green check. The send-result banner is INFO, not SUCCESS. After any send attempt (tracker attempt, SENDING, SEND_ATTEMPTED, UNKNOWN_RESULT), the reply section is titled "הטקסט שהועבר" and the approve button is hidden instead of disabled. | `ux06_afterASendAttemptTheTextIsLabelledForwardedAndApproveIsHidden`, `ux06_a11y02_sendResultIsAnnouncedAssertively`; `DraftDetailTest.approveDialog_…` (updated) |
+| UX-07 | FIXED | With sending off, the primary button reads "העתק טקסט" and copies the stored text: it saves a local edit first and marks the clip as sensitive. It opens no dialog and calls no `approveDraft`. The "sending off" dialog was removed. | `ux07_sendingOffButtonCopiesAndApprovesNothing`; `DraftDetailTest.sendingDisabled_offersCopyAndNeverSends` (updated) |
+| UX-08 … UX-12 | NOT CHANGED | Low, left as documented. | — |
+| PERF-01 | FIXED | The controller no longer decrypts anything in its constructor. Credentials, exclusions and the conversation_ref secret are read on `ioDispatcher`. Until they are loaded the coordinator runs with `paused`, so an exclusion that is not loaded yet can never be missed. `KeystoreCipher` caches the `SecretKey`, and the cache is cleared on `destroyKey` and on `InvalidKeyException`. The plain settings flags are still read synchronously: emergency stop and pause must apply before the first notification. | `SecurityFixesPlatformTest.perf01_keystoreReadsHappenOnTheIoDispatcherNotInTheConstructor_andTheCoordinatorIsPausedUntilLoaded` |
+| PERF-02 | FIXED | Settings and exclusion writes run on `ioDispatcher`, and each write stores the newest value, so out-of-order writes cannot lose an update. `SettingsStore.save` keeps `commit()`, now off the main thread, because the flags are safety-relevant (emergency stop, consent, sending). `OnboardingStore` already used `apply()`. | `perf02_settingsAndExclusionWritesRunOnTheIoDispatcherAndKeepTheNewestValue` |
+| PERF-03, PERF-05, PERF-06, PERF-07, PERF-09 | NOT CHANGED | Low, left as documented. | — |
+| PERF-04 | FIXED | `LruDeduplicator.purgeExpired` stops at the first entry that has not expired. The access-ordered map keeps the entries ordered by last sighting. | `SecurityFixesTest.perf04_purgeStopsAtTheFirstLiveEntryAndStillExpiresOldOnes`; the existing `LruDeduplicatorTest` |
+| PERF-08 | FIXED | The 30 s UI clock runs through `tickWhileResumed`, which uses `repeatOnLifecycle(RESUMED)`. It does not tick in the background, and it ticks again immediately on resume. | `SecurityPlatformUiTest.perf08_clockTicksOnlyWhileResumed` |
+
+The screenshot test `05b_approve_dialog_sending_off` (opt-in, `NOA_SCREENSHOTS=1`) now captures the detail screen after the
+direct copy, because the dialog no longer exists. The gallery images were not regenerated in this pass.

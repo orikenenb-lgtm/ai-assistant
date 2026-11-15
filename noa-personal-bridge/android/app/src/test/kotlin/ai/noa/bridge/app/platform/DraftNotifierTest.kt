@@ -8,7 +8,6 @@ import android.app.NotificationManager
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,10 +40,11 @@ class DraftNotifierTest {
         assertEquals(DraftNotifier.CHANNEL_ID, n.channelId)
         assertEquals(NotificationManager.IMPORTANCE_DEFAULT, nm.getNotificationChannel(DraftNotifier.CHANNEL_ID).importance)
         assertEquals("טיוטה מוכנה לאישור", n.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-        assertEquals("תשובה עבור דנה", n.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+        // S-L6: no sender name in either version (lock screen, watch, Link to Windows).
+        assertEquals("יש טיוטה חדשה שממתינה לאישורך", n.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         assertEquals(Notification.VISIBILITY_PRIVATE, n.visibility)
-        assertEquals("טיוטה חדשה ממתינה", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-        assertNull(n.publicVersion.extras.getCharSequence(Notification.EXTRA_TEXT))
+        assertEquals("טיוטה מוכנה לאישור", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        assertEquals("יש טיוטה חדשה שממתינה לאישורך", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         assertTrue(n.actions.isNullOrEmpty())
         assertTrue(n.contentIntent.isImmutable)
         assertEquals(

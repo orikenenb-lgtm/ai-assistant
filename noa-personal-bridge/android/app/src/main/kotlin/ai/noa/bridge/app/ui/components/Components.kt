@@ -31,11 +31,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -171,6 +175,8 @@ fun NoticeBanner(
     body: String,
     modifier: Modifier = Modifier,
     title: String? = null,
+    /** A11Y-02: set for banners that appear in response to something (errors, results). */
+    liveRegion: LiveRegionMode? = null,
     action: (@Composable () -> Unit)? = null,
 ) {
     val s = NoaStatus.colors
@@ -191,7 +197,8 @@ fun NoticeBanner(
         BannerKind.WARNING -> stringResource(R.string.cd_warning)
         BannerKind.DANGER -> stringResource(R.string.cd_error)
     }
-    Surface(color = bg, contentColor = fg, shape = MaterialTheme.shapes.medium, modifier = modifier.fillMaxWidth()) {
+    val live = if (liveRegion != null) Modifier.semantics { this.liveRegion = liveRegion } else Modifier
+    Surface(color = bg, contentColor = fg, shape = MaterialTheme.shapes.medium, modifier = modifier.then(live).fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
             Icon(icon, contentDescription = iconCd, modifier = Modifier.size(22.dp))
             Spacer(Modifier.width(12.dp))
@@ -214,7 +221,12 @@ fun NoticeBanner(
 
 /**
  * Confirmation dialog. The body scrolls, so it never clips at 200% font scale.
- * [destructive] renders the confirm action in the danger color.
+ * [destructive] renders the confirm action in the danger color. The dismiss action reads "סגור"
+ * by default (UX-02: "ביטול" is reserved for cancelling a draft).
+ *
+ * [filterObscuredTouches] (S-L8, tapjacking): the dialog's window drops touches that arrive while
+ * another window is drawn over it (View.filterTouchesWhenObscured on the dialog's own view and its
+ * root), in addition to MainActivity hiding non-system overlays on Android 12+.
  */
 @Composable
 fun ConfirmDialog(
@@ -224,9 +236,10 @@ fun ConfirmDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     body: String? = null,
-    dismissLabel: String = stringResource(R.string.action_cancel),
+    dismissLabel: String = stringResource(R.string.action_close),
     destructive: Boolean = false,
     confirmEnabled: Boolean = true,
+    filterObscuredTouches: Boolean = false,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val danger = NoaStatus.colors.danger
@@ -235,6 +248,7 @@ fun ConfirmDialog(
         onDismissRequest = onDismiss,
         title = { Text(title, modifier = Modifier.semantics { heading() }) },
         text = {
+            if (filterObscuredTouches) FilterObscuredTouches()
             Column(
                 Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -255,6 +269,22 @@ fun ConfirmDialog(
             TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(dismissLabel) }
         },
     )
+}
+
+/** Sets filterTouchesWhenObscured on the hosting (dialog) view and its root while composed. */
+@Composable
+private fun FilterObscuredTouches() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val root = view.rootView
+        val before = view.filterTouchesWhenObscured to root.filterTouchesWhenObscured
+        view.filterTouchesWhenObscured = true
+        root.filterTouchesWhenObscured = true
+        onDispose {
+            view.filterTouchesWhenObscured = before.first
+            root.filterTouchesWhenObscured = before.second
+        }
+    }
 }
 
 /** A bulleted line used in explanations (onboarding, disclosure dialogs). */

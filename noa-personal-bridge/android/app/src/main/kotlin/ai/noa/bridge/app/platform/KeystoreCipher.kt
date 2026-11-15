@@ -38,10 +38,15 @@ interface SecretCipher {
  */
 class KeystoreCipher(private val alias: String = DEFAULT_ALIAS) : SecretCipher {
 
+    /** PERF-01: the key handle is cached; loading AndroidKeyStore for every value cost ~5-30 ms each. */
+    @Volatile
+    private var cachedKey: SecretKey? = null
+
     @Synchronized
     private fun key(): SecretKey {
+        cachedKey?.let { return it }
         val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        (keyStore.getKey(alias, null) as? SecretKey)?.let { return it }
+        (keyStore.getKey(alias, null) as? SecretKey)?.let { cachedKey = it; return it }
         val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
         generator.init(
             KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
@@ -51,7 +56,7 @@ class KeystoreCipher(private val alias: String = DEFAULT_ALIAS) : SecretCipher {
                 .setRandomizedEncryptionRequired(true)
                 .build(),
         )
-        return generator.generateKey()
+        return generator.generateKey().also { cachedKey = it }
     }
 
     /** May throw GeneralSecurityException / ProviderException; [SecureStore] catches and stores nothing. */
@@ -75,6 +80,8 @@ class KeystoreCipher(private val alias: String = DEFAULT_ALIAS) : SecretCipher {
         }
     } catch (e: GeneralSecurityException) {
         // Includes KeyStoreException, AEADBadTagException, UnrecoverableKeyException.
+        // A permanently invalidated key must not stay cached.
+        if (e is java.security.InvalidKeyException) cachedKey = null
         SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
         null
     } catch (e: java.io.IOException) {
@@ -90,6 +97,7 @@ class KeystoreCipher(private val alias: String = DEFAULT_ALIAS) : SecretCipher {
 
     @Synchronized
     override fun destroyKey() {
+        cachedKey = null
         try {
             KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }.deleteEntry(alias)
         } catch (e: GeneralSecurityException) {

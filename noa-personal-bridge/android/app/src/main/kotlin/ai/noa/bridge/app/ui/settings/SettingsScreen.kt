@@ -4,6 +4,7 @@ import ai.noa.bridge.app.AppController
 import ai.noa.bridge.app.BridgeStatus
 import ai.noa.bridge.app.ExclusionEntry
 import ai.noa.bridge.app.R
+import ai.noa.bridge.app.ServerRevokeResult
 import ai.noa.bridge.app.ui.components.BannerKind
 import ai.noa.bridge.app.ui.components.ConfirmDialog
 import ai.noa.bridge.app.ui.components.MinTouchTarget
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -75,15 +77,16 @@ fun SettingsScreen(
     var resultRes by rememberSaveable { mutableStateOf(0) }
     var resultIsError by rememberSaveable { mutableStateOf(false) }
 
-    fun runSuspend(doneRes: Int, block: suspend () -> Unit) {
+    /** [block] returns the message to show and whether it is a problem. */
+    fun runSuspend(block: suspend () -> Pair<Int, Boolean>) {
         if (busy) return
         busy = true
         resultRes = 0
         scope.launch {
             try {
-                block()
-                resultRes = doneRes
-                resultIsError = false
+                val (res, isError) = block()
+                resultRes = res
+                resultIsError = isError
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -105,7 +108,12 @@ fun SettingsScreen(
         ScreenTitle(stringResource(R.string.settings_title))
 
         if (resultRes != 0) {
-            NoticeBanner(if (resultIsError) BannerKind.DANGER else BannerKind.SUCCESS, stringResource(resultRes))
+            NoticeBanner(
+                if (resultIsError) BannerKind.DANGER else BannerKind.SUCCESS,
+                stringResource(resultRes),
+                modifier = Modifier.testTag("settingsResult"),
+                liveRegion = LiveRegionMode.Polite,
+            )
         }
 
         // ---- Behavior ----
@@ -256,7 +264,13 @@ fun SettingsScreen(
             destructive = true,
             onConfirm = {
                 dialogName = SettingsDialog.NONE.name
-                runSuspend(R.string.settings_wipe_done) { controller.wipeLocalData() }
+                runSuspend {
+                    // S-L5: honest about whether the server revoked the token before the wipe.
+                    when (controller.wipeLocalData()) {
+                        ServerRevokeResult.NOT_CONFIRMED -> R.string.settings_revoke_not_confirmed to true
+                        else -> R.string.settings_wipe_done to false
+                    }
+                }
             },
             onDismiss = { dialogName = SettingsDialog.NONE.name },
         )
@@ -267,7 +281,13 @@ fun SettingsScreen(
             destructive = true,
             onConfirm = {
                 dialogName = SettingsDialog.NONE.name
-                runSuspend(R.string.settings_disconnect_done) { controller.disconnect() }
+                runSuspend {
+                    when (controller.disconnect()) {
+                        ServerRevokeResult.CONFIRMED -> R.string.settings_disconnect_done to false
+                        ServerRevokeResult.NOT_CONFIRMED -> R.string.settings_revoke_not_confirmed to true
+                        ServerRevokeResult.NOT_PAIRED -> R.string.settings_disconnect_done_local to false
+                    }
+                }
             },
             onDismiss = { dialogName = SettingsDialog.NONE.name },
         )

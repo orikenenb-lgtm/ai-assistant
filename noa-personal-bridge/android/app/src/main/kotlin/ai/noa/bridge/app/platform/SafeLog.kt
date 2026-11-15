@@ -40,6 +40,10 @@ internal object SafeLog {
         DRAFT_NOTIFICATION_SKIPPED_NO_PERMISSION,
         COROUTINE_FAILURE,
         CONTROLLER_FAILURE,
+        REVOKE_NOT_CONFIRMED,
+        NOTIFICATION_HIDDEN_HANDLE_REMOVED,
+        LISTENER_SEEDED,
+        OVERLAY_PROTECTION_UNAVAILABLE,
     }
 
     fun i(event: Event, code: Int? = null) {

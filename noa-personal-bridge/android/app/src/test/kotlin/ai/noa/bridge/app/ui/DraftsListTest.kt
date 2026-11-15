@@ -5,6 +5,8 @@ import ai.noa.bridge.app.ui.drafts.DraftsListScreen
 import ai.noa.bridge.app.ui.preview.FakeAppController
 import ai.noa.bridge.core.DraftState
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -30,7 +32,11 @@ class DraftsListTest {
 
         drafts.forEach { draft ->
             rule.onNodeWithTag("draftsList").performScrollToKey(draft.id)
-            rule.onNodeWithTag("stateChip_${draft.state.name}", useUnmergedTree = true).assertIsDisplayed()
+            // Several drafts can share a state (UX-01 groups them), so look inside this draft's card.
+            rule.onNode(
+                hasTestTag("stateChip_${draft.state.name}") and hasAnyAncestor(hasTestTag("draftCard_${draft.id}")),
+                useUnmergedTree = true,
+            ).assertIsDisplayed()
         }
         rule.onNodeWithTag("draftsList").performScrollToKey("draft-8")
         rule.onNodeWithText(str(R.string.state_send_attempted), useUnmergedTree = true).assertIsDisplayed()
