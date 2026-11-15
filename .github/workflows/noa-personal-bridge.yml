@@ -1,0 +1,72 @@
+# CI for NOA Personal Bridge (noa-personal-bridge/). Independent from the existing
+# Kerem Orders (ci.yml) and SMART CRM (smart-crm.yml) workflows: it only triggers on
+# changes under noa-personal-bridge/ and never deploys anything.
+name: NOA Personal Bridge
+
+on:
+  push:
+    paths:
+      - "noa-personal-bridge/**"
+      - ".github/workflows/noa-personal-bridge.yml"
+  pull_request:
+    paths:
+      - "noa-personal-bridge/**"
+      - ".github/workflows/noa-personal-bridge.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: noa-bridge-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bridge-service:
+    name: Bridge service (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: noa-personal-bridge/bridge-service
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: noa-personal-bridge/bridge-service/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+
+  android:
+    name: Android (unit tests + debug APK)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: noa-personal-bridge/android
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew --no-daemon :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: noa-bridge-test-reports
+          path: |
+            noa-personal-bridge/android/core/build/reports/tests
+            noa-personal-bridge/android/app/build/reports
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: noa-personal-bridge-debug-apk
+          path: noa-personal-bridge/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
