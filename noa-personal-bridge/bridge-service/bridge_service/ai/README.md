@@ -12,7 +12,7 @@ sends anything.
 | `output_guard.py` | `finalize()`: cleans model text, removes unknown links, blocks secrets and prompt leaks |
 | `stub.py` | `StubEngine`: offline, deterministic replies (local dev, tests) |
 | `anthropic_engine.py` | `AnthropicEngine`: one tool-free Messages API call |
-| `noa_persona_engine.py` | `NoaPersonaEngine`: borrows NOA's persona via read-only `/prompt`, then the same tool-free call |
+| `noa_persona_engine.py` | `NoaPersonaEngine`: borrows NOA's persona from a local file (recommended) or via read-only `/prompt`, then the same tool-free call |
 | `factory.py` | `create_engine(settings)` (`engine` = `stub` / `anthropic` / `noa_persona`) |
 
 ## Threat model
@@ -34,10 +34,42 @@ sends anything.
   and replaces the whole draft with a safe fallback if it contains secret-looking strings
   (API-key prefixes, long base64/hex, card-shaped numbers, any 4-8 digit code when the
   conversation asked for something sensitive) or prompt fragments.
+* **Detector evasions (review M-3):** every rule also runs on detection-only variants: a
+  "skeleton" with Cyrillic/Greek look-alikes mapped to Latin (`іgnore аll …` with Cyrillic
+  і/а, `ΙGNΟRΕ`), and leetspeak-folded copies (`1gn0r3 4ll pr3v10us 1nstruct10ns`; digits are
+  folded only inside tokens that also contain Latin letters, so "נתראה ב-8" is untouched).
+  Base64 blobs of ≥ 40 chars are decoded; decoded injection text is flagged, and any long
+  (≥ 120 chars, varied) base64 run gets the note "תוכן מקודד — טופל כטקסט בלבד". The sender
+  display name is analyzed like a message (`analyze_incoming(messages, sender_display_name=…)`;
+  the keyword is optional, so old callers keep working).
+* **Persona / prompt leak check (review L-9):** `finalize(..., persona=...)` also replaces the
+  draft with the fallback if it shares any run of 8 consecutive words, or 40 consecutive
+  characters (normalized), with the NOA persona or with our own system-prompt template.
 * `safety.py` is a heuristic signal, not the security boundary; the boundaries are "no
   tools" and "a human approves every send". It errs a little on the cautious side (e.g.
   any mention of כסף / money is flagged as a money topic); bare English "bit" is not
   flagged (too common), "ביט" / "בbit" / "via bit" are.
+
+## Persona FILE mode (recommended for `noa_persona`)
+
+NOA's key is unscoped (see below), so the recommended setup keeps it off the bridge host
+entirely (security review H-1):
+
+```bash
+# once, with the NOA key in the environment of THIS command only:
+python -m bridge_service.admin export-persona --out data/persona.txt
+# then run the bridge with:
+BRIDGE_ENGINE=noa_persona BRIDGE_PERSONA_FILE=data/persona.txt   # and no BRIDGE_NOA_ENGINE_API_KEY
+```
+
+`export-persona` makes exactly ONE `POST {base}/agents/{id}/prompt` through the same guarded
+client as the engine (allowlist hook, no redirects, https only) and writes the cleaned persona
+(placeholder lines dropped, ≤ 6000 chars) to the file with 0600 permissions; it never prints
+the persona. With `persona_file` set, `NoaPersonaEngine` ignores the NOA URL and key, never
+creates an HTTP client and never sends a request to NOA. It reads the UTF-8 file (max 20 KB;
+larger, missing, non-UTF-8 or empty → drafts without persona, label `noa_persona:fallback`),
+drops `[למלא` lines, and re-reads it only when the file's mtime/size changes. Live fetching
+(below) remains available when no persona file is configured.
 
 ## Why NOA's `/chat` is forbidden
 
@@ -61,7 +93,7 @@ Tests record every outgoing request and assert none goes to `/chat` or `/calls`.
 **Recommendation:** if the live NOA engine supports a dedicated, read-only (prompt-only)
 key, configure that instead of the global engine key; and keep the key out of logs.
 
-Persona handling: cached 10 minutes per agent id (persona is agent configuration, not
+Persona handling (live-fetch mode): cached 10 minutes per agent id (persona is agent configuration, not
 conversation data; failures are cached 60 s), lines containing `[למלא` (unfilled template
 placeholders, which `/prompt` does not check) are dropped, capped at 6000 chars, and placed
 in `<noa_persona>` as tone/identity background only. The prompt states that the bridge rules
