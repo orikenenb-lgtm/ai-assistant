@@ -38,7 +38,10 @@ def classify(data: DraftInput) -> str:
     texts = [m.text or "" for m in sorted(data.messages, key=lambda m: m.sent_at)]
     last = normalize_for_matching(texts[-1]) if texts else ""
     if "?" in last or "؟" in last:
-        return "question"
+        # "היי מה קורה?" is small talk, not a real question: if nothing is left once the
+        # greeting phrases and punctuation are removed, answer it as a greeting.
+        leftover = re.sub(r"[\W_]+", "", _GREETING.sub("", last))
+        return "greeting" if not leftover else "question"
     if _THANKS.search(last):
         return "thanks"
     if any(_GREETING.search(normalize_for_matching(t)) for t in texts):

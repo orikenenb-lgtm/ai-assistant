@@ -219,12 +219,14 @@ class BridgeApiClient(
         const val MSG_BAD_RESPONSE = "התקבלה תשובה לא תקינה מהשרת"
         const val MSG_NOT_PAIRED = "המכשיר אינו מחובר לשרת"
         const val MSG_BAD_URL = "כתובת השרת חייבת להתחיל ב־https://"
-        const val MSG_BAD_CODE_FORMAT = "קוד הצימוד צריך להכיל 8 תווים (אותיות לועזיות וספרות)"
-        const val MSG_BAD_CODE = "קוד הצימוד שגוי, פג תוקפו או שכבר נוצל"
+        const val MSG_BAD_CODE_FORMAT = "קוד החיבור צריך להכיל 8 תווים (אותיות לועזיות וספרות)"
+        const val MSG_BAD_CODE = "קוד החיבור לא תקין או שפג תוקפו"
+        const val MSG_WRONG_ENDPOINT = "כתובת השרת שגויה — בדוק את הכתובת"
 
         private val JSON = "application/json; charset=utf-8".toMediaType()
         private val EMPTY_BODY: RequestBody = ByteArray(0).toRequestBody(null)
         private val CONVERSATION_REF = Regex("^[0-9a-f]{64}$")
+        private val UUID_V4 = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
         private const val PAIRING_ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ"
         private val DEBUG_CLEARTEXT_HOSTS = setOf("10.0.2.2", "localhost", "127.0.0.1")
 
@@ -267,6 +269,8 @@ class BridgeApiClient(
         internal fun buildDraftBody(request: DraftRequest, locale: String): DraftRequestBody? {
             val ref = request.conversationKey.value
             if (!CONVERSATION_REF.matches(ref)) return null
+            // v1.1: request_id must be a UUID v4 (the server answers 422 otherwise).
+            if (!UUID_V4.matches(request.requestId)) return null
             val lines = request.messages
                 .map { MessageBody(text = it.text.trim().take(MAX_TEXT), sentAt = it.timestampMillis) }
                 .filter { it.text.isNotEmpty() }
@@ -291,6 +295,7 @@ class BridgeApiClient(
             422 -> DraftResult.Failure(MSG_INVALID_REQUEST, retryable = false)
             429 -> DraftResult.Failure(MSG_RATE_LIMITED, retryable = true)
             503 -> DraftResult.Failure(MSG_DISABLED, retryable = false)
+            404, 405 -> DraftResult.Failure(MSG_WRONG_ENDPOINT, retryable = false)
             in 500..599 -> DraftResult.Failure(MSG_UNAVAILABLE, retryable = true)
             else -> DraftResult.Failure(MSG_REJECTED, retryable = false)
         }
@@ -299,6 +304,7 @@ class BridgeApiClient(
             400 -> MSG_BAD_CODE
             429 -> MSG_RATE_LIMITED
             503 -> MSG_DISABLED
+            404, 405 -> MSG_WRONG_ENDPOINT
             in 500..599 -> MSG_UNAVAILABLE
             else -> MSG_REJECTED
         }

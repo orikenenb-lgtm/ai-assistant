@@ -109,8 +109,8 @@ class BridgeApiClientTest {
 
     @Test
     fun missingSafetyDefaultsToClean() = runTest {
-        server.enqueue(MockResponse().setBody("""{"request_id":"r1","draft_text":"שלום","engine":"stub","extra":1}"""))
-        val result = client().requestDraft(request(requestId = "r1")) as DraftResult.Success
+        server.enqueue(MockResponse().setBody("""{"request_id":"22222222-3333-4444-9555-666666666666","draft_text":"שלום","engine":"stub","extra":1}"""))
+        val result = client().requestDraft(request(requestId = "22222222-3333-4444-9555-666666666666")) as DraftResult.Success
         assertFalse(result.safety.injectionSuspected)
         assertTrue(result.safety.notes.isEmpty())
     }
@@ -135,7 +135,9 @@ class BridgeApiClientTest {
             Triple(503, "disabled", BridgeApiClient.MSG_DISABLED to false),
             Triple(502, "engine_error", BridgeApiClient.MSG_UNAVAILABLE to true),
             Triple(500, "x", BridgeApiClient.MSG_UNAVAILABLE to true),
-            Triple(404, "x", BridgeApiClient.MSG_REJECTED to false),
+            Triple(404, "not_found", BridgeApiClient.MSG_WRONG_ENDPOINT to false),
+            Triple(405, "method_not_allowed", BridgeApiClient.MSG_WRONG_ENDPOINT to false),
+            Triple(400, "x", BridgeApiClient.MSG_REJECTED to false),
         )
         val c = client()
         cases.forEach { (code, err, expected) ->
@@ -217,6 +219,13 @@ class BridgeApiClientTest {
     }
 
     @Test
+    fun nonUuidV4RequestIdIsNotSent() = runTest {
+        val failure = client().requestDraft(request(requestId = "not-a-uuid")) as DraftResult.Failure
+        assertFalse(failure.retryable)
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
     fun invalidConversationRefIsNotSent() = runTest {
         val failure = client().requestDraft(request(conversationRef = "not-hex")) as DraftResult.Failure
         assertFalse(failure.retryable)
@@ -240,7 +249,7 @@ class BridgeApiClientTest {
 
     @Test
     fun pairErrorsAndBadCodes() = runTest {
-        server.enqueue(error(400, "invalid_code"))
+        server.enqueue(error(400, "invalid_pairing_code"))
         server.enqueue(error(429, "rate_limited"))
         val c = client()
         assertEquals(BridgeApiClient.MSG_BAD_CODE, (c.pair(baseUrl(), "ABCD2345", "x") as PairOutcome.Failure).messageHebrew)
@@ -249,6 +258,7 @@ class BridgeApiClientTest {
         assertEquals(BridgeApiClient.MSG_BAD_CODE_FORMAT, (c.pair(baseUrl(), "ABCD0123", "x") as PairOutcome.Failure).messageHebrew)
         assertEquals(BridgeApiClient.MSG_BAD_CODE_FORMAT, (c.pair(baseUrl(), "ABC", "x") as PairOutcome.Failure).messageHebrew)
         assertEquals(2, server.requestCount)
+        assertEquals("קוד החיבור לא תקין או שפג תוקפו", BridgeApiClient.MSG_BAD_CODE)
     }
 
     @Test

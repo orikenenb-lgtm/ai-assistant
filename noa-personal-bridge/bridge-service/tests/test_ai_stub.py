@@ -41,8 +41,8 @@ async def draft(*texts: str) -> DraftOutput:
         (("I watched the movie",), "Got it, I'll get back to you soon 👍"),
         (("😂😂",), "קיבלתי, אחזור אליך בהקדם 👍"),
         (("👋",), "היי! מה שלומך? 😊"),
-        (("hey מה קורה?",), "שאלה טובה, אבדוק ואחזור אליך בהקדם"),
-        (("היי", "מה המצב?"), "שאלה טובה, אבדוק ואחזור אליך בהקדם"),
+        (("hey מה קורה?",), "היי! מה שלומך? 😊"),  # small talk, not a real question (D-017)
+        (("היי", "מה המצב?"), "היי! מה שלומך? 😊"),  # D-017
     ],
 )
 async def test_deterministic_replies(texts, expected):
@@ -89,3 +89,10 @@ async def test_english_injection_deflects_in_english():
 async def test_clean_report_on_benign():
     out = await draft("היי מה נשמע? 😊")
     assert not out.safety.injection_suspected and not out.safety.sensitive_request
+
+
+async def test_greeting_phrased_as_question_is_a_greeting():
+    """Orchestrator regression (D-017): small talk with '?' must not get the 'I'll check' reply."""
+    assert (await draft("היי מה קורה?")).draft_text == "היי! מה שלומך? 😊"
+    assert (await draft("מה נשמע?")).draft_text == "היי! מה שלומך? 😊"
+    assert (await draft("היי, מתי נפגשים מחר?")).draft_text == "שאלה טובה, אבדוק ואחזור אליך בהקדם"
