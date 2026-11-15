@@ -16,14 +16,20 @@ package ai.noa.bridge.core
  * 8. no messages / only blank text → [RejectReason.NO_CONTENT]
  * 9. single placeholder line ("2 new messages") → [RejectReason.HIDDEN_CONTENT]
  * 10. latest line (by timestamp) is from the device owner → [RejectReason.FROM_SELF]
- * 11. otherwise Accepted with the last [MAX_MESSAGES] non-self, non-blank lines.
+ * 11. otherwise Accepted with the last [MAX_MESSAGES] non-blank lines from the other person that
+ *     came AFTER the owner's last own line (earlier lines were already answered).
+ *
+ * Classification (fail closed): GROUP on any group signal; PRIVATE only with a private JID / LID
+ * (`@s.whatsapp.net`, `@lid`) in tag or shortcutId, or `isGroupConversationFlag == false` together
+ * with a non-blank tag / shortcutId; UNKNOWN otherwise. Hidden / redacted content is detected by
+ * [ContentVisibility], shared with the app.
  *
  * [RejectReason.DUPLICATE] is never produced here; the coordinator de-duplicates.
  */
 internal class DefaultConversationFilter(val allowedPackages: Set<String>) : ConversationFilter {
 
     override fun classify(snapshot: NotificationSnapshot): ChatKind {
-        val ids = listOfNotNull(snapshot.tag, snapshot.shortcutId)
+        val ids = listOfNotNull(snapshot.tag, snapshot.shortcutId).map(String::trim).filter(String::isNotEmpty)
         val distinctOtherSenders = snapshot.messages
             .asSequence()
             .filter { !it.isFromSelf }
@@ -39,8 +45,11 @@ internal class DefaultConversationFilter(val allowedPackages: Set<String>) : Con
             (convTitle.isNotEmpty() && title.isNotEmpty() && convTitle != title)
         if (groupSignal) return ChatKind.GROUP
 
-        val privateSignal = snapshot.isGroupConversationFlag == false ||
-            ids.any { it.contains(PRIVATE_JID_SUFFIX) }
+        // On API 28+ MessagingStyle always writes EXTRA_IS_GROUP_CONVERSATION (default false), so
+        // `false` alone is not positive evidence. PRIVATE needs a private JID / LID in the tag or
+        // shortcut, or the explicit false flag together with a stable id (which the key needs anyway).
+        val privateSignal = ids.any { it.contains(PRIVATE_JID_SUFFIX) || it.contains(PRIVATE_LID_SUFFIX) } ||
+            (snapshot.isGroupConversationFlag == false && ids.isNotEmpty())
         return if (privateSignal) ChatKind.PRIVATE else ChatKind.UNKNOWN
     }
 
@@ -61,13 +70,13 @@ internal class DefaultConversationFilter(val allowedPackages: Set<String>) : Con
 
         val nonBlank = snapshot.messages.filter { !it.text.isNullOrBlank() }
         if (nonBlank.isEmpty()) return reject(RejectReason.NO_CONTENT)
-        if (nonBlank.size == 1 && isHiddenPlaceholder(nonBlank.single().text!!)) {
+        if (nonBlank.size == 1 && ContentVisibility.isHiddenPlaceholder(nonBlank.single().text!!)) {
             return reject(RejectReason.HIDDEN_CONTENT)
         }
         // Android 15+ redacts "sensitive" notifications for untrusted listeners: the title becomes
         // the app name and the text a fixed notice, but the Reply action stays. Any sign of that
         // means we did not see the real message — never draft (and never reply) on it.
-        if (isRedactedTitle(snapshot) || nonBlank.any { isSensitiveRedactionNotice(it.text!!) }) {
+        if (ContentVisibility.isRedactedSnapshot(snapshot)) {
             return reject(RejectReason.HIDDEN_CONTENT)
         }
 
@@ -75,8 +84,12 @@ internal class DefaultConversationFilter(val allowedPackages: Set<String>) : Con
         val ordered = snapshot.messages.sortedBy { it.timestampMillis }
         if (ordered.last().isFromSelf) return reject(RejectReason.FROM_SELF)
 
+        // Only what arrived AFTER the owner's last own line is unanswered; earlier incoming lines
+        // were already answered and must not be drafted again.
+        val lastSelf = ordered.indexOfLast { it.isFromSelf }
         val fallbackName = snapshot.title?.takeIf { it.isNotBlank() }
         val accepted = ordered
+            .drop(lastSelf + 1)
             .filter { !it.isFromSelf && !it.text.isNullOrBlank() }
             .takeLast(MAX_MESSAGES)
             .map { m ->
@@ -98,45 +111,8 @@ internal class DefaultConversationFilter(val allowedPackages: Set<String>) : Con
         const val MAX_MESSAGES = 20
         const val GROUP_JID_SUFFIX = "@g.us"
         const val PRIVATE_JID_SUFFIX = "@s.whatsapp.net"
+        /** WhatsApp "linked identity" ids of private contacts (used instead of the phone JID). */
+        const val PRIVATE_LID_SUFFIX = "@lid"
         const val CATEGORY_CALL = "call"
-
-        /** Bidi / zero-width marks WhatsApp puts around Hebrew placeholder text. */
-        private val INVISIBLE_MARKS = Regex("[\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069\\uFEFF]")
-
-        private val HIDDEN_PATTERNS: List<Regex> = listOf(
-            Regex("^\\d+ (הודעות חדשות|new messages)$", RegexOption.IGNORE_CASE),
-            Regex("^הודעה חדשה$"),
-            Regex("^new message$", RegexOption.IGNORE_CASE),
-            Regex("^checking for new messages\\.*$", RegexOption.IGNORE_CASE),
-            Regex("^בודק(ת)? (אם יש )?הודעות חדשות\\.*$"),
-            Regex("^\\d+ (new )?messages from \\d+ chats$", RegexOption.IGNORE_CASE),
-            Regex("^\\d+ הודעות (חדשות )?מ-?\\s?\\d+ (צ'אטים|שיחות)$"),
-        )
-
-        private val REDACTION_NOTICES: List<Regex> = listOf(
-            Regex("sensitive notification content hidden", RegexOption.IGNORE_CASE),
-            Regex("sensitive.*hidden", RegexOption.IGNORE_CASE),
-            Regex("תוכן.*רגיש.*(הוסתר|מוסתר)"),
-            Regex("(הוסתר|מוסתר).*תוכן.*רגיש"),
-        )
-
-        /** Redacted notifications carry the app label instead of the contact/conversation name. */
-        fun isRedactedTitle(snapshot: NotificationSnapshot): Boolean {
-            val title = snapshot.title?.replace(INVISIBLE_MARKS, "")?.trim()
-            val conversation = snapshot.conversationTitle?.replace(INVISIBLE_MARKS, "")?.trim()
-            return title.equals("WhatsApp", ignoreCase = true) ||
-                conversation.equals("WhatsApp", ignoreCase = true) ||
-                snapshot.messages.any { it.sender?.trim().equals("WhatsApp", ignoreCase = true) }
-        }
-
-        fun isSensitiveRedactionNotice(text: String): Boolean {
-            val normalized = text.replace(INVISIBLE_MARKS, "").trim()
-            return REDACTION_NOTICES.any { it.containsMatchIn(normalized) }
-        }
-
-        fun isHiddenPlaceholder(text: String): Boolean {
-            val normalized = text.replace(INVISIBLE_MARKS, "").trim()
-            return HIDDEN_PATTERNS.any { it.matches(normalized) }
-        }
     }
 }

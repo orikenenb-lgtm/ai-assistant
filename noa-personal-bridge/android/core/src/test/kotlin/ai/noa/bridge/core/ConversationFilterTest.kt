@@ -145,8 +145,7 @@ class ConversationFilterTest {
         val s = snapshot(
             messages = listOf(
                 msg("  first  ", 1),
-                msg("mine", 2, "Me", self = true),
-                msg("   ", 3),
+                msg("   ", 2),
                 msg("second", 4, null),
             ),
         )

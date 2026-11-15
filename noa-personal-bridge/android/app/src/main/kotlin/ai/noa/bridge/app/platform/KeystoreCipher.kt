@@ -14,7 +14,10 @@ import javax.crypto.spec.GCMParameterSpec
 interface SecretCipher {
     fun encrypt(plaintext: String): String
 
-    /** Returns null when the value cannot be decrypted (key deleted, data corrupted, tampered). */
+    /**
+     * Returns null when the value cannot be decrypted (key deleted or invalidated, data corrupted,
+     * tampered, keystore error). Implementations should not throw; [SecureStore] also guards it.
+     */
     fun decrypt(encoded: String): String?
 
     /** Permanently deletes the key; everything encrypted with it becomes unreadable. */
@@ -51,6 +54,7 @@ class KeystoreCipher(private val alias: String = DEFAULT_ALIAS) : SecretCipher {
         return generator.generateKey()
     }
 
+    /** May throw GeneralSecurityException / ProviderException; [SecureStore] catches and stores nothing. */
     override fun encrypt(plaintext: String): String {
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, key())
@@ -70,9 +74,16 @@ class KeystoreCipher(private val alias: String = DEFAULT_ALIAS) : SecretCipher {
             String(cipher.doFinal(bytes, IV_BYTES, bytes.size - IV_BYTES), Charsets.UTF_8)
         }
     } catch (e: GeneralSecurityException) {
+        // Includes KeyStoreException, AEADBadTagException, UnrecoverableKeyException.
         SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
         null
-    } catch (e: IllegalArgumentException) {
+    } catch (e: java.io.IOException) {
+        // KeyStore.load() failure.
+        SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
+        null
+    } catch (e: RuntimeException) {
+        // ProviderException (keystore daemon errors, invalidated key), IllegalStateException,
+        // IllegalArgumentException (bad base64), ClassCastException: the value counts as absent.
         SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
         null
     }

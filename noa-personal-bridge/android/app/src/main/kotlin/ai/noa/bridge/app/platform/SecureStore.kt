@@ -7,6 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import java.security.GeneralSecurityException
 
 /**
  * Encrypted key/value storage (SharedPreferences "noa_bridge_secure"; every value is encrypted
@@ -63,14 +64,44 @@ class SecureStore(
         cipher.destroyKey()
     }
 
+    /**
+     * Never throws: a keystore / cipher failure (GeneralSecurityException, KeyStoreException,
+     * ProviderException, IllegalState/IllegalArgument or any other RuntimeException from the
+     * keystore) makes the value count as absent — i.e. "not paired", re-pair needed. Only the
+     * exception class is logged. This runs on the notification-listener path.
+     */
     private fun read(key: String): String? = synchronized(lock) {
-        val encrypted = prefs.getString(key, null) ?: return null
-        cipher.decrypt(encrypted)
+        try {
+            val encrypted = prefs.getString(key, null) ?: return null
+            cipher.decrypt(encrypted)
+        } catch (e: GeneralSecurityException) {
+            SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
+            null
+        } catch (e: RuntimeException) {
+            // KeyStoreException is a GeneralSecurityException; ProviderException, IllegalState-,
+            // IllegalArgument- and ClassCastException are RuntimeExceptions.
+            SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
+            null
+        }
     }
 
+    /** Never throws either: on a cipher failure the old value is removed and nothing is stored. */
     private fun write(key: String, value: String?) = synchronized(lock) {
         val editor = prefs.edit()
-        if (value == null) editor.remove(key) else editor.putString(key, cipher.encrypt(value))
+        if (value == null) {
+            editor.remove(key)
+        } else {
+            val encrypted = try {
+                cipher.encrypt(value)
+            } catch (e: GeneralSecurityException) {
+                SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
+                null
+            } catch (e: RuntimeException) {
+                SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
+                null
+            }
+            if (encrypted == null) editor.remove(key) else editor.putString(key, encrypted)
+        }
         editor.commit()
         Unit
     }

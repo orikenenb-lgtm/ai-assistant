@@ -43,8 +43,11 @@ val ActiveStates: Set<DraftState> = setOf(
 /** States that count as "waiting for the user" (badge, home card). */
 val PendingStates: Set<DraftState> = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL)
 
-/** States in which the user may still edit / approve / cancel. */
-val ApprovableStates: Set<DraftState> = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL)
+/**
+ * States in which the user may still edit / approve / cancel. APPROVED is included so a draft whose
+ * send was refused (device locked, sending off) or whose approval expired can be approved again.
+ */
+val ApprovableStates: Set<DraftState> = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
 
 /** States in which a cancel makes sense (nothing has been handed to WhatsApp yet). */
 val CancellableStates: Set<DraftState> = setOf(

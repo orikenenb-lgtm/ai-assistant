@@ -122,8 +122,13 @@ class BridgeCoordinatorTest {
         assertNull(h.c.approve(d.id, ""))
         assertNull(h.c.approve("nope", "reply text"))
         assertEquals(DraftState.AWAITING_APPROVAL, h.only().state)
-        assertNotNull(h.c.approve(d.id, "reply text"))
-        assertNull(h.c.approve(d.id, "reply text")) // already APPROVED
+        val first = h.c.approve(d.id, "reply text")!!
+        // Already APPROVED: re-approval (L-3) issues a NEW token and burns the old one.
+        val second = h.c.approve(d.id, "reply text")!!
+        assertTrue(first.token != second.token)
+        assertEquals(DraftState.APPROVED, h.only().state)
+        assertEquals(second, h.only().approval)
+        assertNull(h.c.approve(d.id, "reply text ")) // still exact text only
     }
 
     @Test fun cancelNeverSends() = runTest {

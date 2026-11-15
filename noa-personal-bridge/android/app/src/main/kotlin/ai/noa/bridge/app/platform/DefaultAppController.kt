@@ -169,6 +169,23 @@ class DefaultAppController(
 
     override fun approveDraft(draftId: String, finalText: String): Approval? = coordinator.approve(draftId, finalText)
 
+    /**
+     * The send gate the reply sender re-checks on the main thread immediately before
+     * `PendingIntent.send` (after the core's own checks): false when emergency-stopped, paused,
+     * the experimental send toggle is off (or not compiled in), or the device is locked.
+     */
+    fun canSendNow(): Boolean {
+        val s = _settings.value
+        if (!replyPathCompiledIn || !s.sendingEnabled || s.paused || s.emergencyStopped) return false
+        val locked = try {
+            isDeviceLocked()
+        } catch (e: RuntimeException) {
+            SafeLog.e(SafeLog.Event.CONTROLLER_FAILURE, e)
+            true
+        }
+        return !locked
+    }
+
     override suspend fun sendApproved(approval: Approval): DraftState {
         val current = coordinator.drafts.value.firstOrNull { it.id == approval.draftId }?.state ?: DraftState.EXPIRED
         if (!replyPathCompiledIn || !_settings.value.sendingEnabled) {
@@ -290,10 +307,17 @@ class DefaultAppController(
         _status.update { it.copy(lastErrorHebrew = messageHebrew) }
     }
 
-    private fun loadCredentials(): ApiCredentials? {
-        val url = secureStore.baseUrl ?: return null
-        val token = secureStore.deviceToken ?: return null
-        return ApiCredentials(url, token)
+    /**
+     * Runs while the platform graph is built — possibly from the notification listener on the
+     * main thread. A keystore failure must never crash that path: treat it as "not paired".
+     */
+    private fun loadCredentials(): ApiCredentials? = try {
+        val url = secureStore.baseUrl
+        val token = secureStore.deviceToken
+        if (url == null || token == null) null else ApiCredentials(url, token)
+    } catch (e: RuntimeException) {
+        SafeLog.e(SafeLog.Event.SECURE_STORE_DECRYPT_FAILED, e)
+        null
     }
 
     companion object {

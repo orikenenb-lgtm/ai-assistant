@@ -25,11 +25,13 @@ class ConversationKeysTest {
         assertEquals(Hashing.sha256Hex("com.whatsapp|sc-1"), keyOf(withShortcut).value)
         val withTag = snapshot(shortcutId = " ", tag = "tag-1", conversationTitle = "ct", title = "t")
         assertEquals(Hashing.sha256Hex("com.whatsapp|tag-1"), keyOf(withTag).value)
-        val withConvTitle = snapshot(shortcutId = null, tag = "", conversationTitle = "ct", title = "t")
-        assertEquals(Hashing.sha256Hex("com.whatsapp|ct"), keyOf(withConvTitle).value)
-        val withTitle = snapshot(shortcutId = null, tag = null, conversationTitle = null, title = "Dana")
-        assertEquals(Hashing.sha256Hex("com.whatsapp|Dana"), keyOf(withTitle).value)
-        assertFalse(keyOf(withTitle).value.contains("Dana"))
+    }
+
+    /** M-2: display names are not identities (two contacts can share one) — fail closed. */
+    @Test fun titlesAreNeverAnIdentity() {
+        assertNull(ConversationKeys.derive(snapshot(shortcutId = null, tag = "", conversationTitle = "ct", title = "t")))
+        assertNull(ConversationKeys.derive(snapshot(shortcutId = null, tag = null, conversationTitle = null, title = "Dana")))
+        assertNull(ConversationKeys.derive(snapshot(shortcutId = " ", tag = null, conversationTitle = "Dana", title = "Dana")))
     }
 
     @Test fun nullWhenNoIdentity() {

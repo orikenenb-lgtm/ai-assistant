@@ -17,7 +17,8 @@ internal class PlatformGraph(context: Context, scope: CoroutineScope) {
     val notifier = DraftNotifier(appContext)
     private val secureStore = SecureStore(appContext, KeystoreCipher())
     private val settingsStore = SettingsStore(appContext)
-    private val replySender = RemoteInputReplySender(appContext, registry)
+    // The gate reads the controller lazily (at send time), so the forward reference is safe.
+    private val replySender = RemoteInputReplySender(appContext, registry, sendGate = { controller.canSendNow() })
 
     val controller: DefaultAppController = DefaultAppController(
         context = appContext,

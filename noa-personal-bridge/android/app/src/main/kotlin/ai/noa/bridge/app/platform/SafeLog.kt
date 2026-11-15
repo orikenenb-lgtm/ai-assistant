@@ -29,6 +29,8 @@ internal object SafeLog {
         SEND_UNKNOWN,
         SEND_REFUSED_LOCKED,
         SEND_REFUSED_DISABLED,
+        SEND_REFUSED_GATE,
+        SEND_CONVERSATION_MISMATCH,
         API_HTTP_ERROR,
         API_IO_ERROR,
         API_BAD_RESPONSE,

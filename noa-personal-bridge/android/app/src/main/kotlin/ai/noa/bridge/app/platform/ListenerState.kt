@@ -1,6 +1,7 @@
 package ai.noa.bridge.app.platform
 
 import android.service.notification.NotificationListenerService
+import android.service.notification.StatusBarNotification
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -8,8 +9,8 @@ import java.lang.ref.WeakReference
 
 /**
  * Process-wide listener state: "is our NotificationListenerService connected" plus a weak
- * reference to the connected instance so the reply sender can check that a notification is
- * still active (read-only: only getActiveNotifications() is ever called through it).
+ * reference to the connected instance so the reply sender can re-read the live notification right
+ * before a send (read-only: only getActiveNotifications() is ever called through it).
  */
 object ListenerState {
     private val _connected = MutableStateFlow(false)
@@ -30,6 +31,23 @@ object ListenerState {
 
     internal fun setConnected(connected: Boolean) {
         _connected.value = connected
+    }
+
+    /**
+     * The currently showing notification with [notificationKey], read live from the connected
+     * listener; null when it is no longer active or the listener is not connected.
+     */
+    fun activeNotification(notificationKey: String): StatusBarNotification? {
+        val listener = service?.get() ?: return null
+        if (!_connected.value) return null
+        return try {
+            listener.getActiveNotifications(arrayOf(notificationKey)).orEmpty()
+                .firstOrNull { it != null && it.key == notificationKey }
+        } catch (e: RuntimeException) {
+            // SecurityException when access was revoked between the check and the call.
+            SafeLog.e(SafeLog.Event.NOTIFICATION_MAP_FAILED, e)
+            null
+        }
     }
 
     /** Keys of the currently active notifications, or null when the listener is not connected. */

@@ -130,12 +130,13 @@ class WhatsAppNotifications(private val context: Context) {
     }
 
     /** A style-less notification (content hidden by the user, or Android 15 redaction) that still has Reply. */
-    fun plain(title: String, text: String, replyTag: String = "plain.v1"): Notification =
+    fun plain(title: String, text: String, replyTag: String = "plain.v1", shortcutId: String? = null): Notification =
         NotificationCompat.Builder(context, "qa")
             .setSmallIcon(android.R.drawable.sym_action_chat)
             .setContentTitle(title)
             .setContentText(text)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .apply { if (shortcutId != null) setShortcutId(shortcutId) }
             .addAction(replyAction(replyTag))
             .build()
 }

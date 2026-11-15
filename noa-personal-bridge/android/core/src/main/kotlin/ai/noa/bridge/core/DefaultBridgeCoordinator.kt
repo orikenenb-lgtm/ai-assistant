@@ -222,17 +222,24 @@ internal class DefaultBridgeCoordinator(
 
     override fun updateSettings(settings: BridgeSettings) {
         synchronized(lock) {
+            val consentRevoked = this.settings.cloudConsentGiven && !settings.cloudConsentGiven
             this.settings = settings
             when {
                 settings.emergencyStopped -> stopAllLocked(DETAIL_EMERGENCY_STOP)
                 settings.paused -> stopAllLocked(DETAIL_PAUSED)
                 else -> settings.excludedConversations.forEach { expireActiveLocked(it, DETAIL_EXCLUDED) }
             }
+            if (consentRevoked) revokeConsentLocked()
             pruneLocked()
             publishLocked()
         }
     }
 
+    /**
+     * The single normalization point for user edits: the text is stored trimmed, and the UI approves
+     * the stored [Draft.finalText]. Text longer than [MAX_TEXT_LENGTH] is rejected (the UI enforces
+     * the limit and explains it; this is the defensive backstop).
+     */
     override fun edit(draftId: String, newText: String) {
         val text = newText.trim()
         if (text.isEmpty() || text.length > MAX_TEXT_LENGTH) return
@@ -263,9 +270,18 @@ internal class DefaultBridgeCoordinator(
         synchronized(lock) {
             val s = settings
             if (s.emergencyStopped || s.paused) return null
-            val draft = draftsById[draftId] ?: return null
-            if (draft.state != DraftState.AWAITING_APPROVAL) return null
-            if (finalText.isBlank() || finalText != draft.finalText) return null
+            val found = draftsById[draftId] ?: return null
+            if (found.state != DraftState.AWAITING_APPROVAL && found.state != DraftState.APPROVED) return null
+            if (finalText.isBlank() || finalText != found.finalText) return null
+            // Re-approval of an APPROVED draft (its send was refused, or its approval expired):
+            // burn the old token and go back through AWAITING_APPROVAL, so a draft is never stuck
+            // and at most one live approval exists per draft.
+            val draft = if (found.state == DraftState.APPROVED) {
+                found.approval?.let(guard::consume)
+                putLocked(found, DraftState.AWAITING_APPROVAL, null) ?: return null
+            } else {
+                found
+            }
             if (!DraftStateMachine.canTransition(draft.state, DraftState.APPROVED)) return null
             val approval = guard.issue(draft, finalText)
             putLocked(draft, DraftState.APPROVED, null) { it.copy(approval = approval) }
@@ -397,6 +413,23 @@ internal class DefaultBridgeCoordinator(
         pruneLocked()
     }
 
+    /**
+     * Cloud consent was withdrawn: nothing more may go to the backend and nothing produced after the
+     * withdrawal may become a draft. Cancels pending debounces and in-flight engine requests and
+     * fails the drafts that were waiting for them.
+     */
+    private fun revokeConsentLocked() {
+        debouncer.cancelAll()
+        draftsById.values
+            .filter { it.state == DraftState.DEBOUNCING || it.state == DraftState.PROCESSING }
+            .forEach { d ->
+                stopWorkLocked(d)
+                putLocked(d, DraftState.FAILED, DETAIL_CONSENT_REVOKED)
+            }
+        engineJobs.values.forEach { it.cancel() }
+        engineJobs.clear()
+    }
+
     private fun stopAllLocked(detail: String) {
         debouncer.cancelAll()
         engineJobs.values.forEach { it.cancel() }
@@ -461,6 +494,7 @@ internal class DefaultBridgeCoordinator(
         const val DETAIL_PAUSED = "הגשר מושהה"
         const val DETAIL_EMERGENCY_STOP = "עצירת חירום"
         const val DETAIL_NO_CONSENT = "לא ניתנה הסכמה לשליחת תוכן לנועה"
+        const val DETAIL_CONSENT_REVOKED = "ההסכמה לשליחת תוכן בוטלה"
         const val DETAIL_NOTIFICATION_REMOVED = "ההתראה נסגרה ב-WhatsApp"
         const val DETAIL_EXCLUDED = "השיחה הוחרגה מהגשר"
         const val DETAIL_ENGINE_TIMEOUT = "נועה לא ענתה בזמן — אין ניסיון חוזר אוטומטי"

@@ -1,5 +1,6 @@
 package ai.noa.bridge.app.platform
 
+import ai.noa.bridge.core.ContentVisibility
 import ai.noa.bridge.core.NotificationSnapshot
 import ai.noa.bridge.core.SnapshotMessage
 import android.app.Notification
@@ -97,28 +98,18 @@ object NotificationMapper {
             category = notification.category,
         )
         val text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()
-        return MappedNotification(snapshot, replyAction, isLikelyRedacted(style != null, title, text))
+        return MappedNotification(snapshot, replyAction, isLikelyRedacted(snapshot, text))
     }
 
     /**
      * Redacted WhatsApp notifications (Android 15+ "sensitive notification" redaction for
-     * untrusted listeners) have no MessagingStyle, the app label as title and a system
-     * placeholder text. Conservative: a style-less notification titled "WhatsApp" counts as redacted.
+     * untrusted listeners) carry the app label as title and a system notice as text. Uses the
+     * core's single detector ([ContentVisibility], shared with the core filter) on the mapped
+     * snapshot plus the raw EXTRA_TEXT (which can differ from the MessagingStyle lines).
      */
-    fun isLikelyRedacted(hasMessagingStyle: Boolean, title: String?, text: String?): Boolean {
-        val normalizedText = text?.trim().orEmpty()
-        if (REDACTION_TEXT_PATTERNS.any { it.containsMatchIn(normalizedText) }) return true
-        if (hasMessagingStyle) return false
-        return title?.trim()?.equals(WHATSAPP_LABEL, ignoreCase = true) == true
-    }
-
-    private const val WHATSAPP_LABEL = "WhatsApp"
-    private val REDACTION_TEXT_PATTERNS = listOf(
-        Regex("sensitive notification content hidden", RegexOption.IGNORE_CASE),
-        Regex("content hidden", RegexOption.IGNORE_CASE),
-        Regex("רגיש.*מוסתר|מוסתר.*רגיש"),
-        Regex("התוכן (הוסתר|מוסתר)"),
-    )
+    fun isLikelyRedacted(snapshot: NotificationSnapshot, text: String?): Boolean =
+        ContentVisibility.isRedactedSnapshot(snapshot) ||
+            (text != null && ContentVisibility.isSensitiveRedactionNotice(text))
 
     private fun styleMessages(style: NotificationCompat.MessagingStyle): List<SnapshotMessage> {
         val user = style.user

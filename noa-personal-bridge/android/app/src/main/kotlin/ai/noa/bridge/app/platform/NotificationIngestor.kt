@@ -1,5 +1,6 @@
 package ai.noa.bridge.app.platform
 
+import ai.noa.bridge.core.ContentVisibility
 import ai.noa.bridge.core.ConversationFilter
 import ai.noa.bridge.core.ConversationKey
 import ai.noa.bridge.core.ConversationKeys
@@ -38,7 +39,7 @@ class NotificationIngestor(
         val snapshot = mapped.snapshot
         val action = mapped.replyAction ?: return
         // Never reply through a redacted notification (Android 15+ sensitive-content redaction).
-        if (mapped.isLikelyRedacted) return
+        if (mapped.isLikelyRedacted || ContentVisibility.isRedactedSnapshot(snapshot)) return
         // Cheap local guard; the core filter is the authority on private vs. group.
         if (snapshot.isGroupSummary || snapshot.isOngoing || snapshot.isGroupConversationFlag == true) return
         if (!wouldAccept(snapshot)) return

@@ -11,8 +11,10 @@ import kotlinx.coroutines.flow.StateFlow
 /** Stable, privacy-preserving identifiers. */
 object ConversationKeys {
     /**
-     * Derives a ConversationKey from the most stable identity available, in this order:
-     * shortcutId, tag, conversationTitle/title. Returns null when nothing stable exists.
+     * Derives a ConversationKey from the stable identity of the chat, in this order: shortcutId,
+     * then tag (first non-blank wins). Display names (conversationTitle / title) are never used —
+     * they are not unique, so two contacts with the same name would share one key (fail closed).
+     * Returns null when neither shortcutId nor tag is present.
      * Output is SHA-256 hex of "packageName|identity" (kind is deliberately excluded so a chat keeps its
      * key if its classification changes — see DECISION_LOG D-014), never the raw identity.
      */
@@ -119,7 +121,9 @@ interface BridgeCoordinator {
 
     /**
      * Step 1 of sending: the UI shows [finalText] and the user confirms → returns the approval
-     * (or null if the draft is not in a state that can be approved).
+     * (or null if the draft is not in a state that can be approved). [finalText] must equal the
+     * stored [Draft.finalText] exactly. A draft that is already APPROVED (its send was refused or its
+     * approval expired) can be approved again: the old approval is burnt and a new one issued.
      */
     fun approve(draftId: String, finalText: String): Approval?
 
