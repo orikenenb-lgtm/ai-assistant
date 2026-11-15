@@ -92,12 +92,10 @@ def test_global_pairing_cap_lifts_after_the_hour(settings_factory, engine, make_
 
 
 def test_trust_proxy_headers_is_documented_as_overwrite_only():
-    from bridge_service.config import Settings
-
-    doc = Settings.model_fields["trust_proxy_headers"].description or ""
-    src = open(__import__("bridge_service.config", fromlist=["x"]).__file__, encoding="utf-8").read()
-    assert "OVERWRITES" in src and "X-Forwarded-For" in src
-    del doc
+    here = os.path.dirname(__file__)
+    for rel in ("../bridge_service/config.py", "../README.md", "../.env.example"):
+        text = open(os.path.join(here, rel), encoding="utf-8").read()
+        assert "overwrite" in text.lower() and "X-Forwarded-For" in text, rel
 
 
 # =============================================================================== L-3 nonces / auth
@@ -320,8 +318,8 @@ def test_list_devices_shows_last_seen_as_date_only(settings, capsys):
         conn.execute("INSERT INTO devices VALUES ('dev_1', 'h', 'P', 1, ?, NULL)", (20_407 * DAY_SECONDS,))
     assert admin.main(["list-devices"], settings=settings) == 0
     line = [ln for ln in capsys.readouterr().out.splitlines() if ln.startswith("dev_1")][0]
-    assert "2025-11-15" in line and "2025-11-15 " not in line.split("2025-11-15", 1)[1][:3] + " "[:0] or True
-    assert line.split()[3] == "2025-11-15"  # created(2 cols), then the date-only last-seen column
+    cols = line.split()  # id, status, created date, created time, last-seen DATE, name
+    assert cols[4] == "2025-11-15" and cols[5] == "P"
 
 
 # =============================================================================== L-11 pepper
@@ -330,8 +328,8 @@ def test_list_devices_shows_last_seen_as_date_only(settings, capsys):
 def test_pepper_file_is_created_next_to_db_with_0600_and_not_in_db(settings, engine, make_pairing_code):
     with TestClient(create_app(settings, engine=engine)) as c:
         pepper_file = pepper_path_for(settings.db_path)
-        assert pepper_file == pepper_file.parent / "pepper.key"
-        assert pepper_file.parent == os.path.dirname(settings.db_path) or str(pepper_file.parent) == os.path.dirname(settings.db_path)
+        assert pepper_file.name == "pepper.key"
+        assert str(pepper_file.parent) == os.path.dirname(settings.db_path)
         assert stat.S_IMODE(os.stat(pepper_file).st_mode) == 0o600
         pepper = pepper_file.read_text().strip()
         assert len(pepper) >= 64
@@ -366,8 +364,8 @@ def test_configured_pepper_is_used_and_no_file_is_written(settings_factory, engi
         assert c.app.state.bridge.pairing_pepper == b"configured-pepper-0123456789"
         code = make_pairing_code(settings.db_path, pepper="configured-pepper-0123456789")
         assert c.post("/v1/pair", json={"pairing_code": code}).status_code == 200
+        assert not pepper_path_for(settings.db_path).exists()  # configured → no pepper file
         file_code = make_pairing_code(settings.db_path)  # hashed with a *different* (file) pepper
-    assert not pepper_path_for(settings.db_path).exists() or file_code  # file only from the helper
     with TestClient(create_app(settings, engine=engine)) as c:
         assert c.post("/v1/pair", json={"pairing_code": file_code}).status_code == 400
 
@@ -389,8 +387,8 @@ def test_short_configured_pepper_is_rejected(tmp_path):
 
     with pytest.raises(ValidationError):
         Settings(db_path=str(tmp_path / "x.db"), pairing_pepper="short")
-    assert "pepper" not in repr(Settings(db_path=str(tmp_path / "x.db"), pairing_pepper="p" * 20)).lower() or \
-        "p" * 20 not in repr(Settings(db_path=str(tmp_path / "x.db"), pairing_pepper="p" * 20))
+    secret = "s3cret-pepper-value-xyz"
+    assert secret not in repr(Settings(db_path=str(tmp_path / "x.db"), pairing_pepper=secret))
 
 
 def test_sqlite_has_no_pepper_column(settings, engine):
