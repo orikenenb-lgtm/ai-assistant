@@ -64,6 +64,12 @@ internal class DefaultConversationFilter(val allowedPackages: Set<String>) : Con
         if (nonBlank.size == 1 && isHiddenPlaceholder(nonBlank.single().text!!)) {
             return reject(RejectReason.HIDDEN_CONTENT)
         }
+        // Android 15+ redacts "sensitive" notifications for untrusted listeners: the title becomes
+        // the app name and the text a fixed notice, but the Reply action stays. Any sign of that
+        // means we did not see the real message — never draft (and never reply) on it.
+        if (isRedactedTitle(snapshot) || nonBlank.any { isSensitiveRedactionNotice(it.text!!) }) {
+            return reject(RejectReason.HIDDEN_CONTENT)
+        }
 
         // sortedBy is stable: on equal timestamps the later list entry counts as "last".
         val ordered = snapshot.messages.sortedBy { it.timestampMillis }
@@ -106,6 +112,27 @@ internal class DefaultConversationFilter(val allowedPackages: Set<String>) : Con
             Regex("^\\d+ (new )?messages from \\d+ chats$", RegexOption.IGNORE_CASE),
             Regex("^\\d+ הודעות (חדשות )?מ-?\\s?\\d+ (צ'אטים|שיחות)$"),
         )
+
+        private val REDACTION_NOTICES: List<Regex> = listOf(
+            Regex("sensitive notification content hidden", RegexOption.IGNORE_CASE),
+            Regex("sensitive.*hidden", RegexOption.IGNORE_CASE),
+            Regex("תוכן.*רגיש.*(הוסתר|מוסתר)"),
+            Regex("(הוסתר|מוסתר).*תוכן.*רגיש"),
+        )
+
+        /** Redacted notifications carry the app label instead of the contact/conversation name. */
+        fun isRedactedTitle(snapshot: NotificationSnapshot): Boolean {
+            val title = snapshot.title?.replace(INVISIBLE_MARKS, "")?.trim()
+            val conversation = snapshot.conversationTitle?.replace(INVISIBLE_MARKS, "")?.trim()
+            return title.equals("WhatsApp", ignoreCase = true) ||
+                conversation.equals("WhatsApp", ignoreCase = true) ||
+                snapshot.messages.any { it.sender?.trim().equals("WhatsApp", ignoreCase = true) }
+        }
+
+        fun isSensitiveRedactionNotice(text: String): Boolean {
+            val normalized = text.replace(INVISIBLE_MARKS, "").trim()
+            return REDACTION_NOTICES.any { it.containsMatchIn(normalized) }
+        }
 
         fun isHiddenPlaceholder(text: String): Boolean {
             val normalized = text.replace(INVISIBLE_MARKS, "").trim()
