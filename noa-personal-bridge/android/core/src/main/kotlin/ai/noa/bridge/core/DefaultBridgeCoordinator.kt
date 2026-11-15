@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,8 +27,11 @@ import kotlinx.coroutines.withTimeout
  *   that have no active draft are ignored (not recorded as seen, so a later re-post can still be
  *   picked up once capacity frees). Existing drafts keep receiving messages.
  * - At most [MAX_MESSAGES_PER_DRAFT] source messages per draft (oldest dropped).
- * - Privacy pruning on every mutation: terminal drafts older than [TERMINAL_RETENTION_MILLIS]
- *   are dropped, and at most [MAX_TERMINAL_DRAFTS] terminal drafts are kept.
+ * - Privacy pruning on every mutation and by a delayed janitor: terminal drafts lose their content
+ *   after [TERMINAL_CONTENT_RETENTION_MILLIS], are dropped after [TERMINAL_RETENTION_MILLIS], and at
+ *   most [MAX_TERMINAL_DRAFTS] terminal drafts are kept.
+ * - A rejected HIDDEN_CONTENT update (redaction / placeholder) expires the conversation's open draft,
+ *   like FROM_SELF does.
  * - Engine requests time out after [ENGINE_TIMEOUT_MILLIS]; failures are never retried.
  * - A draft in [DraftState.SENDING] is never modified by anything except the send result.
  * - [BridgeCoordinator.emergencyStop] sets `emergencyStopped=true, sendingEnabled=false` in the
@@ -69,14 +73,32 @@ internal class DefaultBridgeCoordinator(
         val current = settings
         when (val result = filter.evaluate(snapshot, current)) {
             is FilterResult.Accepted -> onAccepted(result)
-            is FilterResult.Rejected -> if (result.reason == RejectReason.FROM_SELF) {
-                val key = ConversationKeys.derive(snapshot) ?: return
-                synchronized(lock) {
-                    expireActiveLocked(key, DETAIL_MANUAL_REPLY)
-                    publishLocked()
-                }
+            is FilterResult.Rejected -> when (result.reason) {
+                RejectReason.FROM_SELF -> expireActiveOf(snapshot, DETAIL_MANUAL_REPLY)
+                // An update we could not read (Android 15+ redaction, "2 new messages" placeholder):
+                // the open draft now answers a conversation nobody has fully seen — it is stale.
+                RejectReason.HIDDEN_CONTENT -> expireActiveOf(snapshot, DETAIL_HIDDEN_UPDATE)
+                // Every other rejection: store nothing at all.
+                else -> Unit
             }
-            // Every other rejection: store nothing at all.
+        }
+    }
+
+    private fun expireActiveOf(snapshot: NotificationSnapshot, detail: String) {
+        val key = ConversationKeys.derive(snapshot) ?: return
+        synchronized(lock) {
+            expireActiveLocked(key, detail)
+            publishLocked()
+        }
+    }
+
+    override fun seedSeen(snapshots: List<NotificationSnapshot>) {
+        synchronized(lock) {
+            snapshots.forEach { snapshot ->
+                val key = ConversationKeys.derive(snapshot) ?: return@forEach
+                // Same id the filter computes for an accepted line (EventIds.of on the raw line).
+                snapshot.messages.forEach { dedup.checkAndRecord(EventIds.of(key, it)) }
+            }
         }
     }
 
@@ -461,6 +483,14 @@ internal class DefaultBridgeCoordinator(
         return next
     }
 
+    /**
+     * Privacy pruning. Terminal drafts lose their content (incoming lines, proposed and edited text,
+     * server notes) [TERMINAL_CONTENT_RETENTION_MILLIS] after reaching the terminal state — state,
+     * statusDetail and the other metadata stay for the history list — and are dropped entirely after
+     * [TERMINAL_RETENTION_MILLIS]. updatedAt is not touched by scrubbing, so it keeps measuring the
+     * time since the terminal transition. Also (re)schedules the janitor that applies both deadlines
+     * when nothing else mutates the drafts.
+     */
     private fun pruneLocked() {
         val now = clock.nowMillis()
         val terminal = draftsById.values.filter { it.state in DraftStateMachine.terminalStates }
@@ -471,6 +501,59 @@ internal class DefaultBridgeCoordinator(
             remaining.sortedByDescending { it.updatedAtMillis }
                 .drop(MAX_TERMINAL_DRAFTS)
                 .forEach { draftsById.remove(it.id) }
+        }
+        draftsById.values
+            .filter { it.state in DraftStateMachine.terminalStates && it.hasContent() }
+            .filter { now - it.updatedAtMillis >= TERMINAL_CONTENT_RETENTION_MILLIS }
+            .forEach { draftsById[it.id] = it.scrubbed() }
+        scheduleJanitorLocked(now)
+    }
+
+    private fun Draft.hasContent(): Boolean =
+        sourceMessages.isNotEmpty() || proposedText != null || editedText != null || safety.notes.isNotEmpty()
+
+    private fun Draft.scrubbed(): Draft = copy(
+        sourceMessages = emptyList(),
+        proposedText = null,
+        editedText = null,
+        safety = safety.copy(notes = emptyList()),
+        approval = null,
+    )
+
+    private var janitor: Job? = null
+    private var janitorDueAt: Long = Long.MAX_VALUE
+
+    /** One delayed job for the next scrub / drop deadline of a terminal draft (none when there is none). */
+    private fun scheduleJanitorLocked(now: Long) {
+        val next = draftsById.values
+            .filter { it.state in DraftStateMachine.terminalStates }
+            .minOfOrNull { d ->
+                if (d.hasContent()) d.updatedAtMillis + TERMINAL_CONTENT_RETENTION_MILLIS
+                else d.updatedAtMillis + TERMINAL_RETENTION_MILLIS + 1
+            }
+        if (next == null) {
+            janitor?.cancel()
+            janitor = null
+            janitorDueAt = Long.MAX_VALUE
+            return
+        }
+        if (janitor?.isActive == true && janitorDueAt <= next) return
+        janitor?.cancel()
+        janitorDueAt = next
+        janitor = scope.launch {
+            delay((next - now).coerceAtLeast(0L))
+            val self = currentCoroutineContext().job
+            synchronized(lock) {
+                if (janitor === self) {
+                    janitor = null
+                    janitorDueAt = Long.MAX_VALUE
+                }
+                // A clock that did not follow the scheduler (e.g. a fixed test clock): stop here
+                // instead of rescheduling forever; the next mutation schedules again.
+                if (clock.nowMillis() < next) return@launch
+                pruneLocked()
+                publishLocked()
+            }
         }
     }
 
@@ -484,6 +567,7 @@ internal class DefaultBridgeCoordinator(
         const val MAX_ACTIVE_DRAFTS = 30
         const val MAX_TERMINAL_DRAFTS = 50
         const val TERMINAL_RETENTION_MILLIS = 60 * 60 * 1000L
+        const val TERMINAL_CONTENT_RETENTION_MILLIS = 10 * 60 * 1000L
         const val MAX_MESSAGES_PER_DRAFT = 20
         const val MAX_TEXT_LENGTH = 4_000
         const val ENGINE_TIMEOUT_MILLIS = 45_000L
@@ -491,6 +575,7 @@ internal class DefaultBridgeCoordinator(
         val EDITABLE_STATES = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
 
         const val DETAIL_MANUAL_REPLY = "נראה שענית ידנית — הטיוטה בוטלה"
+        const val DETAIL_HIDDEN_UPDATE = "התקבלה הודעה שלא ניתן לקרוא — הטיוטה בוטלה"
         const val DETAIL_PAUSED = "הגשר מושהה"
         const val DETAIL_EMERGENCY_STOP = "עצירת חירום"
         const val DETAIL_NO_CONSENT = "לא ניתנה הסכמה לשליחת תוכן לנועה"

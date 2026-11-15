@@ -111,6 +111,13 @@ interface BridgeCoordinator {
     /** The notification for a conversation was removed (user opened/answered the chat elsewhere). */
     fun onNotificationRemoved(conversationKey: ConversationKey)
 
+    /**
+     * Marks every message line of [snapshots] (the notifications already showing when the listener
+     * (re)connects) as seen, without creating drafts, so old unread lines are never sent to the
+     * backend again after a process restart. Stores only the opaque event ids.
+     */
+    fun seedSeen(snapshots: List<NotificationSnapshot>)
+
     fun updateSettings(settings: BridgeSettings)
 
     /** User edited the text. Bumps revision and invalidates any approval. */

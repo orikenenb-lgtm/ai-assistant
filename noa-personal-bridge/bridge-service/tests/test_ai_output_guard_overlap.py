@@ -102,3 +102,22 @@ async def test_persona_engine_draft_quoting_persona_becomes_fallback(tmp_path):
         await e.aclose()
     assert PERSONA in json.loads(llm.calls.last.request.content)["system"]
     assert out.draft_text == FALLBACK_HE
+
+
+# ------------------------------------------------------------- QA-02: several quoted parts
+
+
+@pytest.mark.parametrize(
+    "reply",
+    ['"הארי פוטר" או "שר הטבעות"', "״כן״ או ״לא״", "'א' או 'ב'", "«אחד» או «שניים»", "“זה” וגם “זה”"],
+)
+def test_reply_with_several_quoted_parts_is_not_corrupted(reply):
+    assert finalize(reply, inp("איזה סרט?"), SafetyReport()) == reply
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [('"נשמע מעולה"', "נשמע מעולה"), ("«סבבה, נדבר»", "סבבה, נדבר"), ("“בטח”", "בטח"), ("«הוא אמר «כן» אז סגור»", "הוא אמר «כן» אז סגור")],
+)
+def test_single_wrapping_quote_pair_is_still_removed(raw, expected):
+    assert finalize(raw, inp("היי"), SafetyReport()) == expected

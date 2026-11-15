@@ -35,10 +35,12 @@ internal class LruDeduplicator(val clock: Clock, val capacity: Int, val ttlMilli
     internal fun size(): Int = seen.size
 
     private fun purgeExpired(now: Long) {
-        // Iterating entries does not count as access, so order is preserved.
+        // Iterating entries does not count as access, so order is preserved. Every sighting re-inserts
+        // the id at the tail (access order) with `now`, so entries are ordered by last sighting:
+        // the first entry that has not expired ends the purge (O(1) amortized instead of O(n)).
         val it = seen.entries.iterator()
         while (it.hasNext()) {
-            if (now - it.next().value >= ttlMillis) it.remove()
+            if (now - it.next().value >= ttlMillis) it.remove() else break
         }
     }
 }

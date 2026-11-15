@@ -123,10 +123,29 @@ def _strip_wrapping(text: str) -> str:
         t = _FENCE.sub("", t).strip()
         t = _PREFIX.sub("", t).strip()
         for a, b in _QUOTE_PAIRS:
-            if len(t) >= 2 and t.startswith(a) and t.endswith(b) and a not in t[1:-1].replace(b, ""):
+            if len(t) >= 2 and t.startswith(a) and t.endswith(b) and _wraps_whole(t[1:-1], a, b):
                 t = t[1:-1].strip()
                 break
     return t
+
+
+def _wraps_whole(inner: str, a: str, b: str) -> bool:
+    """True if the outer a…b pair encloses the whole text, not just its first and last segment.
+
+    Identical quote chars ('"x" או "y"'): only if the inner text contains no such char at all.
+    Distinct chars («x» או «y»): only if the inner text is balanced on its own.
+    """
+    if a == b:
+        return a not in inner
+    depth = 0
+    for ch in inner:
+        if ch == a:
+            depth += 1
+        elif ch == b:
+            depth -= 1
+            if depth < 0:
+                return False
+    return depth == 0
 
 
 def _strip_markdown(text: str) -> str:

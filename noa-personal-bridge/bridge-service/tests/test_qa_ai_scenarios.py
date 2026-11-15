@@ -298,10 +298,7 @@ async def test_injection_requests_are_still_tool_free():
     assert not {"tools", "tool_choice", "mcp_servers"} & body.keys()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: QA-01 — safety._RULES: mixed Hebrew/English injection (Hebrew verb + English object or vice versa) is not flagged",
-)
+# QA-01 fixed (bridge_service/ai/safety.py, cross-language rules) — now a regression test.
 @pytest.mark.parametrize(
     "text",
     [
@@ -432,11 +429,7 @@ async def test_wrong_answer_refusal_or_non_text_blocks_give_fallback():
     await e.aclose()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: QA-02 — output_guard._strip_wrapping strips the first and last quote of a reply with several quoted "
-    "segments (same opening/closing quote char), corrupting it",
-)
+# QA-02 fixed (bridge_service/ai/output_guard.py, _wraps_whole) — now a regression test.
 @pytest.mark.parametrize(
     "reply",
     ['"הארי פוטר" או "שר הטבעות"', "״כן״ או ״לא״", "'א' או 'ב'"],
