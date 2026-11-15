@@ -9,15 +9,23 @@ Matching runs on a normalized copy of the text (NFKC, niqqud and zero-width char
 removed, case-folded, Hebrew final letters folded, whitespace collapsed), plus a
 "compact" copy with all separators removed for a few long, distinctive phrases so
 letter-spacing tricks ("i g n o r e", "ה.ו.ר.א.ו.ת") do not slip through.
+
+Every rule also runs on two extra detection-only variants (security review M-3), so a match on any
+of them counts: a "skeleton" with Cyrillic/Greek look-alikes mapped to Latin ("іgnore аll" with
+Cyrillic і/а), and leetspeak-folded copies ("1gn0re 4ll pr3v10us"). Base64 blobs (≥ 40 chars)
+are decoded and analyzed too; a decoded injection, or any long (≥ 120 chars) blob, adds the
+"encoded content" note. The sender display name is analyzed like a message.
 """
 
 from __future__ import annotations
 
+import base64
+import binascii
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from bridge_service.ai._text import compact, fold_finals, normalize_for_matching
+from bridge_service.ai._text import compact, fold_finals, fold_homoglyphs, fold_leet, normalize_for_matching
 from bridge_service.ai.base import InboundMessage, SafetyReport
 
 NOTE_INJECTION = "ההודעה מנסה לתת הוראות למערכת — טופלה כטקסט בלבד"
@@ -27,6 +35,7 @@ NOTE_CREDENTIALS = "ההודעה מבקשת מידע רגיש (קוד/סיסמה
 NOTE_FINANCIAL_ID = "ההודעה מבקשת פרטים אישיים או פיננסיים (אשראי/ת״ז/בנק) — לא לשלוח מידע כזה"
 NOTE_MONEY = "ההודעה עוסקת בכסף או בתשלום — לא להתחייב ולא להעביר כסף בלי לבדוק"
 NOTE_LOCATION = "ההודעה מבקשת כתובת או מיקום — לשקול היטב לפני ששולחים"
+NOTE_ENCODED = "תוכן מקודד — טופל כטקסט בלבד"
 
 # Category names (internal; the contract SafetyReport carries only the two booleans + notes).
 INJECTION = "injection"
@@ -36,8 +45,9 @@ CREDENTIALS = "credentials"
 FINANCIAL_ID = "financial_id"
 MONEY = "money"
 LOCATION = "location"
+ENCODED = "encoded"
 
-_INJECTION_CATEGORIES = frozenset({INJECTION, COMMAND, EXFIL})
+_INJECTION_CATEGORIES = frozenset({INJECTION, COMMAND, EXFIL, ENCODED})
 _NOTES = {
     INJECTION: NOTE_INJECTION,
     COMMAND: NOTE_COMMAND,
@@ -46,9 +56,10 @@ _NOTES = {
     FINANCIAL_ID: NOTE_FINANCIAL_ID,
     MONEY: NOTE_MONEY,
     LOCATION: NOTE_LOCATION,
+    ENCODED: NOTE_ENCODED,
 }
 # Order in which notes are shown to the owner.
-_ORDER = (INJECTION, COMMAND, EXFIL, CREDENTIALS, FINANCIAL_ID, MONEY, LOCATION)
+_ORDER = (INJECTION, COMMAND, EXFIL, ENCODED, CREDENTIALS, FINANCIAL_ID, MONEY, LOCATION)
 
 # Hebrew helpers. Patterns are written with normal Hebrew spelling and passed through
 # fold_finals() at compile time, matching the normalized text.
@@ -170,37 +181,109 @@ _RULES: tuple[_Rule, ...] = (
 )
 
 
-def categorize(text: str) -> set[str]:
+# --- base64 payloads -----------------------------------------------------------------------
+_B64_BLOB = re.compile(r"(?<![A-Za-z0-9+/=_\-])[A-Za-z0-9+/_\-]{40,}={0,2}(?![A-Za-z0-9+/=_\-])")
+B64_MIN_DECODE_CHARS = 40
+B64_LONG_BLOB_CHARS = 120
+_MAX_B64_BLOBS = 8
+_MAX_DECODE_DEPTH = 2
+
+
+def _b64_decode_text(blob: str) -> str | None:
+    """Decode a base64 / base64url blob to text if it is mostly printable, else None."""
+    core = blob.rstrip("=")
+    if len(core) % 4 == 1:
+        return None
+    padded = core + "=" * (-len(core) % 4)
+    try:
+        if "-" in core or "_" in core:
+            raw = base64.urlsafe_b64decode(padded)
+        else:
+            raw = base64.b64decode(padded, validate=True)
+    except (binascii.Error, ValueError):
+        return None
+    text = raw.decode("utf-8", errors="replace")
+    if not text:
+        return None
+    printable = sum(1 for ch in text if ch.isprintable() or ch in "\n\r\t")
+    return text if printable / len(text) >= 0.9 else None
+
+
+def _looks_encoded(blob: str) -> bool:
+    """A long run of base64 alphabet that is not just a repeated word ("hahaha…", "zzzz…")."""
+    core = blob.rstrip("=")
+    classes = sum(bool(re.search(p, core)) for p in (r"[A-Z]", r"[a-z]", r"[0-9]"))
+    return classes >= 2 and len(set(core)) >= 16
+
+
+def _encoded_categories(text: str, depth: int) -> set[str]:
+    found: set[str] = set()
+    for i, m in enumerate(_B64_BLOB.finditer(text)):
+        if i >= _MAX_B64_BLOBS:
+            break
+        blob = m.group(0)
+        if len(blob) >= B64_LONG_BLOB_CHARS and _looks_encoded(blob):
+            found.add(ENCODED)
+        if len(blob) < B64_MIN_DECODE_CHARS or depth >= _MAX_DECODE_DEPTH:
+            continue
+        decoded = _b64_decode_text(blob)
+        if decoded is None:
+            continue
+        inner = categorize(decoded, _depth=depth + 1)
+        if inner & _INJECTION_CATEGORIES:
+            found |= inner | {ENCODED}
+    return found
+
+
+def _variants(norm: str) -> list[str]:
+    """Normalized text plus its detection-only skeleton / leetspeak variants (deduplicated)."""
+    out = [norm]
+    skel = fold_homoglyphs(norm)
+    for v in (skel, *fold_leet(skel)):
+        if v not in out:
+            out.append(v)
+    return out
+
+
+def categorize(text: str, *, _depth: int = 0) -> set[str]:
     """Return the set of risk categories detected in one piece of text."""
     norm = normalize_for_matching(text)
     if not norm:
         return set()
-    comp = compact(norm)
+    variants = [(v, compact(v)) for v in _variants(norm)]
     found: set[str] = set()
     for rule in _RULES:
         if rule.category in found:
             continue
-        target = comp if rule.on_compact else norm
-        if rule.pattern.search(target):
-            found.add(rule.category)
+        for v, comp in variants:
+            if rule.pattern.search(comp if rule.on_compact else v):
+                found.add(rule.category)
+                break
     if EXFIL in found or INJECTION in found:
         # "send me the password" style requests are also sensitive.
-        if _CRED_HINT.search(norm):
+        if any(_CRED_HINT.search(v) for v, _ in variants):
             found.add(CREDENTIALS)
+    # Base64 is case-sensitive: scan the original text, not the case-folded copy.
+    found |= _encoded_categories(text, _depth)
     return found
 
 
 _CRED_HINT = re.compile(fold_finals(r"סיסמ|קוד|password|passcode|otp|code"), re.IGNORECASE)
 
 
-def analyze_incoming(messages: Sequence[InboundMessage]) -> SafetyReport:
-    """Analyze a burst of incoming messages. Pure function, no I/O."""
+def analyze_incoming(
+    messages: Sequence[InboundMessage], *, sender_display_name: str | None = None
+) -> SafetyReport:
+    """Analyze a burst of incoming messages (and the untrusted sender name). Pure, no I/O."""
     found: set[str] = set()
     for m in messages:
         found |= categorize(m.text or "")
     # Also catch an instruction split across consecutive messages ("ignore all" / "instructions").
     if len(messages) > 1:
         found |= categorize(" ".join(m.text or "" for m in messages))
+    # The display name is chosen by the sender and reaches the model too (M-3).
+    if sender_display_name:
+        found |= categorize(sender_display_name)
     injection = bool(found & _INJECTION_CATEGORIES)
     sensitive = bool(found & {CREDENTIALS, FINANCIAL_ID, MONEY, LOCATION})
     notes = tuple(_NOTES[c] for c in _ORDER if c in found)

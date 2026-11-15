@@ -115,10 +115,10 @@ class AnthropicEngine:
                 for block in (resp.content or [])
                 if getattr(block, "type", None) == "text"
             )
-        return finalize(text, data, report)
+        return finalize(text, data, report, persona=persona)
 
     async def draft(self, data: DraftInput) -> DraftOutput:
-        report = analyze_incoming(data.messages)
+        report = analyze_incoming(data.messages, sender_display_name=data.sender_display_name)
         text = await self.generate(data, report, persona=None)
         return DraftOutput(draft_text=text, safety=report, engine=self.name)
 

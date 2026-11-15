@@ -29,9 +29,16 @@ class SlidingWindowLimiter:
         self._clock = clock
         self._hits: OrderedDict[Hashable, deque[float]] = OrderedDict()
 
-    def hit(self, key: Hashable) -> int | None:
-        """Record one hit. Returns None if allowed, else seconds to wait (Retry-After)."""
-        now = self._clock()
+    def _retry_after(self, hits: deque[float] | None, now: float) -> int | None:
+        if not hits:
+            return None
+        retry_after = 0.0
+        for n, window in self._limits:
+            if len(hits) >= n and hits[-n] > now - window:
+                retry_after = max(retry_after, hits[-n] + window - now)
+        return max(1, math.ceil(retry_after)) if retry_after > 0 else None
+
+    def _bucket(self, key: Hashable) -> deque[float]:
         hits = self._hits.get(key)
         if hits is None:
             hits = deque(maxlen=self._depth)
@@ -40,14 +47,25 @@ class SlidingWindowLimiter:
                 self._hits.popitem(last=False)
         else:
             self._hits.move_to_end(key)
-        retry_after = 0.0
-        for n, window in self._limits:
-            if len(hits) >= n and hits[-n] > now - window:
-                retry_after = max(retry_after, hits[-n] + window - now)
-        if retry_after > 0:
-            return max(1, math.ceil(retry_after))
+        return hits
+
+    def hit(self, key: Hashable) -> int | None:
+        """Record one hit. Returns None if allowed, else seconds to wait (Retry-After)."""
+        now = self._clock()
+        hits = self._bucket(key)
+        retry_after = self._retry_after(hits, now)
+        if retry_after is not None:
+            return retry_after
         hits.append(now)
         return None
+
+    def blocked(self, key: Hashable) -> int | None:
+        """Like ``hit`` but records nothing: seconds to wait if the key is over a limit, else None."""
+        return self._retry_after(self._hits.get(key), self._clock())
+
+    def record(self, key: Hashable) -> None:
+        """Record one event (e.g. a failure) without checking the limit."""
+        self._bucket(key).append(self._clock())
 
     def forget(self, key: Hashable) -> None:
         self._hits.pop(key, None)

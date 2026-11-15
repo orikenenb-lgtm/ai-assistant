@@ -19,6 +19,7 @@ from bridge_service.api.middleware import BridgeMiddleware
 from bridge_service.api.routes import router
 from bridge_service.api.state import BridgeState
 from bridge_service.config import Settings, get_settings
+from bridge_service.security.pairing import resolve_pairing_pepper
 from bridge_service.storage.db import Database
 
 logger = logging.getLogger("bridge_service")
@@ -35,8 +36,16 @@ def create_app(settings: Settings | None = None, engine: DraftEngine | None = No
     settings = settings or get_settings()
     db = Database(settings.db_path)
     db.migrate()
+    # Retention (security review L-10): drop long-revoked devices and dead pairing codes.
+    purged = db.purge()
+    if purged.devices or purged.pairing_codes:
+        logger.info(
+            "retention purge",
+            extra={"event": "purge", "devices": purged.devices, "pairing_codes": purged.pairing_codes},
+        )
+    pepper = resolve_pairing_pepper(settings.pairing_pepper, settings.db_path)
     engine = engine if engine is not None else _build_engine(settings)
-    state = BridgeState.build(settings, db, engine)
+    state = BridgeState.build(settings, db, engine, pepper)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -68,7 +77,7 @@ def create_app(settings: Settings | None = None, engine: DraftEngine | None = No
 
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, exc: ApiError) -> JSONResponse:
-        return error_response(exc.code, headers=exc.headers)
+        return error_response(exc.code, headers=exc.headers, message=exc.message)
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, __: RequestValidationError) -> JSONResponse:

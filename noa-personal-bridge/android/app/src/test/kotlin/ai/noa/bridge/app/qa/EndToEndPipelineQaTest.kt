@@ -109,6 +109,20 @@ class EndToEndPipelineQaTest {
         assertNotNull(phone.registry.get(phone.keyOf(mDana)))
     }
 
+    @Test fun e2e_notificationSlotReusedByAnotherChat_neverRepliesIntoTheWrongConversation() = runTest {
+        val phone = QaPhone(this, context).apply { onboard() }
+        val slot = "0|com.whatsapp|1|null|42"
+        val mDana = phone.post(wa.privateChat(wa.dana, DANA_JID, listOf(Line(wa.dana, "היי מדנה", 1_000)), "dana.v1"), slot)
+        phone.advance(DEBOUNCE_MS)
+        val d = phone.awaiting(phone.keyOf(mDana))
+        val approval = phone.controller.approveDraft(d.id, d.finalText!!)!!
+
+        // WhatsApp now shows Yossi's chat in the very same notification slot (same SBN key).
+        phone.post(wa.privateChat(wa.yossi, YOSSI_JID, listOf(Line(wa.yossi, "היי מיוסי", 2_000)), "yossi.v1"), slot)
+        assertEquals(DraftState.FAILED, phone.controller.sendApproved(approval))
+        assertTrue("nothing may reach Yossi's (or anyone's) reply action", repliesSent(context).isEmpty())
+    }
+
     // ------------------------------------------------------------------ 13.1 group message
 
     @Test fun e2e_groupMessage_noDraftNoReplyHandleNoEngineCall() = runTest {
@@ -243,7 +257,7 @@ class EndToEndPipelineQaTest {
         val m = phone.post(wa.privateChat(wa.dana, DANA_JID, listOf(Line(wa.dana, "היי", 1_000))), danaKey)
         phone.advance(DEBOUNCE_MS)
         val d = phone.awaiting(phone.keyOf(m))
-        phone.activeKeys = null // notification access revoked → listener unbound
+        phone.live = null // notification access revoked → listener unbound
         assertEquals(DraftState.FAILED, phone.controller.sendApproved(phone.controller.approveDraft(d.id, d.finalText!!)!!))
         assertTrue(repliesSent(context).isEmpty())
     }
@@ -264,7 +278,7 @@ class EndToEndPipelineQaTest {
         val registry = ReplyActionRegistry()
         val m = phone.map(wa.privateChat(wa.dana, DANA_JID, listOf(Line(wa.dana, "היי", 1_000))), danaKey)
         registry.put(phone.keyOf(m), ai.noa.bridge.app.platform.ReplyHandle(m.replyAction!!.pendingIntent, m.replyAction!!.remoteInputs, danaKey, 1L))
-        val productionSender = RemoteInputReplySender(context, registry, Dispatchers.Unconfined)
+        val productionSender = RemoteInputReplySender(context, registry, sendGate = { true }, mainDispatcher = Dispatchers.Unconfined)
         assertEquals(SendOutcome.FAILED_NO_ACTION, productionSender.send(phone.keyOf(m), "שלום"))
         assertTrue(repliesSent(context).isEmpty())
     }
@@ -308,8 +322,9 @@ class EndToEndPipelineQaTest {
         assertEquals(0, second.registry.size)
 
         // onListenerConnected: rebuild reply handles from the notifications still showing.
-        second.activeKeys!!.add(danaKey)
-        second.ingestor.rebuildFrom(listOf(second.map(wa.privateChat(wa.dana, DANA_JID, listOf(Line(wa.dana, "היי", 1_000))), danaKey)))
+        val stillShowing = second.map(wa.privateChat(wa.dana, DANA_JID, listOf(Line(wa.dana, "היי", 1_000))), danaKey)
+        second.live!![danaKey] = stillShowing
+        second.ingestor.rebuildFrom(listOf(stillShowing))
         assertNotNull(second.registry.get(second.keyOf(m)))
         second.advance(DEBOUNCE_MS * 2)
         assertTrue("old messages do not create drafts", second.drafts.isEmpty())

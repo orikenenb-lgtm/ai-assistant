@@ -147,6 +147,8 @@
     <string name="detail_empty_text_error">אי אפשר לאשר תשובה ריקה.</string>
     <string name="detail_approve_failed">לא ניתן לאשר את הטיוטה כרגע. ייתכן שהגיעה הודעה חדשה, שהטיוטה פגה או שהופעלה עצירת חירום.</string>
     <string name="detail_send_exception">אירעה שגיאה בזמן השליחה. לא ידוע אם ההודעה נשלחה — כדאי לבדוק בשיחה עצמה. לא ננסה שוב אוטומטית.</string>
+    <string name="detail_draft_changed">הטיוטה התעדכנה — בדוק שוב לפני אישור</string>
+    <string name="detail_text_too_long">הטקסט ארוך מדי (עד 4000 תווים)</string>
     <string name="detail_copied">הנוסח הועתק. אפשר להדביק אותו ב-WhatsApp.</string>
     <string name="detail_status_detail">פרטים: %1$s</string>
     <string name="cd_message_from">הודעה של %1$s, בשעה %2$s</string>

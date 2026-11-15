@@ -45,5 +45,7 @@ def create_engine(settings: Any) -> DraftEngine:
             noa_engine_api_key=_secret(getattr(settings, "noa_engine_api_key", None)),
             noa_agent_id=getattr(settings, "noa_agent_id", None),
             generator=_anthropic(settings),
+            # File mode (recommended): no NOA request and no NOA key at all.
+            persona_file=getattr(settings, "persona_file", None) or None,
         )
     raise ValueError(f"unknown engine {kind!r}; expected one of {', '.join(ENGINES)}")

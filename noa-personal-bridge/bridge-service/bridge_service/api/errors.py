@@ -36,17 +36,26 @@ STATUS_CODES: dict[str, int] = {
 }
 
 
+# Fixed alternative message for 422 `invalid_request` (security review L-4).
+MESSAGE_REQUEST_ID_REUSED = "מזהה הבקשה כבר שימש לבקשה אחרת"
+
+
 class ApiError(Exception):
-    def __init__(self, code: str, *, headers: dict[str, str] | None = None) -> None:
+    def __init__(
+        self, code: str, *, headers: dict[str, str] | None = None, message: str | None = None
+    ) -> None:
         super().__init__(code)
         self.code = code
         self.status_code = STATUS_CODES[code]
         self.headers = headers or {}
+        self.message = message  # a fixed string from this module, never request data
 
 
-def error_body(code: str) -> dict[str, str]:
-    return {"error": code, "message": MESSAGES[code]}
+def error_body(code: str, message: str | None = None) -> dict[str, str]:
+    return {"error": code, "message": message or MESSAGES[code]}
 
 
-def error_response(code: str, headers: dict[str, str] | None = None) -> JSONResponse:
-    return JSONResponse(error_body(code), status_code=STATUS_CODES[code], headers=headers)
+def error_response(
+    code: str, headers: dict[str, str] | None = None, message: str | None = None
+) -> JSONResponse:
+    return JSONResponse(error_body(code, message), status_code=STATUS_CODES[code], headers=headers)

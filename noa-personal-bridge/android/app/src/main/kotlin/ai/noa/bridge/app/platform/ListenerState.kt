@@ -41,8 +41,7 @@ object ListenerState {
         val listener = service?.get() ?: return null
         if (!_connected.value) return null
         return try {
-            listener.getActiveNotifications(arrayOf(notificationKey)).orEmpty()
-                .firstOrNull { it != null && it.key == notificationKey }
+            listener.activeNotifications.orEmpty().firstOrNull { it != null && it.key == notificationKey }
         } catch (e: RuntimeException) {
             // SecurityException when access was revoked between the check and the call.
             SafeLog.e(SafeLog.Event.NOTIFICATION_MAP_FAILED, e)

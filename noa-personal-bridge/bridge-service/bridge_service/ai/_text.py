@@ -44,6 +44,51 @@ def normalize_for_matching(text: str) -> str:
     return _WS.sub(" ", t).strip()
 
 
+# Cyrillic / Greek (and a few Latin-extended) look-alikes → Latin. Applied AFTER casefold, so only
+# lower-case forms are needed (casefold maps "А"→"а", "Ο"→"ο", ...). Detection only: never applied
+# to text that anyone sees. Hebrew is untouched.
+_HOMOGLYPHS = str.maketrans({
+    # Cyrillic
+    "а": "a", "в": "b", "е": "e", "ё": "e", "з": "3", "к": "k", "м": "m", "н": "h", "о": "o",
+    "р": "p", "с": "c", "т": "t", "у": "y", "х": "x", "і": "i", "ї": "i", "ј": "j", "ѕ": "s",
+    "ԁ": "d", "һ": "h", "ӏ": "l", "ԛ": "q", "ԝ": "w", "ь": "b", "п": "n", "г": "r", "ɡ": "g",
+    "ɑ": "a", "ı": "i", "ʟ": "l",
+    # Greek (lower-case forms of Α Β Ε Ζ Η Ι Κ Μ Ν Ο Ρ Τ Υ Χ, plus common small look-alikes)
+    "α": "a", "β": "b", "ε": "e", "ζ": "z", "η": "n", "ι": "i", "κ": "k", "μ": "m", "ν": "v",
+    "ο": "o", "ρ": "p", "τ": "t", "υ": "u", "χ": "x", "ω": "w", "γ": "y", "ϲ": "c", "ϳ": "j",
+})
+# Leetspeak, folded only inside tokens that also contain a Latin letter ("1gn0re", "4ll"), so plain
+# numbers ("נתראה ב-8", "500 שקל") are never rewritten. "1" is ambiguous (i / l): both are tried.
+_LEET_I = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "|": "l", "!": "i"})
+_LEET_L = str.maketrans({"0": "o", "1": "l", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "|": "l", "!": "i"})
+_LEET_CANDIDATE = re.compile(r"[a-z0-9@$|!]+")
+
+
+def fold_homoglyphs(normalized: str) -> str:
+    """Map Cyrillic/Greek look-alike letters to Latin (input: output of normalize_for_matching)."""
+    return normalized.translate(_HOMOGLYPHS)
+
+
+def fold_leet(normalized: str) -> tuple[str, ...]:
+    """Leetspeak-folded variants of `normalized` (empty tuple if there is nothing to fold)."""
+
+    def fold(table: dict[int, str]) -> str:
+        def repl(m: re.Match[str]) -> str:
+            tok = m.group(0)
+            if not re.search(r"[a-z]", tok) or not re.search(r"[0-9@$|!]", tok):
+                return tok
+            return tok.translate(table)
+
+        return _LEET_CANDIDATE.sub(repl, normalized)
+
+    variants = []
+    for table in (_LEET_I, _LEET_L):
+        v = fold(table)
+        if v != normalized and v not in variants:
+            variants.append(v)
+    return tuple(variants)
+
+
 def compact(normalized: str) -> str:
     """Drop everything but letters/digits: defeats 'i g n o r e' / 'i.g.n.o.r.e' spacing tricks."""
     return re.sub(r"[\W_]+", "", normalized)

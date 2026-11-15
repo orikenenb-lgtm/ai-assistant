@@ -132,11 +132,20 @@ class FakeAppController(
         _settings.update { s -> s.copy(excludedConversations = s.excludedConversations.filterNot { it.value == conversationKeyValue }.toSet()) }
     }
 
+    /** Mirrors the core: stores the trimmed text, ignores blank / >4000 chars, bumps the revision. */
     override fun editDraft(draftId: String, newText: String) {
         record("editDraft"); editCalls += draftId to newText
+        val text = newText.trim()
+        if (text.isEmpty() || text.length > MAX_TEXT_LENGTH) return
         updateDraft(draftId) {
             if (it.state in EDITABLE_STATES) {
-                it.copy(editedText = newText, revision = it.revision + 1, approval = null, updatedAtMillis = now())
+                it.copy(
+                    editedText = text,
+                    revision = it.revision + 1,
+                    approval = null,
+                    state = DraftState.AWAITING_APPROVAL,
+                    updatedAtMillis = now(),
+                )
             } else it
         }
     }
@@ -150,7 +159,7 @@ class FakeAppController(
         record("approveDraft"); approveCalls += draftId to finalText
         if (rejectApprovals || _settings.value.emergencyStopped) return null
         val draft = _drafts.value.firstOrNull { it.id == draftId } ?: return null
-        if (draft.state !in EDITABLE_STATES || finalText.isBlank() || draft.finalText != finalText) return null
+        if (draft.state !in APPROVABLE_STATES || finalText.isBlank() || draft.finalText != finalText) return null
         val issued = now()
         val approval = Approval(
             token = "fake-token-$draftId-${draft.revision}",
@@ -214,7 +223,10 @@ class FakeAppController(
             DraftState.RECEIVED, DraftState.FILTERED, DraftState.DEBOUNCING, DraftState.PROCESSING,
             DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL, DraftState.APPROVED,
         )
-        val EDITABLE_STATES = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL)
+        val EDITABLE_STATES = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
+        /** Like the core, an APPROVED draft can be approved again (its old approval is replaced). */
+        val APPROVABLE_STATES = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
+        const val MAX_TEXT_LENGTH = 4_000
 
         fun sampleKey(n: Int): ConversationKey = ConversationKey("%064x".format(n.toLong() + 0xA11CEL))
 

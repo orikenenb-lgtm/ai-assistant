@@ -17,6 +17,9 @@ from bridge_service.storage.db import Database
 from bridge_service.storage.memory import TTLStore
 
 
+PAIR_FAILURES_KEY = "pair_failures"
+
+
 class KeyedLocks:
     """One asyncio.Lock per key, removed once nobody holds or waits for it."""
 
@@ -50,18 +53,30 @@ class BridgeState:
     replay: ReplayGuard
     draft_limiter: SlidingWindowLimiter
     pair_limiter: SlidingWindowLimiter
-    idempotency: TTLStore[dict[str, Any]]
+    # Value: (sha256 of the canonical request body, cached response) — see routes.create_draft.
+    idempotency: TTLStore[tuple[str, dict[str, Any]]]
+    pairing_pepper: bytes
+    pair_failures: SlidingWindowLimiter
+    """Global (all IPs) count of failed pairing attempts; key is always PAIR_FAILURES_KEY."""
+    auth_failures: SlidingWindowLimiter
+    """Failed authentications per client IP (checked before any DB lookup)."""
     idempotency_locks: KeyedLocks = field(default_factory=KeyedLocks)
     engine_slots: asyncio.Semaphore | None = None
 
     @classmethod
-    def build(cls, settings: Settings, db: Database, engine: DraftEngine) -> BridgeState:
+    def build(
+        cls, settings: Settings, db: Database, engine: DraftEngine, pairing_pepper: bytes
+    ) -> BridgeState:
         cap = settings.memory_max_entries
         return cls(
             settings=settings,
             db=db,
             engine=engine,
-            replay=ReplayGuard(settings.replay_window_seconds, cap),
+            replay=ReplayGuard(
+                settings.replay_window_seconds,
+                cap,
+                per_device_quota=settings.nonce_quota_per_device,
+            ),
             draft_limiter=SlidingWindowLimiter(
                 [(settings.rate_limit_per_minute, 60.0), (settings.rate_limit_per_day, 86_400.0)],
                 max_keys=cap,
@@ -70,6 +85,13 @@ class BridgeState:
                 [(settings.pairing_attempts_per_hour, 3_600.0)], max_keys=cap
             ),
             idempotency=TTLStore(cap),
+            pairing_pepper=pairing_pepper,
+            pair_failures=SlidingWindowLimiter(
+                [(settings.pairing_failures_per_hour_global, 3_600.0)], max_keys=1
+            ),
+            auth_failures=SlidingWindowLimiter(
+                [(settings.auth_failures_per_10_minutes, 600.0)], max_keys=cap
+            ),
             engine_slots=asyncio.Semaphore(settings.max_concurrent_drafts),
         )
 

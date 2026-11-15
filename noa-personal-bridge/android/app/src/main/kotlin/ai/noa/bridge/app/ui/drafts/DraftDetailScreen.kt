@@ -81,6 +81,14 @@ import ai.noa.bridge.app.ui.theme.NoaStatus
 /** Which confirmation dialog is open (saved across recreation by name). */
 private enum class DetailDialog { NONE, APPROVE, CANCEL, EXCLUDE }
 
+/** Same limit the coordinator enforces on edits (UTF-16 units, like String.length). */
+const val MAX_REPLY_CHARS = 4_000
+
+/** States in which the approve dialog may confirm (APPROVED: re-approval after a refused send). */
+private val ConfirmableStates = setOf(DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
+
+private fun AppController.liveDraft(id: String): Draft? = drafts.value.firstOrNull { it.id == id }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DraftDetailScreen(
@@ -166,16 +174,103 @@ private fun DraftDetailContent(
 
     var dialogName by rememberSaveable(draft.id) { mutableStateOf(DetailDialog.NONE.name) }
     val dialog = DetailDialog.valueOf(dialogName)
-    var dialogText by rememberSaveable(draft.id) { mutableStateOf("") }
+    // The approve dialog is bound to the draft revision and state it was opened on (H-1).
+    var dialogRevision by rememberSaveable(draft.id) { mutableStateOf(-1) }
+    var dialogStateName by rememberSaveable(draft.id) { mutableStateOf(DraftState.AWAITING_APPROVAL.name) }
+    var draftChanged by rememberSaveable(draft.id) { mutableStateOf(false) }
+    var tooLongAttempt by rememberSaveable(draft.id) { mutableStateOf(false) }
     var errorRes by rememberSaveable(draft.id) { mutableStateOf(0) }
     var infoRes by rememberSaveable(draft.id) { mutableStateOf(0) }
+
+    // Revisions only grow. Composition may lag one frame behind the controller (revision lower than
+    // the one the dialog was opened on): wait. A higher revision, or the same revision in another
+    // state, means the draft changed under the open dialog: close it at once.
+    val approveDialogOpen = dialog == DetailDialog.APPROVE
+    val dialogLagging = approveDialogOpen && draft.revision < dialogRevision
+    val dialogStale = approveDialogOpen && !dialogLagging &&
+        (draft.revision != dialogRevision || draft.state.name != dialogStateName)
+    LaunchedEffect(dialogStale) {
+        if (dialogStale) {
+            dialogName = DetailDialog.NONE.name
+            errorRes = 0
+            infoRes = 0
+            draftChanged = true
+        }
+    }
 
     val inFlight = sendAttempt == SendUiState.InFlight || draft.state == DraftState.SENDING
     val alreadyAttempted = sendAttempt != null
     val editable = draft.state in ApprovableStates && !alreadyAttempted && !settings.emergencyStopped
     val isDirty = text != serverText
+    val overLimit = text.length > MAX_REPLY_CHARS
+    val showTooLong = overLimit || tooLongAttempt
     val sendingPossible = settings.sendingEnabled && !status.deviceLocked
-    val approveEnabled = editable && !inFlight && text.isNotBlank() && !(settings.sendingEnabled && status.deviceLocked)
+    val approveEnabled = editable && !inFlight && text.isNotBlank() && !overLimit &&
+        !(settings.sendingEnabled && status.deviceLocked)
+
+    /**
+     * Saves the local edit through the coordinator (the single trimming point) and returns the live
+     * draft afterwards, or null (with an error shown) when nothing approvable was stored.
+     */
+    fun saveEdit(): Draft? {
+        val toSave = text.trim()
+        if (toSave.isEmpty()) {
+            errorRes = R.string.detail_empty_text_error
+            return null
+        }
+        if (toSave.length > MAX_REPLY_CHARS) {
+            tooLongAttempt = true
+            return null
+        }
+        val before = controller.liveDraft(draft.id) ?: return null
+        if (toSave == before.finalText) {
+            text = toSave // only surrounding whitespace differed: nothing to store
+            return before
+        }
+        controller.editDraft(draft.id, toSave)
+        val after = controller.liveDraft(draft.id)
+        if (after == null || after.revision == before.revision || after.finalText != toSave) {
+            errorRes = R.string.detail_approve_failed
+            return null
+        }
+        text = after.finalText.orEmpty()
+        return after
+    }
+
+    /** Opens the approve dialog on the STORED text of the live draft, saving a local edit first. */
+    fun openApproveDialog() {
+        errorRes = 0
+        infoRes = 0
+        draftChanged = false
+        if (text.isBlank()) {
+            errorRes = R.string.detail_empty_text_error
+            return
+        }
+        val live = if (text != (controller.liveDraft(draft.id)?.finalText ?: serverText)) {
+            saveEdit() ?: return
+        } else {
+            controller.liveDraft(draft.id)
+        }
+        if (live == null || live.state !in ConfirmableStates || live.finalText.isNullOrBlank()) {
+            errorRes = R.string.detail_approve_failed
+            return
+        }
+        dialogRevision = live.revision
+        dialogStateName = live.state.name
+        dialogName = DetailDialog.APPROVE.name
+    }
+
+    /** The live draft, if it is still exactly what the open dialog showed; otherwise closes as "changed". */
+    fun unchangedSinceDialogOpened(): Draft? {
+        val live = controller.liveDraft(draft.id)
+        val ok = live != null && live.revision == dialogRevision && live.state.name == dialogStateName &&
+            live.state in ConfirmableStates && !live.finalText.isNullOrBlank()
+        if (!ok) {
+            draftChanged = true
+            return null
+        }
+        return live
+    }
     val cancelEnabled = draft.state in CancellableStates && !inFlight && !alreadyAttempted
 
     Column(
@@ -212,16 +307,25 @@ private fun DraftDetailContent(
         } else {
             OutlinedTextField(
                 value = text,
-                onValueChange = {
-                    text = it
+                onValueChange = { new ->
+                    // Enforce the limit visibly instead of letting the coordinator drop the edit.
+                    if (new.length > MAX_REPLY_CHARS) {
+                        tooLongAttempt = true
+                    } else {
+                        text = new
+                        tooLongAttempt = false
+                    }
                     errorRes = 0
                     infoRes = 0
+                    draftChanged = false
                 },
                 label = { Text(stringResource(R.string.detail_reply_label)) },
                 readOnly = !editable,
                 minLines = 3,
                 textStyle = MaterialTheme.typography.bodyLarge,
+                isError = showTooLong,
                 supportingText = when {
+                    showTooLong -> { { Text(stringResource(R.string.detail_text_too_long), modifier = Modifier.testTag("textTooLong")) } }
                     isDirty -> { { Text(stringResource(R.string.detail_unsaved_changes)) } }
                     draft.editedText != null -> { { Text(stringResource(R.string.detail_edited_marker)) } }
                     else -> null
@@ -231,10 +335,11 @@ private fun DraftDetailContent(
             if (editable) {
                 TextButton(
                     onClick = {
-                        controller.editDraft(draft.id, text)
-                        infoRes = R.string.detail_edit_saved
+                        errorRes = 0
+                        infoRes = 0
+                        if (saveEdit() != null) infoRes = R.string.detail_edit_saved
                     },
-                    enabled = isDirty && text.isNotBlank() && !inFlight,
+                    enabled = isDirty && text.isNotBlank() && !inFlight && !overLimit,
                     modifier = Modifier.heightIn(min = MinTouchTarget).testTag("saveEditButton"),
                 ) { Text(stringResource(R.string.detail_save_edit)) }
             }
@@ -250,6 +355,13 @@ private fun DraftDetailContent(
 
         SendProgressOrResult(sendAttempt)
 
+        if (draftChanged) {
+            NoticeBanner(
+                BannerKind.WARNING,
+                stringResource(R.string.detail_draft_changed),
+                modifier = Modifier.testTag("draftChangedNotice").semantics { liveRegion = LiveRegionMode.Assertive },
+            )
+        }
         if (errorRes != 0) {
             NoticeBanner(BannerKind.DANGER, stringResource(errorRes), modifier = Modifier.testTag("detailError"))
         }
@@ -264,16 +376,7 @@ private fun DraftDetailContent(
 
         // ---- Actions ----
         Button(
-            onClick = {
-                errorRes = 0
-                infoRes = 0
-                if (text.isBlank()) {
-                    errorRes = R.string.detail_empty_text_error
-                } else {
-                    dialogText = text
-                    dialogName = DetailDialog.APPROVE.name
-                }
-            },
+            onClick = { openApproveDialog() },
             enabled = approveEnabled,
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("approveButton"),
             shape = MaterialTheme.shapes.medium,
@@ -309,7 +412,11 @@ private fun DraftDetailContent(
 
     when (dialog) {
         DetailDialog.NONE -> Unit
-        DetailDialog.APPROVE -> {
+        DetailDialog.APPROVE -> if (dialogLagging || dialogStale) {
+            Unit // waiting for composition to catch up, or about to close as "changed"
+        } else {
+            // Always the STORED text of the live draft at the revision the dialog was opened on.
+            val shownText = draft.finalText.orEmpty()
             if (sendingPossible) {
                 ConfirmDialog(
                     title = stringResource(R.string.approve_dialog_title),
@@ -318,9 +425,9 @@ private fun DraftDetailContent(
                     onDismiss = { dialogName = DetailDialog.NONE.name },
                     onConfirm = {
                         dialogName = DetailDialog.NONE.name
-                        val exact = dialogText
-                        if (exact != serverText) controller.editDraft(draft.id, exact)
-                        val approval = controller.approveDraft(draft.id, exact)
+                        // Never edits: approves exactly the stored text, only if nothing changed.
+                        val live = unchangedSinceDialogOpened() ?: return@ConfirmDialog
+                        val approval = controller.approveDraft(live.id, live.finalText!!)
                         if (approval == null) {
                             errorRes = R.string.detail_approve_failed
                         } else if (!onSend(approval)) {
@@ -335,7 +442,7 @@ private fun DraftDetailContent(
                         modifier = Modifier.testTag("approveDialogRecipient"),
                     )
                     Text(stringResource(R.string.approve_dialog_exact_text), style = MaterialTheme.typography.bodyMedium)
-                    ExactTextBox(dialogText)
+                    ExactTextBox(shownText)
                     Text(
                         stringResource(R.string.approve_dialog_note),
                         style = MaterialTheme.typography.bodySmall,
@@ -350,8 +457,9 @@ private fun DraftDetailContent(
                     dismissLabel = stringResource(R.string.action_close),
                     onDismiss = { dialogName = DetailDialog.NONE.name },
                     onConfirm = {
-                        copyToClipboard(context, dialogText)
                         dialogName = DetailDialog.NONE.name
+                        val live = unchangedSinceDialogOpened() ?: return@ConfirmDialog
+                        copyToClipboard(context, live.finalText!!)
                         infoRes = R.string.detail_copied
                     },
                     modifier = Modifier.testTag("approveDialog"),
@@ -363,7 +471,7 @@ private fun DraftDetailContent(
                     if (settings.sendingEnabled && status.deviceLocked) {
                         Text(stringResource(R.string.detail_locked_notice), style = MaterialTheme.typography.bodyMedium)
                     }
-                    ExactTextBox(dialogText)
+                    ExactTextBox(shownText)
                 }
             }
         }

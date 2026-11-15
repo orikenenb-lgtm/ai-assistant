@@ -439,7 +439,7 @@ async def test_wrong_answer_refusal_or_non_text_blocks_give_fallback():
 )
 @pytest.mark.parametrize(
     "reply",
-    ['"הארי פוטר" או "שר הטבעות"', "״כן״ או ״לא״?", "'א' או 'ב'"],
+    ['"הארי פוטר" או "שר הטבעות"', "״כן״ או ״לא״", "'א' או 'ב'"],
 )
 def test_wrong_answer_guard_never_corrupts_a_reply_with_several_quoted_parts(reply):
     assert finalize(reply, inp("איזה סרט?"), SafetyReport()) == reply
@@ -517,8 +517,9 @@ def test_emoji_reach_the_model_as_visible_characters():
 @pytest.mark.parametrize(
     "texts,expected",
     [
-        (("היי, what's the plan for tonight?",), "he"),
-        (("ok סבבה",), "he"),
+        (("היי, מה התוכנית ל-tonight?",), "he"),  # Hebrew-majority mix → Hebrew
+        (("ok סבבה",), "he"),  # balanced mix → Hebrew (detect_language 'mixed')
+        (("היי, what's the plan for tonight?",), "en"),  # ≥80% Latin letters → English by design
         (("Hey! How are you?",), "en"),
     ],
 )

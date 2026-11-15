@@ -53,7 +53,7 @@ class StubEngine:
     name = "stub"
 
     async def draft(self, data: DraftInput) -> DraftOutput:
-        report = analyze_incoming(data.messages)
+        report = analyze_incoming(data.messages, sender_display_name=data.sender_display_name)
         lang = "en" if detect_language(m.text for m in data.messages) == "en" else "he"
         if report.injection_suspected or report.sensitive_request:
             kind = "deflect"

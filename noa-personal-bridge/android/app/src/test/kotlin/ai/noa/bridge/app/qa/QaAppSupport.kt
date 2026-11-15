@@ -50,7 +50,7 @@ import java.util.Collections
  *     → BridgeCoordinator (core) → RemoteInputReplySender → PendingIntent.send (Robolectric)
  *
  * Only the draft engine is faked (no network) and the "active notifications" set of the listener
- * is simulated. A reply that would reach WhatsApp shows up as a recorded broadcast whose action
+ * (the listener's live notifications) is simulated. A reply that would reach WhatsApp shows up as a recorded broadcast whose action
  * names the conversation and the notification version it came from.
  */
 
@@ -163,15 +163,25 @@ class QaPhone(
     secureStore: SecureStore = SecureStore(context, QaCipher()),
     settingsStore: SettingsStore = SettingsStore(context),
 ) {
-    /** Keys of notifications currently showing; null = listener not connected / access revoked. */
-    @Volatile var activeKeys: MutableSet<String>? = mutableSetOf()
+    /**
+     * Notifications currently showing, by StatusBarNotification key (what the connected listener's
+     * getActiveNotifications() would return, already mapped); null = listener not connected / access revoked.
+     */
+    @Volatile var live: MutableMap<String, MappedNotification>? = mutableMapOf()
     @Volatile var locked: Boolean = false
 
     val registry = ReplyActionRegistry()
     private val filter = ConversationFilter.create()
-    val sender = RemoteInputReplySender(context, registry, Dispatchers.Unconfined) { activeKeys?.toSet() }
+    // Same wiring as PlatformGraph: the gate reads the controller lazily at send time.
+    val sender = RemoteInputReplySender(
+        context = context,
+        registry = registry,
+        sendGate = { controller.canSendNow() },
+        mainDispatcher = Dispatchers.Unconfined,
+        liveNotification = { key -> live?.get(key) },
+    )
 
-    val controller = DefaultAppController(
+    val controller: DefaultAppController = DefaultAppController(
         context = context,
         scope = test.backgroundScope,
         secureStore = secureStore,
@@ -212,13 +222,13 @@ class QaPhone(
     /** WhatsApp posts (or updates) [n] under [notificationKey]. */
     fun post(n: Notification, notificationKey: String): MappedNotification {
         val mapped = map(n, notificationKey)
-        activeKeys?.add(notificationKey)
+        live?.put(notificationKey, mapped)
         ingestor.onPosted(mapped)
         return mapped
     }
 
     fun remove(mapped: MappedNotification, reason: Int) {
-        activeKeys?.remove(mapped.snapshot.notificationKey)
+        live?.remove(mapped.snapshot.notificationKey)
         ingestor.onRemoved(mapped, reason)
     }
 

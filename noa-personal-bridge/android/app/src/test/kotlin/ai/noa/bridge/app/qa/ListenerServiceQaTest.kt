@@ -89,8 +89,11 @@ class ListenerServiceQaTest {
         val sbn = svc.activeNotifications.single()
         val key = ConversationKeys.derive(ai.noa.bridge.app.platform.NotificationMapper.map(sbn).snapshot)!!
         val registry = app.platform.registry
-        // Production sender wiring (ListenerState decides what is "active"), main work inline.
-        val sender = RemoteInputReplySender(app, registry, Dispatchers.Unconfined)
+        // Production sender wiring: gate = the real controller, live notification = the real listener.
+        app.platform.controller.setSendingEnabled(true)
+        val sender = RemoteInputReplySender(
+            app, registry, sendGate = { app.platform.controller.canSendNow() }, mainDispatcher = Dispatchers.Unconfined,
+        )
 
         svc.onListenerConnected()
         assertEquals(SendOutcome.ATTEMPTED, runBlocking { sender.send(key, "שלום מהבדיקה") })
