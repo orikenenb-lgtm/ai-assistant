@@ -244,13 +244,24 @@ private fun WhatsAppCard(status: BridgeStatus, onOpenAccess: () -> Unit) {
         level = level,
         statusLabel = label,
         body = { Text(body, style = MaterialTheme.typography.bodyMedium) },
-        actions = if (!status.notificationAccessGranted) {
-            {
-                Button(onClick = onOpenAccess, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                    Text(stringResource(R.string.action_grant))
+        actions = when {
+            !status.notificationAccessGranted -> {
+                {
+                    Button(onClick = onOpenAccess, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                        Text(stringResource(R.string.action_grant))
+                    }
                 }
             }
-        } else null,
+            // Turning access off and on again in system settings usually reconnects a stuck listener.
+            !status.listenerConnected -> {
+                {
+                    OutlinedButton(onClick = onOpenAccess, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                        Text(stringResource(R.string.action_manage))
+                    }
+                }
+            }
+            else -> null
+        },
     )
 }
 

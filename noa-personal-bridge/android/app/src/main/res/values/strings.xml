@@ -11,10 +11,8 @@
     <string name="action_back">חזרה</string>
     <string name="action_cancel">ביטול</string>
     <string name="action_close">סגירה</string>
-    <string name="action_confirm">אישור</string>
     <string name="action_continue">המשך</string>
     <string name="action_keep">השארה</string>
-    <string name="action_try_again">ניסיון נוסף</string>
     <string name="cd_status_ok">תקין</string>
     <string name="cd_status_attention">דורש תשומת לב</string>
     <string name="cd_status_problem">בעיה</string>
@@ -38,7 +36,6 @@
     <string name="time_yesterday">אתמול, %1$s</string>
 
     <!-- Home -->
-    <string name="home_title">בית</string>
     <string name="home_subtitle">נועה מנסחת עבורך טיוטות תשובה. שום דבר לא נשלח בלי האישור שלך.</string>
     <string name="home_card_server_title">נועה / שרת הגשר</string>
     <string name="home_server_not_paired">עדיין לא מחובר לשרת. כדי שנועה תוכל לנסח טיוטות צריך להתחבר פעם אחת עם קוד חיבור.</string>
@@ -124,7 +121,6 @@
     <string name="drafts_section_active">פעילות</string>
     <string name="drafts_section_history">היסטוריה מהזמן האחרון</string>
     <string name="draft_messages_count">%1$d הודעות</string>
-    <string name="cd_open_draft">פתיחת הטיוטה</string>
 
     <!-- Draft detail -->
     <string name="detail_title">טיוטת תשובה</string>
@@ -151,7 +147,6 @@
     <string name="detail_empty_text_error">אי אפשר לאשר תשובה ריקה.</string>
     <string name="detail_approve_failed">לא ניתן לאשר את הטיוטה כרגע. ייתכן שהגיעה הודעה חדשה, שהטיוטה פגה או שהופעלה עצירת חירום.</string>
     <string name="detail_send_exception">אירעה שגיאה בזמן השליחה. לא ידוע אם ההודעה נשלחה — כדאי לבדוק בשיחה עצמה. לא ננסה שוב אוטומטית.</string>
-    <string name="detail_result_title">תוצאת השליחה</string>
     <string name="detail_copied">הנוסח הועתק. אפשר להדביק אותו ב-WhatsApp.</string>
     <string name="detail_status_detail">פרטים: %1$s</string>
     <string name="cd_message_from">הודעה של %1$s, בשעה %2$s</string>

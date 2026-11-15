@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar small icon (white, alpha-only) for the app's own "draft ready" notification. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="60" android:viewportHeight="60">
+    <group android:translateX="-24" android:translateY="-28.5">
+        <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+            android:pathData="M34,38h40a8,8 0,0 1,8 8v16a8,8 0,0 1,-8 8H52l-10,9v-9h-8a8,8 0,0 1,-8 -8V46a8,8 0,0 1,8 -8zM42,50a4,4 0,1 0,0 8a4,4 0,1 0,0 -8zM54,50a4,4 0,1 0,0 8a4,4 0,1 0,0 -8zM66,50a4,4 0,1 0,0 8a4,4 0,1 0,0 -8z"/>
+    </group>
+</vector>

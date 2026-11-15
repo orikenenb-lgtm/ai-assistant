@@ -153,6 +153,31 @@ class NotificationMapperTest {
     }
 
     @Test
+    fun android15RedactedNotificationIsFlaggedEvenWithReplyAction() {
+        val n = builder().setContentTitle("WhatsApp").setContentText("Sensitive notification content hidden")
+            .addAction(replyAction()).build()
+        val mapped = map(n)
+        assertTrue(mapped.isLikelyRedacted)
+        assertTrue(mapped.snapshot.hasReplyAction) // the action is still there; the ingestor must ignore it
+    }
+
+    @Test
+    fun styleLessNotificationTitledWhatsAppIsTreatedAsRedacted() {
+        val n = builder().setContentTitle("WhatsApp").setContentText("תוכן כלשהו").addAction(replyAction()).build()
+        assertTrue(map(n).isLikelyRedacted)
+    }
+
+    @Test
+    fun normalPrivateChatIsNotRedacted() {
+        val n = builder()
+            .setStyle(NotificationCompat.MessagingStyle(me).addMessage("היי", 1_000L, dana))
+            .addAction(replyAction()).build()
+        assertFalse(map(n).isLikelyRedacted)
+        val fallback = builder().setContentTitle("דנה").setContentText("היי").build()
+        assertFalse(map(fallback).isLikelyRedacted)
+    }
+
+    @Test
     fun replyActionDetectionPrefersSemanticReply() {
         val n = builder().setContentTitle("דנה").setContentText("היי")
             .addAction(replyAction(semantic = false, requestCode = 1))

@@ -51,7 +51,7 @@ class HomeScreenTest {
         assertEquals(1, fake.emergencyStopCalls)
 
         // Stopped state: clear banner + resume action, emergency button gone.
-        rule.onNodeWithTag("emergencyBanner").assertIsDisplayed()
+        rule.onNodeWithTag("emergencyBanner").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag("emergencyStopButton").assertDoesNotExist()
     }
 

@@ -57,6 +57,39 @@ class NotificationIngestorTest {
     }
 
     @Test
+    fun redactedNotificationGetsNoReplyHandle() {
+        ingestor.onPosted(MappedNotification(snapshot(tag = "a"), replyAction(), isLikelyRedacted = true))
+        assertNull(registry.get(key('a')))
+        assertEquals(1, posted.size) // the core still sees it and rejects it as HIDDEN_CONTENT
+    }
+
+    @Test
+    fun snapshotTheCoreWouldRejectGetsNoReplyHandle() {
+        val strict = NotificationIngestor(registry, { posted += it }, { removed += it }, { s -> s.tag?.let { key(it.first()) } }, { it.tag == "a" })
+        strict.onPosted(MappedNotification(snapshot(tag = "a"), replyAction()))
+        strict.onPosted(MappedNotification(snapshot(tag = "b"), replyAction()))
+        assertNotNull(registry.get(key('a')))
+        assertNull(registry.get(key('b')))
+    }
+
+    @Test
+    fun rebuildReplacesRegistryWithoutFeedingTheCoordinator() {
+        ingestor.onPosted(MappedNotification(snapshot(notificationKey = "old", tag = "z"), replyAction()))
+        posted.clear()
+        ingestor.rebuildFrom(
+            listOf(
+                MappedNotification(snapshot(notificationKey = "n1", tag = "a"), replyAction()),
+                MappedNotification(snapshot(notificationKey = "n2", tag = "b"), replyAction(), isLikelyRedacted = true),
+            ),
+        )
+        assertNull(registry.get(key('z')))
+        assertNotNull(registry.get(key('a')))
+        assertNull(registry.get(key('b')))
+        assertTrue(posted.isEmpty())
+        assertTrue(removed.isEmpty())
+    }
+
+    @Test
     fun removalReasonsThatMeanHandledElsewhereNotifyTheCoordinator() {
         val reasons = listOf(
             NotificationListenerService.REASON_CLICK,

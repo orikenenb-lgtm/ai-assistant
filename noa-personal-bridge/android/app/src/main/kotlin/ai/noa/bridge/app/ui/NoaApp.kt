@@ -104,7 +104,9 @@ private fun NoaAppContent(
     sendTracker: SendTracker,
 ) {
     val status by controller.status.collectAsStateWithLifecycle()
-    val settings by controller.settings.collectAsStateWithLifecycle()
+    val rawSettings by controller.settings.collectAsStateWithLifecycle()
+    // If the reply path is compiled out, the UI treats sending as off everywhere (no send dialog).
+    val settings = if (sendingCompiledIn || !rawSettings.sendingEnabled) rawSettings else rawSettings.copy(sendingEnabled = false)
     val drafts by controller.drafts.collectAsStateWithLifecycle()
     val exclusions by controller.exclusions.collectAsStateWithLifecycle()
     val attempts by sendTracker.attempts.collectAsStateWithLifecycle()

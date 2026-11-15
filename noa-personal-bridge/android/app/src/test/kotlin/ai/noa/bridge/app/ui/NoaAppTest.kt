@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToKey
 import androidx.compose.ui.unit.LayoutDirection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -64,6 +65,7 @@ class NoaAppTest {
         rule.onNodeWithContentDescription(str(R.string.cd_drafts_badge, 3), useUnmergedTree = true).assertExists() // draft-1, draft-2 (awaiting) + draft-5 (ready)
         rule.onNodeWithTag("tab_drafts").performClick()
         rule.onNodeWithTag("draftsList").assertIsDisplayed()
+        rule.onNodeWithTag("draftsList").performScrollToKey("draft-1")
         rule.onNodeWithTag("draftCard_draft-1").performClick()
         rule.onNodeWithTag("approveButton").assertExists()
         rule.onNodeWithTag("backButton").performClick()

@@ -23,7 +23,8 @@ class RemoteInputReplySenderTest {
     private val context: Application = ApplicationProvider.getApplicationContext()
     private val registry = ReplyActionRegistry()
     // The test thread IS the Robolectric main thread, so run "main" work inline.
-    private val sender = RemoteInputReplySender(context, registry, Dispatchers.Unconfined)
+    private var activeKeys: Set<String>? = setOf("n1")
+    private val sender = RemoteInputReplySender(context, registry, Dispatchers.Unconfined) { activeKeys }
 
     private fun freeFormInput(key: String) = RemoteInput.Builder(key).setLabel("Reply").build()
 
@@ -85,6 +86,23 @@ class RemoteInputReplySenderTest {
     fun blankTextIsNeverSentAndKeepsHandle() = runTest {
         registry.put(key('a'), ReplyHandle(mutablePendingIntent(context), arrayOf(freeFormInput("reply_text")), "n1", 1L))
         assertEquals(SendOutcome.FAILED_NO_ACTION, sender.send(key('a'), "   "))
+        assertTrue(sentReplyBroadcasts().isEmpty())
+    }
+
+    @Test
+    fun notificationNoLongerActiveMeansFailedNoAction() = runTest {
+        registry.put(key('a'), ReplyHandle(mutablePendingIntent(context), arrayOf(freeFormInput("reply_text")), "n1", 1L))
+        activeKeys = setOf("some-other-notification")
+        assertEquals(SendOutcome.FAILED_NO_ACTION, sender.send(key('a'), "שלום"))
+        assertNull(registry.get(key('a')))
+        assertTrue(sentReplyBroadcasts().isEmpty())
+    }
+
+    @Test
+    fun listenerDisconnectedMeansFailedNoAction() = runTest {
+        registry.put(key('a'), ReplyHandle(mutablePendingIntent(context), arrayOf(freeFormInput("reply_text")), "n1", 1L))
+        activeKeys = null
+        assertEquals(SendOutcome.FAILED_NO_ACTION, sender.send(key('a'), "שלום"))
         assertTrue(sentReplyBroadcasts().isEmpty())
     }
 
