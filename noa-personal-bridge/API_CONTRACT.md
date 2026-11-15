@@ -77,3 +77,18 @@ Auth required. Revokes the calling device's token (used by "ניתוק מלא" i
 - The server holds no per-conversation memory: each request carries only that conversation's burst.
 - The AI layer is tool-free: no endpoint can trigger sending, calls, documents or any side effect.
 - The server cannot send WhatsApp messages. Sending happens only on the phone, after in-app approval.
+
+## v1.1 clarifications (from the implementation — DECISION_LOG D-016)
+- `POST /v1/pair` errors: 400 `invalid_pairing_code` (identical body for invalid / expired / used / malformed).
+  `device_name` is optional (default "Android"); control and bidi-override characters are stripped.
+- 413 `too_large`: > 20 messages, text > 2000, total > 8000, sender name > 80, or body > 64 KB.
+  422 `invalid_request`: every other schema problem (empty text, bad `conversation_ref`/UUID, wrong types, bad JSON).
+  The 422 body never echoes submitted values.
+- Missing or malformed `X-Bridge-Timestamp` / `X-Bridge-Nonce` → 409 `replay` (not 401), checked after the token.
+- `request_id` must be a UUID v4 and is echoed back as sent. A repeated `request_id` returns the cached response even if the body differs.
+- When disabled: `/v1/pair` and `/v1/drafts` → 503; `/health` and `/v1/devices/revoke` keep working, so a user can always disconnect.
+- Rate limit counts only requests that reach the engine (cache hits and validation failures don't count).
+  A full nonce store → 429 with `Retry-After: 60`.
+- 404 / 405 / 500 use the same envelope: `not_found`, `method_not_allowed`, `internal_error`.
+- Extra optional server settings: `BRIDGE_KILL_SWITCH_FILE` (if the file exists the service acts as disabled),
+  `BRIDGE_MAX_CONCURRENT_DRAFTS` (default 8).

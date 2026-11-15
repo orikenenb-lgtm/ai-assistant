@@ -70,3 +70,8 @@
 ## D-015 — אחריות על שמירת הגדרות אחרי עצירת חירום
 - `BridgeCoordinator.emergencyStop()` מעדכן את ההגדרות בזיכרון בלבד (`emergencyStopped=true`, `sendingEnabled=false`). שכבת ה־App (`DefaultAppController`) אחראית לשמור אותן בדיסק, כדי שגם אחרי הפעלה מחדש הגשר יישאר עצור.
 - קיצור טקסט לגבולות ה־API (2000 תווים להודעה, 8000 סה"כ) מתבצע ב־`BridgeApiClient`, לא ב־Core.
+
+## D-016 — הבהרות לחוזה ה־API מתוך המימוש
+- צוות ה־Backend סגר נקודות שהחוזה השאיר פתוחות: קוד שגיאה `invalid_pairing_code` אחיד, חלוקה בין 413 ל־422, כותרות Replay חסרות = 409, `device_name` אופציונלי, והשארת `revoke` פעיל גם כשהשרת כבוי (כדי שתמיד אפשר יהיה להתנתק).
+- נוספו `BRIDGE_KILL_SWITCH_FILE` ומגבלת מקביליות למנוע. פירוט מלא: `noa-personal-bridge/API_CONTRACT.md` סעיף v1.1.
+- **החליט:** מנהל־העל, לאחר בדיקת המימוש והרצת 324 בדיקות.
