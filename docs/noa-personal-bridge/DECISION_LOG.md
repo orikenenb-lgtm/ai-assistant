@@ -62,3 +62,11 @@
 
 ## D-013 — CI נפרד
 - **החלטה:** Workflow חדש `.github/workflows/noa-personal-bridge.yml` עם `paths` filter על `noa-personal-bridge/**`. הקבצים `ci.yml` ו־`smart-crm.yml` לא שונו. ה־Workflow החדש לא פורס דבר.
+
+## D-014 — קלט ה־Hash של מפתח שיחה
+- **הקשר:** צוות ה־Core מצא שה־KDoc בחוזה (`Api.kt`) תיאר `packageName|kind|identity`, בעוד המפרט והמימוש משתמשים ב־`packageName|identity`.
+- **החלטה:** `kind` לא נכלל, כדי שמפתח השיחה יישאר יציב גם אם הסיווג (פרטי/לא ודאי) משתנה בין התראות. ה־KDoc תוקן; החתימה לא השתנתה.
+
+## D-015 — אחריות על שמירת הגדרות אחרי עצירת חירום
+- `BridgeCoordinator.emergencyStop()` מעדכן את ההגדרות בזיכרון בלבד (`emergencyStopped=true`, `sendingEnabled=false`). שכבת ה־App (`DefaultAppController`) אחראית לשמור אותן בדיסק, כדי שגם אחרי הפעלה מחדש הגשר יישאר עצור.
+- קיצור טקסט לגבולות ה־API (2000 תווים להודעה, 8000 סה"כ) מתבצע ב־`BridgeApiClient`, לא ב־Core.

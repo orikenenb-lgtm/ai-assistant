@@ -13,7 +13,8 @@ object ConversationKeys {
     /**
      * Derives a ConversationKey from the most stable identity available, in this order:
      * shortcutId, tag, conversationTitle/title. Returns null when nothing stable exists.
-     * Output is SHA-256 hex of "packageName|kind|identity", never the raw identity.
+     * Output is SHA-256 hex of "packageName|identity" (kind is deliberately excluded so a chat keeps its
+     * key if its classification changes — see DECISION_LOG D-014), never the raw identity.
      */
     fun derive(snapshot: NotificationSnapshot): ConversationKey? = ConversationKeysImpl.derive(snapshot)
 }
