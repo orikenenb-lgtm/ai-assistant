@@ -85,7 +85,7 @@ Auth required. Revokes the calling device's token (used by "ניתוק מלא" i
   422 `invalid_request`: every other schema problem (empty text, bad `conversation_ref`/UUID, wrong types, bad JSON).
   The 422 body never echoes submitted values.
 - Missing or malformed `X-Bridge-Timestamp` / `X-Bridge-Nonce` → 409 `replay` (not 401), checked after the token.
-- `request_id` must be a UUID v4 and is echoed back as sent. A repeated `request_id` returns the cached response even if the body differs.
+- `request_id` must be a UUID v4 and is echoed back as sent. A repeated `request_id` (same device, within the cache TTL) returns the cached response only if the request body is identical (compared by SHA-256 of the canonical JSON; key order, whitespace, unknown fields and `request_id` case don't matter); with a different body it is rejected with 422 `invalid_request` and the message "מזהה הבקשה כבר שימש לבקשה אחרת", and the engine is not called.
 - When disabled: `/v1/pair` and `/v1/drafts` → 503; `/health` and `/v1/devices/revoke` keep working, so a user can always disconnect.
 - Rate limit counts only requests that reach the engine (cache hits and validation failures don't count).
   A full nonce store → 429 with `Retry-After: 60`.
