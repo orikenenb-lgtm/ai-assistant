@@ -1,7 +1,11 @@
 """SQLite storage (stdlib ``sqlite3``, WAL mode, versioned idempotent migrations).
 
 PRIVACY INVARIANT: there is deliberately no table for messages, drafts, sender names or
-conversation references. Only device credentials (as sha256) and pairing codes (as sha256).
+conversation references. Only device credentials (as sha256) and pairing codes (as HMAC-SHA256).
+
+RETENTION (security review L-10): ``devices.last_seen_at`` has DAY granularity (UTC midnight,
+epoch seconds) so the file holds no timeline of when private messages arrived; ``purge()`` (run
+at every start and by ``admin purge``) deletes devices revoked more than 30 days ago.
 """
 
 from __future__ import annotations
@@ -13,6 +17,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+
+DAY_SECONDS = 86_400
 
 # (version, statements). Append only; never edit a released migration.
 MIGRATIONS: tuple[tuple[int, tuple[str, ...]], ...] = (
@@ -40,10 +46,27 @@ MIGRATIONS: tuple[tuple[int, tuple[str, ...]], ...] = (
             "CREATE INDEX IF NOT EXISTS idx_pairing_codes_expires ON pairing_codes(expires_at)",
         ),
     ),
+    (
+        2,
+        (
+            # L-10: coarsen existing last_seen_at values to the UTC day (idempotent by itself too).
+            f"UPDATE devices SET last_seen_at = (last_seen_at / {DAY_SECONDS}) * {DAY_SECONDS}"
+            " WHERE last_seen_at IS NOT NULL",
+            "CREATE INDEX IF NOT EXISTS idx_devices_revoked ON devices(revoked_at)",
+        ),
+    ),
 )
 
 # Expired/used pairing codes are deleted after this many seconds (they are useless afterwards).
 PAIRING_CODE_RETENTION_SECONDS = 24 * 3600
+# Revoked devices are deleted this long after revocation.
+REVOKED_DEVICE_RETENTION_SECONDS = 30 * DAY_SECONDS
+
+
+@dataclass(frozen=True)
+class PurgeResult:
+    devices: int
+    pairing_codes: int
 
 
 @dataclass(frozen=True)
@@ -62,6 +85,11 @@ class Device:
 
 def _now() -> int:
     return int(time.time())
+
+
+def day_of(ts: int) -> int:
+    """UTC midnight (epoch seconds) of the day containing ``ts``."""
+    return ts - ts % DAY_SECONDS
 
 
 class Database:
@@ -161,7 +189,7 @@ class Database:
             conn.execute(
                 "INSERT INTO devices(id, token_sha256, name, created_at, last_seen_at)"
                 " VALUES (?, ?, ?, ?, ?)",
-                (device_id, token_sha256, device_name, now, now),
+                (device_id, token_sha256, device_name, now, day_of(now)),
             )
         return True
 
@@ -197,14 +225,36 @@ class Database:
         return [d for d in (self._device(r) for r in rows) if d is not None]
 
     def touch_device(self, device_id: str, min_interval_seconds: int = 60) -> None:
-        """Update last_seen_at, at most once per ``min_interval_seconds`` (fewer writes)."""
-        now = _now()
+        """Set last_seen_at to TODAY (UTC midnight): day granularity, at most one write per day.
+
+        ``min_interval_seconds`` is kept for backward compatibility and ignored.
+        """
+        del min_interval_seconds
+        today = day_of(_now())
         with self.connect() as conn:
             conn.execute(
                 "UPDATE devices SET last_seen_at = ?"
-                " WHERE id = ? AND (last_seen_at IS NULL OR last_seen_at <= ?)",
-                (now, device_id, now - min_interval_seconds),
+                " WHERE id = ? AND (last_seen_at IS NULL OR last_seen_at < ?)",
+                (today, device_id, today),
             )
+
+    def purge(
+        self,
+        revoked_retention_seconds: int = REVOKED_DEVICE_RETENTION_SECONDS,
+        now: int | None = None,
+    ) -> PurgeResult:
+        """Delete devices revoked more than ``revoked_retention_seconds`` ago and dead pairing codes."""
+        now = _now() if now is None else now
+        with self.transaction() as conn:
+            devices = conn.execute(
+                "DELETE FROM devices WHERE revoked_at IS NOT NULL AND revoked_at < ?",
+                (now - revoked_retention_seconds,),
+            ).rowcount
+            codes = conn.execute(
+                "DELETE FROM pairing_codes WHERE expires_at < ?",
+                (now - PAIRING_CODE_RETENTION_SECONDS,),
+            ).rowcount
+        return PurgeResult(devices=devices, pairing_codes=codes)
 
     def revoke_device(self, device_id: str) -> bool:
         """Revoke a device. Returns True if it existed and was active."""

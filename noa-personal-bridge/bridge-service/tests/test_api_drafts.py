@@ -218,7 +218,7 @@ async def test_concurrent_duplicates_call_engine_once(settings, fake_engine_cls,
         from bridge_service.security.pairing import generate_pairing_code, hash_pairing_code
 
         code = generate_pairing_code()
-        app.state.bridge.db.add_pairing_code(hash_pairing_code(code), 600)
+        app.state.bridge.db.add_pairing_code(hash_pairing_code(code, app.state.bridge.pairing_pepper), 600)
         paired = (await ac.post("/v1/pair", json={"pairing_code": code})).json()
         token = paired["device_token"]
         payload = body()

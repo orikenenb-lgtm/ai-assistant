@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -159,14 +160,17 @@ class ReviewFixesUiTest {
         val fake = FakeAppController(initialSettings = sendingOn)
         setDetail(fake)
         rule.onNodeWithTag("replyField").performScrollTo().performTextReplacement("x".repeat(4_001))
-        rule.onNodeWithTag("textTooLong").assertIsDisplayed()
-        rule.onNodeWithText(str(R.string.detail_text_too_long)).assertIsDisplayed()
+        // The supporting text sits below the field (possibly off-screen in the scroll column).
+        rule.onNodeWithTag("textTooLong", useUnmergedTree = true).assertExists()
+        rule.onNodeWithText(str(R.string.detail_text_too_long), useUnmergedTree = true).assertExists()
+        // The over-long input was not taken (and nothing was silently dropped by the coordinator).
+        rule.onNodeWithTag("replyField").assertTextContains(textA)
         assertTrue(fake.editCalls.isEmpty())
 
         // Exactly at the limit is fine and is stored as typed.
         val max = "y".repeat(4_000)
         rule.onNodeWithTag("replyField").performScrollTo().performTextReplacement(max)
-        rule.onNodeWithTag("textTooLong").assertDoesNotExist()
+        rule.onNodeWithTag("textTooLong", useUnmergedTree = true).assertDoesNotExist()
         rule.onNodeWithTag("saveEditButton").performScrollTo().assertIsEnabled().performClick()
         rule.waitForIdle()
         assertEquals(listOf("draft-1" to max), fake.editCalls)

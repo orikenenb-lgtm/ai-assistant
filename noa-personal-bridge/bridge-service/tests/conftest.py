@@ -20,7 +20,11 @@ from fastapi.testclient import TestClient
 from bridge_service.ai.base import DraftInput, DraftOutput, EngineError, SafetyReport
 from bridge_service.config import Settings
 from bridge_service.main import create_app
-from bridge_service.security.pairing import generate_pairing_code, hash_pairing_code
+from bridge_service.security.pairing import (
+    generate_pairing_code,
+    hash_pairing_code,
+    resolve_pairing_pepper,
+)
 from bridge_service.storage.db import Database
 
 MARKER = "MARKER-7f3a9c-סוד"  # unique string used to prove content never lands in logs/disk
@@ -91,11 +95,13 @@ def client(app) -> Iterator[TestClient]:
         yield c
 
 
-def new_pairing_code(db_path: str, ttl_seconds: int = 600) -> str:
+def new_pairing_code(db_path: str, ttl_seconds: int = 600, pepper: str | None = None) -> str:
+    """Create a code the app will accept: hashed with the same pepper the app resolves
+    (BRIDGE_PAIRING_PEPPER if given, else ``pepper.key`` next to the DB)."""
     db = Database(db_path)
     db.migrate()
     code = generate_pairing_code()
-    db.add_pairing_code(hash_pairing_code(code), ttl_seconds)
+    db.add_pairing_code(hash_pairing_code(code, resolve_pairing_pepper(pepper, db_path)), ttl_seconds)
     return code
 
 
@@ -113,7 +119,7 @@ class PairedDevice:
 
 
 def pair_device(client: TestClient, settings: Settings, name: str = "Galaxy S25 Ultra") -> PairedDevice:
-    code = new_pairing_code(settings.db_path)
+    code = new_pairing_code(settings.db_path, pepper=settings.pairing_pepper)
     resp = client.post("/v1/pair", json={"pairing_code": code, "device_name": name})
     assert resp.status_code == 200, resp.text
     body = resp.json()

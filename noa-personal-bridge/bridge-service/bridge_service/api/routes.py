@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import hmac
+import json
 import logging
 import re
 from typing import Any
@@ -14,14 +17,14 @@ from starlette.concurrency import run_in_threadpool
 
 from bridge_service import __version__
 from bridge_service.ai.base import DraftInput, DraftOutput, EngineError, InboundMessage
-from bridge_service.api.errors import ApiError
+from bridge_service.api.errors import MESSAGE_REQUEST_ID_REUSED, ApiError
 from bridge_service.api.models import (
     MAX_TOTAL_CHARS,
     DraftRequest,
     PairRequest,
     is_oversize_error,
 )
-from bridge_service.api.state import BridgeState
+from bridge_service.api.state import PAIR_FAILURES_KEY, BridgeState
 from bridge_service.security.auth import client_ip, get_state, require_device, require_enabled
 from bridge_service.security.pairing import hash_pairing_code, normalize_pairing_code
 from bridge_service.security.tokens import generate_device_id, generate_device_token, sha256_hex
@@ -62,9 +65,20 @@ async def health(request: Request) -> dict[str, Any]:
     }
 
 
+def _pair_failed(state: BridgeState) -> ApiError:
+    state.pair_failures.record(PAIR_FAILURES_KEY)
+    return ApiError("invalid_pairing_code")
+
+
 @router.post("/v1/pair", dependencies=[Depends(require_enabled)])
 async def pair(request: Request) -> JSONResponse:
     state = get_state(request)
+    # Global cap first (security review L-2): too many failures across ALL IPs in the last hour
+    # → every attempt is refused, whatever its IP and even with a valid code.
+    retry_after = state.pair_failures.blocked(PAIR_FAILURES_KEY)
+    if retry_after is not None:
+        logger.warning("pairing globally rate limited", extra={"event": "pair_global_rate_limited"})
+        raise ApiError("rate_limited", headers={"Retry-After": str(retry_after)})
     ip = client_ip(request, state.settings.trust_proxy_headers)
     retry_after = state.pair_limiter.hit(("pair", ip))
     if retry_after is not None:
@@ -74,23 +88,33 @@ async def pair(request: Request) -> JSONResponse:
     body: PairRequest = await _parse(request, PairRequest, size_limits=False)
     code = normalize_pairing_code(body.pairing_code)
     if code is None:
-        raise ApiError("invalid_pairing_code")
+        raise _pair_failed(state)
 
     device_id = generate_device_id()
     token = generate_device_token()
     ok = await run_in_threadpool(
         state.db.redeem_pairing_code,
-        hash_pairing_code(code),
+        hash_pairing_code(code, state.pairing_pepper),
         device_id,
         sha256_hex(token),
         _sanitize_device_name(body.device_name),
     )
     if not ok:
         logger.info("pairing failed", extra={"event": "pair_failed"})
-        raise ApiError("invalid_pairing_code")
+        raise _pair_failed(state)
     request.state.device_id = device_id
     logger.info("device paired", extra={"event": "device_paired"})
     return JSONResponse({"device_id": device_id, "device_token": token})
+
+
+def canonical_body_sha256(body: DraftRequest) -> str:
+    """SHA-256 of the validated request in canonical JSON (sorted keys, no whitespace, request_id
+    lower-cased, unknown fields dropped). Formatting / key order never changes the hash; any
+    change to conversation_ref, sender, messages or locale does. Kept in memory only."""
+    data = body.model_dump(mode="json")
+    data["request_id"] = str(data["request_id"]).lower()
+    canonical = json.dumps(data, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _to_draft_input(body: DraftRequest) -> DraftInput:
@@ -154,11 +178,17 @@ async def create_draft(request: Request, device: Device = Depends(require_device
     request.state.request_id = body.request_id.lower()
 
     key = (device.id, body.request_id.lower())
+    body_hash = canonical_body_sha256(body)
     async with state.idempotency_locks.hold(key):
         cached = state.idempotency.get(key)
         if cached is not None:
+            cached_hash, cached_response = cached
+            if not hmac.compare_digest(cached_hash, body_hash):
+                # Same request_id, different body: never hand one conversation's draft to another.
+                logger.warning("request_id reused with another body", extra={"event": "idempotency_conflict"})
+                raise ApiError("invalid_request", message=MESSAGE_REQUEST_ID_REUSED)
             logger.info("idempotent replay", extra={"event": "idempotent_hit"})
-            return JSONResponse(cached)
+            return JSONResponse(cached_response)
 
         retry_after = state.draft_limiter.hit(device.id)
         if retry_after is not None:
@@ -166,7 +196,7 @@ async def create_draft(request: Request, device: Device = Depends(require_device
 
         response = await _call_engine(state, _to_draft_input(body), body.request_id)
         # Memory only (never disk): the cache is what makes client retries free and safe.
-        state.idempotency.set(key, response, state.settings.idempotency_ttl_seconds)
+        state.idempotency.set(key, (body_hash, response), state.settings.idempotency_ttl_seconds)
         return JSONResponse(response)
 
 

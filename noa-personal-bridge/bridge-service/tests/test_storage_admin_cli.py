@@ -7,7 +7,7 @@ from bridge_service.storage.db import Database
 
 def test_init_db(settings, capsys):
     assert admin.main(["init-db"], settings=settings) == 0
-    assert "schema version: 1" in capsys.readouterr().out
+    assert "schema version: 2" in capsys.readouterr().out
 
 
 def test_create_code_pair_list_revoke(settings, engine, capsys):

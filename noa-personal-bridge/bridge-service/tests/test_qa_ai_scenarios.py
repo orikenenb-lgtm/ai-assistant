@@ -300,7 +300,7 @@ async def test_injection_requests_are_still_tool_free():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="BUG: QA-01 — safety.py:78/93 mixed Hebrew/English injection (Hebrew verb + English object or vice versa) is not flagged",
+    reason="BUG: QA-01 — safety._RULES: mixed Hebrew/English injection (Hebrew verb + English object or vice versa) is not flagged",
 )
 @pytest.mark.parametrize(
     "text",
@@ -434,8 +434,8 @@ async def test_wrong_answer_refusal_or_non_text_blocks_give_fallback():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="BUG: QA-02 — output_guard.py:71 strips the first and last quote of a reply with several quoted segments "
-    "(same opening/closing quote char), corrupting it",
+    reason="BUG: QA-02 — output_guard._strip_wrapping strips the first and last quote of a reply with several quoted "
+    "segments (same opening/closing quote char), corrupting it",
 )
 @pytest.mark.parametrize(
     "reply",

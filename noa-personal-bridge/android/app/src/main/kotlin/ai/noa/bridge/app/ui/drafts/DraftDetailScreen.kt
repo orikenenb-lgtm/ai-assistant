@@ -61,6 +61,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -175,12 +176,12 @@ private fun DraftDetailContent(
     var dialogName by rememberSaveable(draft.id) { mutableStateOf(DetailDialog.NONE.name) }
     val dialog = DetailDialog.valueOf(dialogName)
     // The approve dialog is bound to the draft revision and state it was opened on (H-1).
-    var dialogRevision by rememberSaveable(draft.id) { mutableStateOf(-1) }
+    var dialogRevision by rememberSaveable(draft.id) { mutableIntStateOf(-1) }
     var dialogStateName by rememberSaveable(draft.id) { mutableStateOf(DraftState.AWAITING_APPROVAL.name) }
     var draftChanged by rememberSaveable(draft.id) { mutableStateOf(false) }
     var tooLongAttempt by rememberSaveable(draft.id) { mutableStateOf(false) }
-    var errorRes by rememberSaveable(draft.id) { mutableStateOf(0) }
-    var infoRes by rememberSaveable(draft.id) { mutableStateOf(0) }
+    var errorRes by rememberSaveable(draft.id) { mutableIntStateOf(0) }
+    var infoRes by rememberSaveable(draft.id) { mutableIntStateOf(0) }
 
     // Revisions only grow. Composition may lag one frame behind the controller (revision lower than
     // the one the dialog was opened on): wait. A higher revision, or the same revision in another

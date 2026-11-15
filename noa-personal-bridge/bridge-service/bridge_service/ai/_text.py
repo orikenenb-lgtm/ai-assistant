@@ -58,7 +58,8 @@ _HOMOGLYPHS = str.maketrans({
     "ο": "o", "ρ": "p", "τ": "t", "υ": "u", "χ": "x", "ω": "w", "γ": "y", "ϲ": "c", "ϳ": "j",
 })
 # Leetspeak, folded only inside tokens that also contain a Latin letter ("1gn0re", "4ll"), so plain
-# numbers ("נתראה ב-8", "500 שקל") are never rewritten. "1" is ambiguous (i / l): both are tried.
+# numbers ("נתראה ב-8", "500 שקל") are never rewritten. "1" is ambiguous (i / l): three variants
+# are tried — all "i", all "l", and "i" at the start of a token / "l" elsewhere ("1gn0r3 ru1es").
 _LEET_I = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "|": "l", "!": "i"})
 _LEET_L = str.maketrans({"0": "o", "1": "l", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "|": "l", "!": "i"})
 _LEET_CANDIDATE = re.compile(r"[a-z0-9@$|!]+")
@@ -72,17 +73,19 @@ def fold_homoglyphs(normalized: str) -> str:
 def fold_leet(normalized: str) -> tuple[str, ...]:
     """Leetspeak-folded variants of `normalized` (empty tuple if there is nothing to fold)."""
 
-    def fold(table: dict[int, str]) -> str:
+    def fold(table: dict[int, str] | None) -> str:
         def repl(m: re.Match[str]) -> str:
             tok = m.group(0)
             if not re.search(r"[a-z]", tok) or not re.search(r"[0-9@$|!]", tok):
                 return tok
+            if table is None:  # mixed: leading "1" → i, any other "1" → l
+                return tok[0].translate(_LEET_I) + tok[1:].translate(_LEET_L)
             return tok.translate(table)
 
         return _LEET_CANDIDATE.sub(repl, normalized)
 
     variants = []
-    for table in (_LEET_I, _LEET_L):
+    for table in (_LEET_I, _LEET_L, None):
         v = fold(table)
         if v != normalized and v not in variants:
             variants.append(v)

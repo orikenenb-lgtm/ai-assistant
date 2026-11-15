@@ -53,7 +53,9 @@ def test_normalize_pairing_code():
 
 
 def test_pairing_hash_is_domain_separated():
-    assert hash_pairing_code("ABCD2345") != sha256_hex("ABCD2345")
+    pepper = b"p" * 32
+    assert hash_pairing_code("ABCD2345", pepper) != sha256_hex("ABCD2345")
+    assert hash_pairing_code("ABCD2345", pepper) != sha256_hex("pairing:ABCD2345")
 
 
 def test_settings_repr_hides_secrets(tmp_path):
