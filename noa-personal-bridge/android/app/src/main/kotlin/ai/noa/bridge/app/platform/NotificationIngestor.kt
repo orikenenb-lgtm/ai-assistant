@@ -16,6 +16,11 @@ class NotificationIngestor(
     private val onNotification: (NotificationSnapshot) -> Unit,
     private val onConversationRemoved: (ConversationKey) -> Unit,
     private val deriveKey: (NotificationSnapshot) -> ConversationKey? = ConversationKeys::derive,
+    /**
+     * True when the core filter would accept this snapshot (production: ConversationFilter.evaluate
+     * with the current settings is FilterResult.Accepted). Reply handles are only kept for those.
+     */
+    private val wouldAccept: (NotificationSnapshot) -> Boolean = { true },
 ) {
 
     /** Only personal WhatsApp (not WhatsApp Business, not a Samsung Dual Messenger / work-profile clone). */
@@ -32,8 +37,11 @@ class NotificationIngestor(
     fun registerReplyAction(mapped: MappedNotification) {
         val snapshot = mapped.snapshot
         val action = mapped.replyAction ?: return
+        // Never reply through a redacted notification (Android 15+ sensitive-content redaction).
+        if (mapped.isLikelyRedacted) return
         // Cheap local guard; the core filter is the authority on private vs. group.
         if (snapshot.isGroupSummary || snapshot.isOngoing || snapshot.isGroupConversationFlag == true) return
+        if (!wouldAccept(snapshot)) return
         val key = deriveKey(snapshot)
         if (key == null) {
             SafeLog.i(SafeLog.Event.NOTIFICATION_NO_KEY)
@@ -49,6 +57,15 @@ class NotificationIngestor(
             ),
         )
         SafeLog.i(SafeLog.Event.REPLY_HANDLE_STORED, registry.size)
+    }
+
+    /**
+     * Rebuilds the registry from the notifications currently showing (on listener connect). Reply
+     * handles only: old messages are NOT fed to the coordinator, so no drafts are made for old chats.
+     */
+    fun rebuildFrom(active: List<MappedNotification>) {
+        registry.clear()
+        active.forEach { registerReplyAction(it) }
     }
 
     fun onRemoved(mapped: MappedNotification, reason: Int) {

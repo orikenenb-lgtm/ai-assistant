@@ -20,7 +20,8 @@ import kotlinx.coroutines.withContext
  * Only the core coordinator calls this, and only with a validated, single-use approval.
  *
  * Semantics:
- * - No live handle → [SendOutcome.FAILED_NO_ACTION] (nothing is sent).
+ * - No live handle, or its notification is no longer active (checked through the connected
+ *   listener's getActiveNotifications()) → [SendOutcome.FAILED_NO_ACTION] (nothing is sent).
  * - The handle is removed BEFORE the attempt, so a handle can never be used twice.
  * - `PendingIntent.send()` returned → [SendOutcome.ATTEMPTED]. Android gives no delivery
  *   confirmation; WhatsApp may still drop the message (e.g. no network). Never "delivered".
@@ -37,6 +38,8 @@ class RemoteInputReplySender(
     private val context: Context,
     private val registry: ReplyActionRegistry,
     private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+    /** Keys of currently active notifications; null when the listener is not connected. */
+    private val activeNotificationKeys: () -> Set<String>? = ListenerState::activeNotificationKeys,
 ) : ReplySender {
 
     override suspend fun send(conversationKey: ConversationKey, text: String): SendOutcome {
@@ -47,6 +50,13 @@ class RemoteInputReplySender(
         }
         val handle = registry.take(conversationKey)
         if (handle == null) {
+            SafeLog.w(SafeLog.Event.SEND_NO_ACTION)
+            return SendOutcome.FAILED_NO_ACTION
+        }
+        // Only reply while WhatsApp's notification is still showing: a withdrawn notification means
+        // the chat was handled elsewhere (or the handle is stale) — never act on it.
+        val active = activeNotificationKeys()
+        if (active == null || handle.notificationKey !in active) {
             SafeLog.w(SafeLog.Event.SEND_NO_ACTION)
             return SendOutcome.FAILED_NO_ACTION
         }

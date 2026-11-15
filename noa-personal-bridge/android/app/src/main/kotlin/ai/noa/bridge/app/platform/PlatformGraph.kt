@@ -3,6 +3,8 @@ package ai.noa.bridge.app.platform
 import ai.noa.bridge.app.BuildConfig
 import ai.noa.bridge.core.BridgeCoordinator
 import ai.noa.bridge.core.Clock
+import ai.noa.bridge.core.ConversationFilter
+import ai.noa.bridge.core.FilterResult
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 
@@ -11,6 +13,7 @@ internal class PlatformGraph(context: Context, scope: CoroutineScope) {
     private val appContext = context.applicationContext
 
     val registry = ReplyActionRegistry()
+    private val filter = ConversationFilter.create()
     val notifier = DraftNotifier(appContext)
     private val secureStore = SecureStore(appContext, KeystoreCipher())
     private val settingsStore = SettingsStore(appContext)
@@ -43,5 +46,6 @@ internal class PlatformGraph(context: Context, scope: CoroutineScope) {
         registry = registry,
         onNotification = { controller.coordinator.onNotification(it) },
         onConversationRemoved = { controller.coordinator.onNotificationRemoved(it) },
+        wouldAccept = { snapshot -> filter.evaluate(snapshot, controller.settings.value) is FilterResult.Accepted },
     )
 }

@@ -20,6 +20,11 @@ class ReplyAction(
 class MappedNotification(
     val snapshot: NotificationSnapshot,
     val replyAction: ReplyAction?,
+    /**
+     * Android 15+ sensitive-content redaction (or a content-hiding placeholder) detected: the
+     * notification may still carry a Reply action, but we must never reply through it.
+     */
+    val isLikelyRedacted: Boolean = false,
 )
 
 /**
@@ -91,8 +96,29 @@ object NotificationMapper {
             isOngoing = flags and (Notification.FLAG_ONGOING_EVENT or Notification.FLAG_FOREGROUND_SERVICE) != 0,
             category = notification.category,
         )
-        return MappedNotification(snapshot, replyAction)
+        val text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()
+        return MappedNotification(snapshot, replyAction, isLikelyRedacted(style != null, title, text))
     }
+
+    /**
+     * Redacted WhatsApp notifications (Android 15+ "sensitive notification" redaction for
+     * untrusted listeners) have no MessagingStyle, the app label as title and a system
+     * placeholder text. Conservative: a style-less notification titled "WhatsApp" counts as redacted.
+     */
+    fun isLikelyRedacted(hasMessagingStyle: Boolean, title: String?, text: String?): Boolean {
+        val normalizedText = text?.trim().orEmpty()
+        if (REDACTION_TEXT_PATTERNS.any { it.containsMatchIn(normalizedText) }) return true
+        if (hasMessagingStyle) return false
+        return title?.trim()?.equals(WHATSAPP_LABEL, ignoreCase = true) == true
+    }
+
+    private const val WHATSAPP_LABEL = "WhatsApp"
+    private val REDACTION_TEXT_PATTERNS = listOf(
+        Regex("sensitive notification content hidden", RegexOption.IGNORE_CASE),
+        Regex("content hidden", RegexOption.IGNORE_CASE),
+        Regex("רגיש.*מוסתר|מוסתר.*רגיש"),
+        Regex("התוכן (הוסתר|מוסתר)"),
+    )
 
     private fun styleMessages(style: NotificationCompat.MessagingStyle): List<SnapshotMessage> {
         val user = style.user

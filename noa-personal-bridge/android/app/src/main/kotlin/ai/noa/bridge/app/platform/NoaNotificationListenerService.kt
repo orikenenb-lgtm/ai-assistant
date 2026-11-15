@@ -1,6 +1,7 @@
 package ai.noa.bridge.app.platform
 
 import ai.noa.bridge.app.BridgeApplication
+import android.content.ComponentName
 import android.os.Process
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -20,23 +21,36 @@ class NoaNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        ListenerState.setConnected(true)
+        ListenerState.attach(this)
         SafeLog.i(SafeLog.Event.LISTENER_CONNECTED)
-        // Re-register reply handles for chats already showing (handles are lost on process death).
+        // Rebuild reply handles for chats already showing (handles are lost on process death).
         // This does NOT create drafts for old messages.
         try {
-            activeNotifications.orEmpty()
+            val active = activeNotifications.orEmpty()
                 .filter { it != null && ingestor.accepts(it.packageName, it.user == Process.myUserHandle()) }
-                .forEach { ingestor.registerReplyAction(NotificationMapper.map(it)) }
+                .map { NotificationMapper.map(it) }
+            ingestor.rebuildFrom(active)
         } catch (e: RuntimeException) {
             SafeLog.e(SafeLog.Event.NOTIFICATION_MAP_FAILED, e)
         }
     }
 
+    override fun onDestroy() {
+        ListenerState.detach()
+        super.onDestroy()
+    }
+
     override fun onListenerDisconnected() {
-        ListenerState.setConnected(false)
+        ListenerState.detach()
         SafeLog.i(SafeLog.Event.LISTENER_DISCONNECTED)
         super.onListenerDisconnected()
+        // Ask the system to bind us again (public API; it only takes effect while access is granted).
+        try {
+            requestRebind(ComponentName(this, NoaNotificationListenerService::class.java))
+            SafeLog.i(SafeLog.Event.LISTENER_REBIND_REQUESTED)
+        } catch (e: RuntimeException) {
+            SafeLog.e(SafeLog.Event.LISTENER_DISCONNECTED, e)
+        }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?, rankingMap: RankingMap?) {
