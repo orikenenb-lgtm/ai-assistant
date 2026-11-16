@@ -1,6 +1,7 @@
 package ai.noa.bridge.app.platform
 
 import ai.noa.bridge.app.MainActivity
+import ai.noa.bridge.app.OpenInWhatsAppActivity
 import ai.noa.bridge.app.R
 import ai.noa.bridge.core.Draft
 import ai.noa.bridge.core.DraftState
@@ -23,8 +24,14 @@ import androidx.core.content.ContextCompat
  *   "טיוטה מוכנה לאישור" / "יש טיוטה חדשה שממתינה לאישורך". One UI mirrors our notification to the
  *   lock screen ("show content"), a Galaxy Watch and Link to Windows, so it carries no sender name
  *   and no message text.
- * - Tap opens MainActivity (immutable PendingIntent) with [EXTRA_DRAFT_ID].
- * - There are deliberately NO actions: approval and sending happen only inside the app.
+ * - Tap (D-020) goes straight to WhatsApp with the draft pre-typed: an immutable
+ *   PendingIntent.getActivity to the translucent, non-exported [OpenInWhatsAppActivity] with
+ *   [EXTRA_DRAFT_ID] (no receiver/service trampoline, which Android 12+ blocks). The activity reads
+ *   the draft's CURRENT stored text by id at tap time, so an edited draft never opens stale text and
+ *   the notification does not need re-posting when the revision changes. The user still presses
+ *   WhatsApp's own Send button.
+ * - One action, "פתח באפליקציה", opens MainActivity at the draft (immutable PendingIntent). There is
+ *   deliberately no approve / send action: our own sending happens only inside the app.
  * - Skips silently when POST_NOTIFICATIONS is not granted (Android 13+) or notifications are off.
  * - Never touches other apps' notifications; [cancel] only cancels our own.
  */
@@ -98,7 +105,23 @@ class DraftNotifier(private val context: Context) {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setOnlyAlertOnce(true)
             .setAutoCancel(true)
-            .setContentIntent(openAppIntent(draftId))
+            .setContentIntent(openInWhatsAppIntent(draftId))
+            .addAction(
+                NotificationCompat.Action.Builder(R.drawable.ic_stat_noa, ACTION_OPEN_IN_APP, openAppIntent(draftId)).build(),
+            )
+
+    /** Tap: straight to WhatsApp through [OpenInWhatsAppActivity] (an activity, not a trampoline). */
+    private fun openInWhatsAppIntent(draftId: String): PendingIntent {
+        val intent = Intent(context, OpenInWhatsAppActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .putExtra(EXTRA_DRAFT_ID, draftId)
+        return PendingIntent.getActivity(
+            context,
+            notificationId(draftId),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+    }
 
     private fun openAppIntent(draftId: String): PendingIntent {
         val intent = Intent(context, MainActivity::class.java)
@@ -132,5 +155,6 @@ class DraftNotifier(private val context: Context) {
         private const val CHANNEL_DESCRIPTION = "התראה כשטיוטת תשובה מוכנה לאישור באפליקציה"
         const val TITLE = "טיוטה מוכנה לאישור"
         const val TEXT = "יש טיוטה חדשה שממתינה לאישורך"
+        const val ACTION_OPEN_IN_APP = "פתח באפליקציה"
     }
 }

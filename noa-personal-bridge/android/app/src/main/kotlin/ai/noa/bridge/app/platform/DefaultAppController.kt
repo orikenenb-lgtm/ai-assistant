@@ -3,6 +3,7 @@ package ai.noa.bridge.app.platform
 import ai.noa.bridge.app.AppController
 import ai.noa.bridge.app.BridgeStatus
 import ai.noa.bridge.app.ExclusionEntry
+import ai.noa.bridge.app.OpenInWhatsAppResult
 import ai.noa.bridge.app.PairingResult
 import ai.noa.bridge.app.ServerRevokeResult
 import ai.noa.bridge.core.Approval
@@ -74,6 +75,7 @@ class DefaultAppController(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val isDeviceLocked: () -> Boolean = defaultLockCheck(context),
     private val deviceName: String = Build.MODEL ?: "Android",
+    private val whatsAppOpener: WhatsAppOpener = WhatsAppOpener(context, registry),
 ) : AppController {
 
     @Volatile
@@ -269,6 +271,32 @@ class DefaultAppController(
         return coordinator.sendApproved(approval)
     }
 
+    /**
+     * D-020: opens the chat in WhatsApp with the draft's STORED text (read now, by id, so it can
+     * never be stale). Not a send: no approval, no state change, independent of the experimental
+     * toggle. When the user sends in WhatsApp, the existing FROM_SELF / notification-removed logic
+     * expires the draft.
+     */
+    override fun openInWhatsApp(draftId: String): OpenInWhatsAppResult {
+        if (_settings.value.emergencyStopped) {
+            SafeLog.w(SafeLog.Event.OPEN_IN_WHATSAPP_REFUSED)
+            return OpenInWhatsAppResult.EMERGENCY_STOPPED
+        }
+        val draft = coordinator.drafts.value.firstOrNull { it.id == draftId }
+        val text = draft?.finalText
+        if (draft == null || draft.state !in OPEN_IN_WHATSAPP_STATES || text.isNullOrBlank()) {
+            SafeLog.w(SafeLog.Event.OPEN_IN_WHATSAPP_REFUSED)
+            return OpenInWhatsAppResult.NOT_AVAILABLE
+        }
+        return try {
+            whatsAppOpener.open(draft.conversationKey, text)
+        } catch (e: RuntimeException) {
+            // The opener handles failed starts itself; this only keeps an unexpected error from crashing the caller.
+            SafeLog.e(SafeLog.Event.OPEN_IN_WHATSAPP_FAILED, e)
+            OpenInWhatsAppResult.CHAT_NOT_FOUND_TEXT_COPIED
+        }
+    }
+
     // ---- backend --------------------------------------------------------------------------
 
     override suspend fun pair(baseUrl: String, pairingCode: String, spkiPin: String?): PairingResult {
@@ -446,6 +474,9 @@ class DefaultAppController(
         /** The command name is an LTR isolate so it renders correctly inside the Hebrew sentence. */
         const val MSG_REVOKE_NOT_CONFIRMED =
             "הניתוק המקומי בוצע, אבל השרת לא אישר את הביטול — בטל את המכשיר בשרת עם \u2066revoke-device\u2069"
+
+        /** The approvable states: only these drafts can be opened in WhatsApp (D-020). */
+        val OPEN_IN_WHATSAPP_STATES: Set<DraftState> = setOf(DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
 
         /** States in which cancel() is pointless or not allowed (terminal, or a send in flight). */
         private val NOT_CANCELLABLE = setOf(

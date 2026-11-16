@@ -11,6 +11,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
 
+    <!-- D-020: package visibility for WhatsApp only, so "open in WhatsApp" (click-to-chat link
+         restricted to com.whatsapp) can be started. Not a permission; no other package is visible. -->
+    <queries>
+        <package android:name="com.whatsapp" />
+    </queries>
+
     <application
         android:name=".BridgeApplication"
         android:allowBackup="false"
@@ -33,6 +39,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- D-020: target of our "draft ready" notification. Not exported, no UI (translucent), its
+             own task, gone from recents and history: it opens the chat in WhatsApp with the draft's
+             CURRENT stored text and finishes (or opens MainActivity at the draft on failure). -->
+        <activity
+            android:name=".OpenInWhatsAppActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity="" />
 
         <!-- Read-only WhatsApp notification listener. Bound only by the system
              (BIND_NOTIFICATION_LISTENER_SERVICE) after the user grants Notification Access. -->

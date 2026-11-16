@@ -2,6 +2,7 @@ package ai.noa.bridge.app.ui.drafts
 
 import ai.noa.bridge.app.AppController
 import ai.noa.bridge.app.BridgeStatus
+import ai.noa.bridge.app.OpenInWhatsAppResult
 import ai.noa.bridge.app.R
 import ai.noa.bridge.app.ui.components.ApprovableStates
 import ai.noa.bridge.app.ui.components.BannerKind
@@ -72,12 +73,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ai.noa.bridge.app.ui.theme.NoaStatus
@@ -215,6 +218,8 @@ private fun DraftDetailContent(
     val sendingPossible = settings.sendingEnabled && !status.deviceLocked
     val approveEnabled = editable && !inFlight && text.isNotBlank() && !overLimit &&
         !(settings.sendingEnabled && status.deviceLocked)
+    /** Opening in WhatsApp / copying is not our send, so the lock state does not matter. */
+    val openOrCopyEnabled = editable && !inFlight && text.isNotBlank() && !overLimit
 
     /**
      * Saves the local edit through the coordinator (the single trimming point) and returns the live
@@ -281,27 +286,50 @@ private fun DraftDetailContent(
     }
     val cancelEnabled = draft.state in CancellableStates && !inFlight && !alreadyAttempted
 
-    /** UX-07: with sending off the primary action copies the STORED text — nothing is "approved". */
-    fun copyStoredText() {
+    /**
+     * Saves a local edit first and returns the live draft whose STORED text an action may use, or
+     * null (with [failureRes] shown) when there is nothing usable.
+     */
+    fun storedDraftForAction(failureRes: Int): Draft? {
         errorRes = 0
         infoRes = 0
         draftChanged = false
         if (text.isBlank()) {
             errorRes = R.string.detail_empty_text_error
-            return
+            return null
         }
         val live = if (text != (controller.liveDraft(draft.id)?.finalText ?: serverText)) {
-            saveEdit() ?: return
+            saveEdit() ?: return null
         } else {
             controller.liveDraft(draft.id)
         }
-        val stored = live?.finalText
-        if (live == null || live.state !in ConfirmableStates || stored.isNullOrBlank()) {
-            errorRes = R.string.detail_approve_failed
-            return
+        if (live == null || live.state !in ConfirmableStates || live.finalText.isNullOrBlank()) {
+            errorRes = failureRes
+            return null
         }
-        copyToClipboard(context, stored)
+        return live
+    }
+
+    /** UX-07: copies the STORED text — nothing is "approved". */
+    fun copyStoredText() {
+        val live = storedDraftForAction(R.string.detail_approve_failed) ?: return
+        copyToClipboard(context, live.finalText!!)
         infoRes = R.string.detail_copied
+    }
+
+    /**
+     * D-020: opens the chat in WhatsApp with the STORED text pre-typed. Not an approval and not our
+     * send: the user presses WhatsApp's own Send button. Works with the experimental sending off.
+     */
+    fun openStoredTextInWhatsApp() {
+        val live = storedDraftForAction(R.string.open_whatsapp_not_available) ?: return
+        when (controller.openInWhatsApp(live.id)) {
+            OpenInWhatsAppResult.OPENED_WITH_TEXT -> infoRes = R.string.open_whatsapp_opened
+            OpenInWhatsAppResult.OPENED_CHAT_TEXT_COPIED -> infoRes = R.string.open_whatsapp_copied_paste
+            OpenInWhatsAppResult.CHAT_NOT_FOUND_TEXT_COPIED -> errorRes = R.string.open_whatsapp_not_found_copied
+            OpenInWhatsAppResult.NOT_AVAILABLE -> errorRes = R.string.open_whatsapp_not_available
+            OpenInWhatsAppResult.EMERGENCY_STOPPED -> errorRes = R.string.open_whatsapp_emergency_stopped
+        }
     }
     val contentScrubbed = draft.state in DraftStateMachine.terminalStates &&
         draft.sourceMessages.isEmpty() && draft.finalText == null
@@ -422,21 +450,37 @@ private fun DraftDetailContent(
         }
 
         // ---- Actions ----
+        // D-020: with sending off (default) the primary action opens the chat in WhatsApp with the
+        // text pre-typed (the user sends there); with experimental sending on it is a secondary one.
         if (!sendWasAttempted) {
-            Button(
-                onClick = { if (settings.sendingEnabled) openApproveDialog() else copyStoredText() },
-                enabled = approveEnabled,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("approveButton"),
-                shape = MaterialTheme.shapes.medium,
-            ) {
-                if (settings.sendingEnabled) {
+            if (settings.sendingEnabled) {
+                Button(
+                    onClick = { openApproveDialog() },
+                    enabled = approveEnabled,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("approveButton"),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
                     Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.detail_approve_send), style = MaterialTheme.typography.titleMedium)
                 }
-                Text(
-                    stringResource(if (settings.sendingEnabled) R.string.detail_approve_send else R.string.detail_copy_text),
-                    style = MaterialTheme.typography.titleMedium,
-                )
+                OutlinedButton(
+                    onClick = { openStoredTextInWhatsApp() },
+                    enabled = openOrCopyEnabled,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).testTag("openWhatsAppButton"),
+                ) { OpenInWhatsAppLabel() }
+            } else {
+                Button(
+                    onClick = { openStoredTextInWhatsApp() },
+                    enabled = openOrCopyEnabled,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("openWhatsAppButton"),
+                    shape = MaterialTheme.shapes.medium,
+                ) { OpenInWhatsAppLabel(MaterialTheme.typography.titleMedium) }
+                OutlinedButton(
+                    onClick = { copyStoredText() },
+                    enabled = openOrCopyEnabled,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).testTag("copyTextButton"),
+                ) { Text(stringResource(R.string.detail_copy_text)) }
             }
         }
         if (alreadyAttempted) {
@@ -537,6 +581,13 @@ private fun DraftDetailContent(
             },
         )
     }
+}
+
+@Composable
+private fun OpenInWhatsAppLabel(style: TextStyle = MaterialTheme.typography.labelLarge) {
+    Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.size(20.dp))
+    Spacer(Modifier.width(8.dp))
+    Text(stringResource(R.string.detail_open_whatsapp), style = style)
 }
 
 @Composable

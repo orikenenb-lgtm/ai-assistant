@@ -3,6 +3,7 @@ package ai.noa.bridge.app.ui.preview
 import ai.noa.bridge.app.AppController
 import ai.noa.bridge.app.BridgeStatus
 import ai.noa.bridge.app.ExclusionEntry
+import ai.noa.bridge.app.OpenInWhatsAppResult
 import ai.noa.bridge.app.PairingResult
 import ai.noa.bridge.app.ServerRevokeResult
 import ai.noa.bridge.core.Approval
@@ -43,6 +44,8 @@ class FakeAppController(
     var rejectApprovals: Boolean = false,
     /** What [disconnect] / [wipeLocalData] report while paired. */
     var revokeResult: ServerRevokeResult = ServerRevokeResult.CONFIRMED,
+    /** What [openInWhatsApp] reports when the draft may be opened (never opens anything). */
+    var openInWhatsAppResult: OpenInWhatsAppResult = OpenInWhatsAppResult.OPENED_WITH_TEXT,
 ) : AppController {
 
     private val _status = MutableStateFlow(initialStatus)
@@ -68,6 +71,8 @@ class FakeAppController(
     val cancelCalls = mutableListOf<String>()
     val approveCalls = mutableListOf<Pair<String, String>>()
     val sendCalls = mutableListOf<Approval>()
+    /** Draft id and the STORED text at the time of every [openInWhatsApp] call. */
+    val openInWhatsAppCalls = mutableListOf<Pair<String, String?>>()
     val pairCalls = mutableListOf<Pair<String, String>>()
     /** spkiPin argument of every [pair] call (null = none entered). */
     val pinCalls = mutableListOf<String?>()
@@ -192,6 +197,18 @@ class FakeAppController(
         return result
     }
 
+    /** Mirrors the platform rules (D-020) without opening anything; never changes the draft. */
+    override fun openInWhatsApp(draftId: String): OpenInWhatsAppResult {
+        record("openInWhatsApp")
+        val draft = _drafts.value.firstOrNull { it.id == draftId }
+        openInWhatsAppCalls += draftId to draft?.finalText
+        if (_settings.value.emergencyStopped) return OpenInWhatsAppResult.EMERGENCY_STOPPED
+        if (draft == null || draft.state !in OPEN_IN_WHATSAPP_STATES || draft.finalText.isNullOrBlank()) {
+            return OpenInWhatsAppResult.NOT_AVAILABLE
+        }
+        return openInWhatsAppResult
+    }
+
     override suspend fun pair(baseUrl: String, pairingCode: String, spkiPin: String?): PairingResult {
         record("pair"); pairCalls += baseUrl to pairingCode; pinCalls += spkiPin
         if (pairDelayMillis > 0) delay(pairDelayMillis)
@@ -235,6 +252,7 @@ class FakeAppController(
         val EDITABLE_STATES = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
         /** Like the core, an APPROVED draft can be approved again (its old approval is replaced). */
         val APPROVABLE_STATES = setOf(DraftState.DRAFT_READY, DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
+        val OPEN_IN_WHATSAPP_STATES = setOf(DraftState.AWAITING_APPROVAL, DraftState.APPROVED)
         const val MAX_TEXT_LENGTH = 4_000
 
         fun sampleKey(n: Int): ConversationKey = ConversationKey("%064x".format(n.toLong() + 0xA11CEL))

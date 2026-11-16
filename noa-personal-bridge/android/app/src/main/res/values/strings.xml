@@ -139,13 +139,20 @@
     <string name="detail_edit_saved">העריכה נשמרה</string>
     <string name="detail_approve_send">אשר ושלח</string>
     <string name="detail_copy_text">העתק טקסט</string>
+    <!-- D-020: open the chat in WhatsApp with the draft pre-typed; the user sends with WhatsApp's own button. -->
+    <string name="detail_open_whatsapp">פתח ב-WhatsApp</string>
+    <string name="open_whatsapp_opened">WhatsApp נפתח עם הנוסח. השליחה נעשית רק בכפתור השליחה של WhatsApp.</string>
+    <string name="open_whatsapp_copied_paste">הטקסט הועתק — הדבק בשיחה</string>
+    <string name="open_whatsapp_not_found_copied">לא נמצאה השיחה ב-WhatsApp — הטקסט הועתק</string>
+    <string name="open_whatsapp_not_available">אי אפשר לפתוח את הטיוטה הזו ב-WhatsApp כרגע. ייתכן שהגיעה הודעה חדשה או שהטיוטה פגה.</string>
+    <string name="open_whatsapp_emergency_stopped">עצירת החירום פעילה — שום דבר לא נפתח.</string>
     <string name="detail_cancel_draft">בטל טיוטה</string>
     <string name="detail_exclude">אל תציע לשיחה הזו</string>
     <string name="detail_safety_title">שים/י לב</string>
     <string name="detail_safety_injection">ההודעה מנסה לתת הוראות למערכת — נועה התייחסה אליה כטקסט בלבד.</string>
     <string name="detail_safety_sensitive">ההודעה מבקשת מידע רגיש (קודים, סיסמאות, כסף או פרטים אישיים). כדאי לבדוק היטב לפני שעונים.</string>
     <string name="detail_locked_notice">המכשיר נעול. אפשר לשלוח רק כשהמכשיר פתוח.</string>
-    <string name="detail_sending_off_notice">השליחה מהאפליקציה כבויה. אפשר להעתיק את הנוסח ולהדביק בעצמך ב-WhatsApp.</string>
+    <string name="detail_sending_off_notice">השליחה מהאפליקציה כבויה. אפשר לפתוח את השיחה ב-WhatsApp עם הנוסח מוכן ולשלוח שם בכפתור השליחה של WhatsApp, או להעתיק את הנוסח.</string>
     <string name="detail_already_attempted">כבר בוצע ניסיון שליחה לטיוטה הזו. כדי למנוע שליחה כפולה אין אפשרות לשלוח שוב.</string>
     <string name="detail_empty_text_error">אי אפשר לאשר תשובה ריקה.</string>
     <string name="detail_approve_failed">לא ניתן לאשר את הטיוטה כרגע. ייתכן שהגיעה הודעה חדשה, שהטיוטה פגה או שהופעלה עצירת חירום.</string>
