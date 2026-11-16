@@ -77,7 +77,9 @@ def _read_pepper(path: Path) -> bytes:
     with open(path, encoding="ascii") as fh:
         value = fh.read().strip()
     mode = stat.S_IMODE(os.stat(path).st_mode)
-    if mode & 0o077:
+    # POSIX permission bits are meaningless on Windows (os.stat reports 0o666 for any writable
+    # file; access is governed by ACLs on the user profile), so only warn on POSIX systems.
+    if os.name == "posix" and mode & 0o077:
         logger.warning("pepper file is readable by group/others; chmod 600 it", extra={"event": "pepper_perms"})
     if len(value) < 32:
         raise ValueError(f"pepper file {path} is too short or empty")
