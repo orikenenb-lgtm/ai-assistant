@@ -202,4 +202,76 @@ class DraftDetailTest {
         rule.onNodeWithTag("statusDetail").assertIsDisplayed()
         rule.onNodeWithTag("approveButton").performScrollTo().assertIsNotEnabled()
     }
+
+    // ------------------------------------------------------------------ D-020 open in WhatsApp
+
+    @Test
+    fun sendingOff_primaryOpensWhatsAppWithStoredText_secondaryCopies_noApproval() {
+        val fake = FakeAppController(initialSettings = sendingOff)
+        setDetail(fake)
+        rule.onNodeWithTag("openWhatsAppButton").performScrollTo()
+            .assertTextEquals(str(R.string.detail_open_whatsapp)).assertIsEnabled().performClick()
+        rule.waitForIdle()
+        assertEquals(listOf("draft-1" to draft1Text), fake.openInWhatsAppCalls)
+        assertTrue(fake.approveCalls.isEmpty())
+        assertTrue(fake.sendCalls.isEmpty())
+        assertEquals(DraftState.AWAITING_APPROVAL, fake.drafts.value.first { it.id == "draft-1" }.state)
+        rule.onNodeWithText(str(R.string.open_whatsapp_opened)).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("copyTextButton").performScrollTo().assertIsEnabled()
+    }
+
+    @Test
+    fun openInWhatsApp_savesALocalEditFirstAndOpensTheStoredText() {
+        val fake = FakeAppController(initialSettings = sendingOff)
+        setDetail(fake)
+        rule.onNodeWithTag("replyField").performTextReplacement("  נוסח ערוך ✨  ")
+        rule.onNodeWithTag("openWhatsAppButton").performScrollTo().performClick()
+        rule.waitForIdle()
+        assertEquals(listOf("draft-1" to "נוסח ערוך ✨"), fake.openInWhatsAppCalls)
+    }
+
+    @Test
+    fun openInWhatsApp_fallbackMessagesAreShown() {
+        val fake = FakeAppController(
+            initialSettings = sendingOff,
+            openInWhatsAppResult = ai.noa.bridge.app.OpenInWhatsAppResult.OPENED_CHAT_TEXT_COPIED,
+        )
+        setDetail(fake)
+        rule.onNodeWithTag("openWhatsAppButton").performScrollTo().performClick()
+        rule.onNodeWithText("הטקסט הועתק — הדבק בשיחה").performScrollTo().assertIsDisplayed()
+
+        fake.openInWhatsAppResult = ai.noa.bridge.app.OpenInWhatsAppResult.CHAT_NOT_FOUND_TEXT_COPIED
+        rule.onNodeWithTag("openWhatsAppButton").performScrollTo().performClick()
+        rule.onNodeWithText("לא נמצאה השיחה ב-WhatsApp — הטקסט הועתק").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun sendingOn_approveStaysPrimary_openInWhatsAppIsSecondary_evenWhenLocked() {
+        val fake = FakeAppController(
+            initialStatus = BridgeStatus(notificationAccessGranted = true, listenerConnected = true, paired = true, deviceLocked = true),
+            initialSettings = sendingOn,
+        )
+        setDetail(fake)
+        rule.onNodeWithTag("approveButton").performScrollTo().assertTextEquals(str(R.string.detail_approve_send)).assertIsNotEnabled()
+        rule.onNodeWithTag("copyTextButton").assertDoesNotExist()
+        rule.onNodeWithTag("openWhatsAppButton").performScrollTo().assertIsEnabled().performClick()
+        rule.waitForIdle()
+        assertEquals(listOf("draft-1" to draft1Text), fake.openInWhatsAppCalls)
+        assertTrue(fake.approveCalls.isEmpty())
+    }
+
+    @Test
+    fun openInWhatsApp_notOfferedForFinishedDrafts() {
+        val fake = FakeAppController(initialSettings = sendingOff)
+        setDetail(fake, id = "draft-10") // FAILED
+        rule.onNodeWithTag("openWhatsAppButton").performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag("copyTextButton").performScrollTo().assertIsNotEnabled()
+    }
+
+    @Test
+    fun openInWhatsApp_refusedWhileEmergencyStopped() {
+        val fake = FakeAppController(initialSettings = sendingOff.copy(emergencyStopped = true))
+        setDetail(fake)
+        rule.onNodeWithTag("openWhatsAppButton").performScrollTo().assertIsNotEnabled()
+    }
 }
