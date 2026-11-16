@@ -37,6 +37,18 @@ interface AppController {
     suspend fun sendApproved(approval: Approval): DraftState
 
     /**
+     * D-020: opens the draft's chat INSIDE WhatsApp with the STORED text of the draft
+     * ([Draft.finalText]) pre-typed; the user sends it with WhatsApp's own send button. This is not
+     * our send: it works with the experimental sending toggle off and never changes the draft's
+     * state. Only for drafts in AWAITING_APPROVAL / APPROVED and never while emergency-stopped.
+     *
+     * Falls back to copying the text (marked sensitive) and opening the chat through WhatsApp's own
+     * notification, or only copying when the chat cannot be found. Call it from a foreground
+     * activity (it starts another app's activity).
+     */
+    fun openInWhatsApp(draftId: String): OpenInWhatsAppResult
+
+    /**
      * Pair with the bridge backend using a one-time code. [spkiPin] (optional, `sha256/<base64>` or
      * the bare base64) pins the server's public key for every later call; null/blank = system CAs.
      */
@@ -81,6 +93,24 @@ enum class ServerRevokeResult {
     NOT_CONFIRMED,
     /** There was no token to revoke. */
     NOT_PAIRED,
+}
+
+/** Outcome of [AppController.openInWhatsApp]. The UI shows the Hebrew text from strings.xml. */
+enum class OpenInWhatsAppResult {
+    /** WhatsApp opened on the chat with the text pre-typed (the user still presses Send there). */
+    OPENED_WITH_TEXT,
+    /** The text was copied and the chat was opened through WhatsApp's notification: "הטקסט הועתק — הדבק בשיחה". */
+    OPENED_CHAT_TEXT_COPIED,
+    /** The chat could not be opened; the text was copied: "לא נמצאה השיחה ב-WhatsApp — הטקסט הועתק". */
+    CHAT_NOT_FOUND_TEXT_COPIED,
+    /** Refused: the draft is gone, has no text, or is not waiting for approval. Nothing happened. */
+    NOT_AVAILABLE,
+    /** Refused: emergency stop is on. Nothing happened. */
+    EMERGENCY_STOPPED,
+    ;
+
+    /** True when nothing was opened (the caller should show the draft in the app instead). */
+    val isFailure: Boolean get() = this != OPENED_WITH_TEXT && this != OPENED_CHAT_TEXT_COPIED
 }
 
 sealed interface PairingResult {

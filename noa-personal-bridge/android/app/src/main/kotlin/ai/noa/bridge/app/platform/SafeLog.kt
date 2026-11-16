@@ -44,6 +44,12 @@ internal object SafeLog {
         NOTIFICATION_HIDDEN_HANDLE_REMOVED,
         LISTENER_SEEDED,
         OVERLAY_PROTECTION_UNAVAILABLE,
+        CHAT_TARGET_STORED,
+        OPEN_IN_WHATSAPP_WITH_TEXT,
+        OPEN_IN_WHATSAPP_CHAT_COPIED,
+        OPEN_IN_WHATSAPP_NOT_FOUND,
+        OPEN_IN_WHATSAPP_REFUSED,
+        OPEN_IN_WHATSAPP_FAILED,
     }
 
     fun i(event: Event, code: Int? = null) {

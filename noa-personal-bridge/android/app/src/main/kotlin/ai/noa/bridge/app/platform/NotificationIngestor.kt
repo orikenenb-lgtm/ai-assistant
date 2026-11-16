@@ -51,7 +51,9 @@ class NotificationIngestor(
             if (removed.isNotEmpty()) SafeLog.i(SafeLog.Event.NOTIFICATION_HIDDEN_HANDLE_REMOVED, removed.size)
             return
         }
-        val action = mapped.replyAction ?: return
+        val action = mapped.replyAction
+        val hasChatTarget = mapped.contentIntent != null || mapped.chatPhoneDigits != null
+        if (action == null && !hasChatTarget) return
         // Cheap local guard; the core filter is the authority on private vs. group.
         if (snapshot.isGroupSummary || snapshot.isOngoing || snapshot.isGroupConversationFlag == true) return
         if (!wouldAccept(snapshot)) return
@@ -60,16 +62,32 @@ class NotificationIngestor(
             SafeLog.i(SafeLog.Event.NOTIFICATION_NO_KEY)
             return
         }
-        registry.put(
-            key,
-            ReplyHandle(
-                pendingIntent = action.pendingIntent,
-                remoteInputs = action.remoteInputs,
-                notificationKey = snapshot.notificationKey,
-                postTimeMillis = snapshot.postTimeMillis,
-            ),
-        )
-        SafeLog.i(SafeLog.Event.REPLY_HANDLE_STORED, registry.size)
+        if (action != null) {
+            registry.put(
+                key,
+                ReplyHandle(
+                    pendingIntent = action.pendingIntent,
+                    remoteInputs = action.remoteInputs,
+                    notificationKey = snapshot.notificationKey,
+                    postTimeMillis = snapshot.postTimeMillis,
+                ),
+            )
+            SafeLog.i(SafeLog.Event.REPLY_HANDLE_STORED, registry.size)
+        }
+        // D-020: how to open this chat in WhatsApp itself. Memory only; the phone digits are never
+        // logged (SafeLog takes no strings), persisted or sent to the backend.
+        if (hasChatTarget) {
+            registry.putChatTarget(
+                key,
+                ChatTarget(
+                    phoneDigits = mapped.chatPhoneDigits,
+                    contentIntent = mapped.contentIntent,
+                    notificationKey = snapshot.notificationKey,
+                    postTimeMillis = snapshot.postTimeMillis,
+                ),
+            )
+            SafeLog.i(SafeLog.Event.CHAT_TARGET_STORED, registry.chatTargetCount)
+        }
     }
 
     /**

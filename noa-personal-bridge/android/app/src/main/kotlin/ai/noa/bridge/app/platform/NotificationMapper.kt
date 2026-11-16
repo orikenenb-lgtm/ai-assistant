@@ -26,7 +26,20 @@ class MappedNotification(
      * notification may still carry a Reply action, but we must never reply through it.
      */
     val isLikelyRedacted: Boolean = false,
-)
+    /**
+     * The notification's contentIntent (WhatsApp opens this chat with it). Memory only (D-020):
+     * kept in [ReplyActionRegistry] as a [ChatTarget], never persisted, logged or sent anywhere.
+     */
+    val contentIntent: PendingIntent? = null,
+    /**
+     * The chat's phone number (E.164 digits, no '+'), only when the shortcutId/tag is a
+     * `<digits>@s.whatsapp.net` JID ([WhatsAppChatIds]). Memory only (D-020), like [contentIntent].
+     */
+    val chatPhoneDigits: String? = null,
+) {
+    /** Never prints the phone number or the PendingIntent (crash reports, debugger, string templates). */
+    override fun toString(): String = "MappedNotification(hasReply=${replyAction != null}, redacted=$isLikelyRedacted)"
+}
 
 /**
  * StatusBarNotification → core [NotificationSnapshot]. Pure read-only: it never modifies,
@@ -98,7 +111,13 @@ object NotificationMapper {
             category = notification.category,
         )
         val text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()
-        return MappedNotification(snapshot, replyAction, isLikelyRedacted(snapshot, text))
+        return MappedNotification(
+            snapshot = snapshot,
+            replyAction = replyAction,
+            isLikelyRedacted = isLikelyRedacted(snapshot, text),
+            contentIntent = notification.contentIntent,
+            chatPhoneDigits = WhatsAppChatIds.phoneDigits(snapshot.shortcutId, snapshot.tag),
+        )
     }
 
     /**
