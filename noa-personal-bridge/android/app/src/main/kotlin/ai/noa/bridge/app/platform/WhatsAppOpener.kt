@@ -10,7 +10,7 @@ import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -100,7 +100,7 @@ class WhatsAppOpener(
          */
         fun buildOpenIntent(phoneDigits: String, text: String): Intent? {
             if (phoneDigits.isEmpty() || !phoneDigits.all { it in '0'..'9' }) return null
-            val uri = Uri.parse(CLICK_TO_CHAT).buildUpon()
+            val uri = CLICK_TO_CHAT.toUri().buildUpon()
                 .appendQueryParameter("phone", phoneDigits)
                 .appendQueryParameter("text", text)
                 .build()
