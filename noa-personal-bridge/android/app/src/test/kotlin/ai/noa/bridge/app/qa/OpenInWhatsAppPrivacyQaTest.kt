@@ -75,17 +75,13 @@ class OpenInWhatsAppPrivacyQaTest {
         ShadowLog.clear()
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
-                requests += buildString {
-                    append(request.requestLine).append('\n')
-                    append(request.headers.toString()).append('\n')
-                    append(request.body.readUtf8())
-                }
+                val body = request.body.readUtf8()
+                requests += "${request.requestLine}\n${request.headers}\n$body"
                 return if (request.path == "/health") {
                     MockResponse().setBody("""{"ok":true,"enabled":true}""")
                 } else {
-                    MockResponse().setBody(
-                        """{"request_id":"22222222-3333-4444-9555-666666666666","draft_text":"נתראה מחר","engine":"stub"}""",
-                    )
+                    val requestId = Regex("\"request_id\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                    MockResponse().setBody("""{"request_id":"$requestId","draft_text":"נתראה מחר","engine":"stub"}""")
                 }
             }
         }
