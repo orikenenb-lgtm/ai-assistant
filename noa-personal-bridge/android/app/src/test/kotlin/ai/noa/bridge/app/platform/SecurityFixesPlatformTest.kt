@@ -538,9 +538,9 @@ class SecurityFixesPlatformTest {
         val all = listOf(n.extras, n.publicVersion.extras).flatMap { e -> e.keySet().map { e.get(it)?.toString().orEmpty() } }
         assertTrue(all.none { "יוסי" in it })
         assertEquals("טיוטה מוכנה לאישור", n.extras.getCharSequence(android.app.Notification.EXTRA_TITLE).toString())
-        assertEquals("יש טיוטה חדשה שממתינה לאישורך", n.extras.getCharSequence(android.app.Notification.EXTRA_TEXT).toString())
+        assertEquals("לחץ כדי לפתוח ב-WhatsApp עם הטיוטה", n.extras.getCharSequence(android.app.Notification.EXTRA_TEXT).toString())
         assertEquals("טיוטה מוכנה לאישור", n.publicVersion.extras.getCharSequence(android.app.Notification.EXTRA_TITLE).toString())
-        assertEquals("יש טיוטה חדשה שממתינה לאישורך", n.publicVersion.extras.getCharSequence(android.app.Notification.EXTRA_TEXT).toString())
+        assertEquals("לחץ כדי לפתוח ב-WhatsApp עם הטיוטה", n.publicVersion.extras.getCharSequence(android.app.Notification.EXTRA_TEXT).toString())
     }
 
     // ================================================================== QA-03

@@ -41,10 +41,10 @@ class DraftNotifierTest {
         assertEquals(NotificationManager.IMPORTANCE_DEFAULT, nm.getNotificationChannel(DraftNotifier.CHANNEL_ID).importance)
         assertEquals("טיוטה מוכנה לאישור", n.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
         // S-L6: no sender name in either version (lock screen, watch, Link to Windows).
-        assertEquals("יש טיוטה חדשה שממתינה לאישורך", n.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+        assertEquals("לחץ כדי לפתוח ב-WhatsApp עם הטיוטה", n.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         assertEquals(Notification.VISIBILITY_PRIVATE, n.visibility)
         assertEquals("טיוטה מוכנה לאישור", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-        assertEquals("יש טיוטה חדשה שממתינה לאישורך", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+        assertEquals("לחץ כדי לפתוח ב-WhatsApp עם הטיוטה", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         // D-020: tap → straight to WhatsApp via our no-UI activity; one action opens the app.
         assertTrue(n.contentIntent.isImmutable)
         assertEquals(

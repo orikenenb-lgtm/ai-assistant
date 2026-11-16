@@ -21,7 +21,7 @@ import androidx.core.content.ContextCompat
  * Our OWN notification ("drafts" channel) telling the user a draft waits for approval.
  *
  * - No names anywhere (S-L6): both the private and the public (lock-screen) version read
- *   "טיוטה מוכנה לאישור" / "יש טיוטה חדשה שממתינה לאישורך". One UI mirrors our notification to the
+ *   "טיוטה מוכנה לאישור" / "לחץ כדי לפתוח ב-WhatsApp עם הטיוטה". One UI mirrors our notification to the
  *   lock screen ("show content"), a Galaxy Watch and Link to Windows, so it carries no sender name
  *   and no message text.
  * - Tap (D-020) goes straight to WhatsApp with the draft pre-typed: an immutable
@@ -154,7 +154,7 @@ class DraftNotifier(private val context: Context) {
         private const val CHANNEL_NAME = "טיוטות לאישור"
         private const val CHANNEL_DESCRIPTION = "התראה כשטיוטת תשובה מוכנה לאישור באפליקציה"
         const val TITLE = "טיוטה מוכנה לאישור"
-        const val TEXT = "יש טיוטה חדשה שממתינה לאישורך"
+        const val TEXT = "לחץ כדי לפתוח ב-WhatsApp עם הטיוטה"
         const val ACTION_OPEN_IN_APP = "פתח באפליקציה"
     }
 }

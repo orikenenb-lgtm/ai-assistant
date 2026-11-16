@@ -10,10 +10,10 @@ import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import androidx.core.net.toUri
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
+import androidx.core.net.toUri
 
 /**
  * D-020: opens a conversation INSIDE WhatsApp so the user sends the reply with WhatsApp's own send
