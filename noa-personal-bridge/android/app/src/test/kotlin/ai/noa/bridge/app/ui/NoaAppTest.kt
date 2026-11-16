@@ -67,7 +67,7 @@ class NoaAppTest {
         rule.onNodeWithTag("draftsList").assertIsDisplayed()
         rule.onNodeWithTag("draftsList").performScrollToKey("draft-1")
         rule.onNodeWithTag("draftCard_draft-1").performClick()
-        rule.onNodeWithTag("approveButton").assertExists()
+        rule.onNodeWithTag("openWhatsAppButton").assertExists() // sending off: D-020 primary action
         rule.onNodeWithTag("backButton").performClick()
         rule.onNodeWithTag("draftsList").assertIsDisplayed()
         rule.onNodeWithTag("tab_settings").performClick()
@@ -120,6 +120,6 @@ class NoaAppTest {
                 )
             }
         }
-        rule.onNodeWithTag("approveButton").assertExists()
+        rule.onNodeWithTag("openWhatsAppButton").assertExists() // sending off: D-020 primary action
     }
 }

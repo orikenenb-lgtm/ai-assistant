@@ -30,7 +30,7 @@ class DraftNotifierTest {
     }
 
     @Test
-    fun postsPrivateNotificationWithoutActionsAndWithdrawsIt() {
+    fun postsPrivateNotificationOpeningWhatsAppAndWithdrawsIt() {
         shadowOf(context).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
         notifier.onDrafts(listOf(draft("d1", key('a'), DraftState.DEBOUNCING)))
         assertTrue(shadowOf(nm).allNotifications.isEmpty())
@@ -45,11 +45,16 @@ class DraftNotifierTest {
         assertEquals(Notification.VISIBILITY_PRIVATE, n.visibility)
         assertEquals("טיוטה מוכנה לאישור", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
         assertEquals("יש טיוטה חדשה שממתינה לאישורך", n.publicVersion.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
-        assertTrue(n.actions.isNullOrEmpty())
+        // D-020: tap → straight to WhatsApp via our no-UI activity; one action opens the app.
         assertTrue(n.contentIntent.isImmutable)
         assertEquals(
-            "ai.noa.bridge.app.MainActivity",
+            "ai.noa.bridge.app.OpenInWhatsAppActivity",
             shadowOf(n.contentIntent).savedIntent.component!!.className,
+        )
+        assertEquals("פתח באפליקציה", n.actions.single().title.toString())
+        assertEquals(
+            "ai.noa.bridge.app.MainActivity",
+            shadowOf(n.actions.single().actionIntent).savedIntent.component!!.className,
         )
 
         // Same draft again (e.g. edited) → not re-announced.

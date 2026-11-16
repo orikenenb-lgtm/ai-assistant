@@ -256,7 +256,7 @@ class SecurityUxFixesUiTest {
     fun ux07_sendingOffButtonCopiesAndApprovesNothing() {
         val fake = FakeAppController(initialSettings = BridgeSettings(cloudConsentGiven = true))
         setDetail(fake)
-        rule.onNodeWithTag("approveButton").performScrollTo().assertTextEquals("העתק טקסט").performClick()
+        rule.onNodeWithTag("copyTextButton").performScrollTo().assertTextEquals("העתק טקסט").performClick()
         rule.waitForIdle()
         assertTrue(fake.approveCalls.isEmpty())
         assertTrue(fake.sendCalls.isEmpty())

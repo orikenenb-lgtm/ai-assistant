@@ -115,7 +115,9 @@ class DraftDetailTest {
         setDetail(fake)
 
         // UX-07: the button says what it does and does exactly that — no dialog, no "approve".
-        rule.onNodeWithTag("approveButton").performScrollTo().assertTextEquals(str(R.string.detail_copy_text)).performClick()
+        // D-020: with sending off the primary action is "open in WhatsApp"; copying is secondary.
+        rule.onNodeWithTag("approveButton").assertDoesNotExist()
+        rule.onNodeWithTag("copyTextButton").performScrollTo().assertTextEquals(str(R.string.detail_copy_text)).performClick()
         rule.waitForIdle()
         rule.onNodeWithTag("approveDialog").assertDoesNotExist()
 
