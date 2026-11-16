@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- The ONLY permissions this app requests. No contacts, SMS, phone, accessibility,
+         overlay, foreground service or battery-optimization exemption. Notification access is
+         granted by the user in system Settings (it is not a manifest permission).
+         HIDE_OVERLAY_WINDOWS is a normal (install-time) permission that lets MainActivity hide
+         other apps' overlays while it is showing (tapjacking protection, Android 12+). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
+
+    <!-- D-020: package visibility for WhatsApp only, so "open in WhatsApp" (click-to-chat link
+         restricted to com.whatsapp) can be started. Not a permission; no other package is visible. -->
+    <queries>
+        <package android:name="com.whatsapp" />
+    </queries>
+
+    <application
+        android:name=".BridgeApplication"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:usesCleartextTraffic="false"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.NoaBridge"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- D-020: target of our "draft ready" notification. Not exported, no UI (translucent), its
+             own task, gone from recents and history: it opens the chat in WhatsApp with the draft's
+             CURRENT stored text and finishes (or opens MainActivity at the draft on failure). -->
+        <activity
+            android:name=".OpenInWhatsAppActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity="" />
+
+        <!-- Read-only WhatsApp notification listener. Bound only by the system
+             (BIND_NOTIFICATION_LISTENER_SERVICE) after the user grants Notification Access. -->
+        <service
+            android:name=".platform.NoaNotificationListenerService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+            <!-- Android 12+: default notification types offered to this listener (user can change). -->
+            <meta-data
+                android:name="android.service.notification.default_filter_types"
+                android:value="conversations|alerting" />
+            <!-- Android 12+: types this listener never needs (calls/backups/"checking for messages", silent). -->
+            <meta-data
+                android:name="android.service.notification.disabled_filter_types"
+                android:value="ongoing|silent" />
+        </service>
+    </application>
+</manifest>

@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default locale is Hebrew. All user-facing text of the app lives here.
+  Use the Hebrew geresh (׳) and gershayim (״) instead of ASCII quotes.
+-->
+<resources>
+    <string name="app_name">NOA Personal Bridge</string>
+    <string name="app_title">נועה · גשר אישי</string>
+
+    <!-- Common -->
+    <string name="action_back">חזרה</string>
+    <string name="action_close">סגור</string>
+    <string name="action_continue">המשך</string>
+    <string name="cd_status_ok">תקין</string>
+    <string name="cd_status_attention">דורש תשומת לב</string>
+    <string name="cd_status_problem">בעיה</string>
+    <string name="cd_warning">אזהרה</string>
+    <string name="cd_info">מידע</string>
+    <string name="cd_error">שגיאה</string>
+
+    <!-- Navigation -->
+    <string name="tab_home">בית</string>
+    <string name="tab_drafts">טיוטות</string>
+    <string name="tab_settings">הגדרות</string>
+    <string name="cd_drafts_badge">%1$d טיוטות ממתינות</string>
+
+    <!-- Relative time -->
+    <string name="time_just_now">עכשיו</string>
+    <string name="time_one_minute">לפני דקה</string>
+    <string name="time_minutes">לפני %1$d דקות</string>
+    <string name="time_one_hour">לפני שעה</string>
+    <string name="time_two_hours">לפני שעתיים</string>
+    <string name="time_hours">לפני %1$d שעות</string>
+    <string name="time_yesterday">אתמול, %1$s</string>
+
+    <!-- Home -->
+    <string name="home_subtitle">נועה מנסחת עבורך טיוטות תשובה. שום דבר לא נשלח בלי האישור שלך.</string>
+    <string name="home_card_server_title">נועה / שרת הגשר</string>
+    <string name="home_server_not_paired">עדיין לא מחובר לשרת. כדי שנועה תוכל לנסח טיוטות צריך להתחבר פעם אחת עם קוד חיבור.</string>
+    <string name="home_server_paired_reachable">מחובר והשרת זמין.</string>
+    <string name="home_server_paired_unreachable">מחובר, אבל השרת לא ענה בבדיקה האחרונה.</string>
+    <string name="home_server_paired_unknown">מחובר. מצב השרת עוד לא נבדק.</string>
+    <string name="home_server_address">כתובת: \u2066%1$s\u2069</string>
+    <string name="home_action_pair">חיבור לשרת</string>
+    <string name="home_card_whatsapp_title">גשר WhatsApp</string>
+    <string name="home_whatsapp_no_access">אין גישה להתראות, ולכן האפליקציה לא רואה הודעות חדשות.</string>
+    <string name="home_whatsapp_not_connected">יש גישה להתראות, אבל רכיב ההאזנה עדיין לא מחובר. לפעמים זה לוקח כמה שניות; אם זה נמשך, כדאי לכבות ולהדליק את הגישה מחדש.</string>
+    <string name="home_whatsapp_ok">מאזין להתראות של שיחות פרטיות בלבד.</string>
+    <string name="home_card_permissions_title">הרשאות</string>
+    <string name="home_perm_notification_access">גישה להתראות</string>
+    <string name="home_perm_notification_access_desc">נדרשת כדי לקרוא הודעות פרטיות חדשות מההתראות של WhatsApp.</string>
+    <string name="home_perm_post_notifications">הצגת התראות</string>
+    <string name="home_perm_post_notifications_desc">כדי שנעדכן אותך כשטיוטה מוכנה לאישור.</string>
+    <string name="perm_granted">ניתנה</string>
+    <string name="perm_missing">חסרה</string>
+    <string name="action_grant">מתן הרשאה</string>
+    <string name="action_manage">ניהול</string>
+    <string name="home_card_pending_title">טיוטות ממתינות</string>
+    <string name="home_pending_none">אין טיוטות שממתינות לאישורך.</string>
+    <string name="home_pending_count">%1$d טיוטות ממתינות לאישורך</string>
+    <string name="home_pending_one">טיוטה אחת ממתינה לאישורך</string>
+    <string name="home_action_open_drafts">לטיוטות</string>
+    <string name="home_pause_title">השהיה</string>
+    <string name="home_pause_desc_active">פעיל. הודעות פרטיות חדשות יקבלו טיוטה.</string>
+    <string name="home_pause_desc_paused">מושהה. הודעות חדשות לא נקראות ולא מנוסחות עד שתבטל/י את ההשהיה.</string>
+    <string name="home_last_error_title">תקלה אחרונה</string>
+    <string name="home_no_consent_title">נועה לא מנסחת טיוטות כרגע</string>
+    <string name="home_no_consent_body">לא ניתנה הסכמה לשליחת תוכן ההודעות לעיבוד. אפשר לשנות זאת בכל עת בהגדרות ← פרטיות.</string>
+    <string name="home_action_privacy_settings">להגדרות הפרטיות</string>
+    <string name="home_experimental_title">שליחה ניסיונית פעילה</string>
+    <string name="home_experimental_body">השליחה מתבצעת דרך כפתור התשובה בהתראה של WhatsApp. היא לא נבדקה על המכשיר הזה, ואין אישור מסירה: גם אחרי ״הועבר ל-WhatsApp״ כדאי לוודא בשיחה עצמה.</string>
+    <string name="home_emergency_stop">עצירת חירום</string>
+    <string name="home_emergency_stop_short">עצירה</string>
+    <string name="cd_emergency_stop_action">עצירת חירום</string>
+    <string name="cd_emergency_stop_active">עצירת חירום פעילה</string>
+    <string name="home_emergency_stop_desc">עוצר מיד את כל הטיוטות, הבקשות והשליחות.</string>
+    <string name="home_emergency_dialog_title">לעצור הכול עכשיו?</string>
+    <string name="home_emergency_dialog_body">כל הטיוטות הפתוחות יבוטלו, בקשות שבדרך ייעצרו, ושום הודעה לא תישלח. כדי לחזור לפעול יהיה צריך לאשר במפורש.</string>
+    <string name="home_emergency_dialog_confirm">כן, לעצור הכול</string>
+    <string name="home_stopped_title">הופעלה עצירת חירום</string>
+    <string name="home_stopped_body">שום הודעה לא נקראת, לא מנוסחת ולא נשלחת. הטיוטות שהיו פתוחות בוטלו.</string>
+    <string name="home_resume">חידוש פעולה</string>
+    <string name="home_resume_dialog_title">לחדש את הפעולה?</string>
+    <string name="home_resume_dialog_body">נועה תחזור לקרוא הודעות פרטיות חדשות ולנסח טיוטות. שום דבר עדיין לא יישלח בלי אישור שלך לכל הודעה.</string>
+    <string name="home_resume_dialog_confirm">כן, לחדש</string>
+
+    <!-- Draft states (chips) -->
+    <string name="state_received">התקבלה</string>
+    <string name="state_filtered">נבדקה</string>
+    <string name="state_debouncing">ממתין לסיום ההודעות…</string>
+    <string name="state_processing">נועה מנסחת…</string>
+    <string name="state_draft_ready">טיוטה מוכנה</string>
+    <string name="state_awaiting_approval">ממתין לאישורך</string>
+    <string name="state_approved">אושר</string>
+    <string name="state_sending">שולח…</string>
+    <string name="state_send_attempted">הועבר ל-WhatsApp — אין אישור מסירה</string>
+    <string name="state_failed">השליחה נכשלה</string>
+    <string name="state_unknown_result">לא ידוע אם נשלח</string>
+    <string name="state_expired">פג תוקף</string>
+    <string name="state_cancelled">בוטל</string>
+
+    <!-- Draft state explanations -->
+    <string name="explain_received">ההודעה התקבלה ונבדקת.</string>
+    <string name="explain_filtered">ההודעה עברה את הבדיקות והיא בתור.</string>
+    <string name="explain_debouncing">נועה מחכה 15 שניות של שקט מהשולח, כדי לענות על כל מה שנכתב ולא רק על ההודעה הראשונה.</string>
+    <string name="explain_processing">הטיוטה בדרך. זה לוקח בדרך כלל כמה שניות.</string>
+    <string name="explain_draft_ready">הטיוטה מוכנה ותופיע לאישור.</string>
+    <string name="explain_awaiting_approval">אפשר לערוך, לאשר ולשלוח או לבטל.</string>
+    <string name="explain_approved">אישרת את הנוסח. השליחה מתבצעת פעם אחת בלבד.</string>
+    <string name="explain_sending">מעבירים את התשובה ל-WhatsApp…</string>
+    <string name="explain_send_attempted">התשובה הועברה ל-WhatsApp דרך ההתראה. אנדרואיד לא מספק אישור מסירה, לכן כדאי לוודא בשיחה עצמה.</string>
+    <string name="explain_failed">לא הצלחנו להעביר את התשובה ל-WhatsApp. שום דבר לא נשלח שוב אוטומטית.</string>
+    <string name="explain_unknown_result">לא ידוע אם ההודעה נשלחה. כדי לא לשלוח פעמיים, לא ננסה שוב — כדאי לבדוק בשיחה עצמה.</string>
+    <string name="explain_expired">הטיוטה כבר לא רלוונטית ולא תישלח.</string>
+    <string name="explain_cancelled">הטיוטה בוטלה ולא תישלח.</string>
+
+    <!-- Drafts list -->
+    <string name="drafts_title">טיוטות</string>
+    <string name="drafts_empty_title">אין טיוטות כרגע</string>
+    <string name="drafts_empty_body">כשתגיע הודעה פרטית חדשה ב-WhatsApp, נועה תחכה 15 שניות שהשולח יסיים לכתוב ואז תנסח כאן טיוטת תשובה. שום דבר לא נשלח בלי האישור שלך.</string>
+    <string name="drafts_empty_checklist">כדי שזה יעבוד צריך: גישה להתראות, חיבור לשרת והסכמה לעיבוד בענן.</string>
+    <string name="drafts_section_needs_you">ממתין לאישורך</string>
+    <string name="drafts_section_active">בתהליך</string>
+    <string name="drafts_section_history">היסטוריה מהזמן האחרון</string>
+    <string name="draft_messages_count">%1$d הודעות</string>
+
+    <!-- Draft detail -->
+    <string name="detail_title">טיוטת תשובה</string>
+    <string name="detail_not_found_title">הטיוטה כבר לא זמינה</string>
+    <string name="detail_not_found_body">ייתכן שהיא בוטלה, פג תוקפה או שהנתונים המקומיים נמחקו.</string>
+    <string name="detail_incoming_header">ההודעות שהתקבלו</string>
+    <string name="detail_reply_header">התשובה המוצעת</string>
+    <string name="detail_reply_header_sent">הטקסט שהועבר</string>
+    <string name="detail_reply_label">נוסח התשובה</string>
+    <string name="detail_reply_waiting">נועה עדיין לא סיימה לנסח.</string>
+    <string name="detail_edited_marker">נערך על ידך</string>
+    <string name="detail_unsaved_changes">יש שינויים שלא נשמרו</string>
+    <string name="detail_save_edit">שמור עריכה</string>
+    <string name="detail_edit_saved">העריכה נשמרה</string>
+    <string name="detail_approve_send">אשר ושלח</string>
+    <string name="detail_copy_text">העתק טקסט</string>
+    <!-- D-020: open the chat in WhatsApp with the draft pre-typed; the user sends with WhatsApp's own button. -->
+    <string name="detail_open_whatsapp">פתח ב-WhatsApp</string>
+    <string name="open_whatsapp_opened">WhatsApp נפתח עם הנוסח. השליחה נעשית רק בכפתור השליחה של WhatsApp.</string>
+    <string name="open_whatsapp_copied_paste">הטקסט הועתק — הדבק בשיחה</string>
+    <string name="open_whatsapp_not_found_copied">לא נמצאה השיחה ב-WhatsApp — הטקסט הועתק</string>
+    <string name="open_whatsapp_not_available">אי אפשר לפתוח את הטיוטה הזו ב-WhatsApp כרגע. ייתכן שהגיעה הודעה חדשה או שהטיוטה פגה.</string>
+    <string name="open_whatsapp_emergency_stopped">עצירת החירום פעילה — שום דבר לא נפתח.</string>
+    <string name="detail_cancel_draft">בטל טיוטה</string>
+    <string name="detail_exclude">אל תציע לשיחה הזו</string>
+    <string name="detail_safety_title">שים/י לב</string>
+    <string name="detail_safety_injection">ההודעה מנסה לתת הוראות למערכת — נועה התייחסה אליה כטקסט בלבד.</string>
+    <string name="detail_safety_sensitive">ההודעה מבקשת מידע רגיש (קודים, סיסמאות, כסף או פרטים אישיים). כדאי לבדוק היטב לפני שעונים.</string>
+    <string name="detail_locked_notice">המכשיר נעול. אפשר לשלוח רק כשהמכשיר פתוח.</string>
+    <string name="detail_sending_off_notice">השליחה מהאפליקציה כבויה. אפשר לפתוח את השיחה ב-WhatsApp עם הנוסח מוכן ולשלוח שם בכפתור השליחה של WhatsApp, או להעתיק את הנוסח.</string>
+    <string name="detail_already_attempted">כבר בוצע ניסיון שליחה לטיוטה הזו. כדי למנוע שליחה כפולה אין אפשרות לשלוח שוב.</string>
+    <string name="detail_empty_text_error">אי אפשר לאשר תשובה ריקה.</string>
+    <string name="detail_approve_failed">לא ניתן לאשר את הטיוטה כרגע. ייתכן שהגיעה הודעה חדשה, שהטיוטה פגה או שהופעלה עצירת חירום.</string>
+    <string name="detail_send_exception">אירעה שגיאה בזמן השליחה. לא ידוע אם ההודעה נשלחה — כדאי לבדוק בשיחה עצמה. לא ננסה שוב אוטומטית.</string>
+    <string name="detail_draft_changed">הטיוטה התעדכנה — בדוק שוב לפני אישור</string>
+    <string name="detail_text_too_long">הטקסט ארוך מדי (עד 4000 תווים)</string>
+    <string name="detail_copied">הנוסח הועתק. אפשר להדביק אותו ב-WhatsApp.</string>
+    <string name="detail_status_detail">פרטים: %1$s</string>
+    <string name="cd_message_meta">הודעה של %1$s, בשעה %2$s</string>
+    <string name="detail_content_scrubbed">תוכן ההודעות והטיוטה נמחק מהזיכרון כדי לשמור על פרטיות. נשארו רק המצב והפרטים.</string>
+
+    <string name="approve_dialog_title">לשלוח את ההודעה הזו?</string>
+    <string name="approve_dialog_recipient">אל: %1$s</string>
+    <string name="approve_dialog_exact_text">זה הנוסח המדויק שיישלח:</string>
+    <string name="approve_dialog_note">ההודעה תועבר ל-WhatsApp פעם אחת בלבד. אין אישור מסירה.</string>
+    <string name="approve_dialog_confirm">כן, לשלוח</string>
+    <string name="approve_dialog_safety">שים/י לב: ההודעה סומנה כחשודה. ודא/י שהתשובה לא מוסרת קודים, סיסמאות, כסף או פרטים אישיים.</string>
+
+    <string name="cancel_dialog_title">לבטל את הטיוטה?</string>
+    <string name="cancel_dialog_body">הטיוטה לא תישלח. ההודעות עצמן נשארות ב-WhatsApp כרגיל.</string>
+    <string name="cancel_dialog_confirm">ביטול טיוטה</string>
+
+    <string name="exclude_dialog_title">להפסיק להציע טיוטות בשיחה עם %1$s?</string>
+    <string name="exclude_dialog_body">הודעות מהשיחה הזו לא ייקראו ולא יקבלו טיוטה. הרשימה נשמרת רק במכשיר, ואפשר להחזיר את השיחה בכל עת מההגדרות.</string>
+    <string name="exclude_dialog_confirm">כן, לא להציע</string>
+
+    <!-- Settings -->
+    <string name="settings_title">הגדרות</string>
+    <string name="settings_section_behavior">איך נועה עובדת</string>
+    <string name="settings_debounce_title">השהיה של 15 שניות</string>
+    <string name="settings_debounce_desc">לפני שנועה מנסחת, היא מחכה 15 שניות שבהן לא הגיעה הודעה חדשה מאותו אדם. כך התשובה מתייחסת לכל מה שנכתב ולא רק לשורה הראשונה. ההגדרה קבועה.</string>
+    <string name="settings_private_only_title">שיחות פרטיות בלבד</string>
+    <string name="settings_private_only_desc">תמיד פעיל. הודעות מקבוצות לא נקראות ולא נשלחות לשום מקום. כשאי אפשר לדעת בוודאות שזו שיחה פרטית, ההודעה מדולגת.</string>
+    <string name="settings_locked_on">תמיד פעיל</string>
+    <string name="settings_section_exclusions">שיחות שלא יקבלו טיוטות</string>
+    <string name="settings_exclusions_empty">אין שיחות מוחרגות. אפשר להחריג שיחה מתוך מסך הטיוטה (״אל תציע לשיחה הזו״).</string>
+    <string name="settings_exclusion_remove">הסרה</string>
+    <string name="cd_remove_exclusion">הסרת ההחרגה של %1$s</string>
+    <string name="settings_section_permissions">הרשאות</string>
+    <string name="settings_section_privacy">פרטיות</string>
+    <string name="settings_consent_title">עיבוד בענן</string>
+    <string name="settings_consent_desc_on">ניתנה הסכמה. תוכן הודעות פרטיות חדשות נשלח לשרת הגשר לניסוח טיוטות.</string>
+    <string name="settings_consent_desc_off">לא ניתנה הסכמה. שום תוכן לא יוצא מהמכשיר, ולכן לא נוצרות טיוטות.</string>
+    <string name="settings_sending_title">שליחה ניסיונית</string>
+    <string name="settings_sending_desc_on">פעיל. כל הודעה עדיין דורשת אישור מפורש שלך לפני שליחה.</string>
+    <string name="settings_sending_desc_off">כבוי. אפשר לאשר טיוטה ולהעתיק את הנוסח, אבל האפליקציה לא שולחת דבר.</string>
+    <string name="settings_sending_unavailable">השליחה לא זמינה בגרסה הזו.</string>
+    <string name="settings_wipe_title">מחיקת נתונים מקומיים</string>
+    <string name="settings_wipe_desc">מוחק מהמכשיר טיוטות, החרגות, הגדרות ופרטי חיבור.</string>
+    <string name="settings_wipe_dialog_title">למחוק את כל הנתונים המקומיים?</string>
+    <string name="settings_wipe_dialog_body">יימחקו מהמכשיר: כל הטיוטות, רשימת ההחרגות, ההגדרות ופרטי החיבור לשרת. אי אפשר לבטל את הפעולה.</string>
+    <string name="settings_wipe_dialog_confirm">כן, למחוק</string>
+    <string name="settings_wipe_done">הנתונים המקומיים נמחקו.</string>
+    <string name="settings_section_connection">חיבור</string>
+    <string name="settings_pair_title">חיבור לשרת</string>
+    <string name="settings_pair_desc_paired">מחובר ל-\u2066%1$s\u2069</string>
+    <string name="settings_pair_desc_unpaired">לא מחובר. נדרש קוד חיבור חד-פעמי.</string>
+    <string name="settings_disconnect_title">ניתוק מלא</string>
+    <string name="settings_disconnect_desc">מבטל את ההרשאה של המכשיר בשרת ומוחק את פרטי החיבור.</string>
+    <string name="settings_disconnect_dialog_title">להתנתק מהשרת?</string>
+    <string name="settings_disconnect_dialog_body">המכשיר יבטל את ההרשאה שלו בשרת וישכח את פרטי החיבור. עד שתתחבר/י מחדש לא ינוסחו טיוטות.</string>
+    <string name="settings_disconnect_dialog_confirm">כן, להתנתק</string>
+    <string name="settings_disconnect_done">החיבור לשרת נותק והשרת אישר את ביטול המכשיר.</string>
+    <string name="settings_disconnect_done_local">פרטי החיבור נמחקו מהמכשיר.</string>
+    <string name="settings_revoke_not_confirmed">הניתוק המקומי בוצע, אבל השרת לא אישר את הביטול — בטל את המכשיר בשרת עם \u2066revoke-device\u2069</string>
+    <string name="settings_section_about">אודות</string>
+    <string name="settings_version">גרסה %1$s</string>
+    <string name="settings_operation_failed">הפעולה לא הושלמה. אפשר לנסות שוב.</string>
+
+    <string name="consent_dialog_title">הסכמה לעיבוד בענן</string>
+    <string name="consent_dialog_intro">כדי לנסח טיוטת תשובה, האפליקציה צריכה לשלוח מידע מחוץ למכשיר. לפני שמחליטים, זה בדיוק מה שקורה:</string>
+    <string name="consent_dialog_what_title">מה נשלח</string>
+    <string name="consent_dialog_what_body">הטקסט של ההודעות הנכנסות החדשות משיחות פרטיות בלבד, ושם התצוגה של השולח. מספרי טלפון לא נשלחים לשרת; השיחה מזוהה במזהה אקראי שנוצר במכשיר. לא נשלחים גם הודעות מקבוצות, היסטוריית שיחות מלאה, תמונות או קבצים.</string>
+    <string name="consent_dialog_where_title">לאן זה נשלח</string>
+    <string name="consent_dialog_where_body">לשרת הגשר שאליו חיברת את המכשיר, ומשם למודל הבינה המלאכותית שמנסח את הטיוטה.</string>
+    <string name="consent_dialog_control_title">השליטה אצלך</string>
+    <string name="consent_dialog_control_body">בלי הסכמה לא נשלח כלום. אפשר לבטל את ההסכמה בכל רגע בהגדרות, ושיחות ספציפיות אפשר להחריג.</string>
+    <string name="consent_dialog_confirm">אני מסכים/ה</string>
+    <string name="consent_dialog_decline">לא עכשיו</string>
+
+    <string name="sending_dialog_title">להפעיל שליחה ניסיונית?</string>
+    <string name="sending_dialog_body">חשוב לדעת לפני שמפעילים:</string>
+    <string name="sending_dialog_point_unverified">השליחה עדיין לא אומתה על המכשיר הזה ועלולה לא לעבוד.</string>
+    <string name="sending_dialog_point_approval">כל הודעה עדיין דורשת אישור מפורש שלך. אין שליחה אוטומטית.</string>
+    <string name="sending_dialog_point_delivery">אי אפשר לאשר מסירה: גם אחרי העברה ל-WhatsApp לא ידוע בוודאות שההודעה נשלחה.</string>
+    <string name="sending_dialog_point_once">כל טיוטה נשלחת לכל היותר פעם אחת, ולא ננסה שוב אוטומטית.</string>
+    <string name="sending_dialog_confirm">הבנתי, להפעיל</string>
+
+    <!-- Pairing -->
+    <string name="pairing_title">חיבור לשרת</string>
+    <string name="pairing_intro">הזן/י את כתובת שרת הגשר ואת קוד החיבור החד-פעמי (8 תווים) שקיבלת מהשרת.</string>
+    <string name="pairing_url_label">כתובת השרת</string>
+    <string name="pairing_url_placeholder">https://bridge.example.com</string>
+    <string name="pairing_url_error">הכתובת צריכה להתחיל ב-\u2066https://\u2069 ולכלול שם שרת.</string>
+    <string name="pairing_code_label">קוד חיבור</string>
+    <string name="pairing_code_supporting">%1$d/8 תווים · אותיות לועזיות ומספרים</string>
+    <string name="pairing_code_error">הקוד צריך להיות בדיוק 8 תווים של אותיות לועזיות או מספרים.</string>
+    <string name="pairing_pin_label">טביעת אצבע של המפתח הציבורי (אופציונלי)</string>
+    <string name="pairing_pin_placeholder">sha256/…</string>
+    <string name="pairing_pin_supporting">טביעת האצבע של מפתח ה-SPKI בפורמט \u2066sha256/&lt;base64&gt;\u2069. אם ממלאים, האפליקציה תתחבר רק לשרת עם המפתח הזה. ריק: אימות רגיל של תעודת השרת.</string>
+    <string name="pairing_pin_error">טביעת האצבע לא תקינה: צריך \u2066sha256/\u2069 ואחריו 44 תווי Base64 (או להשאיר ריק).</string>
+    <string name="pairing_submit">התחברות</string>
+    <string name="pairing_in_progress">מתחבר…</string>
+    <string name="pairing_success">החיבור הצליח. המכשיר מחובר לשרת.</string>
+    <string name="pairing_failure">החיבור נכשל: %1$s</string>
+    <string name="pairing_failure_generic">החיבור נכשל. כדאי לבדוק את החיבור לאינטרנט ולנסות שוב.</string>
+    <string name="pairing_already_paired">המכשיר כבר מחובר ל-\u2066%1$s\u2069. חיבור חדש יחליף את הקיים.</string>
+    <string name="pairing_privacy_note">הקוד משמש פעם אחת בלבד. ההודעות עצמן לא נשלחות לשרת עד שתיתן/י הסכמה לעיבוד בענן.</string>
+
+    <!-- Onboarding -->
+    <string name="onb_step">שלב %1$d מתוך %2$d</string>
+    <string name="onb_p1_title">טיוטות תשובה, באישור שלך</string>
+    <string name="onb_p1_body">כשמגיעה הודעה פרטית חדשה ב-WhatsApp, נועה מנסחת הצעה לתשובה. את/ה מחליט/ה: לאשר ולשלוח, לערוך או לבטל.</string>
+    <string name="onb_p1_point1">כל הודעה נשלחת רק אחרי שאישרת את הנוסח המדויק.</string>
+    <string name="onb_p1_point2">אפשר לעצור הכול בכל רגע בלחיצה אחת.</string>
+    <string name="onb_p2_title">מה נועה אף פעם לא עושה</string>
+    <string name="onb_p2_point1">לא קוראת קבוצות. רק שיחות פרטיות.</string>
+    <string name="onb_p2_point2">לא שולחת שום דבר לבד. אין שליחה אוטומטית.</string>
+    <string name="onb_p2_point3">לא קוראת את היסטוריית השיחות. רק הודעות חדשות שמופיעות בהתראה.</string>
+    <string name="onb_p2_wait">ולמה יש המתנה של 15 שניות? אנשים כותבים בכמה הודעות קצרות. נועה מחכה שהשולח יסיים, ורק אז מנסחת תשובה אחת לכל מה שנכתב.</string>
+    <string name="onb_p3_title">הרשאות</string>
+    <string name="onb_p3_body">כדי לראות הודעות חדשות האפליקציה צריכה גישה להתראות. ההרשאה ניתנת במסך מערכת של אנדרואיד, ואפשר לבטל אותה בכל עת.</string>
+    <string name="onb_p3_post_body">מומלץ גם לאפשר הצגת התראות, כדי שנעדכן אותך כשטיוטה מוכנה.</string>
+    <string name="onb_p4_title">עיבוד בענן</string>
+    <string name="onb_p4_body">כדי לנסח טיוטות, תוכן ההודעות החדשות משיחות פרטיות ושם השולח נשלחים לשרת הגשר ולמודל הבינה המלאכותית. בלי הסכמה האפליקציה עובדת, אבל לא נוצרות טיוטות.</string>
+    <string name="onb_consent_review">קריאת הפרטים ומתן הסכמה</string>
+    <string name="onb_consent_skip">דילוג בינתיים</string>
+    <string name="onb_consent_skip_note">אפשר לתת הסכמה מאוחר יותר בהגדרות ← פרטיות.</string>
+    <string name="onb_next">הבא</string>
+    <string name="onb_prev">הקודם</string>
+
+    <!-- Post-notification rationale -->
+    <string name="postnotif_rationale_title">לעדכן אותך כשטיוטה מוכנה?</string>
+    <string name="postnotif_rationale_body">האפליקציה תציג התראה כשנועה סיימה לנסח טיוטה שממתינה לאישורך. אפשר לשנות זאת בכל עת בהגדרות המכשיר.</string>
+    <string name="postnotif_rationale_confirm">אפשר התראות</string>
+    <string name="postnotif_rationale_decline">לא עכשיו</string>
+
+    <!-- Controller wiring fallback -->
+    <string name="preview_mode_banner">מצב תצוגה: רכיב הגשר לא נטען, הנתונים המוצגים אינם אמיתיים ושום דבר לא נשלח.</string>
+</resources>

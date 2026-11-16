@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window background shown before Compose draws; matches the Compose light background. -->
+    <color name="noa_background">#FFFAF8F5</color>
+    <color name="noa_primary">#FF4B3FD1</color>
+    <color name="noa_icon_background">#FF2E2A6B</color>
+</resources>

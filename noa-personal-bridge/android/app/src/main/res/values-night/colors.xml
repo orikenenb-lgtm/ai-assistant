@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the Compose dark background so there is no white flash on launch. -->
+    <color name="noa_background">#FF151412</color>
+    <color name="noa_primary">#FFC5BFFF</color>
+</resources>
