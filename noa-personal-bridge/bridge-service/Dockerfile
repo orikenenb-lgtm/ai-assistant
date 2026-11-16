@@ -1,6 +1,8 @@
-# Local use only (no deployment pipeline). Build from noa-personal-bridge/bridge-service:
+# Build from noa-personal-bridge/bridge-service:
 #   docker build -t noa-bridge .
 #   docker run --rm -p 127.0.0.1:8787:8787 --env-file .env -v noa-bridge-data:/app/data noa-bridge
+# Hosted (Railway): see railway.json next to this file and docs/noa-personal-bridge/INSTALLATION_HE.md.
+# No VOLUME instruction (Railway rejects it) — mount a persistent volume at /app/data instead.
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -20,5 +22,5 @@ RUN useradd --system --uid 10001 --home /app bridge \
 USER bridge
 
 EXPOSE 8787
-VOLUME ["/app/data"]
-CMD ["python", "-m", "bridge_service.main"]
+# Hosting platforms inject $PORT; fall back to 8787 locally.
+CMD ["sh", "-c", "BRIDGE_PORT=${PORT:-8787} exec python -m bridge_service.main"]

@@ -19,7 +19,7 @@ from bridge_service.api.middleware import BridgeMiddleware
 from bridge_service.api.routes import router
 from bridge_service.api.state import BridgeState
 from bridge_service.config import Settings, get_settings
-from bridge_service.security.pairing import resolve_pairing_pepper
+from bridge_service.security.pairing import generate_pairing_code, hash_pairing_code, resolve_pairing_pepper
 from bridge_service.storage.db import Database
 
 logger = logging.getLogger("bridge_service")
@@ -44,6 +44,16 @@ def create_app(settings: Settings | None = None, engine: DraftEngine | None = No
             extra={"event": "purge", "devices": purged.devices, "pairing_codes": purged.pairing_codes},
         )
     pepper = resolve_pairing_pepper(settings.pairing_pepper, settings.db_path)
+    if settings.startup_pairing_code:
+        # Single-use, short-lived, HMAC-hashed in the DB like any other code. Logged on purpose
+        # (hosted deployments have no shell); disable BRIDGE_STARTUP_PAIRING_CODE after pairing.
+        code = generate_pairing_code()
+        db.add_pairing_code(hash_pairing_code(code, pepper), settings.pairing_code_ttl_minutes * 60)
+        logger.warning(
+            f"PAIRING CODE: {code} (single use, valid {settings.pairing_code_ttl_minutes} min). "
+            "Set BRIDGE_STARTUP_PAIRING_CODE=false after pairing.",
+            extra={"event": "startup_pairing_code"},
+        )
     engine = engine if engine is not None else _build_engine(settings)
     state = BridgeState.build(settings, db, engine, pepper)
 

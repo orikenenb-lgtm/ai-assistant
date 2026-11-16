@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     """Secret key for HMAC-SHA256 of pairing codes. If unset, a random one is generated on first
     start and kept in ``pepper.key`` next to the database (0600), never inside the database."""
     pairing_code_ttl_minutes: int = Field(default=10, ge=1, le=60)
+    startup_pairing_code: bool = False
+    """Hosted deployments (e.g. Railway) have no admin shell: when true, a one-time pairing code
+    valid for ``pairing_code_ttl_minutes`` is created at every start and written to the log, so it
+    can be read from the hosting dashboard. Turn it off again after pairing."""
     replay_window_seconds: int = Field(default=300, ge=10, le=3600)
     nonce_quota_per_device: int = Field(default=200, ge=10)
     """Max live (unexpired) nonces per device; beyond → 429 for that device only."""
